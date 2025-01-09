@@ -7,4 +7,5 @@ public interface RobotMap {
     String CanivoreCANBus = "CANivore";
 
     int MainController = 0;
+    int CoController = 1;
 }

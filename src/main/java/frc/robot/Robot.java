@@ -76,8 +76,13 @@ public class Robot extends LoggedRobot {
     );
 
     public final CommandXboxController driverController = new CommandXboxController(RobotMap.MainController);
+    public final CommandXboxController coController = new CommandXboxController(RobotMap.CoController);
     public final Alert driverControllerDisconnected = new Alert(
             "Driver controller not connected!",
+            Alert.AlertType.kWarning
+    );
+    public final Alert coControllerDisconnected = new Alert(
+            "Co controller not connected!",
             Alert.AlertType.kWarning
     );
 
@@ -186,6 +191,7 @@ public class Robot extends LoggedRobot {
         VirtualSubsystem.run();
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
+        coControllerDisconnected.set(!coController.getHID().isConnected());
         Threads.setCurrentThreadPriority(true, 10);
     }
 
