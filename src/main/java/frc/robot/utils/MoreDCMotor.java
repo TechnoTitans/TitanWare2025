@@ -3,7 +3,7 @@ package frc.robot.utils;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 
-public class DCMotorHelper {
+public class MoreDCMotor {
     public static DCMotor getMinion(final int numMotors) {
         return new DCMotor(
                 12,
