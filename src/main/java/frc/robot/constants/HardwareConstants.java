@@ -14,16 +14,17 @@ public class HardwareConstants {
 
     public record IntakeConstants(
             String CANBus,
-            int pivotMotorID,
+            int intakePivotMotorID,
             int algaeRollerMotorID,
             int coralRollerMotorID,
-            int CANCoderId,
+            int intakePivotCANCoderId,
+            double intakePivotCANCoderOffset,
             int CANRangeId,
             double pivotGearing,
             double algaeGearing,
             double coralGearing,
-            double lowerLimitRots,
-            double upperLimitRots
+            double pivotLowerLimitRots,
+            double pivotUpperLimitRots
     ) {}
 
     public static final IntakeConstants INTAKE = new IntakeConstants(
@@ -32,6 +33,7 @@ public class HardwareConstants {
             18,
             19,
             20,
+            0.5,
             21,
             60,
             4,

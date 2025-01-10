@@ -11,8 +11,11 @@ public interface IntakeIO {
         public double pivotTorqueCurrentAmps = 0.0;
         public double pivotTempCelsius = 0.0;
 
-        public double encoderPositionRots = 0.0;
-        public double encoderVelocityRotsPerSec = 0.0;
+        public double coralRollerPositionRots = 0.0;
+        public double coralRollerVelocityRotsPerSec = 0.0;
+        public double coralRollerVoltage = 0.0;
+        public double coralRollerTorqueCurrentAmps = 0.0;
+        public double coralRollerTempCelsius = 0.0;
 
         public double algaeRollerPositionRots = 0.0;
         public double algaeRollerVelocityRotsPerSec = 0.0;
@@ -20,13 +23,10 @@ public interface IntakeIO {
         public double algaeRollerTorqueCurrentAmps = 0.0;
         public double algaeRollerTempCelsius = 0.0;
 
-        public double coralRollerPositionRots = 0.0;
-        public double coralRollerVelocityRotsPerSec = 0.0;
-        public double coralRollerVoltage = 0.0;
-        public double coralRollerTorqueCurrentAmps = 0.0;
-        public double coralRollerTempCelsius = 0.0;
+        public double encoderPositionRots = 0.0;
+        public double encoderVelocityRotsPerSec = 0.0;
 
-        public double CANRangeDistance = 0.0;
+        public double CANRangeDistanceMeters = 0.0;
         public boolean CANRangeIsDetected = false;
     }
 
@@ -43,19 +43,19 @@ public interface IntakeIO {
 
     default void toPivotPosition(final double pivotPositionRots) {}
 
-    default void pivotToVoltage(final double volts) {}
+    default void toPivotVoltage(final double volts) {}
 
-    default void pivotToTorqueCurrent(final double torqueCurrentAmps) {}
+    default void toPivotTorqueCurrent(final double torqueCurrentAmps) {}
 
-    default void setAlgaeRollerVelocity(final double algaeRollerVelocityRotsPerSec) {}
+    default void toCoralRollerVelocity(final double coralRollerVelocityRotsPerSec) {}
 
-    default void algaeRollerToVoltage(final double volts) {}
+    default void toCoralRollerVoltage(final double volts) {}
 
-    default void algaeRollerToTorqueCurrent(final double torqueCurrentAmps) {}
+    default void toCoralRollerTorqueCurrent(final double torqueCurrentAmps) {}
 
-    default void setCoralRollerVelocity(final double coralRollerVelocityRotsPerSec) {}
+    default void toAlgaeRollerVelocity(final double algaeRollerVelocityRotsPerSec) {}
 
-    default void coralRollerToVoltage(final double volts) {}
+    default void toAlgaeRollerVoltage(final double volts) {}
 
-    default void coralRollerToTorqueCurrent(final double torqueCurrentAmps) {}
+    default void toAlgaeRollerTorqueCurrent(final double torqueCurrentAmps) {}
 }
