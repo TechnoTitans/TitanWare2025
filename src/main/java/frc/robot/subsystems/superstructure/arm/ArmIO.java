@@ -15,7 +15,7 @@ public interface ArmIO {
         double pivotEncoderVelocityRotsPerSec = 0.0;
     }
 
-        /**
+    /**
      * Updates the set of loggable inputs.
      * @param inputs Logged class of IOInputs
      * @see ArmIOInputs
