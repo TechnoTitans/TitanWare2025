@@ -14,4 +14,15 @@ public class DCMotorHelper {
                 numMotors
         );
     }
+
+    public static DCMotor getKrakenX44(final int numMotors) {
+        return new DCMotor(
+                12,
+                4.05,
+                275,
+                1.4,
+                Units.rotationsPerMinuteToRadiansPerSecond(7530),
+                numMotors
+        );
+    }
 }

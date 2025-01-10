@@ -38,4 +38,8 @@ public interface SimConstants {
     interface Arm {
         double LENGTH_METERS = Units.inchesToMeters(30);
     }
+
+    interface Intake {
+        double LENGTH_METERS = Units.inchesToMeters(12);
+    }
 }
