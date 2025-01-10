@@ -112,7 +112,7 @@ public class ElevatorIOReal implements ElevatorIO {
                 100,
                 masterPosition,
                 masterVelocity,
-                masterVelocity,
+                masterVoltage,
                 masterTorqueCurrent,
                 followerPosition,
                 followerVelocity,

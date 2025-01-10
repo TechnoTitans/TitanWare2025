@@ -18,8 +18,9 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
-import frc.robot.subsystems.superstructure.elevator.Elevator;
+import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.arm.Arm;
+import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.logging.LogUtils;
@@ -77,6 +78,8 @@ public class Robot extends LoggedRobot {
             Constants.CURRENT_MODE,
             HardwareConstants.ARM
     );
+
+    public final Superstructure superstructure = new Superstructure(elevator, arm);
 
     public final Autos autos = new Autos(swerve, photonVision);
     public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(

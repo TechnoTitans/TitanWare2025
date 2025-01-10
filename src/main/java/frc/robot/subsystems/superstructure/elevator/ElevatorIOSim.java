@@ -26,7 +26,7 @@ import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
 import frc.robot.utils.sim.SimUtils;
-import frc.robot.utils.sim.feedback.SimPhoenix6CANCoder;
+import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import java.util.List;
@@ -107,7 +107,7 @@ public class ElevatorIOSim implements ElevatorIO {
                 dcMotorSims::getAngularVelocityRadPerSec
 
         );
-        this.motorsSim.attachFeedbackSensor(new SimPhoenix6CANCoder(encoder));
+        this.motorsSim.attachFeedbackSensor(new SimCANCoder(encoder));
 
         this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -184,7 +184,7 @@ public class ElevatorIOSim implements ElevatorIO {
                 100,
                 masterPosition,
                 masterVelocity,
-                masterVelocity,
+                masterVoltage,
                 masterTorqueCurrent,
                 followerPosition,
                 followerVelocity,
