@@ -19,7 +19,6 @@ public class HardwareConstants {
             int followerMotorId,
             int CANCoderId,
             double gearing,
-            double CANCoderOffset,
             double lowerLimitRots,
             double upperLimitRots,
             double spoolDiameterMeters
@@ -31,7 +30,6 @@ public class HardwareConstants {
             15,
             16,
             4,
-            0,
             0.01,
             30,
             Units.inchesToMeters(1)
