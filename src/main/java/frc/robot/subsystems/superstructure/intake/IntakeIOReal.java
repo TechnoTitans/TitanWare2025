@@ -1,0 +1,293 @@
+package frc.robot.subsystems.superstructure.intake;
+
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.CANrange;
+import com.ctre.phoenix6.hardware.ParentDevice;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.*;
+import edu.wpi.first.units.measure.*;
+import frc.robot.constants.HardwareConstants;
+
+public class IntakeIOReal implements IntakeIO {
+    private final HardwareConstants.IntakeConstants constants;
+
+    private final TalonFX pivotMotor;
+    private final TalonFX algaeRollerMotor;
+    private final TalonFX coralRollerMotor;
+    private final CANcoder encoder;
+    private final CANrange CANRange;
+
+    private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
+    private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC;
+    private final TorqueCurrentFOC torqueCurrentFOC;
+    private final VoltageOut voltageOut;
+
+    private final StatusSignal<Angle> pivotPosition;
+    private final StatusSignal<AngularVelocity> pivotVelocity;
+    private final StatusSignal<Voltage> pivotVoltage;
+    private final StatusSignal<Current> pivotTorqueCurrent;
+    private final StatusSignal<Temperature> pivotDeviceTemp;
+    private final StatusSignal<Angle> algaePosition;
+    private final StatusSignal<AngularVelocity> algaeVelocity;
+    private final StatusSignal<Voltage> algaeVoltage;
+    private final StatusSignal<Current> algaeTorqueCurrent;
+    private final StatusSignal<Temperature> algaeDeviceTemp;
+    private final StatusSignal<Angle> coralPosition;
+    private final StatusSignal<AngularVelocity> coralVelocity;
+    private final StatusSignal<Voltage> coralVoltage;
+    private final StatusSignal<Current> coralTorqueCurrent;
+    private final StatusSignal<Temperature> coralDeviceTemp;
+    private final StatusSignal<Distance> CANRangeDistance;
+    private final StatusSignal<Boolean> CAnRangeIsDetected;
+    private final StatusSignal<Angle> encoderPosition;
+    private final StatusSignal<AngularVelocity> encoderVelocity;
+
+    public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
+        this.constants = constants;
+
+        this.pivotMotor = new TalonFX(constants.pivotMotorID(), constants.CANBus());
+        this.algaeRollerMotor = new TalonFX(constants.algaeRollerMotorID(), constants.CANBus());
+        this.coralRollerMotor = new TalonFX(constants.coralRollerMotorID(), constants.CANBus());
+        this.encoder = new CANcoder(constants.CANCoderId(), constants.CANBus());
+        this.CANRange = new CANrange(constants.CANRangeId(), constants.CANBus());
+
+        this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
+        this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
+        this.torqueCurrentFOC = new TorqueCurrentFOC(0);
+        this.voltageOut = new VoltageOut(0);
+
+        this.pivotPosition = pivotMotor.getPosition();
+        this.pivotVelocity = pivotMotor.getVelocity();
+        this.pivotVoltage = pivotMotor.getMotorVoltage();
+        this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent();
+        this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
+        this.algaePosition = algaeRollerMotor.getPosition();
+        this.algaeVelocity = algaeRollerMotor.getVelocity();
+        this.algaeVoltage = algaeRollerMotor.getMotorVoltage();
+        this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
+        this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
+        this.coralPosition = coralRollerMotor.getPosition();
+        this.coralVelocity = coralRollerMotor.getVelocity();
+        this.coralVoltage = coralRollerMotor.getMotorVoltage();
+        this.coralTorqueCurrent = coralRollerMotor.getTorqueCurrent();
+        this.coralDeviceTemp = coralRollerMotor.getDeviceTemp();
+        this.CANRangeDistance = CANRange.getDistance();
+        this.CAnRangeIsDetected = CANRange.getIsDetected();
+        this.encoderPosition = encoder.getPosition();
+        this.encoderVelocity = encoder.getVelocity();
+    }
+
+    @Override
+    public void config() {
+        final SensorDirectionValue encoderSensorDirection = SensorDirectionValue.Clockwise_Positive;
+        final CANcoderConfiguration encoderConfiguration = new CANcoderConfiguration();
+        encoderConfiguration.MagnetSensor.SensorDirection = encoderSensorDirection;
+        encoder.getConfigurator().apply(encoderConfiguration);
+
+        final InvertedValue pivotInverted = InvertedValue.Clockwise_Positive;
+        final TalonFXConfiguration pivotConfiguration = new TalonFXConfiguration();
+
+        pivotConfiguration.Slot0 = new Slot0Configs()
+                .withKS(0)
+                .withKG(0.11)
+                .withGravityType(GravityTypeValue.Elevator_Static)
+                .withKV(13.97)
+                .withKA(0.015)
+                .withKP(50);
+        pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 13.97;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.015;
+        pivotConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
+        pivotConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
+        pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
+        pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
+        pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
+        pivotConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        pivotConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
+        pivotConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+        pivotConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        pivotConfiguration.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
+        pivotConfiguration.Feedback.RotorToSensorRatio = constants.pivotGearing();
+        pivotConfiguration.Feedback.SensorToMechanismRatio = 1;
+        pivotConfiguration.MotorOutput.Inverted = pivotInverted;
+        pivotConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.upperLimitRots();
+        pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        pivotConfiguration.SoftwareLimitSwitch.ReverseSoftLimitThreshold = constants.lowerLimitRots();
+        pivotConfiguration.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+
+        final TalonFXConfiguration algaeConfiguration = new TalonFXConfiguration();
+        algaeConfiguration.Slot0 = new Slot0Configs()
+                .withKS(3.3326)
+                .withKV(0.15104)
+                .withKA(0.2004)
+                .withKP(10.746);
+        algaeConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 60;
+        algaeConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -60;
+        algaeConfiguration.CurrentLimits.StatorCurrentLimit = 60;
+        algaeConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
+        algaeConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
+        algaeConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        algaeConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
+        algaeConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+        algaeConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        algaeConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        algaeConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+        algaeConfiguration.Feedback.SensorToMechanismRatio = constants.algaeGearing();
+        algaeRollerMotor.getConfigurator().apply(algaeConfiguration);
+
+        final TalonFXConfiguration coralConfiguration = new TalonFXConfiguration();
+        coralConfiguration.Slot0 = new Slot0Configs()
+                .withKS(3.3326)
+                .withKV(0.15104)
+                .withKA(0.2004)
+                .withKP(10.746);
+        coralConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 60;
+        coralConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -60;
+        coralConfiguration.CurrentLimits.StatorCurrentLimit = 60;
+        coralConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
+        coralConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
+        coralConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        coralConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
+        coralConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+        coralConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        coralConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        coralConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+        coralConfiguration.Feedback.SensorToMechanismRatio = constants.algaeGearing();
+        coralRollerMotor.getConfigurator().apply(coralConfiguration);
+
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                100,
+                pivotPosition,
+                pivotVelocity,
+                pivotVoltage,
+                pivotTorqueCurrent,
+                algaePosition,
+                algaeVelocity,
+                algaeVoltage,
+                algaeTorqueCurrent,
+                coralPosition,
+                coralVelocity,
+                coralVoltage,
+                coralTorqueCurrent,
+                CANRangeDistance,
+                CAnRangeIsDetected,
+                encoderPosition,
+                encoderVelocity
+        );
+
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                4,
+                pivotDeviceTemp,
+                algaeDeviceTemp,
+                coralDeviceTemp
+        );
+
+        ParentDevice.optimizeBusUtilizationForAll(
+                pivotMotor,
+                algaeRollerMotor,
+                coralRollerMotor,
+                CANRange,
+                encoder
+        );
+    }
+
+    @Override
+    public void updateInputs(IntakeIOInputs inputs) {
+        BaseStatusSignal.refreshAll(
+                pivotPosition,
+                pivotVelocity,
+                pivotVoltage,
+                pivotTorqueCurrent,
+                pivotDeviceTemp,
+                algaePosition,
+                algaeVelocity,
+                algaeVoltage,
+                algaeTorqueCurrent,
+                algaeDeviceTemp,
+                coralPosition,
+                coralVelocity,
+                coralVoltage,
+                coralTorqueCurrent,
+                coralDeviceTemp,
+                CANRangeDistance,
+                CAnRangeIsDetected,
+                encoderPosition,
+                encoderVelocity
+        );
+
+        inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
+        inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
+        inputs.pivotVoltage = pivotVoltage.getValueAsDouble();
+        inputs.pivotTorqueCurrentAmps = pivotTorqueCurrent.getValueAsDouble();
+        inputs.pivotTempCelsius = pivotDeviceTemp.getValueAsDouble();
+        inputs.algaeRollerPositionRots = algaePosition.getValueAsDouble();
+        inputs.algaeRollerVelocityRotsPerSec = algaeVelocity.getValueAsDouble();
+        inputs.algaeRollerVoltage = algaeVoltage.getValueAsDouble();
+        inputs.algaeRollerTorqueCurrentAmps = algaeTorqueCurrent.getValueAsDouble();
+        inputs.algaeRollerTempCelsius = algaeDeviceTemp.getValueAsDouble();
+        inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();
+        inputs.coralRollerVelocityRotsPerSec = coralVelocity.getValueAsDouble();
+        inputs.coralRollerVoltage = coralVoltage.getValueAsDouble();
+        inputs.coralRollerTorqueCurrentAmps = coralTorqueCurrent.getValueAsDouble();
+        inputs.coralRollerTempCelsius = coralDeviceTemp.getValueAsDouble();
+        inputs.CANRangeDistance = CANRangeDistance.getValueAsDouble();
+        inputs.CANRangeIsDetected = CAnRangeIsDetected.getValue();
+        inputs.encoderPositionRots = encoderPosition.getValueAsDouble();
+        inputs.encoderVelocityRotsPerSec= encoderVelocity.getValueAsDouble();
+    }
+
+    @Override
+    public void toPivotPosition(double pivotPositionRots) {
+        pivotMotor.setControl(motionMagicExpoTorqueCurrentFOC.withPosition(pivotPositionRots));
+    }
+
+    @Override
+    public void pivotToVoltage(double volts) {
+        pivotMotor.setControl(voltageOut.withOutput(volts));
+    }
+
+    @Override
+    public void pivotToTorqueCurrent(double torqueCurrentAmps) {
+        pivotMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
+    }
+
+    @Override
+    public void setAlgaeRollerVelocity(double algaeRollerVelocityRotsPerSec) {
+        algaeRollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(algaeRollerVelocityRotsPerSec));
+    }
+
+    @Override
+    public void algaeRollerToVoltage(double volts) {
+        algaeRollerMotor.setControl(voltageOut.withOutput(volts));
+    }
+
+    @Override
+    public void algaeRollerToTorqueCurrent(double torqueCurrentAmps) {
+        algaeRollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
+    }
+
+    @Override
+    public void setCoralRollerVelocity(double coralRollerVelocityRotsPerSec) {
+        coralRollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(coralRollerVelocityRotsPerSec));
+    }
+
+    @Override
+    public void coralRollerToVoltage(double volts) {
+        coralRollerMotor.setControl(voltageOut.withOutput(volts));
+    }
+
+    @Override
+    public void coralRollerToTorqueCurrent(double torqueCurrentAmps) {
+        coralRollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
+    }
+}
