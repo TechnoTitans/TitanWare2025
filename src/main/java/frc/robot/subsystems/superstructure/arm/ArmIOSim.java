@@ -12,6 +12,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
@@ -19,7 +20,6 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
-import frc.robot.utils.DCMotorHelper;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.sim.SimUtils;
@@ -61,7 +61,7 @@ public class ArmIOSim implements ArmIO {
                         13.97 / (2d * Math.PI),
                         0.03 / (2d * Math.PI)
                 ),
-                DCMotorHelper.getMinion(1),
+                DCMotor.getKrakenX60(1),
                 constants.gearing(),
                 SimConstants.Arm.LENGTH_METERS,
                 Units.rotationsToRadians(constants.lowerLimitRots()),

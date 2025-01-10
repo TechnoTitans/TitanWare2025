@@ -26,7 +26,7 @@ import frc.robot.utils.DCMotorHelper;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.sim.SimUtils;
-import frc.robot.utils.sim.feedback.SimPhoenix6CANCoder;
+import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -109,7 +109,7 @@ public class IntakeIOSim implements IntakeIO {
                 pivotSim::getAngleRads,
                 pivotSim::getVelocityRadPerSec
         );
-        this.pivotTalonFXSim.attachFeedbackSensor(new SimPhoenix6CANCoder(pivotEncoder));
+        this.pivotTalonFXSim.attachFeedbackSensor(new SimCANCoder(pivotEncoder));
 
         final DCMotorSim coralRollerMotorSim = new DCMotorSim(
             LinearSystemId.createDCMotorSystem(

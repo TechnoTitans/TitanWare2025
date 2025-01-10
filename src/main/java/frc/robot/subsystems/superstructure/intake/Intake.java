@@ -38,10 +38,10 @@ public class Intake extends SubsystemBase {
     private final SysIdRoutine algaeRollerVoltageSysIdRoutine;
     private final SysIdRoutine algaeRollerTorqueCurrentSysIdRoutine;
 
-    private PivotGoal desiredPivotGoal = PivotGoal.IDLE;
+    private PivotGoal desiredPivotGoal = PivotGoal.STOW;
     private PivotGoal currentPivotGoal = desiredPivotGoal;
 
-    private RollerGoal desiredRollerGoal = RollerGoal.NONE;
+    private RollerGoal desiredRollerGoal = RollerGoal.STOP;
     private RollerGoal currentRollerGoal = desiredRollerGoal;
 
     private final PivotPositionSetpoint pivotPositionSetpoint;
@@ -67,9 +67,10 @@ public class Intake extends SubsystemBase {
     }
 
     public enum PivotGoal {
-        IDLE(0),
+        STOW(0),
         ALGAE_GROUND(2),
         ALGAE_REEF(2),
+        NET(2),
         L1(1),
         L2(2),
         L3(2),
@@ -87,7 +88,7 @@ public class Intake extends SubsystemBase {
     }
 
     public enum RollerGoal {
-        NONE(0, 0),
+        STOP(0, 0),
         CORAL_HP(2, 0),
         ALGAE_GROUND(0, 2),
         ALGAE_SHOOT(0, -5),

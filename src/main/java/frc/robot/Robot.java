@@ -80,12 +80,12 @@ public class Robot extends LoggedRobot {
             HardwareConstants.ARM
     );
 
-    public final Superstructure superstructure = new Superstructure(elevator, arm);
-
     public final Intake intake = new Intake(
             Constants.CURRENT_MODE,
             HardwareConstants.INTAKE
     );
+
+    public final Superstructure superstructure = new Superstructure(elevator, arm, intake);
 
     public final Autos autos = new Autos(swerve, photonVision);
     public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(
