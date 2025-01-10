@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
-import frc.robot.utils.DCMotorHelper;
+import frc.robot.utils.MoreDCMotor;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.sim.SimUtils;
@@ -83,7 +83,7 @@ public class IntakeIOSim implements IntakeIO {
                     13.97 / (2d * Math.PI),
                     0.03 / (2d * Math.PI)
             ),
-            DCMotorHelper.getMinion(1),
+            MoreDCMotor.getMinion(1),
             constants.pivotGearing(),
             SimConstants.Intake.LENGTH_METERS,
             Units.rotationsToRadians(constants.pivotLowerLimitRots()),
@@ -116,7 +116,7 @@ public class IntakeIOSim implements IntakeIO {
                     0.19557 / (2 * Math.PI),
                     2.9856 / (2 * Math.PI)
             ),
-            DCMotorHelper.getKrakenX44(1),
+            MoreDCMotor.getKrakenX44(1),
             constants.coralGearing()
         );
         this.coralRollerTalonFXSim = new TalonFXSim(
@@ -133,7 +133,7 @@ public class IntakeIOSim implements IntakeIO {
                     0.19557 / (2 * Math.PI),
                     2.9856 / (2 * Math.PI)
             ),
-            DCMotorHelper.getKrakenX44(1),
+            MoreDCMotor.getKrakenX44(1),
             constants.algaeGearing()
         );
         this.algaeRollerTalonFXSim = new TalonFXSim(
