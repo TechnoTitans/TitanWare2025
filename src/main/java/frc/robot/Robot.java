@@ -19,6 +19,7 @@ import frc.robot.constants.RobotMap;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
+import frc.robot.subsystems.superstructure.arm.Arm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.logging.LogUtils;
@@ -70,6 +71,11 @@ public class Robot extends LoggedRobot {
     public final Elevator elevator = new Elevator(
             Constants.CURRENT_MODE,
             HardwareConstants.ELEVATOR
+    );
+
+    public final Arm arm = new Arm(
+            Constants.CURRENT_MODE,
+            HardwareConstants.ARM
     );
 
     public final Autos autos = new Autos(swerve, photonVision);

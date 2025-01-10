@@ -4,11 +4,11 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import frc.robot.utils.ctre.Phoenix6Utils;
 
-public class SimPhoenix6CANCoder implements SimFeedbackSensor {
+public class SimCANCoder implements SimFeedbackSensor {
     private final CANcoder canCoder;
     private final CANcoderSimState simState;
 
-    public SimPhoenix6CANCoder(final CANcoder canCoder) {
+    public SimCANCoder(final CANcoder canCoder) {
         this.canCoder = canCoder;
         this.simState = canCoder.getSimState();
     }

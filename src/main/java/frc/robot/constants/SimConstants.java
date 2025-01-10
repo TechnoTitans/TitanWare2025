@@ -34,4 +34,8 @@ public interface SimConstants {
         double MASS_KG = Units.lbsToKilograms(10);
         double EXT_MOI = 0.05;
     }
+
+    interface Arm {
+        double LENGTH_METERS = Units.inchesToMeters(30);
+    }
 }

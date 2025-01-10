@@ -29,7 +29,7 @@ import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
 import frc.robot.utils.sim.SimUtils;
-import frc.robot.utils.sim.feedback.SimPhoenix6CANCoder;
+import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import static frc.robot.subsystems.drive.constants.SwerveConstants.Config;
@@ -123,7 +123,7 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
                 turnDCMotorSim::getAngularPositionRad,
                 turnDCMotorSim::getAngularVelocityRadPerSec
         );
-        this.turnSim.attachFeedbackSensor(new SimPhoenix6CANCoder(turnEncoder));
+        this.turnSim.attachFeedbackSensor(new SimCANCoder(turnEncoder));
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
         this.positionVoltage = new PositionVoltage(0);
