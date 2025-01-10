@@ -11,6 +11,7 @@ import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Threads;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -316,6 +317,7 @@ public class OdometryThreadRunner {
 
         final BaseStatusSignal[] allSignalsArray = allSignals.toArray(BaseStatusSignal[]::new);
         BaseStatusSignal.setUpdateFrequencyForAll(UPDATE_FREQUENCY_HZ, allSignalsArray);
+        Threads.setCurrentThreadPriority(true, threadPriorityToSet);
 
         while (running) {
             final int statusCodeValue;
@@ -393,6 +395,7 @@ public class OdometryThreadRunner {
             // This is inherently synchronous, since lastThreadPriority is only written
             // here and threadPriorityToSet is only read here
             if (threadPriorityToSet != lastThreadPriority) {
+                Threads.setCurrentThreadPriority(true, threadPriorityToSet);
                 lastThreadPriority = threadPriorityToSet;
             }
         }
