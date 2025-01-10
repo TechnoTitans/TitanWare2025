@@ -1,5 +1,6 @@
 package frc.robot.constants;
 
+import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 
 public interface SimConstants {
@@ -27,5 +28,9 @@ public interface SimConstants {
          * Simulated steer voltage required to overcome friction.
          */
         double STEER_KS_VOLTS = 0.25;
+    }
+
+    interface Arm {
+        double LENGTH_METERS = Units.inchesToMeters(30);
     }
 }
