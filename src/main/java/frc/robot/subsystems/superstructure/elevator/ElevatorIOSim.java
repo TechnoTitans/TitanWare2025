@@ -84,10 +84,13 @@ public class ElevatorIOSim implements ElevatorIO {
                         constants.gearing()
                 ),
                 dcMotors,
-                constants.lowerLimitRots(),
-                constants.upperLimitRots(),
+                Units.rotationsToRadians(constants.lowerLimitRots()),
+                Units.rotationsToRadians(constants.upperLimitRots()),
                 true,
-                ThreadLocalRandom.current().nextDouble(constants.lowerLimitRots(), constants.upperLimitRots())
+                ThreadLocalRandom.current().nextDouble(
+                        Units.rotationsToRadians(constants.lowerLimitRots()),
+                        Units.rotationsToRadians(constants.upperLimitRots())
+                )
         );
 
         this.masterMotor = new TalonFX(constants.masterMotorId(), constants.CANBus());

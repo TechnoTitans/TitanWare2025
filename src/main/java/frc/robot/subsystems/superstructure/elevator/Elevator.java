@@ -52,9 +52,9 @@ public class Elevator extends SubsystemBase {
             return this;
         }
 
-        public boolean atSetpoint(final double elevatorPositionRots, final double elevatorVelocityRotsPerSecond) {
+        public boolean atSetpoint(final double elevatorPositionRots, final double elevatorVelocityRotsPerSec) {
             return MathUtil.isNear(this.elevatorPositionRots, elevatorPositionRots, PositionToleranceRots)
-                    && MathUtil.isNear(0, elevatorVelocityRotsPerSecond, VelocityToleranceRotsPerSec);
+                    && MathUtil.isNear(0, elevatorVelocityRotsPerSec, VelocityToleranceRotsPerSec);
         }
     }
 
