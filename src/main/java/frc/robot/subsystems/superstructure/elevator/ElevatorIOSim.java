@@ -140,7 +140,6 @@ public class ElevatorIOSim implements ElevatorIO {
     public void config() {
         final SensorDirectionValue encoderSensorDirection = SensorDirectionValue.Clockwise_Positive;
         final CANcoderConfiguration encoderConfiguration = new CANcoderConfiguration();
-        encoderConfiguration.MagnetSensor.MagnetOffset = constants.CANCoderOffset();
         encoderConfiguration.MagnetSensor.SensorDirection = encoderSensorDirection;
         encoder.getConfigurator().apply(encoderConfiguration);
 
