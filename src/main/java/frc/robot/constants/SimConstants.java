@@ -1,5 +1,6 @@
 package frc.robot.constants;
 
+import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 
 public interface SimConstants {
@@ -27,5 +28,10 @@ public interface SimConstants {
          * Simulated steer voltage required to overcome friction.
          */
         double STEER_KS_VOLTS = 0.25;
+    }
+
+    interface Elevator {
+        double MASS_KG = Units.lbsToKilograms(10);
+        double EXT_MOI = 0.05;
     }
 }
