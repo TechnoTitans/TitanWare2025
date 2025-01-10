@@ -40,9 +40,9 @@ public class Arm extends SubsystemBase {
     private final PositionSetpoint pivotLowerSetpoint;
     private final PositionSetpoint pivotUpperSetpoint;
 
-    private final Trigger atPivotSetpoint = new Trigger(this::atPositionSetpoint);
-    private final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
-    private final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
+    public final Trigger atPivotSetpoint = new Trigger(this::atPositionSetpoint);
+    public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
+    public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
 
     public static class PositionSetpoint {
         public double pivotPositionRots = 0;
