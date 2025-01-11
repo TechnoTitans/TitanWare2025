@@ -51,8 +51,8 @@ public class HardwareConstants {
             15,
             200,
             112.5,
-            0.900634765625,
-            0.01
+            0.1,
+            3
     );
 
     public record IntakeConstants(

@@ -116,8 +116,7 @@ public class IntakeIOSim implements IntakeIO {
                     0.19557 / (2 * Math.PI),
                     2.9856 / (2 * Math.PI)
             ),
-            MoreDCMotor.getKrakenX44(1),
-            constants.coralGearing()
+            MoreDCMotor.getKrakenX44(1)
         );
         this.coralRollerTalonFXSim = new TalonFXSim(
                 coralRollerMotor,
@@ -133,8 +132,7 @@ public class IntakeIOSim implements IntakeIO {
                     0.19557 / (2 * Math.PI),
                     2.9856 / (2 * Math.PI)
             ),
-            MoreDCMotor.getKrakenX44(1),
-            constants.algaeGearing()
+            MoreDCMotor.getKrakenX44(1)
         );
         this.algaeRollerTalonFXSim = new TalonFXSim(
                 algaeRollerMotor,
