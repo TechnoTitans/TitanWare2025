@@ -26,8 +26,11 @@ public interface IntakeIO {
         public double encoderPositionRots = 0.0;
         public double encoderVelocityRotsPerSec = 0.0;
 
-        public double CANRangeDistanceMeters = 0.0;
-        public boolean CANRangeIsDetected = false;
+        public double coralCANRangeDistanceMeters = 0.0;
+        public boolean coralCANRangeIsDetected = false;
+
+        public double algaeCANRangeDistanceMeters = 0.0;
+        public boolean algaeCANRangeIsDetected = false;
     }
 
     /**

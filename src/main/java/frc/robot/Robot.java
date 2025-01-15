@@ -16,6 +16,7 @@ import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
+import frc.robot.state.GamePieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.superstructure.Superstructure;
@@ -86,6 +87,9 @@ public class Robot extends LoggedRobot {
     );
 
     public final Superstructure superstructure = new Superstructure(elevator, arm, intake);
+
+    public final GamePieceState gamePieceState = new GamePieceState(intake);
+    public final ScoreCommands scoreCommands = new ScoreCommands(swerve, intake, superstructure, gamePieceState);
 
     public final Autos autos = new Autos(swerve, photonVision);
     public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(
@@ -268,9 +272,7 @@ public class Robot extends LoggedRobot {
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
         this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
-
         this.driverController.leftBumper(teleopEventLoop).whileTrue(Commands.startEnd(() -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST), () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)));
-
         this.driverController.rightBumper(teleopEventLoop).whileTrue(Commands.startEnd(() -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW), () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)));
     }
 }

@@ -28,6 +28,7 @@ public class Superstructure extends VirtualSubsystem {
         IDLE(Elevator.Goal.IDLE, Arm.Goal.UPRIGHT, Intake.PivotGoal.STOW),
         CLIMB(Elevator.Goal.IDLE, Arm.Goal.CLIMB, Intake.PivotGoal.STOW),
         ALGAE_GROUND(Elevator.Goal.IDLE, Arm.Goal.UPRIGHT, Intake.PivotGoal.ALGAE_GROUND),
+        HP(Elevator.Goal.HP, Arm.Goal.UPRIGHT, Intake.PivotGoal.HP),
         L1(Elevator.Goal.L1, Arm.Goal.UPRIGHT, Intake.PivotGoal.L1),
         L2(Elevator.Goal.L2, Arm.Goal.UPRIGHT, Intake.PivotGoal.L2),
         L3(Elevator.Goal.L3, Arm.Goal.UPRIGHT, Intake.PivotGoal.L3),
@@ -88,19 +89,34 @@ public class Superstructure extends VirtualSubsystem {
         return Commands.run(() -> this.desiredSuperstructureGoal = superstructureGoal);
     }
 
-    public Command toInstantIntakeRollerGoal(final Intake.RollerGoal rollerGoal) {
-        return Commands.runOnce(
-            () -> this.intake.setRollerGoal(rollerGoal)
-        );
-    }
-    public Command toIntakeRollerGoal(final Intake.RollerGoal rollerGoal) {
-        return Commands.runEnd(() -> this.intake.setRollerGoal(rollerGoal), () -> this.intake.setRollerGoal(Intake.RollerGoal.STOP));
-    }
-    public Command runIntakeRollerGoal(final Intake.RollerGoal rollerGoal) {
-        return Commands.run(() -> this.intake.setRollerGoal(rollerGoal));
-    }
-
     public Set<Subsystem> getRequirements() {
         return Set.of(elevator, arm, intake);
+    }
+
+    public Command intakeHPCoralCommand() {
+        return Commands.sequence(
+                Commands.parallel(
+                        intake.runCoralRollerVelocity(1),
+                        toSuperstructureGoal(SuperstructureGoal.HP)
+                ).until(intake.isCoralPresent),
+                Commands.parallel(
+                        intake.coralInstantStopCommand(),
+                        toSuperstructureGoal(SuperstructureGoal.IDLE)
+                )
+        );
+    }
+
+    public Command intakeAlgaeFromLevelCommand(final SuperstructureGoal superstructureGoal) {
+        return Commands.sequence(
+                Commands.parallel(
+                        intake.runAlgaeRollerVelocity(2),
+                        toSuperstructureGoal(superstructureGoal)
+                ).until(intake.isAlgaePresent),
+                Commands.parallel(
+                        intake.algaeInstantStopCommand(),
+                        toSuperstructureGoal(SuperstructureGoal.IDLE)
+                                .onlyIf(intake.isCoralPresent)
+                )
+        );
     }
 }

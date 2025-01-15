@@ -20,6 +20,7 @@ import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -41,8 +42,8 @@ public class Intake extends SubsystemBase {
     private PivotGoal desiredPivotGoal = PivotGoal.STOW;
     private PivotGoal currentPivotGoal = desiredPivotGoal;
 
-    private RollerGoal desiredRollerGoal = RollerGoal.STOP;
-    private RollerGoal currentRollerGoal = desiredRollerGoal;
+    private double coralRollerVelocitySetpoint = 0.0;
+    private double algaeRollerVelocitySetpoint = 0.0;
 
     private final PivotPositionSetpoint pivotPositionSetpoint;
     private final PivotPositionSetpoint pivotLowerLimit;
@@ -51,6 +52,19 @@ public class Intake extends SubsystemBase {
     public final Trigger atPivotPositionSetpoint = new Trigger(this::atPivotPositionSetpoint);
     public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
     public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
+
+    public final Trigger isCoralIntaking = new Trigger(() -> coralRollerVelocitySetpoint > 0.0);
+    public final Trigger isCoralOuttaking = new Trigger(() -> coralRollerVelocitySetpoint < 0.0);
+    public final Trigger isCoralIntakeStopped = isCoralIntaking.negate().and(isCoralOuttaking.negate());
+    public final Trigger isAlgaeIntaking = new Trigger(() -> algaeRollerVelocitySetpoint > 0.0);
+    public final Trigger isAlgaeOuttaking = new Trigger(() -> algaeRollerVelocitySetpoint < 0.0);
+    public final Trigger isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
+
+    public final Trigger isCoralPresent = new Trigger(this::isCoralPresent);
+    public final Trigger isAlgaePresent = new Trigger(this::isAlgaePresent);
+
+    public final DoubleSupplier coralDistance = this::getCoralDistance;
+    public final DoubleSupplier algaeDistance = this::getAlgaeDistance;
 
     public static class PivotPositionSetpoint {
         public double pivotPositionRots = 0.0;
@@ -68,6 +82,7 @@ public class Intake extends SubsystemBase {
 
     public enum PivotGoal {
         STOW(0),
+        HP(2),
         ALGAE_GROUND(2),
         ALGAE_REEF(2),
         NET(2),
@@ -84,30 +99,6 @@ public class Intake extends SubsystemBase {
 
         public double getPivotPositionGoalRots() {
             return pivotPositionGoalRots;
-        }
-    }
-
-    public enum RollerGoal {
-        STOP(0, 0),
-        CORAL_HP(2, 0),
-        ALGAE_GROUND(0, 2),
-        ALGAE_SHOOT(0, -5),
-        CORAL_OUTTAKE(-2, 0);
-
-        private final double coralRollerVelocityGoalRotsPerSec;
-        private final double algaeRollerVelocityGoalRotsPerSec;
-
-        RollerGoal(final double coralRollerVelocityGoalRotsPerSec, final double algaeRollerVelocityGoalRotsPerSec) {
-            this.coralRollerVelocityGoalRotsPerSec = coralRollerVelocityGoalRotsPerSec;
-            this.algaeRollerVelocityGoalRotsPerSec = algaeRollerVelocityGoalRotsPerSec;
-        }
-
-        public double getCoralRollerVelocityGoalRotsPerSec() {
-            return coralRollerVelocityGoalRotsPerSec;
-        }
-
-        public double getAlgaeRollerVelocityGoalRotsPerSec() {
-            return algaeRollerVelocityGoalRotsPerSec;
         }
     }
 
@@ -172,14 +163,8 @@ public class Intake extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (currentPivotGoal != desiredPivotGoal) {
-            pivotPositionSetpoint.pivotPositionRots = desiredPivotGoal.pivotPositionGoalRots;
+            pivotPositionSetpoint.pivotPositionRots = desiredPivotGoal.getPivotPositionGoalRots();
             this.currentPivotGoal = desiredPivotGoal;
-        }
-
-        if (currentRollerGoal != desiredRollerGoal) {
-            intakeIO.toAlgaeRollerVelocity(desiredRollerGoal.getAlgaeRollerVelocityGoalRotsPerSec());
-            intakeIO.toCoralRollerVelocity(desiredRollerGoal.getCoralRollerVelocityGoalRotsPerSec());
-            this.currentRollerGoal = desiredRollerGoal;
         }
 
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
@@ -188,11 +173,12 @@ public class Intake extends SubsystemBase {
                 LogKey + "/PivotPositionSetpoint/PivotPositionRots",
                 pivotPositionSetpoint.pivotPositionRots
         );
-        Logger.recordOutput(LogKey + "/CurrentRollerGoal", currentRollerGoal.toString());
-        Logger.recordOutput(LogKey + "/DesiredRollerGoal", desiredRollerGoal.toString());
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPivotPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atPivotLowerLimit());
         Logger.recordOutput(LogKey + "/AtUpperLimit", atPivotUpperLimit());
+
+        Logger.recordOutput(LogKey + "/CoralRollerVelocitySetpoint", coralRollerVelocitySetpoint);
+        Logger.recordOutput(LogKey + "/AlgaeRollerVelocitySetpoint", algaeRollerVelocitySetpoint);
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
@@ -213,16 +199,82 @@ public class Intake extends SubsystemBase {
         return inputs.pivotPositionRots >= pivotUpperLimit.pivotPositionRots;
     }
 
+    private boolean isCoralPresent() {
+        return inputs.coralCANRangeIsDetected;
+    }
+
+    private boolean isAlgaePresent() {
+        return inputs.algaeCANRangeIsDetected;
+    }
+
+    private double getCoralDistance() {
+        return inputs.coralCANRangeDistanceMeters;
+    }
+
+    private double getAlgaeDistance() {
+        return inputs.algaeCANRangeDistanceMeters;
+    }
+
     public void setPivotGoal(final PivotGoal goal) {
         this.desiredPivotGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
     }
 
-    public void setRollerGoal(final RollerGoal goal) {
-        this.desiredRollerGoal = goal;
-        Logger.recordOutput(LogKey + "/CurrentRollerGoal", currentRollerGoal.toString());
-        Logger.recordOutput(LogKey + "/DesiredRollerGoal", desiredRollerGoal.toString());
+    public Command runCoralRollerVelocity(final double velocityRotsPerSec) {
+        return runEnd(
+                () -> {
+                    coralRollerVelocitySetpoint = velocityRotsPerSec;
+                    intakeIO.toCoralRollerVelocity(velocityRotsPerSec);
+                },
+                () -> {
+                    coralRollerVelocitySetpoint = 0.0;
+                    intakeIO.toCoralRollerVelocity(0.0);
+                }
+        );
+    }
+
+    public Command runAlgaeRollerVelocity(final double velocityRotsPerSec) {
+        return runEnd(
+                () -> {
+                    algaeRollerVelocitySetpoint = velocityRotsPerSec;
+                    intakeIO.toAlgaeRollerVelocity(velocityRotsPerSec);
+                },
+                () -> {
+                    algaeRollerVelocitySetpoint = 0.0;
+                    intakeIO.toAlgaeRollerVelocity(0.0);
+                }
+        );
+    }
+
+    public Command runCoralRollerVoltage(final double volts) {
+        return runEnd(
+                () -> intakeIO.toCoralRollerVoltage(volts),
+                () -> intakeIO.toCoralRollerVoltage(0.0)
+        );
+    }
+
+    public Command runAlgaeRollerVoltage(final double volts) {
+        return runEnd(
+                () -> intakeIO.toAlgaeRollerVoltage(volts),
+                () -> intakeIO.toAlgaeRollerVoltage(0.0)
+        );
+    }
+
+    public Command coralInstantStopCommand() {
+        return Commands.runOnce(() -> {
+                    this.coralRollerVelocitySetpoint = 0.0;
+                    intakeIO.toCoralRollerVoltage(0);
+                }
+        );
+    }
+
+    public Command algaeInstantStopCommand() {
+        return Commands.runOnce(() -> {
+                    this.algaeRollerVelocitySetpoint = 0.0;
+                    intakeIO.toAlgaeRollerVoltage(0);
+                }
+        );
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(
