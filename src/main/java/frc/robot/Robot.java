@@ -145,6 +145,26 @@ public class Robot extends LoggedRobot {
         // disable joystick not found warnings when in sim
         DriverStation.silenceJoystickConnectionWarning(Constants.CURRENT_MODE == Constants.RobotMode.SIM);
 
+        // record git metadata
+        Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
+        Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
+        Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
+        Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
+        Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
+        // no need to inspect this here because BuildConstants is a dynamically changing file upon compilation
+        //noinspection RedundantSuppression
+        switch (BuildConstants.DIRTY) {
+            //noinspection DataFlowIssue,RedundantSuppression
+            case 0 -> //noinspection UnreachableCode
+                    Logger.recordMetadata("GitDirty", "All changes committed");
+            //noinspection DataFlowIssue,RedundantSuppression
+            case 1 -> //noinspection UnreachableCode
+                    Logger.recordMetadata("GitDirty", "Uncommitted changes");
+            //noinspection DataFlowIssue,RedundantSuppression
+            default -> //noinspection UnreachableCode
+                    Logger.recordMetadata("GitDirty", "Unknown");
+        }
+
         switch (Constants.CURRENT_MODE) {
             case REAL -> {
                 try {
