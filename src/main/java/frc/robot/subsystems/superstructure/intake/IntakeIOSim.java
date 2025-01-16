@@ -3,6 +3,7 @@ package frc.robot.subsystems.superstructure.intake;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
@@ -43,7 +44,7 @@ public class IntakeIOSim implements IntakeIO {
     private final TalonFX coralRollerMotor;
     private final TalonFX algaeRollerMotor;
     private final CANcoder pivotEncoder;
-    private final CANrange CANRange;
+    private final CANrange coralCANRange;
 
     private final TalonFXSim pivotTalonFXSim;
     private final TalonFXSim coralRollerTalonFXSim;
@@ -71,8 +72,8 @@ public class IntakeIOSim implements IntakeIO {
     private final StatusSignal<Temperature> algaeDeviceTemp;
     private final StatusSignal<Angle> encoderPosition;
     private final StatusSignal<AngularVelocity> encoderVelocity;
-    private final StatusSignal<Distance> CANRangeDistance;
-    private final StatusSignal<Boolean> CANRangeIsDetected;
+    private final StatusSignal<Distance> coralCANRangeDistance;
+    private final StatusSignal<Boolean> coralCANRangeIsDetected;
 
     public IntakeIOSim(final HardwareConstants.IntakeConstants constants) {
         this.deltaTime = new DeltaTime(true);
@@ -99,7 +100,7 @@ public class IntakeIOSim implements IntakeIO {
         this.coralRollerMotor = new TalonFX(constants.coralRollerMotorID(), constants.CANBus());
         this.algaeRollerMotor = new TalonFX(constants.algaeRollerMotorID(), constants.CANBus());
         this.pivotEncoder = new CANcoder(constants.intakePivotCANCoderId(), constants.CANBus());
-        this.CANRange = new CANrange(constants.CANRangeId(), constants.CANBus());
+        this.coralCANRange = new CANrange(constants.coralCANRangeId(), constants.CANBus());
 
         this.pivotTalonFXSim = new TalonFXSim(
                 pivotMotor,
@@ -165,8 +166,8 @@ public class IntakeIOSim implements IntakeIO {
         this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
         this.encoderPosition = pivotEncoder.getPosition();
         this.encoderVelocity = pivotEncoder.getVelocity();
-        this.CANRangeDistance = CANRange.getDistance();
-        this.CANRangeIsDetected = CANRange.getIsDetected();
+        this.coralCANRangeDistance = coralCANRange.getDistance();
+        this.coralCANRangeIsDetected = coralCANRange.getIsDetected();
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
         final double dt = deltaTime.get();
@@ -266,6 +267,10 @@ public class IntakeIOSim implements IntakeIO {
         algaeConfiguration.Feedback.SensorToMechanismRatio = constants.algaeGearing();
         algaeRollerMotor.getConfigurator().apply(algaeConfiguration);
 
+        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
+        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
+        coralCANRange.getConfigurator().apply(CANRangeConfiguration);
+
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
                 pivotPosition,
@@ -282,8 +287,8 @@ public class IntakeIOSim implements IntakeIO {
                 algaeTorqueCurrent,
                 encoderPosition,
                 encoderVelocity,
-                CANRangeDistance,
-                CANRangeIsDetected
+                coralCANRangeDistance,
+                coralCANRangeIsDetected
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -298,7 +303,7 @@ public class IntakeIOSim implements IntakeIO {
                 coralRollerMotor,
                 algaeRollerMotor,
                 pivotEncoder,
-                CANRange
+                coralCANRange
         );
 
         SimUtils.setCTRETalonFXSimStateMotorInverted(pivotMotor, pivotMotorInverted);
@@ -325,10 +330,10 @@ public class IntakeIOSim implements IntakeIO {
                 algaeVoltage,
                 algaeTorqueCurrent,
                 algaeDeviceTemp,
-                CANRangeDistance,
-                CANRangeIsDetected,
                 encoderPosition,
-                encoderVelocity
+                encoderVelocity,
+                coralCANRangeDistance,
+                coralCANRangeIsDetected
         );
 
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
@@ -346,10 +351,10 @@ public class IntakeIOSim implements IntakeIO {
         inputs.algaeRollerVoltage = algaeVoltage.getValueAsDouble();
         inputs.algaeRollerTorqueCurrentAmps = algaeTorqueCurrent.getValueAsDouble();
         inputs.algaeRollerTempCelsius = algaeDeviceTemp.getValueAsDouble();
-        inputs.CANRangeDistanceMeters = CANRangeDistance.getValueAsDouble();
-        inputs.CANRangeIsDetected = CANRangeIsDetected.getValue();
         inputs.encoderPositionRots = encoderPosition.getValueAsDouble();
         inputs.encoderVelocityRotsPerSec = encoderVelocity.getValueAsDouble();
+        inputs.coralCANRangeDistanceMeters = coralCANRangeDistance.getValueAsDouble();
+        inputs.coralCANRangeIsDetected = coralCANRangeIsDetected.getValue();
     }
 
     @Override

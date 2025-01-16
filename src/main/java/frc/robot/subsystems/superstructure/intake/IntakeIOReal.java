@@ -26,7 +26,6 @@ public class IntakeIOReal implements IntakeIO {
     private final TalonFX algaeRollerMotor;
     private final CANcoder pivotEncoder;
     private final CANrange coralCANRange;
-    private final CANrange algaeCANRange;
 
     private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
     private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC;
@@ -52,8 +51,6 @@ public class IntakeIOReal implements IntakeIO {
     private final StatusSignal<AngularVelocity> encoderVelocity;
     private final StatusSignal<Distance> coralCANRangeDistance;
     private final StatusSignal<Boolean> coralCANRangeIsDetected;
-    private final StatusSignal<Distance> algaeCANRangeDistance;
-    private final StatusSignal<Boolean> algaeCANRangeIsDetected;
 
     public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
         this.constants = constants;
@@ -63,7 +60,6 @@ public class IntakeIOReal implements IntakeIO {
         this.algaeRollerMotor = new TalonFX(constants.algaeRollerMotorID(), constants.CANBus());
         this.pivotEncoder = new CANcoder(constants.intakePivotCANCoderId(), constants.CANBus());
         this.coralCANRange = new CANrange(constants.coralCANRangeId(), constants.CANBus());
-        this.algaeCANRange = new CANrange(constants.algaeCANRangeId(), constants.CANBus());
 
         this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
@@ -89,8 +85,6 @@ public class IntakeIOReal implements IntakeIO {
         this.encoderVelocity = pivotEncoder.getVelocity();
         this.coralCANRangeDistance = coralCANRange.getDistance();
         this.coralCANRangeIsDetected = coralCANRange.getIsDetected();
-        this.algaeCANRangeDistance = algaeCANRange.getDistance();
-        this.algaeCANRangeIsDetected = algaeCANRange.getIsDetected();
     }
 
     @Override
@@ -174,7 +168,6 @@ public class IntakeIOReal implements IntakeIO {
         final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
         CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
-        algaeCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
@@ -193,9 +186,7 @@ public class IntakeIOReal implements IntakeIO {
                 encoderPosition,
                 encoderVelocity,
                 coralCANRangeDistance,
-                coralCANRangeIsDetected,
-                algaeCANRangeDistance,
-                algaeCANRangeIsDetected
+                coralCANRangeIsDetected
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -210,8 +201,7 @@ public class IntakeIOReal implements IntakeIO {
                 coralRollerMotor,
                 algaeRollerMotor,
                 pivotEncoder,
-                coralCANRange,
-                algaeCANRange
+                coralCANRange
         );
     }
 
@@ -236,9 +226,7 @@ public class IntakeIOReal implements IntakeIO {
                 encoderPosition,
                 encoderVelocity,
                 coralCANRangeDistance,
-                coralCANRangeIsDetected,
-                algaeCANRangeDistance,
-                algaeCANRangeIsDetected
+                coralCANRangeIsDetected
         );
 
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
@@ -260,8 +248,6 @@ public class IntakeIOReal implements IntakeIO {
         inputs.encoderVelocityRotsPerSec = encoderVelocity.getValueAsDouble();
         inputs.coralCANRangeDistanceMeters = coralCANRangeDistance.getValueAsDouble();
         inputs.coralCANRangeIsDetected = coralCANRangeIsDetected.getValue();
-        inputs.algaeCANRangeDistanceMeters = algaeCANRangeDistance.getValueAsDouble();
-        inputs.algaeCANRangeIsDetected = algaeCANRangeIsDetected.getValue();
     }
 
     @Override

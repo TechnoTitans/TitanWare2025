@@ -64,7 +64,6 @@ public class Intake extends SubsystemBase {
     public final Trigger isAlgaePresent = new Trigger(this::isAlgaePresent);
 
     public final DoubleSupplier coralDistance = this::getCoralDistance;
-    public final DoubleSupplier algaeDistance = this::getAlgaeDistance;
 
     public static class PivotPositionSetpoint {
         public double pivotPositionRots = 0.0;
@@ -123,6 +122,7 @@ public class Intake extends SubsystemBase {
                 Seconds.of(10),
                 intakeIO::toPivotTorqueCurrent
         );
+
         this.coralRollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
                 Volts.of(10),
@@ -135,6 +135,7 @@ public class Intake extends SubsystemBase {
                 Seconds.of(10),
                 intakeIO::toCoralRollerTorqueCurrent
         );
+
         this.algaeRollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
                 Volts.of(10),
@@ -204,15 +205,11 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isAlgaePresent() {
-        return inputs.algaeCANRangeIsDetected;
+        return inputs.algaeRollerTorqueCurrentAmps >= 30;
     }
 
     private double getCoralDistance() {
         return inputs.coralCANRangeDistanceMeters;
-    }
-
-    private double getAlgaeDistance() {
-        return inputs.algaeCANRangeDistanceMeters;
     }
 
     public void setPivotGoal(final PivotGoal goal) {

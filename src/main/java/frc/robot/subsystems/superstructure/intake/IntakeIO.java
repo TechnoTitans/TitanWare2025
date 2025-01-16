@@ -28,9 +28,6 @@ public interface IntakeIO {
 
         public double coralCANRangeDistanceMeters = 0.0;
         public boolean coralCANRangeIsDetected = false;
-
-        public double algaeCANRangeDistanceMeters = 0.0;
-        public boolean algaeCANRangeIsDetected = false;
     }
 
     /**
