@@ -55,36 +55,43 @@ public class HardwareConstants {
             3
     );
 
-    public record IntakeConstants(
+    public record IntakeArmConstants(
             String CANBus,
             int intakePivotMotorID,
-            int algaeRollerMotorID,
-            int coralRollerMotorID,
             int intakePivotCANCoderId,
             double intakePivotCANCoderOffset,
-            int coralCANRangeId,
-            int algaeCANRangeId,
             double pivotGearing,
-            double algaeGearing,
-            double coralGearing,
             double pivotLowerLimitRots,
             double pivotUpperLimitRots
     ) {}
 
-    public static final IntakeConstants INTAKE = new IntakeConstants(
+    public static final IntakeArmConstants INTAKE_ARM = new IntakeArmConstants(
             RobotMap.CanivoreCANBus,
             17,
+            20,
+            0.5,
+            60,
+            0.01,
+            15
+    );
+
+    public record IntakeConstants(
+            String CANBus,
+            int algaeRollerMotorID,
+            int coralRollerMotorID,
+            int coralCANRangeId,
+            int algaeCANRangeId,
+            double algaeGearing,
+            double coralGearing
+    ) {}
+
+    public static final IntakeConstants INTAKE = new IntakeConstants(
+            RobotMap.CanivoreCANBus,
             18,
             19,
             20,
-            0.5,
-            21,
             22,
-            60,
             4,
-            4,
-            0.01,
-            15
-
+            4
     );
 }

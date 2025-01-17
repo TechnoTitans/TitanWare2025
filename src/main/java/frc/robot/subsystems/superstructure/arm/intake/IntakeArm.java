@@ -1,4 +1,4 @@
-package frc.robot.subsystems.superstructure.intake;
+package frc.robot.subsystems.superstructure.arm.intake;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
@@ -20,55 +20,35 @@ import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Consumer;
-import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.*;
 
-public class Intake extends SubsystemBase {
-    protected static final String LogKey = "Intake";
+public class IntakeArm extends SubsystemBase {
+    protected static final String LogKey = "IntakeArm";
     private static final double PositionToleranceRots = 0.005;
     private static final double VelocityToleranceRotsPerSec = 0.01;
 
-    private final IntakeIO intakeIO;
-    private final IntakeIOInputsAutoLogged inputs;
+    private final IntakeArmIO intakeIO;
+    private final IntakeArmIOInputsAutoLogged inputs;
 
     private final SysIdRoutine pivotVoltageSysIdRoutine;
     private final SysIdRoutine pivotTorqueCurrentSysIdRoutine;
-    private final SysIdRoutine coralRollerVoltageSysIdRoutine;
-    private final SysIdRoutine coralRollerTorqueCurrentSysIdRoutine;
-    private final SysIdRoutine algaeRollerVoltageSysIdRoutine;
-    private final SysIdRoutine algaeRollerTorqueCurrentSysIdRoutine;
 
-    private PivotGoal desiredPivotGoal = PivotGoal.STOW;
-    private PivotGoal currentPivotGoal = desiredPivotGoal;
+    private IntakeArm.PivotGoal desiredPivotGoal = IntakeArm.PivotGoal.STOW;
+    private IntakeArm.PivotGoal currentPivotGoal = desiredPivotGoal;
 
-    private double coralRollerVelocitySetpoint = 0.0;
-    private double algaeRollerVelocitySetpoint = 0.0;
-
-    private final PivotPositionSetpoint pivotPositionSetpoint;
-    private final PivotPositionSetpoint pivotLowerLimit;
-    private final PivotPositionSetpoint pivotUpperLimit;
+    private final IntakeArm.PivotPositionSetpoint pivotPositionSetpoint;
+    private final IntakeArm.PivotPositionSetpoint pivotLowerLimit;
+    private final IntakeArm.PivotPositionSetpoint pivotUpperLimit;
 
     public final Trigger atPivotPositionSetpoint = new Trigger(this::atPivotPositionSetpoint);
     public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
     public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
 
-    public final Trigger isCoralIntaking = new Trigger(() -> coralRollerVelocitySetpoint > 0.0);
-    public final Trigger isCoralOuttaking = new Trigger(() -> coralRollerVelocitySetpoint < 0.0);
-    public final Trigger isCoralIntakeStopped = isCoralIntaking.negate().and(isCoralOuttaking.negate());
-    public final Trigger isAlgaeIntaking = new Trigger(() -> algaeRollerVelocitySetpoint > 0.0);
-    public final Trigger isAlgaeOuttaking = new Trigger(() -> algaeRollerVelocitySetpoint < 0.0);
-    public final Trigger isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
-
-    public final Trigger isCoralPresent = new Trigger(this::isCoralPresent);
-    public final Trigger isAlgaePresent = new Trigger(this::isAlgaePresent);
-
-    public final DoubleSupplier coralDistance = this::getCoralDistance;
-
     public static class PivotPositionSetpoint {
         public double pivotPositionRots = 0.0;
 
-        public PivotPositionSetpoint withPivotPositionRots(final double pivotPositionRots) {
+        public IntakeArm.PivotPositionSetpoint withPivotPositionRots(final double pivotPositionRots) {
             this.pivotPositionRots = pivotPositionRots;
             return this;
         }
@@ -101,14 +81,14 @@ public class Intake extends SubsystemBase {
         }
     }
 
-    public Intake(final Constants.RobotMode mode, final HardwareConstants.IntakeConstants constants) {
+    public IntakeArm(final Constants.RobotMode mode, final HardwareConstants.IntakeArmConstants constants) {
         this.intakeIO = switch (mode) {
-            case REAL -> new IntakeIOReal(constants);
-            case SIM -> new IntakeIOSim(constants);
-            case REPLAY, DISABLED -> new IntakeIO() {};
+            case REAL -> new IntakeArmIOReal(constants);
+            case SIM -> new IntakeArmIOSim(constants);
+            case REPLAY, DISABLED -> new IntakeArmIO() {};
         };
 
-        this.inputs = new IntakeIOInputsAutoLogged();
+        this.inputs = new IntakeArmIOInputsAutoLogged();
 
         this.pivotVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
@@ -123,35 +103,9 @@ public class Intake extends SubsystemBase {
                 intakeIO::toPivotTorqueCurrent
         );
 
-        this.coralRollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(2).per(Second),
-                Volts.of(10),
-                Seconds.of(10),
-                intakeIO::toCoralRollerVoltage
-        );
-        this.coralRollerTorqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
-                Amps.of(4).per(Second),
-                Amp.of(40),
-                Seconds.of(10),
-                intakeIO::toCoralRollerTorqueCurrent
-        );
-
-        this.algaeRollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(2).per(Second),
-                Volts.of(10),
-                Seconds.of(10),
-                intakeIO::toAlgaeRollerVoltage
-        );
-        this.algaeRollerTorqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
-                Amps.of(4).per(Second),
-                Amp.of(40),
-                Seconds.of(10),
-                intakeIO::toAlgaeRollerTorqueCurrent
-        );
-
-        this.pivotPositionSetpoint = new PivotPositionSetpoint();
-        this.pivotLowerLimit = new PivotPositionSetpoint().withPivotPositionRots(constants.pivotLowerLimitRots());
-        this.pivotUpperLimit = new PivotPositionSetpoint().withPivotPositionRots(constants.pivotUpperLimitRots());
+        this.pivotPositionSetpoint = new IntakeArm.PivotPositionSetpoint();
+        this.pivotLowerLimit = new IntakeArm.PivotPositionSetpoint().withPivotPositionRots(constants.pivotLowerLimitRots());
+        this.pivotUpperLimit = new IntakeArm.PivotPositionSetpoint().withPivotPositionRots(constants.pivotUpperLimitRots());
 
         this.intakeIO.config();
     }
@@ -178,9 +132,6 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/AtLowerLimit", atPivotLowerLimit());
         Logger.recordOutput(LogKey + "/AtUpperLimit", atPivotUpperLimit());
 
-        Logger.recordOutput(LogKey + "/CoralRollerVelocitySetpoint", coralRollerVelocitySetpoint);
-        Logger.recordOutput(LogKey + "/AlgaeRollerVelocitySetpoint", algaeRollerVelocitySetpoint);
-
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - intakePeriodicUpdateStart)
@@ -200,78 +151,10 @@ public class Intake extends SubsystemBase {
         return inputs.pivotPositionRots >= pivotUpperLimit.pivotPositionRots;
     }
 
-    private boolean isCoralPresent() {
-        return inputs.coralCANRangeIsDetected;
-    }
-
-    private boolean isAlgaePresent() {
-        return inputs.algaeRollerTorqueCurrentAmps >= 30;
-    }
-
-    private double getCoralDistance() {
-        return inputs.coralCANRangeDistanceMeters;
-    }
-
-    public void setPivotGoal(final PivotGoal goal) {
+    public void setPivotGoal(final IntakeArm.PivotGoal goal) {
         this.desiredPivotGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
-    }
-
-    public Command runCoralRollerVelocity(final double velocityRotsPerSec) {
-        return runEnd(
-                () -> {
-                    coralRollerVelocitySetpoint = velocityRotsPerSec;
-                    intakeIO.toCoralRollerVelocity(velocityRotsPerSec);
-                },
-                () -> {
-                    coralRollerVelocitySetpoint = 0.0;
-                    intakeIO.toCoralRollerVelocity(0.0);
-                }
-        );
-    }
-
-    public Command runAlgaeRollerVelocity(final double velocityRotsPerSec) {
-        return runEnd(
-                () -> {
-                    algaeRollerVelocitySetpoint = velocityRotsPerSec;
-                    intakeIO.toAlgaeRollerVelocity(velocityRotsPerSec);
-                },
-                () -> {
-                    algaeRollerVelocitySetpoint = 0.0;
-                    intakeIO.toAlgaeRollerVelocity(0.0);
-                }
-        );
-    }
-
-    public Command runCoralRollerVoltage(final double volts) {
-        return runEnd(
-                () -> intakeIO.toCoralRollerVoltage(volts),
-                () -> intakeIO.toCoralRollerVoltage(0.0)
-        );
-    }
-
-    public Command runAlgaeRollerVoltage(final double volts) {
-        return runEnd(
-                () -> intakeIO.toAlgaeRollerVoltage(volts),
-                () -> intakeIO.toAlgaeRollerVoltage(0.0)
-        );
-    }
-
-    public Command coralInstantStopCommand() {
-        return Commands.runOnce(() -> {
-                    this.coralRollerVelocitySetpoint = 0.0;
-                    intakeIO.toCoralRollerVoltage(0);
-                }
-        );
-    }
-
-    public Command algaeInstantStopCommand() {
-        return Commands.runOnce(() -> {
-                    this.algaeRollerVelocitySetpoint = 0.0;
-                    intakeIO.toAlgaeRollerVoltage(0);
-                }
-        );
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(
@@ -345,19 +228,5 @@ public class Intake extends SubsystemBase {
     }
     public Command pivotTorqueCurrentSysIdCommand() {
         return makePivotSysIdCommand(pivotTorqueCurrentSysIdRoutine);
-    }
-
-    public Command coralVoltageSysIdCommand() {
-        return makeRollerSysIdCommand(coralRollerVoltageSysIdRoutine);
-    }
-    public Command coralTorqueCurrentSysIdCommand() {
-        return makeRollerSysIdCommand(coralRollerTorqueCurrentSysIdRoutine);
-    }
-
-    public Command algaeVoltageSysIdCommand() {
-        return makeRollerSysIdCommand(algaeRollerVoltageSysIdRoutine);
-    }
-    public Command algaeTorqueCurrentSysIdCommand() {
-        return makeRollerSysIdCommand(algaeRollerTorqueCurrentSysIdRoutine);
     }
 }

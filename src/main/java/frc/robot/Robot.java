@@ -19,10 +19,11 @@ import frc.robot.constants.RobotMap;
 import frc.robot.state.GamePieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.superstructure.arm.Arm;
+import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
+import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
-import frc.robot.subsystems.superstructure.intake.Intake;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.logging.LogUtils;
@@ -75,8 +76,7 @@ public class Robot extends LoggedRobot {
             Constants.CURRENT_MODE,
             HardwareConstants.ELEVATOR
     );
-
-    public final Arm arm = new Arm(
+    public final ElevatorArm elevatorArm = new ElevatorArm(
             Constants.CURRENT_MODE,
             HardwareConstants.ARM
     );
@@ -85,11 +85,15 @@ public class Robot extends LoggedRobot {
             Constants.CURRENT_MODE,
             HardwareConstants.INTAKE
     );
+    public final IntakeArm intakeArm = new IntakeArm(
+            Constants.CURRENT_MODE,
+            HardwareConstants.INTAKE_ARM
+    );
 
-    public final Superstructure superstructure = new Superstructure(elevator, arm, intake);
+    public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
 
     public final GamePieceState gamePieceState = new GamePieceState(intake);
-    public final ScoreCommands scoreCommands = new ScoreCommands(swerve, intake, superstructure, gamePieceState);
+    public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
 
     public final Autos autos = new Autos(swerve, photonVision);
     public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(

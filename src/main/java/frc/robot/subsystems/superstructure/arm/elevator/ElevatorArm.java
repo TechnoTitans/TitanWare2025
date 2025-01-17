@@ -1,4 +1,4 @@
-package frc.robot.subsystems.superstructure.arm;
+package frc.robot.subsystems.superstructure.arm.elevator;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
@@ -22,13 +22,13 @@ import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.*;
 
-public class Arm extends SubsystemBase {
-    protected static final String LogKey = "Arm";
+public class ElevatorArm extends SubsystemBase {
+    protected static final String LogKey = "ElevatorArm";
     private static final double PositionToleranceRots = 0.005;
     private static final double VelocityToleranceRotsPerSec = 0.01;
 
-    private final ArmIO armIO;
-    private final ArmIOInputsAutoLogged inputs;
+    private final ElevatorArmIO elevatorArmIO;
+    private final ElevatorArmIOInputsAutoLogged inputs;
 
     private final SysIdRoutine voltageSysIdRoutine;
     private final SysIdRoutine torqueCurrentSysIdRoutine;
@@ -73,14 +73,14 @@ public class Arm extends SubsystemBase {
         }
     }
 
-    public Arm(final Constants.RobotMode mode, final HardwareConstants.ArmConstants constants) {
-        this.armIO = switch (mode) {
-            case REAL -> new ArmIOReal(constants);
-            case SIM -> new ArmIOSim(constants);
-            case REPLAY, DISABLED -> new ArmIO() {};
+    public ElevatorArm(final Constants.RobotMode mode, final HardwareConstants.ArmConstants constants) {
+        this.elevatorArmIO = switch (mode) {
+            case REAL -> new ElevatorArmIOReal(constants);
+            case SIM -> new ElevatorArmIOSim(constants);
+            case REPLAY, DISABLED -> new ElevatorArmIO() {};
         };
 
-        this.inputs = new ArmIOInputsAutoLogged();
+        this.inputs = new ElevatorArmIOInputsAutoLogged();
 
         this.voltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(4).per(Second),
@@ -97,19 +97,19 @@ public class Arm extends SubsystemBase {
         this.pivotLowerSetpoint = new PositionSetpoint().withPivotPositionRots(constants.lowerLimitRots());
         this.pivotUpperSetpoint = new PositionSetpoint().withPivotPositionRots(constants.upperLimitRots());
 
-        this.armIO.config();
+        this.elevatorArmIO.config();
     }
 
     @Override
     public void periodic() {
         final double armPeriodicUpdateStart = RobotController.getFPGATime();
 
-        armIO.updateInputs(inputs);
+        elevatorArmIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
         if (currentGoal != desiredGoal) {
             setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
-            armIO.toPivotPosition(setpoint.pivotPositionRots);
+            elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
 
             this.currentGoal = desiredGoal;
         }
@@ -159,7 +159,7 @@ public class Arm extends SubsystemBase {
                         state -> SignalLogger.writeString(String.format("%s-state", LogKey), state.toString())
                 ),
                 new SysIdRoutine.Mechanism(
-                        voltageMeasure -> armIO.toPivotVoltage(
+                        voltageMeasure -> elevatorArmIO.toPivotVoltage(
                                 voltageMeasure.in(Volts)
                         ),
                         null,
@@ -181,7 +181,7 @@ public class Arm extends SubsystemBase {
                         state -> SignalLogger.writeString(String.format("%s-state", LogKey), state.toString())
                 ),
                 new SysIdRoutine.Mechanism(
-                        voltageMeasure -> armIO.toPivotTorqueCurrent(
+                        voltageMeasure -> elevatorArmIO.toPivotTorqueCurrent(
                                 voltageMeasure.in(Volts)
                         ),
                         null,

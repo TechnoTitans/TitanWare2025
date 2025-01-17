@@ -1,4 +1,4 @@
-package frc.robot.subsystems.superstructure.arm;
+package frc.robot.subsystems.superstructure.arm.elevator;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -12,14 +12,33 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.HardwareConstants;
+import frc.robot.constants.SimConstants;
+import frc.robot.utils.closeables.ToClose;
+import frc.robot.utils.control.DeltaTime;
+import frc.robot.utils.sim.SimUtils;
+import frc.robot.utils.sim.feedback.SimCANCoder;
+import frc.robot.utils.sim.motors.TalonFXSim;
 
-public class ArmIOReal implements ArmIO {
+import java.util.concurrent.ThreadLocalRandom;
+
+public class ElevatorArmIOSim implements ElevatorArmIO {
+    private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
+
+    private final DeltaTime deltaTime;
     private final HardwareConstants.ArmConstants constants;
+
+    private final SingleJointedArmSim pivotSim;
 
     private final TalonFX pivotMotor;
     private final CANcoder pivotCANCoder;
+    private final TalonFXSim pivotMotorSim;
 
     private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
     private final TorqueCurrentFOC torqueCurrentFOC;
@@ -33,11 +52,39 @@ public class ArmIOReal implements ArmIO {
     private final StatusSignal<Angle> pivotCANCoderPosition;
     private final StatusSignal<AngularVelocity> pivotCANCoderVelocity;
 
-    public ArmIOReal(final HardwareConstants.ArmConstants constants) {
+    public ElevatorArmIOSim(final HardwareConstants.ArmConstants constants) {
+        this.deltaTime = new DeltaTime(true);
         this.constants = constants;
+
+        this.pivotSim = new SingleJointedArmSim(
+                LinearSystemId.identifyPositionSystem(
+                        13.97 / (2d * Math.PI),
+                        0.03 / (2d * Math.PI)
+                ),
+                DCMotor.getKrakenX60(1),
+                constants.gearing(),
+                SimConstants.Arm.LENGTH_METERS,
+                Units.rotationsToRadians(constants.lowerLimitRots()),
+                Math.PI,
+                true,
+                ThreadLocalRandom.current().nextDouble(
+                        Units.rotationsToRadians(constants.lowerLimitRots()),
+                        Units.rotationsToRadians(constants.upperLimitRots())
+                )
+        );
 
         this.pivotMotor = new TalonFX(constants.motorId(), constants.CANBus());
         this.pivotCANCoder = new CANcoder(constants.CANCoderId(), constants.CANBus());
+
+        this.pivotMotorSim = new TalonFXSim(
+                pivotMotor,
+                constants.gearing(),
+                pivotSim::update,
+                pivotSim::setInputVoltage,
+                pivotSim::getAngleRads,
+                pivotSim::getVelocityRadPerSec
+        );
+        this.pivotMotorSim.attachFeedbackSensor(new SimCANCoder(pivotCANCoder));
 
         this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -50,15 +97,28 @@ public class ArmIOReal implements ArmIO {
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
         this.pivotCANCoderPosition = pivotCANCoder.getPosition();
         this.pivotCANCoderVelocity = pivotCANCoder.getVelocity();
+
+        final Notifier simUpdateNotifier = new Notifier(() -> {
+        final double dt = deltaTime.get();
+            pivotMotorSim.update(dt);
+        });
+        ToClose.add(simUpdateNotifier);
+        simUpdateNotifier.setName(String.format(
+                "SimUpdate(%d)",
+                pivotMotor.getDeviceID()
+        ));
+        simUpdateNotifier.startPeriodic(SIM_UPDATE_PERIOD_SEC);
     }
 
     @Override
     public void config() {
+        final SensorDirectionValue pivotCANCoderSensorDirection = SensorDirectionValue.Clockwise_Positive;
         final CANcoderConfiguration pivotCANCoderConfig = new CANcoderConfiguration();
         pivotCANCoderConfig.MagnetSensor.MagnetOffset = constants.CANCoderOffset();
-        pivotCANCoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+        pivotCANCoderConfig.MagnetSensor.SensorDirection = pivotCANCoderSensorDirection;
         pivotCANCoder.getConfigurator().apply(pivotCANCoderConfig);
 
+        final InvertedValue pivotMotorInverted = InvertedValue.Clockwise_Positive;
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig.Slot0 = new Slot0Configs()
                 .withKS(0)
@@ -82,7 +142,7 @@ public class ArmIOReal implements ArmIO {
         pivotMotorConfig.Feedback.FeedbackRemoteSensorID = pivotCANCoder.getDeviceID();
         pivotMotorConfig.Feedback.RotorToSensorRatio = constants.gearing();
         pivotMotorConfig.Feedback.SensorToMechanismRatio = 1;
-        pivotMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        pivotMotorConfig.MotorOutput.Inverted = pivotMotorInverted;
         pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.upperLimitRots();
         pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
@@ -107,10 +167,13 @@ public class ArmIOReal implements ArmIO {
                 pivotMotor,
                 pivotCANCoder
         );
+
+        SimUtils.setCTRETalonFXSimStateMotorInverted(pivotMotor, pivotMotorInverted);
+        SimUtils.setCTRECANCoderSimStateSensorDirection(pivotCANCoder, pivotCANCoderSensorDirection);
     }
 
     @Override
-    public void updateInputs(final ArmIOInputs inputs) {
+    public void updateInputs(final ElevatorArmIOInputs inputs) {
         BaseStatusSignal.refreshAll(
                 pivotPosition,
                 pivotVelocity,

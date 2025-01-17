@@ -1,10 +1,10 @@
-package frc.robot.subsystems.superstructure.arm;
+package frc.robot.subsystems.superstructure.arm.elevator;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface ArmIO {
+public interface ElevatorArmIO {
     @AutoLog
-    class ArmIOInputs {
+    class ElevatorArmIOInputs {
         double pivotPositionRots = 0.0;
         double pivotVelocityRotsPerSec = 0.0;
         double pivotVoltageVolts = 0.0;
@@ -18,10 +18,10 @@ public interface ArmIO {
     /**
      * Updates the set of loggable inputs.
      * @param inputs Logged class of IOInputs
-     * @see ArmIOInputs
+     * @see ElevatorArmIOInputs
      * @see AutoLog
      */
-    default void updateInputs(final ArmIOInputs inputs) {}
+    default void updateInputs(final ElevatorArmIOInputs inputs) {}
 
     default void config() {}
 

@@ -4,9 +4,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.superstructure.arm.Arm;
+import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
+import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
-import frc.robot.subsystems.superstructure.intake.Intake;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
@@ -16,47 +16,51 @@ public class Superstructure extends VirtualSubsystem {
     protected static final String LogKey = "Superstructure";
 
     private final Elevator elevator;
-    private final Arm arm;
-    private final Intake intake;
+    private final ElevatorArm elevatorArm;
+    private final IntakeArm intakeArm;
 
     private SuperstructureGoal desiredSuperstructureGoal = SuperstructureGoal.IDLE;
     private SuperstructureGoal currentSuperstructureGoal = desiredSuperstructureGoal;
     public final Trigger atSuperstructureSetpoint;
 
     public enum SuperstructureGoal {
-        STOW(Elevator.Goal.IDLE, Arm.Goal.STOW, Intake.PivotGoal.STOW),
-        IDLE(Elevator.Goal.IDLE, Arm.Goal.UPRIGHT, Intake.PivotGoal.STOW),
-        CLIMB(Elevator.Goal.IDLE, Arm.Goal.CLIMB, Intake.PivotGoal.STOW),
-        ALGAE_GROUND(Elevator.Goal.IDLE, Arm.Goal.UPRIGHT, Intake.PivotGoal.ALGAE_GROUND),
-        HP(Elevator.Goal.HP, Arm.Goal.UPRIGHT, Intake.PivotGoal.HP),
-        L1(Elevator.Goal.L1, Arm.Goal.UPRIGHT, Intake.PivotGoal.L1),
-        L2(Elevator.Goal.L2, Arm.Goal.UPRIGHT, Intake.PivotGoal.L2),
-        L3(Elevator.Goal.L3, Arm.Goal.UPRIGHT, Intake.PivotGoal.L3),
-        L4(Elevator.Goal.L4, Arm.Goal.UPRIGHT, Intake.PivotGoal.L4),
-        NET(Elevator.Goal.NET, Arm.Goal.UPRIGHT, Intake.PivotGoal.NET);
+        STOW(Elevator.Goal.IDLE, ElevatorArm.Goal.STOW, IntakeArm.PivotGoal.STOW),
+        IDLE(Elevator.Goal.IDLE, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.STOW),
+        CLIMB(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB, IntakeArm.PivotGoal.STOW),
+        ALGAE_GROUND(Elevator.Goal.IDLE, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.ALGAE_GROUND),
+        HP(Elevator.Goal.HP, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.HP),
+        L1(Elevator.Goal.L1, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.L1),
+        L2(Elevator.Goal.L2, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.L2),
+        L3(Elevator.Goal.L3, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.L3),
+        L4(Elevator.Goal.L4, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.L4),
+        NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.NET);
 
         private final Elevator.Goal elevatorGoal;
-        private final Arm.Goal armGoal;
-        private final Intake.PivotGoal intakePivotGoal;
+        private final ElevatorArm.Goal armGoal;
+        private final IntakeArm.PivotGoal intakeArmGoal;
 
         SuperstructureGoal(
                 final Elevator.Goal elevatorGoal,
-                final Arm.Goal armGoal,
-                final Intake.PivotGoal intakePivotGoal
+                final ElevatorArm.Goal armGoal,
+                final IntakeArm.PivotGoal intakeArmGoal
         ) {
             this.elevatorGoal = elevatorGoal;
             this.armGoal = armGoal;
-            this.intakePivotGoal = intakePivotGoal;
+            this.intakeArmGoal = intakeArmGoal;
         }
     }
 
-    public Superstructure(final Elevator elevator, final Arm arm, final Intake intake) {
+    public Superstructure(
+            final Elevator elevator,
+            final ElevatorArm elevatorArm,
+            final IntakeArm intakeArm
+    ) {
         this.elevator = elevator;
-        this.arm = arm;
-        this.intake = intake;
+        this.elevatorArm = elevatorArm;
+        this.intakeArm = intakeArm;
         this.atSuperstructureSetpoint = elevator.atSetpoint
-                .and(arm.atPivotSetpoint)
-                .and(intake.atPivotPositionSetpoint)
+                .and(elevatorArm.atPivotSetpoint)
+                .and(intakeArm.atPivotPositionSetpoint)
                 .and(() -> currentSuperstructureGoal == desiredSuperstructureGoal);
     }
 
@@ -64,8 +68,8 @@ public class Superstructure extends VirtualSubsystem {
     public void periodic() {
         if (desiredSuperstructureGoal != currentSuperstructureGoal) {
             elevator.setGoal(desiredSuperstructureGoal.elevatorGoal);
-            arm.setGoal(desiredSuperstructureGoal.armGoal);
-            intake.setPivotGoal(desiredSuperstructureGoal.intakePivotGoal);
+            elevatorArm.setGoal(desiredSuperstructureGoal.armGoal);
+            intakeArm.setPivotGoal(desiredSuperstructureGoal.intakeArmGoal);
             this.currentSuperstructureGoal = desiredSuperstructureGoal;
         }
 
@@ -90,33 +94,33 @@ public class Superstructure extends VirtualSubsystem {
     }
 
     public Set<Subsystem> getRequirements() {
-        return Set.of(elevator, arm, intake);
+        return Set.of(elevator, elevatorArm, intakeArm);
     }
 
-    public Command intakeHPCoralCommand() {
-        return Commands.sequence(
-                Commands.parallel(
-                        intake.runCoralRollerVelocity(1),
-                        toSuperstructureGoal(SuperstructureGoal.HP)
-                ).until(intake.isCoralPresent),
-                Commands.parallel(
-                        intake.coralInstantStopCommand(),
-                        toSuperstructureGoal(SuperstructureGoal.IDLE)
-                )
-        );
-    }
-
-    public Command intakeAlgaeFromLevelCommand(final SuperstructureGoal superstructureGoal) {
-        return Commands.sequence(
-                Commands.parallel(
-                        intake.runAlgaeRollerVelocity(2),
-                        toSuperstructureGoal(superstructureGoal)
-                ).until(intake.isAlgaePresent),
-                Commands.parallel(
-                        intake.algaeInstantStopCommand(),
-                        toSuperstructureGoal(SuperstructureGoal.IDLE)
-                                .onlyIf(intake.isCoralPresent)
-                )
-        );
-    }
+//    public Command intakeHPCoralCommand() {
+//        return Commands.sequence(
+//                Commands.parallel(
+//                        intake.runCoralRollerVelocity(1),
+//                        toSuperstructureGoal(SuperstructureGoal.HP)
+//                ).until(intake.isCoralPresent),
+//                Commands.parallel(
+//                        intake.coralInstantStopCommand(),
+//                        toSuperstructureGoal(SuperstructureGoal.IDLE)
+//                )
+//        );
+//    }
+//
+//    public Command intakeAlgaeFromLevelCommand(final SuperstructureGoal superstructureGoal) {
+//        return Commands.sequence(
+//                Commands.parallel(
+//                        intake.runAlgaeRollerVelocity(2),
+//                        toSuperstructureGoal(superstructureGoal)
+//                ).until(intake.isAlgaePresent),
+//                Commands.parallel(
+//                        intake.algaeInstantStopCommand(),
+//                        toSuperstructureGoal(SuperstructureGoal.IDLE)
+//                                .onlyIf(intake.isCoralPresent)
+//                )
+//        );
+//    }
 }

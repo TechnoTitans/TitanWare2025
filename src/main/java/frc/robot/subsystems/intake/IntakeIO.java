@@ -1,16 +1,10 @@
-package frc.robot.subsystems.superstructure.intake;
+package frc.robot.subsystems.intake;
 
 import org.littletonrobotics.junction.AutoLog;
 
 public interface IntakeIO {
     @AutoLog
     class IntakeIOInputs {
-        public double pivotPositionRots = 0.0;
-        public double pivotVelocityRotsPerSec = 0.0;
-        public double pivotVoltage = 0.0;
-        public double pivotTorqueCurrentAmps = 0.0;
-        public double pivotTempCelsius = 0.0;
-
         public double coralRollerPositionRots = 0.0;
         public double coralRollerVelocityRotsPerSec = 0.0;
         public double coralRollerVoltage = 0.0;
@@ -22,9 +16,6 @@ public interface IntakeIO {
         public double algaeRollerVoltage = 0.0;
         public double algaeRollerTorqueCurrentAmps = 0.0;
         public double algaeRollerTempCelsius = 0.0;
-
-        public double encoderPositionRots = 0.0;
-        public double encoderVelocityRotsPerSec = 0.0;
 
         public double coralCANRangeDistanceMeters = 0.0;
         public boolean coralCANRangeIsDetected = false;
@@ -40,12 +31,6 @@ public interface IntakeIO {
     default void updateInputs(final IntakeIOInputs inputs) {}
 
     default void config() {}
-
-    default void toPivotPosition(final double pivotPositionRots) {}
-
-    default void toPivotVoltage(final double volts) {}
-
-    default void toPivotTorqueCurrent(final double torqueCurrentAmps) {}
 
     default void toCoralRollerVelocity(final double coralRollerVelocityRotsPerSec) {}
 
