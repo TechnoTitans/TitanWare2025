@@ -7,8 +7,8 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
-public class GamePieceState extends VirtualSubsystem {
-    protected static final String LogKey = "GamePieceState";
+public class GamepieceState extends VirtualSubsystem {
+    protected static final String LogKey = "GamepieceState";
 
     private final Intake intake;
 
@@ -35,7 +35,7 @@ public class GamePieceState extends VirtualSubsystem {
     public final Trigger hasCoral = isCoralHeld.or(isCoralScoring);
     public final Trigger hasAlgae = isAlgaeHeld.or(isAlgaeScoring);
 
-    public GamePieceState(final Intake intake) {
+    public GamepieceState(final Intake intake) {
         this.intake = intake;
 
         configureStateTriggers();

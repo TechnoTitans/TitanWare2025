@@ -117,6 +117,14 @@ public class Intake extends SubsystemBase {
         return inputs.coralCANRangeDistanceMeters;
     }
 
+    public Command scoreCoral() {
+        return runCoralRollerVelocity(-2)
+                .onlyIf(isCoralPresent)
+                .until(isCoralPresent.negate())
+                .withTimeout(2)
+                .andThen(coralInstantStopCommand());
+    }
+
     public Command runCoralRollerVelocity(final double velocityRotsPerSec) {
         return runEnd(
                 () -> {

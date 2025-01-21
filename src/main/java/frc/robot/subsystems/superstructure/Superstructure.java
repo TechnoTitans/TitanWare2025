@@ -11,6 +11,7 @@ import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
     protected static final String LogKey = "Superstructure";
@@ -19,11 +20,11 @@ public class Superstructure extends VirtualSubsystem {
     private final ElevatorArm elevatorArm;
     private final IntakeArm intakeArm;
 
-    private SuperstructureGoal desiredSuperstructureGoal = SuperstructureGoal.IDLE;
-    private SuperstructureGoal currentSuperstructureGoal = desiredSuperstructureGoal;
+    private Goal desiredGoal = Goal.IDLE;
+    private Goal currentGoal = desiredGoal;
     public final Trigger atSuperstructureSetpoint;
 
-    public enum SuperstructureGoal {
+    public enum Goal {
         STOW(Elevator.Goal.IDLE, ElevatorArm.Goal.STOW, IntakeArm.PivotGoal.STOW),
         IDLE(Elevator.Goal.IDLE, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.STOW),
         CLIMB(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB, IntakeArm.PivotGoal.STOW),
@@ -39,7 +40,7 @@ public class Superstructure extends VirtualSubsystem {
         private final ElevatorArm.Goal armGoal;
         private final IntakeArm.PivotGoal intakeArmGoal;
 
-        SuperstructureGoal(
+        Goal(
                 final Elevator.Goal elevatorGoal,
                 final ElevatorArm.Goal armGoal,
                 final IntakeArm.PivotGoal intakeArmGoal
@@ -61,36 +62,41 @@ public class Superstructure extends VirtualSubsystem {
         this.atSuperstructureSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atPivotSetpoint)
                 .and(intakeArm.atPivotPositionSetpoint)
-                .and(() -> currentSuperstructureGoal == desiredSuperstructureGoal);
+                .and(() -> currentGoal == desiredGoal);
     }
 
     @Override
     public void periodic() {
-        if (desiredSuperstructureGoal != currentSuperstructureGoal) {
-            elevator.setGoal(desiredSuperstructureGoal.elevatorGoal);
-            elevatorArm.setGoal(desiredSuperstructureGoal.armGoal);
-            intakeArm.setPivotGoal(desiredSuperstructureGoal.intakeArmGoal);
-            this.currentSuperstructureGoal = desiredSuperstructureGoal;
+        if (desiredGoal != currentGoal) {
+            elevator.setGoal(desiredGoal.elevatorGoal);
+            elevatorArm.setGoal(desiredGoal.armGoal);
+            intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
+            this.currentGoal = desiredGoal;
         }
 
-        Logger.recordOutput(LogKey + "/SuperstructureGoal", currentSuperstructureGoal.toString());
+        Logger.recordOutput(LogKey + "/SuperstructureGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint.getAsBoolean());
     }
 
-    public SuperstructureGoal getDesiredSuperstructureGoal() {
-        return desiredSuperstructureGoal;
+    public Goal getDesiredSuperstructureGoal() {
+        return desiredGoal;
     }
 
-    public Command toInstantSuperstructureGoal(final SuperstructureGoal superstructureGoal) {
+    public Command toInstantSuperstructureGoal(final Goal goal) {
         return Commands.runOnce(
-            () -> this.desiredSuperstructureGoal = superstructureGoal
+            () -> this.desiredGoal = goal
         );
     }
-    public Command toSuperstructureGoal(final SuperstructureGoal superstructureGoal) {
-        return Commands.runEnd(() -> this.desiredSuperstructureGoal = superstructureGoal, () -> this.desiredSuperstructureGoal = SuperstructureGoal.IDLE);
+    public Command toSuperstructureGoal(final Goal goal) {
+        return Commands.runEnd(() -> this.desiredGoal = goal, () -> this.desiredGoal = Goal.IDLE);
     }
-    public Command runSuperstructureGoal(final SuperstructureGoal superstructureGoal) {
-        return Commands.run(() -> this.desiredSuperstructureGoal = superstructureGoal);
+
+    public Command runSuperstructureGoal(final Goal goal) {
+        return Commands.run(() -> this.desiredGoal = goal);
+    }
+
+    public Command runSuperstructureGoal(final Supplier<Goal> goalSupplier) {
+        return Commands.run(() -> this.desiredGoal = goalSupplier.get());
     }
 
     public Set<Subsystem> getRequirements() {

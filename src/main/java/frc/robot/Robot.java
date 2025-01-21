@@ -1,6 +1,9 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -16,7 +19,7 @@ import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
-import frc.robot.state.GamePieceState;
+import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.intake.Intake;
@@ -43,6 +46,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 public class Robot extends LoggedRobot {
     private static final String AKitLogPath = "/U/logs";
@@ -92,7 +96,7 @@ public class Robot extends LoggedRobot {
 
     public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
 
-    public final GamePieceState gamePieceState = new GamePieceState(intake);
+    public final GamepieceState gamePieceState = new GamepieceState(intake);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
 
     public final Autos autos = new Autos(swerve, photonVision);
@@ -241,6 +245,21 @@ public class Robot extends LoggedRobot {
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
+
+        Logger.recordOutput("ZeroedRobotPose", new Pose3d());
+        Logger.recordOutput("ZeroedComponentPoses", new Pose3d[]{
+                new Pose3d(),
+                new Pose3d(),
+                new Pose3d(),
+                new Pose3d()
+        });
+        Logger.recordOutput("FinalComponentPoses", new Pose3d[]{
+                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0)),
+                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0)),
+                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0)),
+                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0))
+        });
+
         Threads.setCurrentThreadPriority(true, 10);
     }
 
@@ -296,7 +315,21 @@ public class Robot extends LoggedRobot {
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
         this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
-        this.driverController.leftBumper(teleopEventLoop).whileTrue(Commands.startEnd(() -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST), () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)));
-        this.driverController.rightBumper(teleopEventLoop).whileTrue(Commands.startEnd(() -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW), () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)));
+        this.driverController.leftBumper(teleopEventLoop)
+                .whileTrue(Commands.startEnd(
+                        () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST),
+                        () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
+                ));
+        this.driverController.rightBumper(teleopEventLoop)
+                .whileTrue(Commands.startEnd(
+                        () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW),
+                        () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
+                ));
+
+        final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
+                scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
+        this.driverController.rightTrigger(0.5, teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
+                .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
     }
 }
