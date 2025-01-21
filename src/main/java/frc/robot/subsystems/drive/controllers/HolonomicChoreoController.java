@@ -1,4 +1,4 @@
-package frc.robot.subsystems.drive.trajectory;
+package frc.robot.subsystems.drive.controllers;
 
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.PIDController;

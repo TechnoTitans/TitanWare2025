@@ -68,13 +68,13 @@ public class Elevator extends SubsystemBase {
         L4(2.5),
         NET(3);
 
-        private final double positionGoalMeters;
-        Goal(final double positionGoalMeters) {
-            this.positionGoalMeters = positionGoalMeters;
+        private final double positionGoalRots;
+        Goal(final double positionGoalRots) {
+            this.positionGoalRots = positionGoalRots;
         }
 
         public double getPositionGoalRots() {
-            return positionGoalMeters / (HardwareConstants.ELEVATOR.spoolDiameterMeters() * Math.PI);
+            return positionGoalRots;
         }
     }
 
