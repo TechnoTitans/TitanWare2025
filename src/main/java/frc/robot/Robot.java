@@ -1,6 +1,9 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -242,6 +245,20 @@ public class Robot extends LoggedRobot {
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
+
+        Logger.recordOutput("ZeroedRobotPose", new Pose3d());
+        Logger.recordOutput("ZeroedComponentPoses", new Pose3d[]{
+                new Pose3d(),
+                new Pose3d(),
+                new Pose3d(),
+                new Pose3d()
+        });
+        Logger.recordOutput("FinalComponentPoses", new Pose3d[]{
+                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0)),
+                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0)),
+                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0)),
+                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0))
+        });
 
         Threads.setCurrentThreadPriority(true, 10);
     }
