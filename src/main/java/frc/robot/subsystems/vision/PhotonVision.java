@@ -44,7 +44,7 @@ public class PhotonVision extends VirtualSubsystem {
     public static final AprilTagFieldLayout apriltagFieldLayout;
 
     static {
-        apriltagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo);
+        apriltagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
         apriltagFieldLayout.setOrigin(AprilTagFieldLayout.OriginPosition.kBlueAllianceWallRightSide);
     }
 

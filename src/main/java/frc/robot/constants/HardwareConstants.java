@@ -32,7 +32,7 @@ public class HardwareConstants {
             4,
             0.01,
             30,
-            Units.inchesToMeters(1)
+            Units.inchesToMeters(2)
     );
 
     public record ArmConstants(

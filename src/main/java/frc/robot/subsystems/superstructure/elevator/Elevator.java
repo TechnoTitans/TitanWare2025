@@ -124,6 +124,7 @@ public class Elevator extends SubsystemBase {
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atLowerLimit());
         Logger.recordOutput(LogKey + "/AtUpperLimit", atUpperLimit());
+        Logger.recordOutput(LogKey + "/ExtensionMeters", getExtensionMeters());
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
@@ -152,6 +153,10 @@ public class Elevator extends SubsystemBase {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
+    }
+
+    public double getExtensionMeters() {
+        return inputs.masterPositionRots * HardwareConstants.ELEVATOR.spoolDiameterMeters() * Math.PI;
     }
 
     public Command home() {

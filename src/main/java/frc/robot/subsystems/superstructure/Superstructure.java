@@ -1,12 +1,19 @@
 package frc.robot.subsystems.superstructure;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.constants.Constants;
+import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
 import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
+import frc.robot.utils.solver.SuperstructureSimSolver;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
@@ -74,6 +81,17 @@ public class Superstructure extends VirtualSubsystem {
             this.currentGoal = desiredGoal;
         }
 
+        if (Constants.CURRENT_MODE == Constants.RobotMode.SIM) {
+            Logger.recordOutput(
+                    LogKey + "/Components",
+                    SuperstructureSimSolver.calculatePoses(
+                            elevatorArm.getPivotPosition(),
+                            elevator.getExtensionMeters(),
+                            intakeArm.getPivotPosition()
+                    )
+            );
+        }
+
         Logger.recordOutput(LogKey + "/SuperstructureGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint.getAsBoolean());
     }
@@ -84,7 +102,7 @@ public class Superstructure extends VirtualSubsystem {
 
     public Command toInstantSuperstructureGoal(final Goal goal) {
         return Commands.runOnce(
-            () -> this.desiredGoal = goal
+                () -> this.desiredGoal = goal
         );
     }
     public Command toSuperstructureGoal(final Goal goal) {

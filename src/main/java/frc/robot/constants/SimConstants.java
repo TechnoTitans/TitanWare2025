@@ -1,5 +1,6 @@
 package frc.robot.constants;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 
@@ -33,6 +34,10 @@ public interface SimConstants {
     interface Elevator {
         double MASS_KG = Units.lbsToKilograms(10);
         double EXT_MOI = 0.05;
+        Translation3d ORIGIN = new Translation3d(-0.267, 0, 0.153);
+        double STAGE_1_MAX_EXTENSION_METERS = Units.inchesToMeters(20.75); // from base stage bottom plate to bottom plate on stage 1
+        double STAGE_2_MAX_EXTENSION_METERS = Units.inchesToMeters(20.5); // from stage 1 bottom plate to bottom plate on stage 2
+        double STAGE_2_TO_INTAKE = Units.inchesToMeters(29.5); // from stage 2 bottom plate to intake pivot point
     }
 
     interface Arm {

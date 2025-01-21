@@ -2,6 +2,7 @@ package frc.robot.subsystems.superstructure.arm.intake;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Current;
@@ -155,6 +156,10 @@ public class IntakeArm extends SubsystemBase {
         this.desiredPivotGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
+    }
+
+    public Rotation2d getPivotPosition() {
+        return Rotation2d.fromRotations(inputs.pivotPositionRots);
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(
