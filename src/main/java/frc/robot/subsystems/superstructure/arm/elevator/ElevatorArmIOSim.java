@@ -123,11 +123,11 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         final InvertedValue pivotMotorInverted = InvertedValue.Clockwise_Positive;
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig.Slot0 = new Slot0Configs()
-                .withKS(0)
-                .withKG(0.11)
-                .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(13.97)
-                .withKA(0.015)
+//                .withKS(0)
+//                .withKG(0.11)
+//                .withGravityType(GravityTypeValue.Arm_Cosine)
+//                .withKV(13.97)
+//                .withKA(0.015)
                 .withKP(50);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 13.97;

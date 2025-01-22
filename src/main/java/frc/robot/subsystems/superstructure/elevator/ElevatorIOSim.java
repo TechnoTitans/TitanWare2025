@@ -122,12 +122,12 @@ public class ElevatorIOSim implements ElevatorIO {
         final InvertedValue masterInverted = InvertedValue.CounterClockwise_Positive;
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0)
-                .withKG(14)
-                .withGravityType(GravityTypeValue.Elevator_Static);
+//                .withKS(0)
+//                .withKG(14)
+//                .withGravityType(GravityTypeValue.Elevator_Static)
 //                .withKV(13.97)
 //                .withKA(0.015);
-//                .withKP(25);
+                .withKP(15);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         motorConfiguration.MotionMagic.MotionMagicExpo_kV = 38.974;
         motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.376;

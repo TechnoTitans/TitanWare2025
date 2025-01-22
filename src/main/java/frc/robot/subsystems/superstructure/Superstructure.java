@@ -1,9 +1,19 @@
 package frc.robot.subsystems.superstructure;
 
+import choreo.trajectory.Trajectory;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.spline.CubicHermiteSpline;
+import edu.wpi.first.math.spline.PoseWithCurvature;
+import edu.wpi.first.math.spline.SplineParameterizer;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.constants.HardwareConstants;
 import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
 import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
@@ -11,7 +21,10 @@ import frc.robot.utils.solver.SuperstructureSolver;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
@@ -66,8 +79,23 @@ public class Superstructure extends VirtualSubsystem {
                 .and(() -> currentGoal == desiredGoal);
     }
 
+//    private void update() {
+//        if (desiredGoal == currentGoal) {
+//            return;
+//        }
+//
+//        final Command command;
+//
+//        elevatorArm.setGoal(desiredGoal.armGoal);
+//        elevator.setGoal(desiredGoal.elevatorGoal);
+//        intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
+//        this.currentGoal = desiredGoal;
+//    }
+
     @Override
     public void periodic() {
+//        update();
+
         Logger.recordOutput(
                 LogKey + "/Components",
                 SuperstructureSolver.calculatePoses(
@@ -86,51 +114,108 @@ public class Superstructure extends VirtualSubsystem {
         return desiredGoal;
     }
 
-    public Command toInstantSuperstructureGoal(final Goal goal) {
-        return Commands.sequence(
-                Commands.runOnce(() -> this.desiredGoal = goal),
-                Commands.runOnce(() -> elevatorArm.setGoal(goal.armGoal)),
-                Commands.waitUntil(elevatorArm.atPivotSetpoint).withTimeout(1),
-                Commands.runOnce(() -> elevator.setGoal(goal.elevatorGoal)),
-                Commands.waitUntil(elevator.atSetpoint).withTimeout(1),
-                Commands.runOnce(() -> intakeArm.setPivotGoal(goal.intakeArmGoal)),
-                Commands.waitUntil(intakeArm.atPivotPositionSetpoint).withTimeout(1),
-                Commands.runOnce(() -> this.currentGoal = goal)
-        );
+    private Supplier<PoseWithCurvature> sample(
+            final SplineProfile profile,
+            final DoubleSupplier timeSeconds
+    ) {
+        final CubicHermiteSpline cubicHermiteSpline = profile.getCubicHermiteSpline();
+        return () -> {
+            final double time = timeSeconds.getAsDouble();
+            final double alpha = MathUtil.clamp(time / profile.totalTime, 0, 1);
+            return cubicHermiteSpline
+                    .getPoint(alpha)
+                    .orElseThrow();
+        };
     }
 
+    public Command runProfile(final SplineProfile profile) {
+        final Timer timer = new Timer();
+        final Supplier<PoseWithCurvature> sampleSupplier = sample(profile, timer::get);
+        final CubicHermiteSpline cubicHermiteSpline = profile.getCubicHermiteSpline();
+        return Commands.parallel(
+                Commands.runOnce(timer::restart),
+                Commands.runOnce(() -> {
+                    final Pose2d[] poses = SplineProfile.getPosesAlongBezier(
+                            profile.getBezierCurve(),
+                            profile.totalTime,
+                            0.02
+                    );
+
+                    Logger.recordOutput("spline", poses);
+                }),
+                elevatorArm.runPositionCommand(() -> {
+                    final PoseWithCurvature sample = sampleSupplier.get();
+                    return Units.radiansToRotations(sample.poseMeters.getX());
+                }),
+                elevator.runPositionCommand(() -> {
+                    final PoseWithCurvature sample = sampleSupplier.get();
+                    return sample.poseMeters.getY();
+                })
+        ).finallyDo(timer::stop);
+    }
+
+    public Command toInstantSuperstructureGoal(final Goal goal) {
+        return Commands.runOnce(
+                () -> this.desiredGoal = goal
+        );
+    }
     public Command toSuperstructureGoal(final Goal goal) {
-        return runSuperstructureGoal(goal)
-                .andThen(toInstantSuperstructureGoal(Goal.IDLE));
+        return Commands.runEnd(() -> this.desiredGoal = goal, () -> this.desiredGoal = Goal.IDLE);
     }
 
     public Command runSuperstructureGoal(final Goal goal) {
-        return Commands.parallel(
-                Commands.runOnce(() -> this.desiredGoal = goal),
-                Commands.run(() -> elevatorArm.setGoal(goal.armGoal)),
-                Commands.sequence(
-                        Commands.waitUntil(elevatorArm.atPivotSetpoint).withTimeout(1),
-                        Commands.run(() -> elevator.setGoal(goal.elevatorGoal))
-                ),
-                Commands.sequence(
-                        Commands.waitUntil(elevator.atSetpoint).withTimeout(1),
-                        Commands.run(() -> intakeArm.setPivotGoal(goal.intakeArmGoal))
-                ),
-                Commands.sequence(
-                        Commands.waitUntil(intakeArm.atPivotPositionSetpoint).withTimeout(1),
-                        Commands.runOnce(() -> this.currentGoal = goal)
-                )
-        );
+        return Commands.run(() -> this.desiredGoal = goal);
     }
 
     public Command runSuperstructureGoal(final Supplier<Goal> goalSupplier) {
-        return Commands.repeatingSequence(
-                Commands.defer(
-                        () -> runSuperstructureGoal(goalSupplier.get()),
-                        getRequirements()
-                ).onlyWhile(() -> desiredGoal == goalSupplier.get())
-        );
+        return Commands.run(() -> this.desiredGoal = goalSupplier.get());
     }
+
+//    public Command toInstantSuperstructureGoal(final Goal goal) {
+//        return Commands.sequence(
+//                Commands.runOnce(() -> this.desiredGoal = goal),
+//                Commands.runOnce(() -> elevatorArm.setGoal(goal.armGoal)),
+//                Commands.waitUntil(elevatorArm.atPivotSetpoint).withTimeout(1),
+//                Commands.runOnce(() -> elevator.setGoal(goal.elevatorGoal)),
+//                Commands.waitUntil(elevator.atSetpoint).withTimeout(1),
+//                Commands.runOnce(() -> intakeArm.setPivotGoal(goal.intakeArmGoal)),
+//                Commands.waitUntil(intakeArm.atPivotPositionSetpoint).withTimeout(1),
+//                Commands.runOnce(() -> this.currentGoal = goal)
+//        );
+//    }
+//
+//    public Command toSuperstructureGoal(final Goal goal) {
+//        return runSuperstructureGoal(goal)
+//                .andThen(toInstantSuperstructureGoal(Goal.IDLE));
+//    }
+//
+//    public Command runSuperstructureGoal(final Goal goal) {
+//        return Commands.parallel(
+//                Commands.runOnce(() -> this.desiredGoal = goal),
+//                Commands.run(() -> elevatorArm.setGoal(goal.armGoal)),
+//                Commands.sequence(
+//                        Commands.waitUntil(elevatorArm.atPivotSetpoint).withTimeout(1),
+//                        Commands.run(() -> elevator.setGoal(goal.elevatorGoal))
+//                ),
+//                Commands.sequence(
+//                        Commands.waitUntil(elevator.atSetpoint).withTimeout(1),
+//                        Commands.run(() -> intakeArm.setPivotGoal(goal.intakeArmGoal))
+//                ),
+//                Commands.sequence(
+//                        Commands.waitUntil(intakeArm.atPivotPositionSetpoint).withTimeout(1),
+//                        Commands.runOnce(() -> this.currentGoal = goal)
+//                )
+//        );
+//    }
+//
+//    public Command runSuperstructureGoal(final Supplier<Goal> goalSupplier) {
+//        return Commands.repeatingSequence(
+//                Commands.defer(
+//                        () -> runSuperstructureGoal(goalSupplier.get()),
+//                        getRequirements()
+//                ).onlyWhile(() -> desiredGoal == goalSupplier.get())
+//        );
+//    }
 
     public Set<Subsystem> getRequirements() {
         return Set.of(elevator, elevatorArm, intakeArm);

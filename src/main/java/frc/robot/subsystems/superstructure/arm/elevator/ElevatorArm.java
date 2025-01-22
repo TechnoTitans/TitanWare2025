@@ -21,6 +21,8 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.function.DoubleSupplier;
+
 import static edu.wpi.first.units.Units.*;
 
 public class ElevatorArm extends SubsystemBase {
@@ -149,6 +151,10 @@ public class ElevatorArm extends SubsystemBase {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
+    }
+
+    public Command runPositionCommand(final DoubleSupplier positionRots) {
+        return run(() -> elevatorArmIO.toPivotPosition(positionRots.getAsDouble()));
     }
 
     public Command toVoltageCommand(final double voltage) {

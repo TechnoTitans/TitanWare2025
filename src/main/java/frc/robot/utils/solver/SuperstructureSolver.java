@@ -4,6 +4,10 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.path.TravelingSalesman;
+import edu.wpi.first.math.spline.CubicHermiteSpline;
+import edu.wpi.first.math.spline.SplineHelper;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.SimConstants.Elevator;
 
@@ -39,7 +43,7 @@ public class SuperstructureSolver {
                 )
         );
 
-        final double stage2ExtensionMeters = elevatorExtensionMeters - stage1ExtensionMeters;
+        final double stage2ExtensionMeters = Math.min(elevatorExtensionMeters - stage1ExtensionMeters, Elevator.STAGE_2_MAX_EXTENSION_METERS);
         final Pose3d stage2Pose = stage1Pose.transformBy(
                 new Transform3d(
                         0,

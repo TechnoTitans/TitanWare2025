@@ -20,6 +20,7 @@ import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.superstructure.Profiles;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
 import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
@@ -311,8 +312,8 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
-        this.driverController.povUp().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L4));
-        this.driverController.povRight().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L3));
-        this.driverController.povDown().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L2));
+        this.driverController.povUp().whileTrue(superstructure.runProfile(Profiles.L2_TO_L4));
+//        this.driverController.povRight().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L3));
+//        this.driverController.povDown().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L2));
     }
 }

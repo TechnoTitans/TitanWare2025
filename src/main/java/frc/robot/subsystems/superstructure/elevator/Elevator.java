@@ -19,12 +19,17 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.function.DoubleSupplier;
+
 import static edu.wpi.first.units.Units.*;
 
 public class Elevator extends SubsystemBase {
     protected static final String LogKey = "Elevator";
     private static final double PositionToleranceRots = 0.005;
     private static final double VelocityToleranceRotsPerSec = 0.01;
+
+    private final HardwareConstants.ElevatorConstants constants;
+    private final double drumCircumferenceMeters;
 
     private final ElevatorIO elevatorIO;
     private final ElevatorIOInputsAutoLogged inputs;
@@ -79,6 +84,9 @@ public class Elevator extends SubsystemBase {
     }
 
     public Elevator(final Constants.RobotMode mode, final HardwareConstants.ElevatorConstants constants) {
+        this.constants = constants;
+        this.drumCircumferenceMeters = constants.spoolDiameterMeters() * Math.PI;
+
         this.elevatorIO = switch (mode) {
             case REAL -> new ElevatorIOReal(constants);
             case SIM -> new ElevatorIOSim(constants);
@@ -150,13 +158,17 @@ public class Elevator extends SubsystemBase {
     }
 
     public double getExtensionMeters() {
-        return inputs.masterPositionRots * HardwareConstants.ELEVATOR.spoolDiameterMeters() * Math.PI;
+        return inputs.masterPositionRots * drumCircumferenceMeters;
     }
 
     public void setGoal(final Goal goal) {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
+    }
+
+    public Command runPositionCommand(final DoubleSupplier positionMeters) {
+        return run(() -> elevatorIO.toPosition(positionMeters.getAsDouble() / drumCircumferenceMeters));
     }
 
     public Command toVoltageCommand(final double voltage) {
