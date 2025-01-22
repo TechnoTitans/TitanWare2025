@@ -30,6 +30,7 @@ public class Superstructure extends VirtualSubsystem {
     public final Trigger atSuperstructureSetpoint;
 
     public enum Goal {
+        DYNAMIC(Elevator.Goal.DYNAMIC, ElevatorArm.Goal.DYNAMIC, IntakeArm.PivotGoal.STOW),
         STOW(Elevator.Goal.IDLE, ElevatorArm.Goal.STOW, IntakeArm.PivotGoal.STOW),
         IDLE(Elevator.Goal.IDLE, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.STOW),
         CLIMB(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB, IntakeArm.PivotGoal.STOW),
@@ -82,9 +83,9 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(
                 LogKey + "/Components",
                 SuperstructureSolver.calculatePoses(
-                    elevatorArm.getPivotPosition(),
-                    elevator.getExtensionMeters(),
-                    intakeArm.getPivotPosition()
+                        elevatorArm.getPivotPosition(),
+                        elevator.getExtensionMeters(),
+                        intakeArm.getPivotPosition()
                 )
         );
 
@@ -100,8 +101,12 @@ public class Superstructure extends VirtualSubsystem {
     public Command runProfile(final SplineProfile profile) {
         final Timer timer = new Timer();
         final Supplier<Pose2d> sampler = profile.sampler(timer::get);
+
         return Commands.parallel(
-                Commands.runOnce(timer::restart),
+                Commands.runOnce(() -> {
+                    this.desiredGoal = Goal.DYNAMIC;
+                    timer.restart();
+                }),
                 elevatorArm.runPositionCommand(() -> {
                     final Pose2d sample = sampler.get();
                     return Rotation2d.fromRadians(sample.getX())
@@ -111,8 +116,14 @@ public class Superstructure extends VirtualSubsystem {
                 elevator.runPositionMetersCommand(() -> {
                     final Pose2d sample = sampler.get();
                     return sample.getY();
-                })
-        ).finallyDo(timer::stop);
+                }),
+                intakeArm.runPivotGoalCommand(IntakeArm.PivotGoal.STOW)
+        ).until(
+                atSuperstructureSetpoint
+        ).finallyDo(() -> {
+            timer.stop();
+            this.desiredGoal = profile.endingGoal;
+        });
     }
 
     public Command toInstantSuperstructureGoal(final Goal goal) {

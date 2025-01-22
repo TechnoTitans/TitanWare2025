@@ -66,10 +66,10 @@ public class IntakeArm extends SubsystemBase {
         ALGAE_GROUND(2),
         ALGAE_REEF(2),
         NET(2),
-        L1(1),
-        L2(2),
+        L4(4),
         L3(2),
-        L4(4);
+        L2(2),
+        L1(1);
 
         private final double pivotPositionGoalRots;
 
@@ -160,6 +160,10 @@ public class IntakeArm extends SubsystemBase {
         this.desiredPivotGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
+    }
+
+    public Command runPivotGoalCommand(final PivotGoal goal) {
+        return run(() -> setPivotGoal(goal));
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(

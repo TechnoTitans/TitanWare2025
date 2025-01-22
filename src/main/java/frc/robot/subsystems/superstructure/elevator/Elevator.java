@@ -64,8 +64,8 @@ public class Elevator extends SubsystemBase {
     }
 
     public enum Goal {
-        NONE(0),
-        IDLE(0.01),
+        DYNAMIC(0),
+        IDLE(0),
         HP(2.5),
         L1(1),
         L2(1.5),
@@ -124,7 +124,7 @@ public class Elevator extends SubsystemBase {
         elevatorIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
-        if (desiredGoal != Goal.NONE && currentGoal != desiredGoal) {
+        if (desiredGoal != Goal.DYNAMIC && currentGoal != desiredGoal) {
             setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
             elevatorIO.toPosition(setpoint.elevatorPositionRots);
             this.currentGoal = desiredGoal;
@@ -172,18 +172,17 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command runPositionMetersCommand(final DoubleSupplier positionMeters) {
-        return Commands.parallel(
-                run(() -> {
-                    setpoint.elevatorPositionRots = positionMeters.getAsDouble() / drumCircumferenceMeters;
-                    elevatorIO.toPosition(setpoint.elevatorPositionRots);
-                })
-        );
+        return run(() -> {
+            this.desiredGoal = Goal.DYNAMIC;
+            setpoint.elevatorPositionRots = positionMeters.getAsDouble() / drumCircumferenceMeters;
+            elevatorIO.toPosition(setpoint.elevatorPositionRots);
+        }).finallyDo(() -> this.desiredGoal = Goal.IDLE);
     }
 
     public Command home() {
         return Commands.sequence(
                 run(() -> {
-                    this.desiredGoal = Goal.NONE;
+                    this.desiredGoal = Goal.DYNAMIC;
                     elevatorIO.toVoltage(-5);
                 }).until(atLimitSwitch),
                 runOnce(() -> {

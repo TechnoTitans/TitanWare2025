@@ -62,12 +62,13 @@ public class ElevatorArm extends SubsystemBase {
     }
 
     public enum Goal {
+        DYNAMIC(0),
         STOW(Units.degreesToRotations(10)),
         UPRIGHT(Units.degreesToRotations(90)),
-        L4(Units.radiansToRotations(1.082)),
-        L3(0),
-        L2(Units.radiansToRotations(0.489)),
         L1(0),
+        L2(Units.radiansToRotations(0.489)),
+        L3(0),
+        L4(Units.radiansToRotations(1.082)),
         CLIMB(Units.degreesToRotations(20));
 
         private final double pivotPositionGoalRots;
@@ -114,7 +115,7 @@ public class ElevatorArm extends SubsystemBase {
         elevatorArmIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
-        if (currentGoal != desiredGoal) {
+        if (desiredGoal != Goal.DYNAMIC && currentGoal != desiredGoal) {
             setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
             elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
 
@@ -158,12 +159,11 @@ public class ElevatorArm extends SubsystemBase {
     }
 
     public Command runPositionCommand(final DoubleSupplier positionRots) {
-        return Commands.parallel(
-                run(() -> {
-                    setpoint.pivotPositionRots = positionRots.getAsDouble();
-                    elevatorArmIO.toPivotPosition(positionRots.getAsDouble());
-                })
-        );
+        return run(() -> {
+            this.desiredGoal = Goal.DYNAMIC;
+            setpoint.pivotPositionRots = positionRots.getAsDouble();
+            elevatorArmIO.toPivotPosition(positionRots.getAsDouble());
+        }).finallyDo(() -> this.desiredGoal = Goal.STOW);
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(
