@@ -141,7 +141,12 @@ public class Superstructure extends VirtualSubsystem {
                             0.02
                     );
 
-                    Logger.recordOutput("spline", poses);
+                    Logger.recordOutput("BezierSpline", poses);
+
+                    final Pose2d[] hermitePoses = SplineParameterizer.parameterize(cubicHermiteSpline).stream()
+                            .map(poseWithCurvature -> poseWithCurvature.poseMeters)
+                            .toArray(Pose2d[]::new);
+                    Logger.recordOutput("HermiteSpline", hermitePoses);
                 }),
                 elevatorArm.runPositionCommand(() -> {
                     final PoseWithCurvature sample = sampleSupplier.get();
