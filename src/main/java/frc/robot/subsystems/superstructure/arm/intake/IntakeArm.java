@@ -162,10 +162,6 @@ public class IntakeArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
     }
 
-    public Command toVoltageCommand(final double voltage) {
-        return runOnce(() -> intakeIO.toPivotVoltage(voltage));
-    }
-
     private SysIdRoutine makeVoltageSysIdRoutine(
             final Velocity<VoltageUnit> voltageRampRate,
             final Voltage stepVoltage,

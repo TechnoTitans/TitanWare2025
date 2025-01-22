@@ -24,7 +24,6 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.MoreDCMotor;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
-import frc.robot.utils.sim.SimUtils;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 public class IntakeIOSim implements IntakeIO {

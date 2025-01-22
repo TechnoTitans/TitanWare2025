@@ -69,17 +69,21 @@ public class Elevator extends SubsystemBase {
         HP(2.5),
         L1(1),
         L2(1.5),
-        L3(2),
-        L4(2.5),
+        L3(1.75),
+        L4(2),
         NET(3);
 
-        private final double positionGoalRots;
-        Goal(final double positionGoalRots) {
-            this.positionGoalRots = positionGoalRots;
+        private final double positionGoalMeters;
+        Goal(final double positionGoalMeters) {
+            this.positionGoalMeters = positionGoalMeters;
         }
 
-        public double getPositionGoalRots() {
-            return positionGoalRots;
+        public double getPositionGoalRots(final HardwareConstants.ElevatorConstants constants) {
+            return positionGoalMeters / (constants.spoolDiameterMeters() * Math.PI);
+        }
+
+        public double getPositionGoalMeters() {
+            return positionGoalMeters;
         }
     }
 
@@ -121,7 +125,7 @@ public class Elevator extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != Goal.NONE && currentGoal != desiredGoal) {
-            setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots();
+            setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
             elevatorIO.toPosition(setpoint.elevatorPositionRots);
             this.currentGoal = desiredGoal;
         }
@@ -167,12 +171,13 @@ public class Elevator extends SubsystemBase {
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
     }
 
-    public Command runPositionCommand(final DoubleSupplier positionMeters) {
-        return run(() -> elevatorIO.toPosition(positionMeters.getAsDouble() / drumCircumferenceMeters));
-    }
-
-    public Command toVoltageCommand(final double voltage) {
-        return runOnce(() -> elevatorIO.toVoltage(voltage));
+    public Command runPositionMetersCommand(final DoubleSupplier positionMeters) {
+        return Commands.parallel(
+                run(() -> {
+                    setpoint.elevatorPositionRots = positionMeters.getAsDouble() / drumCircumferenceMeters;
+                    elevatorIO.toPosition(setpoint.elevatorPositionRots);
+                })
+        );
     }
 
     public Command home() {

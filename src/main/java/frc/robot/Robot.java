@@ -312,8 +312,10 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
-        this.driverController.povUp().whileTrue(superstructure.runProfile(Profiles.L2_TO_L4));
-//        this.driverController.povRight().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L3));
-//        this.driverController.povDown().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L2));
+        this.driverController.povUp().onTrue(
+                Commands.sequence(
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(3),
+                        superstructure.runProfile(Profiles.L2_TO_L4)
+                ));
     }
 }

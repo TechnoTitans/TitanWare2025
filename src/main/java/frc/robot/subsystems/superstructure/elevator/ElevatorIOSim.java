@@ -4,10 +4,14 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.*;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.*;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -37,7 +41,9 @@ public class ElevatorIOSim implements ElevatorIO {
     private final TalonFX followerMotor;
     private final TalonFXSim motorsSim;
 
-    private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
+    //TODO: change back when real constants
+    //private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
+    private final PositionVoltage positionVoltage;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
     private final Follower follower;
@@ -88,7 +94,8 @@ public class ElevatorIOSim implements ElevatorIO {
                 () -> Units.rotationsToRadians(elevatorSim.getVelocityMetersPerSecond() / drumCircumferenceMeters)
         );
 
-        this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
+        //this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
+        this.positionVoltage = new PositionVoltage(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
         this.follower = new Follower(masterMotor.getDeviceID(), true);
@@ -127,10 +134,10 @@ public class ElevatorIOSim implements ElevatorIO {
 //                .withGravityType(GravityTypeValue.Elevator_Static)
 //                .withKV(13.97)
 //                .withKA(0.015);
-                .withKP(15);
-        motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 38.974;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.376;
+                .withKP(11);
+//        motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
+//        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 38.974;
+//        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.376;
         motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;
@@ -203,9 +210,10 @@ public class ElevatorIOSim implements ElevatorIO {
         Phoenix6Utils.reportIfNotOk(followerMotor, followerMotor.setPosition(positionRots));
     }
 
+    //TODO: here too
     @Override
     public void toPosition(final double positionRots) {
-        masterMotor.setControl(motionMagicExpoTorqueCurrentFOC.withPosition(positionRots));
+        masterMotor.setControl(positionVoltage.withPosition(positionRots));
         followerMotor.setControl(follower);
     }
 

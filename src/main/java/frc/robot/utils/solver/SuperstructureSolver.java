@@ -4,10 +4,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.path.TravelingSalesman;
-import edu.wpi.first.math.spline.CubicHermiteSpline;
-import edu.wpi.first.math.spline.SplineHelper;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import frc.robot.constants.SimConstants;
 import frc.robot.constants.SimConstants.Elevator;
 

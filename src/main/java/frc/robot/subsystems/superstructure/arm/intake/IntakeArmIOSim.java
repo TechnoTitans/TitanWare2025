@@ -23,11 +23,8 @@ import frc.robot.constants.SimConstants;
 import frc.robot.utils.MoreDCMotor;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
-import frc.robot.utils.sim.SimUtils;
 import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
-
-import java.util.concurrent.ThreadLocalRandom;
 
 public class IntakeArmIOSim implements IntakeArmIO {
     private static final double SIM_UPDATE_PERIOD_SEC = 0.005;

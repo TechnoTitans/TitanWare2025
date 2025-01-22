@@ -64,6 +64,10 @@ public class ElevatorArm extends SubsystemBase {
     public enum Goal {
         STOW(Units.degreesToRotations(10)),
         UPRIGHT(Units.degreesToRotations(90)),
+        L4(Units.radiansToRotations(1.082)),
+        L3(0),
+        L2(Units.radiansToRotations(0.489)),
+        L1(0),
         CLIMB(Units.degreesToRotations(20));
 
         private final double pivotPositionGoalRots;
@@ -154,11 +158,12 @@ public class ElevatorArm extends SubsystemBase {
     }
 
     public Command runPositionCommand(final DoubleSupplier positionRots) {
-        return run(() -> elevatorArmIO.toPivotPosition(positionRots.getAsDouble()));
-    }
-
-    public Command toVoltageCommand(final double voltage) {
-        return runOnce(() -> elevatorArmIO.toPivotVoltage(voltage));
+        return Commands.parallel(
+                run(() -> {
+                    setpoint.pivotPositionRots = positionRots.getAsDouble();
+                    elevatorArmIO.toPivotPosition(positionRots.getAsDouble());
+                })
+        );
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(

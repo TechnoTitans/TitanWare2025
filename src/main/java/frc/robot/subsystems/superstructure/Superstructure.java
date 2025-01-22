@@ -1,19 +1,13 @@
 package frc.robot.subsystems.superstructure;
 
-import choreo.trajectory.Trajectory;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.spline.CubicHermiteSpline;
-import edu.wpi.first.math.spline.PoseWithCurvature;
-import edu.wpi.first.math.spline.SplineParameterizer;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.constants.HardwareConstants;
+import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
 import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
@@ -21,10 +15,7 @@ import frc.robot.utils.solver.SuperstructureSolver;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
@@ -44,23 +35,23 @@ public class Superstructure extends VirtualSubsystem {
         CLIMB(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB, IntakeArm.PivotGoal.STOW),
         ALGAE_GROUND(Elevator.Goal.IDLE, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.ALGAE_GROUND),
         HP(Elevator.Goal.HP, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.HP),
-        L1(Elevator.Goal.L1, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.L1),
-        L2(Elevator.Goal.L2, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.L2),
-        L3(Elevator.Goal.L3, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.L3),
-        L4(Elevator.Goal.L4, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.L4),
+        L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.PivotGoal.L1),
+        L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.PivotGoal.L2),
+        L3(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.PivotGoal.L3),
+        L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.PivotGoal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.NET);
 
-        private final Elevator.Goal elevatorGoal;
-        private final ElevatorArm.Goal armGoal;
-        private final IntakeArm.PivotGoal intakeArmGoal;
+        public final Elevator.Goal elevatorGoal;
+        public final ElevatorArm.Goal elevatorArmGoal;
+        public final IntakeArm.PivotGoal intakeArmGoal;
 
         Goal(
                 final Elevator.Goal elevatorGoal,
-                final ElevatorArm.Goal armGoal,
+                final ElevatorArm.Goal elevatorArmGoal,
                 final IntakeArm.PivotGoal intakeArmGoal
         ) {
             this.elevatorGoal = elevatorGoal;
-            this.armGoal = armGoal;
+            this.elevatorArmGoal = elevatorArmGoal;
             this.intakeArmGoal = intakeArmGoal;
         }
     }
@@ -79,29 +70,21 @@ public class Superstructure extends VirtualSubsystem {
                 .and(() -> currentGoal == desiredGoal);
     }
 
-//    private void update() {
-//        if (desiredGoal == currentGoal) {
-//            return;
-//        }
-//
-//        final Command command;
-//
-//        elevatorArm.setGoal(desiredGoal.armGoal);
-//        elevator.setGoal(desiredGoal.elevatorGoal);
-//        intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
-//        this.currentGoal = desiredGoal;
-//    }
-
     @Override
     public void periodic() {
-//        update();
+        if (desiredGoal != currentGoal) {
+            elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
+            elevator.setGoal(desiredGoal.elevatorGoal);
+            intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
+            this.currentGoal = desiredGoal;
+        }
 
         Logger.recordOutput(
                 LogKey + "/Components",
                 SuperstructureSolver.calculatePoses(
-                        elevatorArm.getPivotPosition(),
-                        elevator.getExtensionMeters(),
-                        intakeArm.getPivotPosition()
+                    elevatorArm.getPivotPosition(),
+                    elevator.getExtensionMeters(),
+                    intakeArm.getPivotPosition()
                 )
         );
 
@@ -114,47 +97,20 @@ public class Superstructure extends VirtualSubsystem {
         return desiredGoal;
     }
 
-    private Supplier<PoseWithCurvature> sample(
-            final SplineProfile profile,
-            final DoubleSupplier timeSeconds
-    ) {
-        final CubicHermiteSpline cubicHermiteSpline = profile.getCubicHermiteSpline();
-        return () -> {
-            final double time = timeSeconds.getAsDouble();
-            final double alpha = MathUtil.clamp(time / profile.totalTime, 0, 1);
-            return cubicHermiteSpline
-                    .getPoint(alpha)
-                    .orElseThrow();
-        };
-    }
-
     public Command runProfile(final SplineProfile profile) {
         final Timer timer = new Timer();
-        final Supplier<PoseWithCurvature> sampleSupplier = sample(profile, timer::get);
-        final CubicHermiteSpline cubicHermiteSpline = profile.getCubicHermiteSpline();
+        final Supplier<Pose2d> sampler = profile.sampler(timer::get);
         return Commands.parallel(
                 Commands.runOnce(timer::restart),
-                Commands.runOnce(() -> {
-                    final Pose2d[] poses = SplineProfile.getPosesAlongBezier(
-                            profile.getBezierCurve(),
-                            profile.totalTime,
-                            0.02
-                    );
-
-                    Logger.recordOutput("BezierSpline", poses);
-
-                    final Pose2d[] hermitePoses = SplineParameterizer.parameterize(cubicHermiteSpline).stream()
-                            .map(poseWithCurvature -> poseWithCurvature.poseMeters)
-                            .toArray(Pose2d[]::new);
-                    Logger.recordOutput("HermiteSpline", hermitePoses);
-                }),
                 elevatorArm.runPositionCommand(() -> {
-                    final PoseWithCurvature sample = sampleSupplier.get();
-                    return Units.radiansToRotations(sample.poseMeters.getX());
+                    final Pose2d sample = sampler.get();
+                    return Rotation2d.fromRadians(sample.getX())
+                            .minus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
+                            .getRotations();
                 }),
-                elevator.runPositionCommand(() -> {
-                    final PoseWithCurvature sample = sampleSupplier.get();
-                    return sample.poseMeters.getY();
+                elevator.runPositionMetersCommand(() -> {
+                    final Pose2d sample = sampler.get();
+                    return sample.getY();
                 })
         ).finallyDo(timer::stop);
     }
@@ -176,80 +132,7 @@ public class Superstructure extends VirtualSubsystem {
         return Commands.run(() -> this.desiredGoal = goalSupplier.get());
     }
 
-//    public Command toInstantSuperstructureGoal(final Goal goal) {
-//        return Commands.sequence(
-//                Commands.runOnce(() -> this.desiredGoal = goal),
-//                Commands.runOnce(() -> elevatorArm.setGoal(goal.armGoal)),
-//                Commands.waitUntil(elevatorArm.atPivotSetpoint).withTimeout(1),
-//                Commands.runOnce(() -> elevator.setGoal(goal.elevatorGoal)),
-//                Commands.waitUntil(elevator.atSetpoint).withTimeout(1),
-//                Commands.runOnce(() -> intakeArm.setPivotGoal(goal.intakeArmGoal)),
-//                Commands.waitUntil(intakeArm.atPivotPositionSetpoint).withTimeout(1),
-//                Commands.runOnce(() -> this.currentGoal = goal)
-//        );
-//    }
-//
-//    public Command toSuperstructureGoal(final Goal goal) {
-//        return runSuperstructureGoal(goal)
-//                .andThen(toInstantSuperstructureGoal(Goal.IDLE));
-//    }
-//
-//    public Command runSuperstructureGoal(final Goal goal) {
-//        return Commands.parallel(
-//                Commands.runOnce(() -> this.desiredGoal = goal),
-//                Commands.run(() -> elevatorArm.setGoal(goal.armGoal)),
-//                Commands.sequence(
-//                        Commands.waitUntil(elevatorArm.atPivotSetpoint).withTimeout(1),
-//                        Commands.run(() -> elevator.setGoal(goal.elevatorGoal))
-//                ),
-//                Commands.sequence(
-//                        Commands.waitUntil(elevator.atSetpoint).withTimeout(1),
-//                        Commands.run(() -> intakeArm.setPivotGoal(goal.intakeArmGoal))
-//                ),
-//                Commands.sequence(
-//                        Commands.waitUntil(intakeArm.atPivotPositionSetpoint).withTimeout(1),
-//                        Commands.runOnce(() -> this.currentGoal = goal)
-//                )
-//        );
-//    }
-//
-//    public Command runSuperstructureGoal(final Supplier<Goal> goalSupplier) {
-//        return Commands.repeatingSequence(
-//                Commands.defer(
-//                        () -> runSuperstructureGoal(goalSupplier.get()),
-//                        getRequirements()
-//                ).onlyWhile(() -> desiredGoal == goalSupplier.get())
-//        );
-//    }
-
     public Set<Subsystem> getRequirements() {
         return Set.of(elevator, elevatorArm, intakeArm);
     }
-
-//    public Command intakeHPCoralCommand() {
-//        return Commands.sequence(
-//                Commands.parallel(
-//                        intake.runCoralRollerVelocity(1),
-//                        toSuperstructureGoal(SuperstructureGoal.HP)
-//                ).until(intake.isCoralPresent),
-//                Commands.parallel(
-//                        intake.coralInstantStopCommand(),
-//                        toSuperstructureGoal(SuperstructureGoal.IDLE)
-//                )
-//        );
-//    }
-//
-//    public Command intakeAlgaeFromLevelCommand(final SuperstructureGoal superstructureGoal) {
-//        return Commands.sequence(
-//                Commands.parallel(
-//                        intake.runAlgaeRollerVelocity(2),
-//                        toSuperstructureGoal(superstructureGoal)
-//                ).until(intake.isAlgaePresent),
-//                Commands.parallel(
-//                        intake.algaeInstantStopCommand(),
-//                        toSuperstructureGoal(SuperstructureGoal.IDLE)
-//                                .onlyIf(intake.isCoralPresent)
-//                )
-//        );
-//    }
 }
