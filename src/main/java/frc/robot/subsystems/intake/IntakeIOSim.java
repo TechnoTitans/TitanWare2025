@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
@@ -140,10 +141,6 @@ public class IntakeIOSim implements IntakeIO {
         coralConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -60;
         coralConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         coralConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        coralConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
-        coralConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        coralConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
-        coralConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
         coralConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         coralConfiguration.MotorOutput.Inverted = coralRollerInvertedValue;
         coralConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
@@ -161,10 +158,6 @@ public class IntakeIOSim implements IntakeIO {
         algaeConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -60;
         algaeConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         algaeConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        algaeConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
-        algaeConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        algaeConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
-        algaeConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
         algaeConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         algaeConfiguration.MotorOutput.Inverted = algaeRollerInvertedValue;
         algaeConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
@@ -201,8 +194,8 @@ public class IntakeIOSim implements IntakeIO {
                 coralCANRange
         );
 
-        SimUtils.setCTRETalonFXSimStateMotorInverted(coralRollerMotor, coralRollerInvertedValue);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(algaeRollerMotor, algaeRollerInvertedValue);
+        coralRollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+        algaeRollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
     }
 
     @Override

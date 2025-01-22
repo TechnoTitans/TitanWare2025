@@ -74,7 +74,7 @@ public class ElevatorArm extends SubsystemBase {
         }
     }
 
-    public ElevatorArm(final Constants.RobotMode mode, final HardwareConstants.ArmConstants constants) {
+    public ElevatorArm(final Constants.RobotMode mode, final HardwareConstants.ElevatorArmConstants constants) {
         this.elevatorArmIO = switch (mode) {
             case REAL -> new ElevatorArmIOReal(constants);
             case SIM -> new ElevatorArmIOSim(constants);
@@ -141,14 +141,18 @@ public class ElevatorArm extends SubsystemBase {
         return inputs.pivotPositionRots >= pivotUpperSetpoint.pivotPositionRots;
     }
 
+    public Rotation2d getPivotPosition() {
+        return Rotation2d.fromRotations(inputs.pivotPositionRots);
+    }
+
     public void setGoal(final Goal goal) {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
     }
 
-    public Rotation2d getPivotPosition() {
-        return Rotation2d.fromRotations(inputs.pivotPositionRots);
+    public Command toVoltageCommand(final double voltage) {
+        return runOnce(() -> elevatorArmIO.toPivotVoltage(voltage));
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(

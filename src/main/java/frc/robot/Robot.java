@@ -1,10 +1,6 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -83,7 +79,7 @@ public class Robot extends LoggedRobot {
     );
     public final ElevatorArm elevatorArm = new ElevatorArm(
             Constants.CURRENT_MODE,
-            HardwareConstants.ARM
+            HardwareConstants.ELEVATOR_ARM
     );
 
     public final Intake intake = new Intake(
@@ -222,16 +218,12 @@ public class Robot extends LoggedRobot {
         ToClose.add(SignalLogger::stop);
 
         CommandScheduler.getInstance().onCommandInitialize(command -> Logger.recordOutput("Commands/Initialized", command.getName()));
-
         CommandScheduler.getInstance().onCommandFinish(command -> Logger.recordOutput("Commands/Finished", command.getName()));
 
         CommandScheduler.getInstance().onCommandInterrupt((interrupted, interrupting) -> {
             Logger.recordOutput("Commands/Interrupted", interrupted.getName());
-
             Logger.recordOutput("Commands/InterruptedRequirements", LogUtils.getRequirementsFromSubsystems(interrupted.getRequirements()));
-
             Logger.recordOutput("Commands/Interrupter", interrupting.isPresent() ? interrupting.get().getName() : "None");
-
             Logger.recordOutput("Commands/InterrupterRequirements", LogUtils.getRequirementsFromSubsystems(interrupting.isPresent() ? interrupting.get().getRequirements() : Set.of()));
         });
 
@@ -246,20 +238,6 @@ public class Robot extends LoggedRobot {
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
-
-        Logger.recordOutput("ZeroedRobotPose", new Pose3d());
-        Logger.recordOutput("ZeroedComponentPoses", new Pose3d[]{
-                new Pose3d(),
-                new Pose3d(),
-                new Pose3d(),
-                new Pose3d()
-        });
-        Logger.recordOutput("FinalComponentPoses", new Pose3d[]{
-                new Pose3d(-0.267, 0, 0.153, new Rotation3d(0, 0, 0)),
-                new Pose3d(-0.267, 0, 0.153, new Rotation3d(0, 0, 0)),
-                new Pose3d(-0.267, 0, 0.153, new Rotation3d(0, 0, 0)),
-                new Pose3d(0, 0, 0, new Rotation3d(0, 0, 0))
-        });
 
         Threads.setCurrentThreadPriority(true, 10);
     }
@@ -332,5 +310,9 @@ public class Robot extends LoggedRobot {
         this.driverController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
+
+        this.driverController.povUp().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L4));
+        this.driverController.povRight().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L3));
+        this.driverController.povDown().whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.L2));
     }
 }

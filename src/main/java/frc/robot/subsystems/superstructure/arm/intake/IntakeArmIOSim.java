@@ -12,6 +12,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
@@ -56,6 +57,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
 
+        final double zeroedPositionToHorizontalRads = SimConstants.IntakeArm.ZEROED_POSITION_TO_HORIZONTAL.getRadians();
         this.pivotSim = new SingleJointedArmSim(
                 LinearSystemId.identifyPositionSystem(
                         13.97 / (2d * Math.PI),
@@ -63,14 +65,11 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 ),
                 MoreDCMotor.getMinion(1),
                 constants.pivotGearing(),
-                SimConstants.Intake.LENGTH_METERS,
-                Units.rotationsToRadians(constants.pivotLowerLimitRots()),
-                Math.PI,
+                SimConstants.IntakeArm.LENGTH_METERS,
+                Units.rotationsToRadians(constants.pivotLowerLimitRots()) + zeroedPositionToHorizontalRads,
+                Units.rotationsToRadians(constants.pivotUpperLimitRots()) + zeroedPositionToHorizontalRads,
                 true,
-                ThreadLocalRandom.current().nextDouble(
-                        Units.rotationsToRadians(constants.pivotLowerLimitRots()),
-                        Units.rotationsToRadians(constants.pivotUpperLimitRots())
-                )
+                SimConstants.IntakeArm.STARTING_ANGLE.getRadians()
         );
 
         this.pivotMotor = new TalonFX(constants.intakePivotMotorID(), constants.CANBus());
@@ -81,7 +80,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 constants.pivotGearing(),
                 pivotSim::update,
                 pivotSim::setInputVoltage,
-                pivotSim::getAngleRads,
+                () -> pivotSim.getAngleRads() - zeroedPositionToHorizontalRads,
                 pivotSim::getVelocityRadPerSec
         );
         this.pivotTalonFXSim.attachFeedbackSensor(new SimCANCoder(pivotEncoder));
@@ -134,10 +133,6 @@ public class IntakeArmIOSim implements IntakeArmIO {
         pivotConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
-        pivotConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        pivotConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
-        pivotConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
         pivotConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         pivotConfiguration.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
         pivotConfiguration.Feedback.RotorToSensorRatio = constants.pivotGearing();
@@ -170,8 +165,8 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 pivotEncoder
         );
 
-        SimUtils.setCTRETalonFXSimStateMotorInverted(pivotMotor, pivotMotorInverted);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(pivotMotor, pivotMotorInverted);
+        pivotMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
+        pivotEncoder.getSimState().Orientation = ChassisReference.Clockwise_Positive;
     }
 
     @Override

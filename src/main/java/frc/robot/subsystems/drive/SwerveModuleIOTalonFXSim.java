@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Angle;
@@ -202,10 +203,9 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
         velocityTorqueCurrentFOC.UpdateFreqHz = 0;
         positionVoltage.UpdateFreqHz = 0;
 
-        // TODO: this fix for CANCoder initialization in sim doesn't seem to work all the time...investigate!
-//      SimUtils.initializeCTRECANCoderSim(turnEncoder);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(driveMotor, driveInvertedValue);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(turnMotor, turnInvertedValue);
+        turnEncoder.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+        driveMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
+        turnMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
     }
 
     @SuppressWarnings("DuplicatedCode")

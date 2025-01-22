@@ -71,9 +71,9 @@ public class IntakeIOReal implements IntakeIO {
     public void config() {
         final TalonFXConfiguration coralConfiguration = new TalonFXConfiguration();
         coralConfiguration.Slot0 = new Slot0Configs()
-                .withKS(3.3326)
-                .withKV(0.15104)
-                .withKA(0.2004)
+//                .withKS(3.3326)
+//                .withKV(0.15104)
+//                .withKA(0.2004)
                 .withKP(10.746);
         coralConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 60;
         coralConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -60;

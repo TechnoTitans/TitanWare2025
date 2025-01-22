@@ -2,47 +2,39 @@ package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
-import frc.robot.utils.sim.SimUtils;
-import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class ElevatorIOSim implements ElevatorIO {
     private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
 
     private final DeltaTime deltaTime;
     private final HardwareConstants.ElevatorConstants constants;
+    private final double drumCircumferenceMeters;
 
     private final ElevatorSim elevatorSim;
 
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
-    private final CANcoder encoder;
     private final TalonFXSim motorsSim;
 
     private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
@@ -60,23 +52,16 @@ public class ElevatorIOSim implements ElevatorIO {
     private final StatusSignal<Voltage> followerVoltage;
     private final StatusSignal<Current> followerTorqueCurrent;
     private final StatusSignal<Temperature> followerDeviceTemp;
-    private final StatusSignal<Angle> encoderPosition;
-    private final StatusSignal<AngularVelocity> encoderVelocity;
 
     public ElevatorIOSim(final HardwareConstants.ElevatorConstants constants) {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
+        this.drumCircumferenceMeters = constants.spoolDiameterMeters() * Math.PI;
 
         final DCMotor dcMotors = DCMotor.getKrakenX60Foc(2);
-        final DCMotorSim dcMotorSims = new DCMotorSim(
-                LinearSystemId.createDCMotorSystem(
-                        dcMotors,
-                        SimConstants.Elevator.EXT_MOI,
-                        constants.gearing()
-                ),
-                dcMotors
-        );
 
+        final double lowerLimitMeters = constants.lowerLimitRots() * drumCircumferenceMeters;
+        final double upperLimitMeters = constants.upperLimitRots() * drumCircumferenceMeters;
         this.elevatorSim = new ElevatorSim(
                 LinearSystemId.createElevatorSystem(
                         dcMotors,
@@ -85,34 +70,28 @@ public class ElevatorIOSim implements ElevatorIO {
                         constants.gearing()
                 ),
                 dcMotors,
-                Units.rotationsToRadians(constants.lowerLimitRots()),
-                Units.rotationsToRadians(constants.upperLimitRots()),
+                lowerLimitMeters,
+                upperLimitMeters,
                 true,
-                ThreadLocalRandom.current().nextDouble(
-                        Units.rotationsToRadians(constants.lowerLimitRots()),
-                        Units.rotationsToRadians(constants.upperLimitRots())
-                )
+                upperLimitMeters
         );
 
         this.masterMotor = new TalonFX(constants.masterMotorId(), constants.CANBus());
         this.followerMotor = new TalonFX(constants.followerMotorId(), constants.CANBus());
-        this.encoder = new CANcoder(constants.CANCoderId(), constants.CANBus());
 
         this.motorsSim = new TalonFXSim(
                 List.of(masterMotor, followerMotor),
                 constants.gearing(),
                 elevatorSim::update,
                 elevatorSim::setInputVoltage,
-                dcMotorSims::getAngularPositionRad,
-                dcMotorSims::getAngularVelocityRadPerSec
-
+                () -> Units.rotationsToRadians(elevatorSim.getPositionMeters() / drumCircumferenceMeters),
+                () -> Units.rotationsToRadians(elevatorSim.getVelocityMetersPerSecond() / drumCircumferenceMeters)
         );
-        this.motorsSim.attachFeedbackSensor(new SimCANCoder(encoder));
 
         this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
-        this.follower = new Follower(masterMotor.getDeviceID(), false);
+        this.follower = new Follower(masterMotor.getDeviceID(), true);
 
         this.masterPosition = masterMotor.getPosition();
         this.masterVelocity = masterMotor.getVelocity();
@@ -124,8 +103,6 @@ public class ElevatorIOSim implements ElevatorIO {
         this.followerVoltage = followerMotor.getMotorVoltage();
         this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
         this.followerDeviceTemp = followerMotor.getDeviceTemp();
-        this.encoderPosition = encoder.getPosition();
-        this.encoderVelocity = encoder.getVelocity();
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
             final double dt = deltaTime.get();
@@ -142,35 +119,23 @@ public class ElevatorIOSim implements ElevatorIO {
 
     @Override
     public void config() {
-        final SensorDirectionValue encoderSensorDirection = SensorDirectionValue.Clockwise_Positive;
-        final CANcoderConfiguration encoderConfiguration = new CANcoderConfiguration();
-        encoderConfiguration.MagnetSensor.SensorDirection = encoderSensorDirection;
-        encoder.getConfigurator().apply(encoderConfiguration);
-
-        final InvertedValue masterInverted = InvertedValue.Clockwise_Positive;
+        final InvertedValue masterInverted = InvertedValue.CounterClockwise_Positive;
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
                 .withKS(0)
-                .withKG(0.11)
-                .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(13.97)
-                .withKA(0.015)
-                .withKP(50);
+                .withKG(14)
+                .withGravityType(GravityTypeValue.Elevator_Static);
+//                .withKV(13.97)
+//                .withKA(0.015);
+//                .withKP(25);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 13.97;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.015;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 38.974;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.376;
         motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         motorConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        motorConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
-        motorConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        motorConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
-        motorConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
-        motorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-        motorConfiguration.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
-        motorConfiguration.Feedback.RotorToSensorRatio = constants.gearing();
-        motorConfiguration.Feedback.SensorToMechanismRatio = 1;
+        motorConfiguration.Feedback.SensorToMechanismRatio = constants.gearing();
         motorConfiguration.MotorOutput.Inverted = masterInverted;
         motorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         motorConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.upperLimitRots();
@@ -189,9 +154,7 @@ public class ElevatorIOSim implements ElevatorIO {
                 followerPosition,
                 followerVelocity,
                 followerVoltage,
-                followerTorqueCurrent,
-                encoderPosition,
-                encoderVelocity
+                followerTorqueCurrent
         );
         BaseStatusSignal.setUpdateFrequencyForAll(
                 4,
@@ -200,13 +163,11 @@ public class ElevatorIOSim implements ElevatorIO {
         );
         ParentDevice.optimizeBusUtilizationForAll(
                 masterMotor,
-                followerMotor,
-                encoder
+                followerMotor
         );
 
-        SimUtils.setCTRETalonFXSimStateMotorInverted(masterMotor, masterInverted);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(followerMotor, masterInverted);
-        SimUtils.setCTRECANCoderSimStateSensorDirection(encoder, encoderSensorDirection);
+        masterMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+        followerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
     }
 
     @Override
@@ -221,9 +182,7 @@ public class ElevatorIOSim implements ElevatorIO {
                 followerVelocity,
                 followerVoltage,
                 followerTorqueCurrent,
-                followerDeviceTemp,
-                encoderPosition,
-                encoderVelocity
+                followerDeviceTemp
         );
 
         inputs.masterPositionRots = masterPosition.getValueAsDouble();
@@ -236,8 +195,6 @@ public class ElevatorIOSim implements ElevatorIO {
         inputs.followerVoltage = followerVoltage.getValueAsDouble();
         inputs.followerTorqueCurrentAmps = followerTorqueCurrent.getValueAsDouble();
         inputs.followerTempCelsius = followerDeviceTemp.getValueAsDouble();
-        inputs.encoderPositionRots = encoderPosition.getValueAsDouble();
-        inputs.encoderVelocityRotsPerSec = encoderVelocity.getValueAsDouble();
     }
 
     @Override

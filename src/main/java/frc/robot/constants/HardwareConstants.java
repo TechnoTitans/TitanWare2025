@@ -30,12 +30,12 @@ public class HardwareConstants {
             15,
             16,
             4,
-            0.01,
-            30,
+            0,
+            (Units.inchesToMeters(41.25) / (0.0508 * Math.PI)),
             Units.inchesToMeters(2)
     );
 
-    public record ArmConstants(
+    public record ElevatorArmConstants(
             String CANBus,
             int motorId,
             int CANCoderId,
@@ -45,14 +45,14 @@ public class HardwareConstants {
             double upperLimitRots
     ) {}
 
-    public static final ArmConstants ARM = new ArmConstants(
+    public static final ElevatorArmConstants ELEVATOR_ARM = new ElevatorArmConstants(
             RobotMap.CanivoreCANBus,
-            14,
-            15,
-            200,
-            112.5,
-            0.1,
-            3
+            17,
+            18,
+            225,
+            0,
+            0,
+            0.27
     );
 
     public record IntakeArmConstants(
@@ -67,12 +67,12 @@ public class HardwareConstants {
 
     public static final IntakeArmConstants INTAKE_ARM = new IntakeArmConstants(
             RobotMap.CanivoreCANBus,
-            17,
+            19,
             20,
-            0.5,
-            60,
-            0.01,
-            15
+            0,
+            80,
+            Units.degreesToRotations(-146),
+            0
     );
 
     public record IntakeConstants(
@@ -80,17 +80,15 @@ public class HardwareConstants {
             int algaeRollerMotorID,
             int coralRollerMotorID,
             int coralCANRangeId,
-            int algaeCANRangeId,
             double algaeGearing,
             double coralGearing
     ) {}
 
     public static final IntakeConstants INTAKE = new IntakeConstants(
             RobotMap.CanivoreCANBus,
-            18,
-            19,
-            20,
+            21,
             22,
+            23,
             4,
             4
     );

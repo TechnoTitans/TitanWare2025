@@ -149,14 +149,18 @@ public class Elevator extends SubsystemBase {
         return inputs.magneticLimitSwitch;
     }
 
+    public double getExtensionMeters() {
+        return inputs.masterPositionRots * HardwareConstants.ELEVATOR.spoolDiameterMeters() * Math.PI;
+    }
+
     public void setGoal(final Goal goal) {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
     }
 
-    public double getExtensionMeters() {
-        return inputs.masterPositionRots * HardwareConstants.ELEVATOR.spoolDiameterMeters() * Math.PI;
+    public Command toVoltageCommand(final double voltage) {
+        return runOnce(() -> elevatorIO.toVoltage(voltage));
     }
 
     public Command home() {

@@ -16,7 +16,7 @@ import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 
 public class ElevatorArmIOReal implements ElevatorArmIO {
-    private final HardwareConstants.ArmConstants constants;
+    private final HardwareConstants.ElevatorArmConstants constants;
 
     private final TalonFX pivotMotor;
     private final CANcoder pivotCANCoder;
@@ -33,7 +33,7 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
     private final StatusSignal<Angle> pivotCANCoderPosition;
     private final StatusSignal<AngularVelocity> pivotCANCoderVelocity;
 
-    public ElevatorArmIOReal(final HardwareConstants.ArmConstants constants) {
+    public ElevatorArmIOReal(final HardwareConstants.ElevatorArmConstants constants) {
         this.constants = constants;
 
         this.pivotMotor = new TalonFX(constants.motorId(), constants.CANBus());

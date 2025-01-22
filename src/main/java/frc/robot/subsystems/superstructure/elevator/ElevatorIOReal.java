@@ -22,7 +22,6 @@ public class ElevatorIOReal implements ElevatorIO {
 
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
-    private final CANcoder encoder;
 
     private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
     private final TorqueCurrentFOC torqueCurrentFOC;
@@ -39,15 +38,12 @@ public class ElevatorIOReal implements ElevatorIO {
     private final StatusSignal<Voltage> followerVoltage;
     private final StatusSignal<Current> followerTorqueCurrent;
     private final StatusSignal<Temperature> followerDeviceTemp;
-    private final StatusSignal<Angle> encoderPosition;
-    private final StatusSignal<AngularVelocity> encoderVelocity;
 
     public ElevatorIOReal(final HardwareConstants.ElevatorConstants constants) {
         this.constants = constants;
 
         this.masterMotor = new TalonFX(constants.masterMotorId(), constants.CANBus());
         this.followerMotor = new TalonFX(constants.followerMotorId(), constants.CANBus());
-        this.encoder = new CANcoder(constants.CANCoderId(), constants.CANBus());
 
         this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -64,17 +60,10 @@ public class ElevatorIOReal implements ElevatorIO {
         this.followerVoltage = followerMotor.getMotorVoltage();
         this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
         this.followerDeviceTemp = followerMotor.getDeviceTemp();
-        this.encoderPosition = encoder.getPosition();
-        this.encoderVelocity = encoder.getVelocity();
     }
 
     @Override
     public void config() {
-        final SensorDirectionValue encoderSensorDirection = SensorDirectionValue.Clockwise_Positive;
-        final CANcoderConfiguration encoderConfiguration = new CANcoderConfiguration();
-        encoderConfiguration.MagnetSensor.SensorDirection = encoderSensorDirection;
-        encoder.getConfigurator().apply(encoderConfiguration);
-
         final InvertedValue masterInverted = InvertedValue.Clockwise_Positive;
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
@@ -91,14 +80,7 @@ public class ElevatorIOReal implements ElevatorIO {
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         motorConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        motorConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
-        motorConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        motorConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
-        motorConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
-        motorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-        motorConfiguration.Feedback.FeedbackRemoteSensorID = encoder.getDeviceID();
-        motorConfiguration.Feedback.RotorToSensorRatio = constants.gearing();
-        motorConfiguration.Feedback.SensorToMechanismRatio = 1;
+        motorConfiguration.Feedback.SensorToMechanismRatio = constants.gearing();
         motorConfiguration.MotorOutput.Inverted = masterInverted;
         motorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         motorConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.upperLimitRots();
@@ -117,9 +99,7 @@ public class ElevatorIOReal implements ElevatorIO {
                 followerPosition,
                 followerVelocity,
                 followerVoltage,
-                followerTorqueCurrent,
-                encoderPosition,
-                encoderVelocity
+                followerTorqueCurrent
         );
         BaseStatusSignal.setUpdateFrequencyForAll(
                 4,
@@ -128,8 +108,7 @@ public class ElevatorIOReal implements ElevatorIO {
         );
         ParentDevice.optimizeBusUtilizationForAll(
                 masterMotor,
-                followerMotor,
-                encoder
+                followerMotor
         );
     }
 
@@ -145,9 +124,7 @@ public class ElevatorIOReal implements ElevatorIO {
                 followerVelocity,
                 followerVoltage,
                 followerTorqueCurrent,
-                followerDeviceTemp,
-                encoderPosition,
-                encoderVelocity
+                followerDeviceTemp
         );
 
         inputs.masterPositionRots = masterPosition.getValueAsDouble();
@@ -160,8 +137,6 @@ public class ElevatorIOReal implements ElevatorIO {
         inputs.followerVoltage = followerVoltage.getValueAsDouble();
         inputs.followerTorqueCurrentAmps = followerTorqueCurrent.getValueAsDouble();
         inputs.followerTempCelsius = followerDeviceTemp.getValueAsDouble();
-        inputs.encoderPositionRots = encoderPosition.getValueAsDouble();
-        inputs.encoderVelocityRotsPerSec = encoderVelocity.getValueAsDouble();
     }
 
     @Override

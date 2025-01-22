@@ -12,34 +12,6 @@ import com.ctre.phoenix6.sim.ChassisReference;
  * Simulation shared utility methods/functions
  */
 public class SimUtils {
-    public static ChassisReference invertedValueToChassisReference(final InvertedValue invertedValue) {
-        return switch (invertedValue) {
-            case Clockwise_Positive -> ChassisReference.Clockwise_Positive;
-            case CounterClockwise_Positive -> ChassisReference.CounterClockwise_Positive;
-        };
-    }
-
-    public static ChassisReference sensorDirectionToChassisReference(final SensorDirectionValue sensorDirectionValue) {
-        return switch (sensorDirectionValue) {
-            case Clockwise_Positive -> ChassisReference.Clockwise_Positive;
-            case CounterClockwise_Positive -> ChassisReference.CounterClockwise_Positive;
-        };
-    }
-
-    public static void setCTRETalonFXSimStateMotorInverted(
-            final CoreTalonFX talonFX,
-            final InvertedValue invertedValue
-    ) {
-        talonFX.getSimState().Orientation = invertedValueToChassisReference(invertedValue);
-    }
-
-    public static void setCTRECANCoderSimStateSensorDirection(
-            final CANcoder canCoder,
-            final SensorDirectionValue sensorDirectionValue
-    ) {
-        canCoder.getSimState().Orientation = sensorDirectionToChassisReference(sensorDirectionValue);
-    }
-
     /**
      * Initialize a simulated relative {@link CANcoder}.
      *

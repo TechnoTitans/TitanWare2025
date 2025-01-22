@@ -17,9 +17,6 @@ public interface ElevatorIO {
         public double followerTorqueCurrentAmps = 0.0;
         public double followerTempCelsius = 0.0;
 
-        public double encoderPositionRots = 0.0;
-        public double encoderVelocityRotsPerSec = 0.0;
-
         public boolean magneticLimitSwitch = false;
     }
 

@@ -12,6 +12,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
@@ -26,13 +27,11 @@ import frc.robot.utils.sim.SimUtils;
 import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 public class ElevatorArmIOSim implements ElevatorArmIO {
     private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
 
     private final DeltaTime deltaTime;
-    private final HardwareConstants.ArmConstants constants;
+    private final HardwareConstants.ElevatorArmConstants constants;
 
     private final SingleJointedArmSim pivotSim;
 
@@ -52,25 +51,28 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
     private final StatusSignal<Angle> pivotCANCoderPosition;
     private final StatusSignal<AngularVelocity> pivotCANCoderVelocity;
 
-    public ElevatorArmIOSim(final HardwareConstants.ArmConstants constants) {
+    public ElevatorArmIOSim(final HardwareConstants.ElevatorArmConstants constants) {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
 
+        final DCMotor dcMotor = DCMotor.getKrakenX60Foc(1);
+
+        final double zeroedPositionToHorizontalRads =
+                SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL.getRadians();
         this.pivotSim = new SingleJointedArmSim(
-                LinearSystemId.identifyPositionSystem(
-                        13.97 / (2d * Math.PI),
-                        0.03 / (2d * Math.PI)
+                LinearSystemId.createSingleJointedArmSystem(
+                        dcMotor,
+                        //TODO: This is only correct when retracted
+                        SimConstants.ElevatorArm.RETRACTED_MOI_KG_M_SQUARED,
+                        constants.gearing()
                 ),
-                DCMotor.getKrakenX60(1),
+                dcMotor,
                 constants.gearing(),
-                SimConstants.Arm.LENGTH_METERS,
-                Units.rotationsToRadians(constants.lowerLimitRots()),
-                Math.PI,
+                SimConstants.ElevatorArm.LENGTH_METERS,
+                Units.rotationsToRadians(constants.lowerLimitRots()) + zeroedPositionToHorizontalRads,
+                Units.rotationsToRadians(constants.upperLimitRots()) + zeroedPositionToHorizontalRads,
                 true,
-                ThreadLocalRandom.current().nextDouble(
-                        Units.rotationsToRadians(constants.lowerLimitRots()),
-                        Units.rotationsToRadians(constants.upperLimitRots())
-                )
+                SimConstants.ElevatorArm.STARTING_ANGLE.getRadians()
         );
 
         this.pivotMotor = new TalonFX(constants.motorId(), constants.CANBus());
@@ -81,7 +83,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
                 constants.gearing(),
                 pivotSim::update,
                 pivotSim::setInputVoltage,
-                pivotSim::getAngleRads,
+                () -> pivotSim.getAngleRads() - zeroedPositionToHorizontalRads,
                 pivotSim::getVelocityRadPerSec
         );
         this.pivotMotorSim.attachFeedbackSensor(new SimCANCoder(pivotCANCoder));
@@ -112,7 +114,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
 
     @Override
     public void config() {
-        final SensorDirectionValue pivotCANCoderSensorDirection = SensorDirectionValue.Clockwise_Positive;
+        final SensorDirectionValue pivotCANCoderSensorDirection = SensorDirectionValue.CounterClockwise_Positive;
         final CANcoderConfiguration pivotCANCoderConfig = new CANcoderConfiguration();
         pivotCANCoderConfig.MagnetSensor.MagnetOffset = constants.CANCoderOffset();
         pivotCANCoderConfig.MagnetSensor.SensorDirection = pivotCANCoderSensorDirection;
@@ -168,8 +170,8 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
                 pivotCANCoder
         );
 
-        SimUtils.setCTRETalonFXSimStateMotorInverted(pivotMotor, pivotMotorInverted);
-        SimUtils.setCTRECANCoderSimStateSensorDirection(pivotCANCoder, pivotCANCoderSensorDirection);
+        pivotCANCoder.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+        pivotMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
     }
 
     @Override

@@ -4,10 +4,11 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import frc.robot.constants.SimConstants;
 import frc.robot.constants.SimConstants.Elevator;
 
-public class SuperstructureSimSolver {
-    private SuperstructureSimSolver() {}
+public class SuperstructureSolver {
+    private SuperstructureSolver() {}
 
     public static Pose3d[] calculatePoses(
             final Rotation2d baseStageRotation,
@@ -16,7 +17,16 @@ public class SuperstructureSimSolver {
     ) {
         final Pose3d baseStagePose = new Pose3d(
                 Elevator.ORIGIN,
-                new Rotation3d(0, baseStageRotation.getRadians(), 0)
+                new Rotation3d(
+                        0,
+                        baseStageRotation
+                                .unaryMinus()
+                                .plus(
+                                        Rotation2d.kCCW_Pi_2
+                                                .minus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                ).getRadians(),
+                        0
+                )
         );
 
         final double stage1ExtensionMeters = Math.min(elevatorExtensionMeters, Elevator.STAGE_1_MAX_EXTENSION_METERS);
@@ -29,8 +39,7 @@ public class SuperstructureSimSolver {
                 )
         );
 
-        final double stage2ExtensionMeters =
-                Math.min(elevatorExtensionMeters - stage1ExtensionMeters, Elevator.STAGE_2_MAX_EXTENSION_METERS);
+        final double stage2ExtensionMeters = elevatorExtensionMeters - stage1ExtensionMeters;
         final Pose3d stage2Pose = stage1Pose.transformBy(
                 new Transform3d(
                         0,
@@ -45,7 +54,14 @@ public class SuperstructureSimSolver {
                         0,
                         0,
                         Elevator.STAGE_2_TO_INTAKE,
-                        new Rotation3d(0, armPivotRotation.getRadians(), 0)
+                        new Rotation3d(
+                                0,
+                                armPivotRotation
+                                        .unaryMinus()
+                                        .minus(SimConstants.IntakeArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                        .getRadians(),
+                                0
+                        )
                 )
         );
 
