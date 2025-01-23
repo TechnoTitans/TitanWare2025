@@ -37,7 +37,7 @@ public class ElevatorArm extends SubsystemBase {
     private final SysIdRoutine torqueCurrentSysIdRoutine;
 
     private Goal desiredGoal = Goal.STOW;
-    private Goal currentGoal = desiredGoal;
+    private Goal currentGoal;
 
     private final PositionSetpoint setpoint;
     private final PositionSetpoint pivotLowerSetpoint;
@@ -63,12 +63,12 @@ public class ElevatorArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        STOW(Units.degreesToRotations(10)),
+        STOW(Units.degreesToRotations(35)),
         UPRIGHT(Units.degreesToRotations(90)),
-        L1(0),
-        L2(Units.radiansToRotations(0.43342354893684387)),
-        L3(0),
-        L4(Units.radiansToRotations(0.8813914060592651)),
+        L1(Units.radiansToRotations(0.159)),
+        L2(Units.radiansToRotations(0.433)),
+        L3(Units.radiansToRotations(0.637)),
+        L4(Units.radiansToRotations(0.881)),
         CLIMB(Units.degreesToRotations(20));
 
         private final double pivotPositionGoalRots;
@@ -115,7 +115,7 @@ public class ElevatorArm extends SubsystemBase {
         elevatorArmIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
-        if (currentGoal != desiredGoal) {
+        if (desiredGoal != currentGoal) {
             if (desiredGoal != Goal.DYNAMIC) {
                 setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
                 elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);

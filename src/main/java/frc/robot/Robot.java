@@ -314,13 +314,61 @@ public class Robot extends LoggedRobot {
 
         this.driverController.povUp().onTrue(
                 Commands.sequence(
-                        superstructure.toSuperstructureGoal(Superstructure.Goal.L2)
-//                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(3),
-//                        superstructure.runProfile(Profiles.L2_TO_L4)
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L1_TO_L2),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L1),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L1_TO_L3),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L1),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L1_TO_L4),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L2),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L2_TO_L1),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L2),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L2_TO_L3),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L2),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L2_TO_L4),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L3),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L3_TO_L1),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L3),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L3_TO_L2),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L3),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L3_TO_L4),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L4),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L4_TO_L1),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L4),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L4_TO_L2),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L4),
+                        Commands.waitSeconds(2),
+                        superstructure.runProfile(Profiles.L4_TO_L3),
+                        Commands.waitSeconds(2),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
                 ));
 
-            this.driverController.povDown().onTrue(
-                    superstructure.runSuperstructureGoal(Superstructure.Goal.STOW).withTimeout(2)
-            );
+//            this.driverController.povDown().whileTrue(
+//                    intakeArm.runPivotGoalCommand(IntakeArm.PivotGoal.L2)
+//            ).onFalse(
+//                    intakeArm.runPivotGoalCommand(IntakeArm.PivotGoal.STOW)
+//            );
     }
 }

@@ -35,8 +35,8 @@ public class IntakeArm extends SubsystemBase {
     private final SysIdRoutine pivotVoltageSysIdRoutine;
     private final SysIdRoutine pivotTorqueCurrentSysIdRoutine;
 
-    private IntakeArm.PivotGoal desiredPivotGoal = IntakeArm.PivotGoal.STOW;
-    private IntakeArm.PivotGoal currentPivotGoal = desiredPivotGoal;
+    private IntakeArm.PivotGoal desiredGoal = IntakeArm.PivotGoal.STOW;
+    private IntakeArm.PivotGoal currentGoal;
 
     private final IntakeArm.PivotPositionSetpoint pivotPositionSetpoint;
     private final IntakeArm.PivotPositionSetpoint pivotLowerLimit;
@@ -118,15 +118,15 @@ public class IntakeArm extends SubsystemBase {
         intakeArmIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
-        if (currentPivotGoal != desiredPivotGoal) {
-            pivotPositionSetpoint.pivotPositionRots = desiredPivotGoal.getPivotPositionGoalRots();
-            intakeArmIO.toPivotPosition(desiredPivotGoal.getPivotPositionGoalRots());
+        if (desiredGoal != currentGoal) {
+            pivotPositionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+            intakeArmIO.toPivotPosition(pivotPositionSetpoint.pivotPositionRots);
 
-            this.currentPivotGoal = desiredPivotGoal;
+            this.currentGoal = desiredGoal;
         }
 
-        Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
-        Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
+        Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
+        Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
         Logger.recordOutput(
                 LogKey + "/PivotPositionSetpoint/PivotPositionRots",
                 pivotPositionSetpoint.pivotPositionRots
@@ -143,7 +143,7 @@ public class IntakeArm extends SubsystemBase {
 
     private boolean atPivotPositionSetpoint() {
         return pivotPositionSetpoint.atSetpoint(inputs.pivotPositionRots, inputs.pivotVelocityRotsPerSec)
-                && currentPivotGoal == desiredPivotGoal;
+                && currentGoal == desiredGoal;
     }
 
     private boolean atPivotLowerLimit() {
@@ -159,16 +159,13 @@ public class IntakeArm extends SubsystemBase {
     }
 
     public void setPivotGoal(final IntakeArm.PivotGoal goal) {
-        this.desiredPivotGoal = goal;
-        Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
-        Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
+        this.desiredGoal = goal;
+        Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
+        Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
     }
 
-    public void toVoltage(final double volts) {
-        this.desiredPivotGoal = PivotGoal.STOW;
-        intakeArmIO.toPivotVoltage(volts);
-        Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
-        Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
+    public Command runPivotGoalCommand(final IntakeArm.PivotGoal goal) {
+        return Commands.run(() -> setPivotGoal(goal));
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(

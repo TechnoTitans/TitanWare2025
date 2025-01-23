@@ -23,7 +23,7 @@ public class Profiles {
             1.1,
             Superstructure.Goal.L1,
             0.579,
-            0.745,
+            0.075,
             0.922,
             0.261,
             Superstructure.Goal.L4
@@ -56,7 +56,7 @@ public class Profiles {
             Superstructure.Goal.L4
     );
     public static final SplineProfile L3_TO_L1 = new SplineProfile(
-            5,
+            0.75,
             Superstructure.Goal.L3,
             0.591,
             0,
@@ -65,7 +65,7 @@ public class Profiles {
             Superstructure.Goal.L1
     );
     public static final SplineProfile L3_TO_L2 = new SplineProfile(
-            5,
+            0.75,
             Superstructure.Goal.L3,
             0.748,
             0.482,
@@ -74,7 +74,7 @@ public class Profiles {
             Superstructure.Goal.L2
     );
     public static final SplineProfile L3_TO_L4 = new SplineProfile(
-            5,
+            0.67,
             Superstructure.Goal.L3,
             0.829,
             0.540,
@@ -83,7 +83,7 @@ public class Profiles {
             Superstructure.Goal.L4
     );
     public static final SplineProfile L4_TO_L1 = new SplineProfile(
-            5,
+            1.1,
             Superstructure.Goal.L4,
             0.922,
             0.261,
@@ -92,7 +92,7 @@ public class Profiles {
             Superstructure.Goal.L1
     );
     public static final SplineProfile L4_TO_L2 = new SplineProfile(
-            5,
+            1,
             Superstructure.Goal.L4,
             0.858,
             0.400,
@@ -101,7 +101,7 @@ public class Profiles {
             Superstructure.Goal.L2
     );
     public static final SplineProfile L4_TO_L3 = new SplineProfile(
-            5,
+            0.69,
             Superstructure.Goal.L4,
             0.934,
             0.732,

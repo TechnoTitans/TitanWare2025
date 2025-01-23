@@ -28,6 +28,8 @@ public class Superstructure extends VirtualSubsystem {
     private Goal currentGoal = desiredGoal;
     public final Trigger atSuperstructureSetpoint;
 
+
+
     public enum Goal {
         DYNAMIC(Elevator.Goal.DYNAMIC, ElevatorArm.Goal.DYNAMIC, IntakeArm.PivotGoal.STOW),
         STOW(Elevator.Goal.IDLE, ElevatorArm.Goal.STOW, IntakeArm.PivotGoal.STOW),
@@ -73,9 +75,11 @@ public class Superstructure extends VirtualSubsystem {
     @Override
     public void periodic() {
         if (desiredGoal != currentGoal) {
-            elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
-            elevator.setGoal(desiredGoal.elevatorGoal);
-            intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
+            if (desiredGoal != Goal.DYNAMIC) {
+                elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
+                elevator.setGoal(desiredGoal.elevatorGoal);
+                intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
+            }
             this.currentGoal = desiredGoal;
         }
 
@@ -113,7 +117,8 @@ public class Superstructure extends VirtualSubsystem {
                 elevator.runPositionMetersCommand(() -> {
                     final Pose2d sample = sampler.get();
                     return sample.getY();
-                })
+                }),
+                intakeArm.runPivotGoalCommand(IntakeArm.PivotGoal.STOW)
         ).until(
                 atSuperstructureSetpoint
         ).finallyDo(

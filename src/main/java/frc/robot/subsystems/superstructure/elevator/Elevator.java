@@ -38,7 +38,7 @@ public class Elevator extends SubsystemBase {
     private final SysIdRoutine torqueCurrentSysIdRoutine;
 
     private Goal desiredGoal = Goal.IDLE;
-    private Goal currentGoal = desiredGoal;
+    private Goal currentGoal;
 
     private final PositionSetpoint setpoint;
     private final PositionSetpoint elevatorLowerLimit;
@@ -67,10 +67,10 @@ public class Elevator extends SubsystemBase {
         DYNAMIC(0),
         IDLE(0),
         HP(2.5),
-        L1(1),
-        L2(0.1735755205154419),
-        L3(1.75),
-        L4(1.0462400913238525),
+        L1(0.028),
+        L2(0.150),
+        L3(0.458),
+        L4(0.976),
         NET(3);
 
         private final double positionGoalMeters;
@@ -124,7 +124,7 @@ public class Elevator extends SubsystemBase {
         elevatorIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
-        if (currentGoal != desiredGoal) {
+        if (desiredGoal != currentGoal) {
             if (desiredGoal != Goal.DYNAMIC) {
                 setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
                 elevatorIO.toPosition(setpoint.elevatorPositionRots);
