@@ -5,9 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -38,7 +36,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
     private final CANcoder pivotEncoder;
     private final TalonFXSim pivotTalonFXSim;
 
-    private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
+    private final PositionVoltage positionVoltage;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
 
@@ -57,8 +55,8 @@ public class IntakeArmIOSim implements IntakeArmIO {
         final double zeroedPositionToHorizontalRads = SimConstants.IntakeArm.ZEROED_POSITION_TO_HORIZONTAL.getRadians();
         this.pivotSim = new SingleJointedArmSim(
                 LinearSystemId.identifyPositionSystem(
-                        13.97 / (2d * Math.PI),
-                        0.03 / (2d * Math.PI)
+                        5.85 / (2d * Math.PI),
+                        0.04 / (2d * Math.PI)
                 ),
                 MoreDCMotor.getMinion(1),
                 constants.pivotGearing(),
@@ -82,7 +80,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         );
         this.pivotTalonFXSim.attachFeedbackSensor(new SimCANCoder(pivotEncoder));
 
-        this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
+        this.positionVoltage = new PositionVoltage(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
 
@@ -117,15 +115,9 @@ public class IntakeArmIOSim implements IntakeArmIO {
         final InvertedValue pivotMotorInverted = InvertedValue.Clockwise_Positive;
         final TalonFXConfiguration pivotConfiguration = new TalonFXConfiguration();
         pivotConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0)
-                .withKG(0.11)
-                .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(13.97)
-                .withKA(0.015)
-                .withKP(50);
-        pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 13.97;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.015;
+                .withKG(0.26)
+                .withGravityType(GravityTypeValue.Elevator_Static)
+                .withKP(21);
         pivotConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
@@ -189,7 +181,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
 
     @Override
     public void toPivotPosition(final double pivotPositionRots) {
-        pivotMotor.setControl(motionMagicExpoTorqueCurrentFOC.withPosition(pivotPositionRots));
+        pivotMotor.setControl(positionVoltage.withPosition(pivotPositionRots));
     }
     @Override
     public void toPivotVoltage(final double volts) {

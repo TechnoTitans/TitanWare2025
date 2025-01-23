@@ -115,9 +115,11 @@ public class ElevatorArm extends SubsystemBase {
         elevatorArmIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
-        if (desiredGoal != Goal.DYNAMIC && currentGoal != desiredGoal) {
-            setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
-            elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
+        if (currentGoal != desiredGoal) {
+            if (desiredGoal != Goal.DYNAMIC) {
+                setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+                elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
+            }
 
             this.currentGoal = desiredGoal;
         }

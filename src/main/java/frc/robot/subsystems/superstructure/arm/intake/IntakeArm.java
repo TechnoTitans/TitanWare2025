@@ -29,7 +29,7 @@ public class IntakeArm extends SubsystemBase {
     private static final double PositionToleranceRots = 0.005;
     private static final double VelocityToleranceRotsPerSec = 0.01;
 
-    private final IntakeArmIO intakeIO;
+    private final IntakeArmIO intakeArmIO;
     private final IntakeArmIOInputsAutoLogged inputs;
 
     private final SysIdRoutine pivotVoltageSysIdRoutine;
@@ -62,14 +62,14 @@ public class IntakeArm extends SubsystemBase {
 
     public enum PivotGoal {
         STOW(0),
-        HP(2),
-        ALGAE_GROUND(2),
-        ALGAE_REEF(2),
-        NET(2),
-        L4(4),
-        L3(2),
-        L2(2),
-        L1(1);
+        HP(-0.2),
+        ALGAE_GROUND(-0.25),
+        ALGAE_REEF(-0.4),
+        NET(-0.15),
+        L4(-0.23),
+        L3(-0.1),
+        L2(-0.1),
+        L1(-0.1);
 
         private final double pivotPositionGoalRots;
 
@@ -83,7 +83,7 @@ public class IntakeArm extends SubsystemBase {
     }
 
     public IntakeArm(final Constants.RobotMode mode, final HardwareConstants.IntakeArmConstants constants) {
-        this.intakeIO = switch (mode) {
+        this.intakeArmIO = switch (mode) {
             case REAL -> new IntakeArmIOReal(constants);
             case SIM -> new IntakeArmIOSim(constants);
             case REPLAY, DISABLED -> new IntakeArmIO() {};
@@ -95,31 +95,33 @@ public class IntakeArm extends SubsystemBase {
                 Volts.of(2).per(Second),
                 Volts.of(10),
                 Seconds.of(10),
-                intakeIO::toPivotVoltage
+                intakeArmIO::toPivotVoltage
         );
         this.pivotTorqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
                 Amps.of(4).per(Second),
                 Amp.of(40),
                 Seconds.of(10),
-                intakeIO::toPivotTorqueCurrent
+                intakeArmIO::toPivotTorqueCurrent
         );
 
         this.pivotPositionSetpoint = new IntakeArm.PivotPositionSetpoint();
         this.pivotLowerLimit = new IntakeArm.PivotPositionSetpoint().withPivotPositionRots(constants.pivotLowerLimitRots());
         this.pivotUpperLimit = new IntakeArm.PivotPositionSetpoint().withPivotPositionRots(constants.pivotUpperLimitRots());
 
-        this.intakeIO.config();
+        this.intakeArmIO.config();
     }
 
     @Override
     public void periodic() {
         final double intakePeriodicUpdateStart = RobotController.getFPGATime();
 
-        intakeIO.updateInputs(inputs);
+        intakeArmIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
         if (currentPivotGoal != desiredPivotGoal) {
             pivotPositionSetpoint.pivotPositionRots = desiredPivotGoal.getPivotPositionGoalRots();
+            intakeArmIO.toPivotPosition(desiredPivotGoal.getPivotPositionGoalRots());
+
             this.currentPivotGoal = desiredPivotGoal;
         }
 
@@ -162,8 +164,11 @@ public class IntakeArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
     }
 
-    public Command runPivotGoalCommand(final PivotGoal goal) {
-        return run(() -> setPivotGoal(goal));
+    public void toVoltage(final double volts) {
+        this.desiredPivotGoal = PivotGoal.STOW;
+        intakeArmIO.toPivotVoltage(volts);
+        Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentPivotGoal.toString());
+        Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredPivotGoal.toString());
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(

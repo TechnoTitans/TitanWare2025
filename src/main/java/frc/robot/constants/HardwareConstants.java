@@ -70,7 +70,7 @@ public class HardwareConstants {
             19,
             20,
             0,
-            80,
+            60,
             Units.degreesToRotations(-146),
             0
     );

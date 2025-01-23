@@ -47,12 +47,12 @@ public class Profiles {
             Superstructure.Goal.L3
     );
     public static final SplineProfile L2_TO_L4 = new SplineProfile(
-            0.8898195028305054,
+            0.89,
             Superstructure.Goal.L2,
-            0.8755736351013184,
-            0.22593539953231812,
-            1.015199899673462,
-            0.8542539477348328,
+            0.876,
+            0.226,
+            1.015,
+            0.854,
             Superstructure.Goal.L4
     );
     public static final SplineProfile L3_TO_L1 = new SplineProfile(

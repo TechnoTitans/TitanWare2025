@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -41,9 +42,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
     private final CANcoder pivotCANCoder;
     private final TalonFXSim pivotMotorSim;
 
-    //TODO: get real KV and KA from robot
-//    private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
-    private final PositionVoltage positionVoltage;
+    private final MotionMagicExpoVoltage motionMagicExpoVoltage;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
 
@@ -75,7 +74,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
                 SimConstants.ElevatorArm.LENGTH_METERS,
                 Units.rotationsToRadians(constants.lowerLimitRots()) + zeroedPositionToHorizontalRads,
                 Units.rotationsToRadians(constants.upperLimitRots()) + zeroedPositionToHorizontalRads,
-                true,
+                false,
                 SimConstants.ElevatorArm.STARTING_ANGLE.getRadians()
         );
 
@@ -92,8 +91,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         );
         this.pivotMotorSim.attachFeedbackSensor(new SimCANCoder(pivotCANCoder));
 
-//        this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
-        this.positionVoltage = new PositionVoltage(0);
+        this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
 
@@ -200,10 +198,9 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         inputs.pivotEncoderVelocityRotsPerSec = pivotCANCoderVelocity.getValueAsDouble();
     }
 
-    //TODO: change to expo
     @Override
     public void toPivotPosition(final double pivotPositionRots) {
-        pivotMotor.setControl(positionVoltage.withPosition(pivotPositionRots));
+        pivotMotor.setControl(motionMagicExpoVoltage.withPosition(pivotPositionRots));
     }
 
     @Override

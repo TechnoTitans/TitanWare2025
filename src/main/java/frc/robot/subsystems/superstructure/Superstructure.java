@@ -1,14 +1,12 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
 import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
@@ -115,8 +113,7 @@ public class Superstructure extends VirtualSubsystem {
                 elevator.runPositionMetersCommand(() -> {
                     final Pose2d sample = sampler.get();
                     return sample.getY();
-                }),
-                intakeArm.runPivotGoalCommand(IntakeArm.PivotGoal.STOW)
+                })
         ).until(
                 atSuperstructureSetpoint
         ).finallyDo(
@@ -128,19 +125,30 @@ public class Superstructure extends VirtualSubsystem {
 
     public Command toInstantSuperstructureGoal(final Goal goal) {
         return Commands.runOnce(
-                () -> this.desiredGoal = goal
+                () -> this.desiredGoal = goal,
+                elevator, elevatorArm, intakeArm
         );
     }
     public Command toSuperstructureGoal(final Goal goal) {
-        return Commands.runEnd(() -> this.desiredGoal = goal, () -> this.desiredGoal = Goal.IDLE);
+        return Commands.runEnd(
+                () -> this.desiredGoal = goal,
+                () -> this.desiredGoal = Goal.IDLE,
+                elevator, elevatorArm, intakeArm
+        );
     }
 
     public Command runSuperstructureGoal(final Goal goal) {
-        return Commands.run(() -> this.desiredGoal = goal);
+        return Commands.run(
+                () -> this.desiredGoal = goal,
+                elevator, elevatorArm, intakeArm
+        );
     }
 
     public Command runSuperstructureGoal(final Supplier<Goal> goalSupplier) {
-        return Commands.run(() -> this.desiredGoal = goalSupplier.get());
+        return Commands.run(
+                () -> this.desiredGoal = goalSupplier.get(),
+                elevator, elevatorArm, intakeArm
+        );
     }
 
     public Set<Subsystem> getRequirements() {

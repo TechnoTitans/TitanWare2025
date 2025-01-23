@@ -25,8 +25,8 @@ import static edu.wpi.first.units.Units.*;
 
 public class Elevator extends SubsystemBase {
     protected static final String LogKey = "Elevator";
-    private static final double PositionToleranceRots = 0.005;
-    private static final double VelocityToleranceRotsPerSec = 0.01;
+    private static final double PositionToleranceRots = 0.05;
+    private static final double VelocityToleranceRotsPerSec = 0.05;
 
     private final HardwareConstants.ElevatorConstants constants;
     private final double drumCircumferenceMeters;
@@ -124,9 +124,12 @@ public class Elevator extends SubsystemBase {
         elevatorIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
-        if (desiredGoal != Goal.DYNAMIC && currentGoal != desiredGoal) {
-            setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
-            elevatorIO.toPosition(setpoint.elevatorPositionRots);
+        if (currentGoal != desiredGoal) {
+            if (desiredGoal != Goal.DYNAMIC) {
+                setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
+                elevatorIO.toPosition(setpoint.elevatorPositionRots);
+            }
+
             this.currentGoal = desiredGoal;
         }
 

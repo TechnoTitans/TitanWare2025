@@ -314,8 +314,13 @@ public class Robot extends LoggedRobot {
 
         this.driverController.povUp().onTrue(
                 Commands.sequence(
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(3),
-                        superstructure.runProfile(Profiles.L2_TO_L4)
+                        superstructure.toSuperstructureGoal(Superstructure.Goal.L2)
+//                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(3),
+//                        superstructure.runProfile(Profiles.L2_TO_L4)
                 ));
+
+            this.driverController.povDown().onTrue(
+                    superstructure.runSuperstructureGoal(Superstructure.Goal.STOW).withTimeout(2)
+            );
     }
 }
