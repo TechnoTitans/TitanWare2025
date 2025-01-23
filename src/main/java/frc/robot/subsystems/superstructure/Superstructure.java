@@ -2,6 +2,7 @@ package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -109,9 +110,7 @@ public class Superstructure extends VirtualSubsystem {
                 }),
                 elevatorArm.runPositionCommand(() -> {
                     final Pose2d sample = sampler.get();
-                    return Rotation2d.fromRadians(sample.getX())
-                            .minus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
-                            .getRotations();
+                    return Units.radiansToRotations(sample.getX());
                 }),
                 elevator.runPositionMetersCommand(() -> {
                     final Pose2d sample = sampler.get();
@@ -120,10 +119,11 @@ public class Superstructure extends VirtualSubsystem {
                 intakeArm.runPivotGoalCommand(IntakeArm.PivotGoal.STOW)
         ).until(
                 atSuperstructureSetpoint
-        ).finallyDo(() -> {
-            timer.stop();
-            this.desiredGoal = profile.endingGoal;
-        });
+        ).finallyDo(
+                timer::stop
+        ).andThen(
+                toInstantSuperstructureGoal(profile.endingGoal)
+        );
     }
 
     public Command toInstantSuperstructureGoal(final Goal goal) {

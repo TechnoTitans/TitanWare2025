@@ -68,9 +68,9 @@ public class Elevator extends SubsystemBase {
         IDLE(0),
         HP(2.5),
         L1(1),
-        L2(1.5),
+        L2(0.1735755205154419),
         L3(1.75),
-        L4(2),
+        L4(1.0462400913238525),
         NET(3);
 
         private final double positionGoalMeters;

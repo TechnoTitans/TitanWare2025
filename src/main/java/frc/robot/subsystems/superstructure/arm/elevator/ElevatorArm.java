@@ -66,9 +66,9 @@ public class ElevatorArm extends SubsystemBase {
         STOW(Units.degreesToRotations(10)),
         UPRIGHT(Units.degreesToRotations(90)),
         L1(0),
-        L2(Units.radiansToRotations(0.489)),
+        L2(Units.radiansToRotations(0.43342354893684387)),
         L3(0),
-        L4(Units.radiansToRotations(1.082)),
+        L4(Units.radiansToRotations(0.8813914060592651)),
         CLIMB(Units.degreesToRotations(20));
 
         private final double pivotPositionGoalRots;
