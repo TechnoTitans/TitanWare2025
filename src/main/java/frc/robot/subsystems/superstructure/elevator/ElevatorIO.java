@@ -17,7 +17,8 @@ public interface ElevatorIO {
         public double followerTorqueCurrentAmps = 0.0;
         public double followerTempCelsius = 0.0;
 
-        public boolean magneticLimitSwitch = false;
+        public double canRangeDistanceMeters = 0.0;
+        public boolean canRangeIsDetected = false;
     }
 
     /**
@@ -37,6 +38,4 @@ public interface ElevatorIO {
     default void toVoltage(final double volts) {}
 
     default void toTorqueCurrent(final double torqueCurrentAmps) {}
-
-    default void setLimitSwitchState(final boolean limitSwitchActive) {}
 }

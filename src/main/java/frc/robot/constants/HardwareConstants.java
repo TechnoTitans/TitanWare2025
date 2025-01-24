@@ -17,7 +17,7 @@ public class HardwareConstants {
             String CANBus,
             int masterMotorId,
             int followerMotorId,
-            int CANCoderId,
+            int CANrangeId,
             double gearing,
             double lowerLimitRots,
             double upperLimitRots,

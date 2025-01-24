@@ -47,7 +47,7 @@ public class Elevator extends SubsystemBase {
     public final Trigger atSetpoint = new Trigger(this::atPositionSetpoint);
     public final Trigger atLowerLimit = new Trigger(this::atLowerLimit);
     public final Trigger atUpperLimit = new Trigger(this::atUpperLimit);
-    public final Trigger atLimitSwitch = new Trigger(this::atLimitSwitch);
+    public final Trigger isRetracted = new Trigger(this::isRetracted);
 
     public static class PositionSetpoint {
         public double elevatorPositionRots = 0.0;
@@ -160,12 +160,12 @@ public class Elevator extends SubsystemBase {
         return inputs.masterPositionRots >= elevatorUpperLimit.elevatorPositionRots;
     }
 
-    private boolean atLimitSwitch() {
-        return inputs.magneticLimitSwitch;
+    private boolean isRetracted() {
+        return inputs.canRangeIsDetected;
     }
 
     public double getExtensionMeters() {
-        return inputs.masterPositionRots * drumCircumferenceMeters;
+        return inputs.canRangeDistanceMeters;
     }
 
     public void setGoal(final Goal goal) {
@@ -187,7 +187,7 @@ public class Elevator extends SubsystemBase {
                 run(() -> {
                     this.desiredGoal = Goal.DYNAMIC;
                     elevatorIO.toVoltage(-5);
-                }).until(atLimitSwitch),
+                }).until(isRetracted),
                 runOnce(() -> {
                     elevatorIO.toVoltage(0);
                     elevatorIO.setPosition(0);
