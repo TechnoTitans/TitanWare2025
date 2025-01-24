@@ -1,5 +1,9 @@
 package frc.robot.subsystems.superstructure;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Profiles {
     public static final SplineProfile L1_TO_L2 = new SplineProfile(
             0.5,
@@ -108,5 +112,29 @@ public class Profiles {
             0.829,
             0.540,
             Superstructure.Goal.L3
+    );
+
+    //starting goal -> ending goal -> profile
+    public static final Map<Superstructure.Goal, Map<Superstructure.Goal, SplineProfile>> profiles = Map.of(
+            Superstructure.Goal.L1, Map.of(
+                    Superstructure.Goal.L2, L1_TO_L2,
+                    Superstructure.Goal.L3, L1_TO_L3,
+                    Superstructure.Goal.L4, L1_TO_L4
+            ),
+            Superstructure.Goal.L2, Map.of(
+                    Superstructure.Goal.L1, L2_TO_L1,
+                    Superstructure.Goal.L3, L2_TO_L3,
+                    Superstructure.Goal.L4, L2_TO_L4
+            ),
+            Superstructure.Goal.L3, Map.of(
+                    Superstructure.Goal.L1, L3_TO_L1,
+                    Superstructure.Goal.L2, L3_TO_L2,
+                    Superstructure.Goal.L4, L3_TO_L4
+            ),
+            Superstructure.Goal.L4, Map.of(
+                    Superstructure.Goal.L1, L4_TO_L1,
+                    Superstructure.Goal.L2, L4_TO_L2,
+                    Superstructure.Goal.L3, L4_TO_L3
+            )
     );
 }

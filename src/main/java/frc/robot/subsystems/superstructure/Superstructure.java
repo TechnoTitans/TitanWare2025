@@ -97,6 +97,10 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint.getAsBoolean());
     }
 
+    public Goal getCurrentSuperstructureGoal() {
+        return currentGoal;
+    }
+
     public Goal getDesiredSuperstructureGoal() {
         return desiredGoal;
     }
@@ -110,6 +114,10 @@ public class Superstructure extends VirtualSubsystem {
                     this.desiredGoal = Goal.DYNAMIC;
                     timer.restart();
                 }),
+                Commands.run(() -> {
+                    Logger.recordOutput(LogKey + "/ProfileTime", timer.get());
+                    Logger.recordOutput(LogKey + "/Profile", profile.toString());
+                }),
                 elevatorArm.runPositionCommand(() -> {
                     final Pose2d sample = sampler.get();
                     return Units.radiansToRotations(sample.getX());
@@ -121,10 +129,11 @@ public class Superstructure extends VirtualSubsystem {
                 intakeArm.runPivotGoalCommand(IntakeArm.PivotGoal.STOW)
         ).until(
                 atSuperstructureSetpoint
-        ).finallyDo(
-                timer::stop
-        ).andThen(
-                toInstantSuperstructureGoal(profile.endingGoal)
+        ).finallyDo(() -> {
+            Logger.recordOutput(LogKey + "/Profile", "None");
+            timer.stop();
+        }).andThen(
+                runSuperstructureGoal(profile.endingGoal)
         );
     }
 

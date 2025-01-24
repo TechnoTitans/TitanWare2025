@@ -165,7 +165,7 @@ public class ElevatorArm extends SubsystemBase {
             this.desiredGoal = Goal.DYNAMIC;
             setpoint.pivotPositionRots = positionRots.getAsDouble();
             elevatorArmIO.toPivotPosition(positionRots.getAsDouble());
-        }).finallyDo(() -> this.desiredGoal = Goal.STOW);
+        });
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(

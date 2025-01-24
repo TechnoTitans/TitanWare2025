@@ -9,6 +9,7 @@ import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.superstructure.Profiles;
 import frc.robot.subsystems.superstructure.Superstructure;
 
 import java.util.HashMap;
@@ -48,8 +49,14 @@ public class ScoreCommands {
     public record ScorePosition(
             Reef.Side side,
             Level level
-    ) {
-    }
+    ) {}
+
+    private static final List<Superstructure.Goal> ScoreGoals = List.of(
+            Superstructure.Goal.L1,
+            Superstructure.Goal.L2,
+            Superstructure.Goal.L3,
+            Superstructure.Goal.L4
+    );
 
     private final Swerve swerve;
     private final Superstructure superstructure;
@@ -137,7 +144,17 @@ public class ScoreCommands {
                 ),
                 Commands.sequence(
                         Commands.waitUntil(swerve.atHolonomicDrivePose).withTimeout(3),
-                        superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level.goal)
+                        Commands.either(
+                                Commands.defer(
+                                        () -> superstructure.runProfile(
+                                                Profiles.profiles.get(superstructure.getCurrentSuperstructureGoal())
+                                                        .get(scorePositionSupplier.get().level.goal)
+                                        ),
+                                        superstructure.getRequirements()
+                                ),
+                                superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level.goal),
+                                () -> ScoreCommands.ScoreGoals.contains(superstructure.getDesiredSuperstructureGoal())
+                        )
                 )
         );
     }

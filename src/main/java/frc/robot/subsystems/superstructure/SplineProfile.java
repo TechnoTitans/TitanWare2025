@@ -121,4 +121,9 @@ public class SplineProfile {
 
         return poses;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s_TO_%s", startingGoal, endingGoal);
+    }
 }

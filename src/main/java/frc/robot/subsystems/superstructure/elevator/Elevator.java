@@ -179,7 +179,7 @@ public class Elevator extends SubsystemBase {
             this.desiredGoal = Goal.DYNAMIC;
             setpoint.elevatorPositionRots = positionMeters.getAsDouble() / drumCircumferenceMeters;
             elevatorIO.toPosition(setpoint.elevatorPositionRots);
-        }).finallyDo(() -> this.desiredGoal = Goal.IDLE);
+        });
     }
 
     public Command home() {
