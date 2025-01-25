@@ -12,10 +12,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.UpdateModeValue;
+import com.ctre.phoenix6.signals.*;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.Phoenix6Utils;
@@ -79,7 +76,7 @@ public class ElevatorIOReal implements ElevatorIO {
         CANrangeConfiguration.ProximityParams.ProximityHysteresis = 0.03;
         canRange.getConfigurator().apply(CANrangeConfiguration);
 
-        final InvertedValue masterInverted = InvertedValue.Clockwise_Positive;
+        final InvertedValue masterInverted = InvertedValue.CounterClockwise_Positive;
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
                 .withKS(0)
@@ -96,6 +93,7 @@ public class ElevatorIOReal implements ElevatorIO {
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         motorConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         motorConfiguration.Feedback.SensorToMechanismRatio = constants.gearing();
+        motorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
         motorConfiguration.MotorOutput.Inverted = masterInverted;
         motorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         motorConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.upperLimitRots();
@@ -103,6 +101,8 @@ public class ElevatorIOReal implements ElevatorIO {
         motorConfiguration.SoftwareLimitSwitch.ReverseSoftLimitThreshold = constants.lowerLimitRots();
         motorConfiguration.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         masterMotor.getConfigurator().apply(motorConfiguration);
+
+        motorConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         followerMotor.getConfigurator().apply(motorConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -114,7 +114,9 @@ public class ElevatorIOReal implements ElevatorIO {
                 followerPosition,
                 followerVelocity,
                 followerVoltage,
-                followerTorqueCurrent
+                followerTorqueCurrent,
+                canRangeDistance,
+                canRangeIsDetected
         );
         BaseStatusSignal.setUpdateFrequencyForAll(
                 4,
@@ -123,7 +125,8 @@ public class ElevatorIOReal implements ElevatorIO {
         );
         ParentDevice.optimizeBusUtilizationForAll(
                 masterMotor,
-                followerMotor
+                followerMotor,
+                canRange
         );
     }
 
