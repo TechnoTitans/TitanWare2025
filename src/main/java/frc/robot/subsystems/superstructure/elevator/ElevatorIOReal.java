@@ -2,17 +2,20 @@ package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.UpdateModeValue;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.Phoenix6Utils;
@@ -22,6 +25,7 @@ public class ElevatorIOReal implements ElevatorIO {
 
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
+    private final CANrange canRange;
 
     private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
     private final TorqueCurrentFOC torqueCurrentFOC;
@@ -38,12 +42,15 @@ public class ElevatorIOReal implements ElevatorIO {
     private final StatusSignal<Voltage> followerVoltage;
     private final StatusSignal<Current> followerTorqueCurrent;
     private final StatusSignal<Temperature> followerDeviceTemp;
+    private final StatusSignal<Distance> canRangeDistance;
+    private final StatusSignal<Boolean> canRangeIsDetected;
 
     public ElevatorIOReal(final HardwareConstants.ElevatorConstants constants) {
         this.constants = constants;
 
         this.masterMotor = new TalonFX(constants.masterMotorId(), constants.CANBus());
         this.followerMotor = new TalonFX(constants.followerMotorId(), constants.CANBus());
+        this.canRange = new CANrange(constants.CANrangeId(), constants.CANBus());
 
         this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -60,10 +67,18 @@ public class ElevatorIOReal implements ElevatorIO {
         this.followerVoltage = followerMotor.getMotorVoltage();
         this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
         this.followerDeviceTemp = followerMotor.getDeviceTemp();
+        this.canRangeDistance = canRange.getDistance();
+        this.canRangeIsDetected = canRange.getIsDetected();
     }
 
     @Override
     public void config() {
+        final CANrangeConfiguration CANrangeConfiguration = new CANrangeConfiguration();
+        CANrangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
+        CANrangeConfiguration.ProximityParams.ProximityThreshold = 0.01;
+        CANrangeConfiguration.ProximityParams.ProximityHysteresis = 0.03;
+        canRange.getConfigurator().apply(CANrangeConfiguration);
+
         final InvertedValue masterInverted = InvertedValue.Clockwise_Positive;
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
@@ -124,7 +139,9 @@ public class ElevatorIOReal implements ElevatorIO {
                 followerVelocity,
                 followerVoltage,
                 followerTorqueCurrent,
-                followerDeviceTemp
+                followerDeviceTemp,
+                canRangeDistance,
+                canRangeIsDetected
         );
 
         inputs.masterPositionRots = masterPosition.getValueAsDouble();
@@ -137,6 +154,8 @@ public class ElevatorIOReal implements ElevatorIO {
         inputs.followerVoltage = followerVoltage.getValueAsDouble();
         inputs.followerTorqueCurrentAmps = followerTorqueCurrent.getValueAsDouble();
         inputs.followerTempCelsius = followerDeviceTemp.getValueAsDouble();
+        inputs.canRangeDistanceMeters = canRangeDistance.getValueAsDouble();
+        inputs.canRangeIsDetected = canRangeIsDetected.getValue();
     }
 
     @Override
