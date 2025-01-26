@@ -6,7 +6,6 @@ import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -117,25 +116,15 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
 
     @Override
     public void config() {
-        final SensorDirectionValue pivotCANCoderSensorDirection = SensorDirectionValue.CounterClockwise_Positive;
         final CANcoderConfiguration pivotCANCoderConfig = new CANcoderConfiguration();
         pivotCANCoderConfig.MagnetSensor.MagnetOffset = constants.CANCoderOffset();
-        pivotCANCoderConfig.MagnetSensor.SensorDirection = pivotCANCoderSensorDirection;
+        pivotCANCoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
         pivotCANCoder.getConfigurator().apply(pivotCANCoderConfig);
 
-        final InvertedValue pivotMotorInverted = InvertedValue.Clockwise_Positive;
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         //TODO: Get real constants from robot
         pivotMotorConfig.Slot0 = new Slot0Configs()
-//                .withKS(0)
-//                .withKG(0.11)
-//                .withGravityType(GravityTypeValue.Arm_Cosine)
-//                .withKV(13.97)
-//                .withKA(0.015)
                 .withKP(500);
-//        pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
-//        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 13.97;
-//        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 0.015;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 60;
@@ -148,7 +137,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         pivotMotorConfig.Feedback.FeedbackRemoteSensorID = pivotCANCoder.getDeviceID();
         pivotMotorConfig.Feedback.RotorToSensorRatio = constants.gearing();
         pivotMotorConfig.Feedback.SensorToMechanismRatio = 1;
-        pivotMotorConfig.MotorOutput.Inverted = pivotMotorInverted;
+        pivotMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.upperLimitRots();
         pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;

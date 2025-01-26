@@ -12,7 +12,6 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Profiles;
 import frc.robot.subsystems.superstructure.SplineProfile;
 import frc.robot.subsystems.superstructure.Superstructure;
-import org.littletonrobotics.junction.Logger;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;

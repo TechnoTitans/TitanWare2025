@@ -1,8 +1,6 @@
 package frc.robot.utils.sim.feedback;
 
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.CANrange;
-import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.CANrangeSimState;
 import frc.robot.utils.ctre.Phoenix6Utils;
 

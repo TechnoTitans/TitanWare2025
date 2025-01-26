@@ -76,7 +76,6 @@ public class ElevatorIOReal implements ElevatorIO {
         CANrangeConfiguration.ProximityParams.ProximityHysteresis = 0.03;
         canRange.getConfigurator().apply(CANrangeConfiguration);
 
-        final InvertedValue masterInverted = InvertedValue.CounterClockwise_Positive;
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
                 .withKS(0)
@@ -94,7 +93,7 @@ public class ElevatorIOReal implements ElevatorIO {
         motorConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         motorConfiguration.Feedback.SensorToMechanismRatio = constants.gearing();
         motorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
-        motorConfiguration.MotorOutput.Inverted = masterInverted;
+        motorConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         motorConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         motorConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.upperLimitRots();
         motorConfiguration.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
