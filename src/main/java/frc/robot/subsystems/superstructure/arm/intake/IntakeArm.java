@@ -36,7 +36,7 @@ public class IntakeArm extends SubsystemBase {
     private final SysIdRoutine pivotTorqueCurrentSysIdRoutine;
 
     private IntakeArm.PivotGoal desiredGoal = IntakeArm.PivotGoal.STOW;
-    private IntakeArm.PivotGoal currentGoal;
+    private IntakeArm.PivotGoal currentGoal = desiredGoal;
 
     private final IntakeArm.PivotPositionSetpoint pivotPositionSetpoint;
     private final IntakeArm.PivotPositionSetpoint pivotLowerLimit;
@@ -104,11 +104,13 @@ public class IntakeArm extends SubsystemBase {
                 intakeArmIO::toPivotTorqueCurrent
         );
 
-        this.pivotPositionSetpoint = new IntakeArm.PivotPositionSetpoint();
+        this.pivotPositionSetpoint = new IntakeArm.PivotPositionSetpoint()
+                .withPivotPositionRots(desiredGoal.getPivotPositionGoalRots());
         this.pivotLowerLimit = new IntakeArm.PivotPositionSetpoint().withPivotPositionRots(constants.pivotLowerLimitRots());
         this.pivotUpperLimit = new IntakeArm.PivotPositionSetpoint().withPivotPositionRots(constants.pivotUpperLimitRots());
 
         this.intakeArmIO.config();
+        this.intakeArmIO.toPivotPosition(pivotPositionSetpoint.pivotPositionRots);
     }
 
     @Override

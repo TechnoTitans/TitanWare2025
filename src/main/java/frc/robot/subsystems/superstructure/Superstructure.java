@@ -1,6 +1,7 @@
 package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -14,26 +15,16 @@ import frc.robot.utils.solver.SuperstructureSolver;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
-    protected static final String LogKey = "Superstructure";
-
-    private final Elevator elevator;
-    private final ElevatorArm elevatorArm;
-    private final IntakeArm intakeArm;
-
-    private Goal desiredGoal = Goal.IDLE;
-    private Goal currentGoal = desiredGoal;
-    public final Trigger atSuperstructureSetpoint;
-
-
-
     public enum Goal {
         DYNAMIC(Elevator.Goal.DYNAMIC, ElevatorArm.Goal.DYNAMIC, IntakeArm.PivotGoal.STOW),
         STOW(Elevator.Goal.IDLE, ElevatorArm.Goal.STOW, IntakeArm.PivotGoal.STOW),
-        IDLE(Elevator.Goal.IDLE, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.STOW),
         CLIMB(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB, IntakeArm.PivotGoal.STOW),
         ALGAE_GROUND(Elevator.Goal.IDLE, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.ALGAE_GROUND),
         HP(Elevator.Goal.HP, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.HP),
@@ -42,6 +33,19 @@ public class Superstructure extends VirtualSubsystem {
         L3(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.PivotGoal.L3),
         L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.PivotGoal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.NET);
+
+        private static final Map<Goal, Pose2d> GoalPoses = new HashMap<>();
+
+        static {
+            for (final Goal goal : Goal.values()) {
+                final Pose2d goalPose = new Pose2d(
+                        0.0,
+                        goal.elevatorGoal.getPositionGoalMeters(),
+                        Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots())
+                );
+                GoalPoses.put(goal, goalPose);
+            }
+        }
 
         public final Elevator.Goal elevatorGoal;
         public final ElevatorArm.Goal elevatorArmGoal;
@@ -58,6 +62,16 @@ public class Superstructure extends VirtualSubsystem {
         }
     }
 
+    protected static final String LogKey = "Superstructure";
+
+    private final Elevator elevator;
+    private final ElevatorArm elevatorArm;
+    private final IntakeArm intakeArm;
+
+    private Goal desiredGoal = Goal.STOW;
+    private Goal currentGoal = desiredGoal;
+    public final Trigger atSuperstructureSetpoint;
+
     public Superstructure(
             final Elevator elevator,
             final ElevatorArm elevatorArm,
@@ -70,6 +84,10 @@ public class Superstructure extends VirtualSubsystem {
                 .and(elevatorArm.atPivotSetpoint)
                 .and(intakeArm.atPivotPositionSetpoint)
                 .and(() -> currentGoal == desiredGoal);
+
+        this.elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
+        this.elevator.setGoal(desiredGoal.elevatorGoal);
+        this.intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
     }
 
     @Override
@@ -118,11 +136,11 @@ public class Superstructure extends VirtualSubsystem {
                     Logger.recordOutput(LogKey + "/ProfileTime", timer.get());
                     Logger.recordOutput(LogKey + "/Profile", profile.toString());
                 }),
-                elevatorArm.runPositionCommand(() -> {
+                elevatorArm.toPositionCommand(() -> {
                     final Pose2d sample = sampler.get();
                     return Units.radiansToRotations(sample.getX());
                 }),
-                elevator.runPositionMetersCommand(() -> {
+                elevator.toPositionMetersCommand(() -> {
                     final Pose2d sample = sampler.get();
                     return sample.getY();
                 }),
@@ -143,12 +161,20 @@ public class Superstructure extends VirtualSubsystem {
                 elevator, elevatorArm, intakeArm
         );
     }
+
     public Command toSuperstructureGoal(final Goal goal) {
         return Commands.runEnd(
                 () -> this.desiredGoal = goal,
-                () -> this.desiredGoal = Goal.IDLE,
+                () -> this.desiredGoal = Goal.STOW,
                 elevator, elevatorArm, intakeArm
         );
+    }
+
+    public Command runWaitSuperstructureGoal(final Goal goal) {
+        return Commands.run(
+                () -> this.desiredGoal = goal,
+                elevator, elevatorArm, intakeArm
+        ).until(atSuperstructureSetpoint);
     }
 
     public Command runSuperstructureGoal(final Goal goal) {
@@ -167,5 +193,29 @@ public class Superstructure extends VirtualSubsystem {
 
     public Set<Subsystem> getRequirements() {
         return Set.of(elevator, elevatorArm, intakeArm);
+    }
+
+    public Optional<Goal> getClosestGoal() {
+        final Pose2d currentPose = new Pose2d(
+            0.0,
+            elevator.getExtensionMeters(),
+            elevatorArm.getPivotPosition()
+        );
+
+        Goal closestGoal = null;
+        double minDistance = Double.MAX_VALUE;
+        for (final Map.Entry<Goal, Pose2d> goalPoseEntry : Goal.GoalPoses.entrySet()) {
+            final double distance = goalPoseEntry
+                    .getValue()
+                    .getTranslation()
+                    .getDistance(currentPose.getTranslation());
+
+            if (distance < minDistance) {
+                closestGoal = goalPoseEntry.getKey();
+                minDistance = distance;
+            }
+        }
+
+        return Optional.ofNullable(closestGoal);
     }
 }

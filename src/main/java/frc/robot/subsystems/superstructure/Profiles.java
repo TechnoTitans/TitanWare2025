@@ -3,6 +3,7 @@ package frc.robot.subsystems.superstructure;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class Profiles {
     public static final SplineProfile L1_TO_L2 = new SplineProfile(
@@ -115,7 +116,7 @@ public class Profiles {
     );
 
     //starting goal -> ending goal -> profile
-    public static final Map<Superstructure.Goal, Map<Superstructure.Goal, SplineProfile>> profiles = Map.of(
+    private static final Map<Superstructure.Goal, Map<Superstructure.Goal, SplineProfile>> profiles = Map.of(
             Superstructure.Goal.L1, Map.of(
                     Superstructure.Goal.L2, L1_TO_L2,
                     Superstructure.Goal.L3, L1_TO_L3,
@@ -137,4 +138,13 @@ public class Profiles {
                     Superstructure.Goal.L3, L4_TO_L3
             )
     );
+
+    public static Optional<SplineProfile> getProfile(Superstructure.Goal start, Superstructure.Goal end) {
+        final Map<Superstructure.Goal, SplineProfile> startProfiles = profiles.get(start);
+        if (startProfiles == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(startProfiles.get(end));
+    }
 }

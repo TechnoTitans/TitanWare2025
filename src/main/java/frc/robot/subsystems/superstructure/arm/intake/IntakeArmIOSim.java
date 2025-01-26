@@ -106,13 +106,11 @@ public class IntakeArmIOSim implements IntakeArmIO {
 
     @Override
     public void config() {
-        final SensorDirectionValue pivotCANCoderDirection = SensorDirectionValue.Clockwise_Positive;
         final CANcoderConfiguration pivotCANCoderConfiguration = new CANcoderConfiguration();
         pivotCANCoderConfiguration.MagnetSensor.MagnetOffset = constants.intakePivotCANCoderOffset();
-        pivotCANCoderConfiguration.MagnetSensor.SensorDirection = pivotCANCoderDirection;
+        pivotCANCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         pivotEncoder.getConfigurator().apply(pivotCANCoderConfiguration);
 
-        final InvertedValue pivotMotorInverted = InvertedValue.Clockwise_Positive;
         final TalonFXConfiguration pivotConfiguration = new TalonFXConfiguration();
         pivotConfiguration.Slot0 = new Slot0Configs()
                 .withKG(0.26)
@@ -126,7 +124,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         pivotConfiguration.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
         pivotConfiguration.Feedback.RotorToSensorRatio = constants.pivotGearing();
         pivotConfiguration.Feedback.SensorToMechanismRatio = 1;
-        pivotConfiguration.MotorOutput.Inverted = pivotMotorInverted;
+        pivotConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();
         pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;

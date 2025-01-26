@@ -37,7 +37,7 @@ public class ElevatorArm extends SubsystemBase {
     private final SysIdRoutine torqueCurrentSysIdRoutine;
 
     private Goal desiredGoal = Goal.STOW;
-    private Goal currentGoal;
+    private Goal currentGoal = desiredGoal;
 
     private final PositionSetpoint setpoint;
     private final PositionSetpoint pivotLowerSetpoint;
@@ -101,11 +101,12 @@ public class ElevatorArm extends SubsystemBase {
                 Seconds.of(6)
         );
 
-        this.setpoint = new PositionSetpoint();
+        this.setpoint = new PositionSetpoint().withPivotPositionRots(desiredGoal.getPivotPositionGoalRots());
         this.pivotLowerSetpoint = new PositionSetpoint().withPivotPositionRots(constants.lowerLimitRots());
         this.pivotUpperSetpoint = new PositionSetpoint().withPivotPositionRots(constants.upperLimitRots());
 
         this.elevatorArmIO.config();
+        this.elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
     }
 
     @Override
@@ -160,11 +161,11 @@ public class ElevatorArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
     }
 
-    public Command runPositionCommand(final DoubleSupplier positionRots) {
+    public Command toPositionCommand(final DoubleSupplier positionRots) {
         return run(() -> {
             this.desiredGoal = Goal.DYNAMIC;
             setpoint.pivotPositionRots = positionRots.getAsDouble();
-            elevatorArmIO.toPivotPosition(positionRots.getAsDouble());
+            elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
         });
     }
 

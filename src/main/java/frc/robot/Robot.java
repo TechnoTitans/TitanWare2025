@@ -314,44 +314,27 @@ public class Robot extends LoggedRobot {
 
         this.driverController.povUp().onTrue(
                 Commands.sequence(
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L1_TO_L4).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L1_TO_L3).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L1_TO_L2).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L2_TO_L1).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L2_TO_L4).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L2_TO_L3).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L3_TO_L1).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L3_TO_L2).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L3_TO_L4).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L4_TO_L1).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L4_TO_L2).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L4_TO_L3).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.STOW)
-                                .until(superstructure.atSuperstructureSetpoint)
-                ));
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).until(superstructure.atSuperstructureSetpoint),
+                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L1).withTimeout(1.5),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                )
+        );
     }
 }

@@ -10,12 +10,12 @@ import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Profiles;
+import frc.robot.subsystems.superstructure.SplineProfile;
 import frc.robot.subsystems.superstructure.Superstructure;
+import org.littletonrobotics.junction.Logger;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -52,6 +52,7 @@ public class ScoreCommands {
     ) {}
 
     private static final List<Superstructure.Goal> ScoreGoals = List.of(
+            Superstructure.Goal.DYNAMIC,
             Superstructure.Goal.L1,
             Superstructure.Goal.L2,
             Superstructure.Goal.L3,
@@ -104,6 +105,15 @@ public class ScoreCommands {
         };
     }
 
+    private Superstructure.Goal getNonDynamicGoal() {
+        final Superstructure.Goal maybeDynamicSuperstructureGoal =
+                superstructure.getCurrentSuperstructureGoal();
+
+        return maybeDynamicSuperstructureGoal == Superstructure.Goal.DYNAMIC
+                ? superstructure.getClosestGoal().orElseThrow()
+                : maybeDynamicSuperstructureGoal;
+    }
+
     public Command readyScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         return Commands.parallel(
                 Commands.defer(
@@ -143,17 +153,37 @@ public class ScoreCommands {
                         Set.of(swerve)
                 ),
                 Commands.sequence(
-                        Commands.waitUntil(swerve.atHolonomicDrivePose).withTimeout(3),
-                        Commands.either(
-                                Commands.defer(
-                                        () -> superstructure.runProfile(
-                                                Profiles.profiles.get(superstructure.getCurrentSuperstructureGoal())
-                                                        .get(scorePositionSupplier.get().level.goal)
+                        Commands.waitUntil(swerve.atHolonomicDrivePose),
+                        Commands.repeatingSequence(
+                                Commands.either(
+                                        Commands.defer(
+                                                () -> {
+                                                    final ScorePosition scorePosition = scorePositionSupplier.get();
+                                                    final Superstructure.Goal superstructureGoal = getNonDynamicGoal();
+
+                                                    final Optional<SplineProfile> splineProfile = Profiles.getProfile(
+                                                            superstructureGoal,
+                                                            scorePosition.level.goal
+                                                    );
+
+                                                    final BooleanSupplier desiredScorePositionNotEqualLast =
+                                                            () -> !scorePosition.equals(scorePositionSupplier.get());
+
+                                                    if (splineProfile.isEmpty()) {
+                                                        return Commands.idle().until(desiredScorePositionNotEqualLast);
+                                                    } else {
+                                                        return superstructure.runProfile(splineProfile.get())
+                                                                .until(desiredScorePositionNotEqualLast);
+                                                    }
+                                                },
+                                                superstructure.getRequirements()
                                         ),
-                                        superstructure.getRequirements()
-                                ),
-                                superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level.goal),
-                                () -> ScoreCommands.ScoreGoals.contains(superstructure.getDesiredSuperstructureGoal())
+                                        Commands.defer(
+                                                () -> superstructure.runWaitSuperstructureGoal(scorePositionSupplier.get().level.goal),
+                                                superstructure.getRequirements()
+                                        ),
+                                        () -> ScoreCommands.ScoreGoals.contains(superstructure.getCurrentSuperstructureGoal())
+                                )
                         )
                 )
         );

@@ -38,7 +38,7 @@ public class Elevator extends SubsystemBase {
     private final SysIdRoutine torqueCurrentSysIdRoutine;
 
     private Goal desiredGoal = Goal.IDLE;
-    private Goal currentGoal;
+    private Goal currentGoal = desiredGoal;
 
     private final PositionSetpoint setpoint;
     private final PositionSetpoint elevatorLowerLimit;
@@ -110,11 +110,13 @@ public class Elevator extends SubsystemBase {
                 Seconds.of(10)
         );
 
-        this.setpoint = new PositionSetpoint();
+        this.setpoint = new PositionSetpoint()
+                .withElevatorPositionRots(desiredGoal.getPositionGoalRots(constants));
         this.elevatorLowerLimit = new PositionSetpoint().withElevatorPositionRots(constants.lowerLimitRots());
         this.elevatorUpperLimit = new PositionSetpoint().withElevatorPositionRots(constants.upperLimitRots());
 
         this.elevatorIO.config();
+        this.elevatorIO.toPosition(setpoint.elevatorPositionRots);
     }
 
     @Override
@@ -174,7 +176,7 @@ public class Elevator extends SubsystemBase {
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
     }
 
-    public Command runPositionMetersCommand(final DoubleSupplier positionMeters) {
+    public Command toPositionMetersCommand(final DoubleSupplier positionMeters) {
         return run(() -> {
             this.desiredGoal = Goal.DYNAMIC;
             setpoint.elevatorPositionRots = positionMeters.getAsDouble() / drumCircumferenceMeters;
