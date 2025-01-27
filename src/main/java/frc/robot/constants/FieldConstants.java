@@ -229,7 +229,15 @@ public class FieldConstants {
     }
 
     public static Pose2d getProcessorScoringPose() {
-        return getAllianceFlipped(Processor.BLUE_SCORING_POSE, Processor.BLUE_SCORING_POSE);
+        return getAllianceFlipped(Processor.BLUE_SCORING_POSE, Processor.RED_SCORING_POSE);
+    }
+
+    public static Pose2d getLeftCoralStationPose() {
+        return getAllianceFlipped(CoralStation.BLUE_LEFT_CENTER_FACE, CoralStation.RED_LEFT_CENTER_FACE);
+    }
+
+    public static Pose2d getRightCoralStationPose() {
+        return getAllianceFlipped(CoralStation.BLUE_RIGHT_CENTER_FACE, CoralStation.RED_RIGHT_CENTER_FACE);
     }
 
     public static Pose2d[] getReefCenterPoses() {

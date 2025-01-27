@@ -1,6 +1,10 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -14,6 +18,7 @@ import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.state.GamepieceState;
@@ -255,7 +260,14 @@ public class Robot extends LoggedRobot {
     @Override
     public void teleopInit() {
         //noinspection SuspiciousNameCombination
-        swerve.setDefaultCommand(swerve.teleopDriveCommand(driverController::getLeftY, driverController::getLeftX, driverController::getRightX, IsRedAlliance));
+        swerve.setDefaultCommand(
+                swerve.teleopDriveCommand(
+                        driverController::getLeftY,
+                        driverController::getLeftX,
+                        driverController::getRightX,
+                        IsRedAlliance
+                )
+        );
     }
 
     @Override
@@ -269,10 +281,44 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-        driverController.y(testEventLoop).whileTrue(swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward));
-        driverController.a(testEventLoop).whileTrue(swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse));
-        driverController.b(testEventLoop).whileTrue(swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kForward));
-        driverController.x(testEventLoop).whileTrue(swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kReverse));
+        driverController.y(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+        );
+        driverController.a(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
+        );
+        driverController.b(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kForward)
+        );
+        driverController.x(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
+        );
+
+        driverController.povUp().onTrue(
+                Commands.sequence(
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1)
+                                .until(superstructure.atSuperstructureSetpoint),
+                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L1).withTimeout(1.5),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                )
+        );
     }
 
     @Override
@@ -285,6 +331,8 @@ public class Robot extends LoggedRobot {
 
     public void configureStateTriggers() {
         endgameTrigger.onTrue(ControllerUtils.rumbleForDurationCommand(driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1));
+
+        intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1));
     }
 
     public void configureAutos() {
@@ -312,28 +360,35 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
-        this.driverController.povUp().onTrue(
-                Commands.sequence(
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L1_TO_L4).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L4_TO_L2).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L2_TO_L4).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L4_TO_L3).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L3_TO_L4).withTimeout(1.5),
-                        superstructure.runProfile(Profiles.L4_TO_L1).withTimeout(1.5),
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+        //noinspection SuspiciousNameCombination
+        this.driverController.povUp().whileTrue(
+                Commands.parallel(
+                        swerve.teleopFacingAngleCommand(
+                                driverController::getLeftY,
+                                driverController::getLeftX,
+                                () -> {
+                                    final Pose2d currentPose = swerve.getPose();
+                                    if (IsRedAlliance.getAsBoolean()) {
+                                        if (currentPose.getY() < FieldConstants.FIELD_WIDTH_Y_METERS / 2) {
+                                            return FieldConstants.CoralStation.RED_LEFT_CENTER_FACE.getRotation()
+                                                    .rotateBy(Rotation2d.kPi);
+                                        } else {
+                                            return FieldConstants.CoralStation.RED_RIGHT_CENTER_FACE.getRotation()
+                                                    .rotateBy(Rotation2d.kPi);
+                                        }
+                                    } else {
+                                        if (currentPose.getY() < FieldConstants.FIELD_WIDTH_Y_METERS / 2) {
+                                            return FieldConstants.CoralStation.BLUE_RIGHT_CENTER_FACE.getRotation()
+                                                    .rotateBy(Rotation2d.kPi);
+                                        } else {
+                                            return FieldConstants.CoralStation.BLUE_LEFT_CENTER_FACE.getRotation()
+                                                    .rotateBy(Rotation2d.kPi);
+                                        }
+                                    }
+                                }
+                        ),
+                        superstructure.toSuperstructureGoal(Superstructure.Goal.HP)
+//                        intake.runCoralRollerVelocity(3)
                 )
         );
     }

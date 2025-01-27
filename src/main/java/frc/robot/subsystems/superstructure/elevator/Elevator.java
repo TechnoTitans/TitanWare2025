@@ -66,7 +66,7 @@ public class Elevator extends SubsystemBase {
     public enum Goal {
         DYNAMIC(0),
         IDLE(0),
-        HP(2.5),
+        HP(0.02),
         L1(0.028),
         L2(0.150),
         L3(0.458),

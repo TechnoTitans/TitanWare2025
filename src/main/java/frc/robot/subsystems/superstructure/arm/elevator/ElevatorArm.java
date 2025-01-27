@@ -64,7 +64,7 @@ public class ElevatorArm extends SubsystemBase {
     public enum Goal {
         DYNAMIC(0),
         STOW(Units.degreesToRotations(35)),
-        UPRIGHT(Units.degreesToRotations(90)),
+        UPRIGHT(Units.degreesToRotations(45)),
         L1(Units.radiansToRotations(0.159)),
         L2(Units.radiansToRotations(0.433)),
         L3(Units.radiansToRotations(0.637)),
