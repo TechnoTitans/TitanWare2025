@@ -263,6 +263,28 @@ public class ScoreCommands {
         );
     }
 
+    public Command intakeLowerAlgae() {
+        return Commands.deadline(
+                Commands.sequence(
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        intake.runAlgaeRollerVoltage(8),
+                        Commands.waitUntil(intake.isAlgaePresent.negate())
+                ),
+                superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE)
+        );
+    }
+
+    public Command intakeUpperAlgae() {
+        return Commands.deadline(
+                Commands.sequence(
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        intake.runAlgaeRollerVoltage(8),
+                        Commands.waitUntil(intake.isAlgaePresent.negate())
+                ),
+                superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE)
+        );
+    }
+
     public Command readyScoreNet(
             final DoubleSupplier leftStickXInput,
             final DoubleSupplier leftStickYInput

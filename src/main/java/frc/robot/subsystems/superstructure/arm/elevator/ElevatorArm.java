@@ -67,7 +67,9 @@ public class ElevatorArm extends SubsystemBase {
         UPRIGHT(Units.degreesToRotations(45)),
         L1(Units.radiansToRotations(0.159)),
         L2(Units.radiansToRotations(0.433)),
+        LOWER_ALGAE(Units.radiansToRotations(0.540)),
         L3(Units.radiansToRotations(0.637)),
+        UPPER_ALGAE(Units.radiansToRotations(.750)),
         L4(Units.radiansToRotations(0.881)),
         CLIMB(Units.degreesToRotations(20));
 
