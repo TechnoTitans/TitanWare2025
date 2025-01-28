@@ -167,7 +167,7 @@ public class IntakeIOSim implements IntakeIO {
         final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
         CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
         CANRangeConfiguration.ProximityParams.ProximityThreshold = Units.inchesToMeters(11);
-        CANRangeConfiguration.ProximityParams.ProximityHysteresis = Units.inchesToMeters(5);
+        CANRangeConfiguration.ProximityParams.ProximityHysteresis = Units.inchesToMeters(1);
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -198,7 +198,7 @@ public class IntakeIOSim implements IntakeIO {
 
         coralRollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
         algaeRollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-        coralCANRange.getSimState().setDistance(0);
+        coralCANRange.getSimState().setDistance(10);
     }
 
     @Override

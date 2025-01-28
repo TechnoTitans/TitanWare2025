@@ -119,5 +119,12 @@ public class GamepieceState extends VirtualSubsystem {
                     Commands.waitSeconds(0.15),
                         setCANRangeDistance(Units.inchesToMeters(6))
         ));
+
+        intake.isCoralOuttaking.and(hasCoral).whileTrue(
+                Commands.sequence(
+                        waitRand(random, 0.1, 2),
+                        Commands.waitSeconds(0.15),
+                        setCANRangeDistance(10)
+        ));
     }
 }

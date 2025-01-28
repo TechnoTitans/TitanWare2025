@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -102,6 +103,35 @@ public class ScoreCommands {
 
             return new ScorePosition(side, level);
         };
+    }
+
+    public Command intakeFacingClosestCoralStation(
+            final DoubleSupplier leftStickXInput,
+            final DoubleSupplier leftStickYInput
+    ) {
+        //noinspection SuspiciousNameCombination
+        return Commands.parallel(
+                swerve.teleopFacingAngleCommand(
+                        leftStickYInput,
+                        leftStickXInput,
+                        () -> {
+                            final Pose2d currentPose = swerve.getPose();
+                            final Pose2d nearestStation;
+                            if (Robot.IsRedAlliance.getAsBoolean()) {
+                                nearestStation = currentPose.nearest(
+                                        FieldConstants.CoralStation.RED_CORAL_STATIONS
+                                );
+                            } else {
+                                nearestStation = currentPose.nearest(
+                                        FieldConstants.CoralStation.BLUE_CORAL_STATIONS
+                                );
+                            }
+                            return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
+                        }
+                ),
+                superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
+                intake.runCoralRollerVelocity(3)
+        );
     }
 
     private Superstructure.Goal getNonDynamicGoal() {

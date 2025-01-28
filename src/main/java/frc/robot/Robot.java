@@ -1,10 +1,6 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -18,7 +14,6 @@ import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
-import frc.robot.constants.FieldConstants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.state.GamepieceState;
@@ -46,7 +41,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
@@ -360,30 +354,8 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
-        //noinspection SuspiciousNameCombination
         this.driverController.povDown().whileTrue(
-                Commands.parallel(
-                        swerve.teleopFacingAngleCommand(
-                                driverController::getLeftY,
-                                driverController::getLeftX,
-                                () -> {
-                                    final Pose2d currentPose = swerve.getPose();
-                                    final Pose2d nearestStation;
-                                    if (IsRedAlliance.getAsBoolean()) {
-                                        nearestStation = currentPose.nearest(
-                                                FieldConstants.CoralStation.RED_CORAL_STATIONS
-                                        );
-                                    } else {
-                                        nearestStation = currentPose.nearest(
-                                                FieldConstants.CoralStation.BLUE_CORAL_STATIONS
-                                        );
-                                    }
-                                    return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
-                                }
-                        ),
-                        superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
-                        intake.runCoralRollerVelocity(3)
-                )
+                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
     }
 }

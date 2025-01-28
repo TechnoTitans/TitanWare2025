@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 
@@ -111,6 +112,8 @@ public class IntakeIOReal implements IntakeIO {
 
         final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
         CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
+        CANRangeConfiguration.ProximityParams.ProximityThreshold = Units.inchesToMeters(11);
+        CANRangeConfiguration.ProximityParams.ProximityHysteresis = Units.inchesToMeters(1);
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -175,10 +178,12 @@ public class IntakeIOReal implements IntakeIO {
     public void toCoralRollerVelocity(final double coralRollerVelocityRotsPerSec) {
         coralRollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(coralRollerVelocityRotsPerSec));
     }
+
     @Override
     public void toCoralRollerVoltage(final double volts) {
         coralRollerMotor.setControl(voltageOut.withOutput(volts));
     }
+
     @Override
     public void toCoralRollerTorqueCurrent(final double torqueCurrentAmps) {
         coralRollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
@@ -188,10 +193,12 @@ public class IntakeIOReal implements IntakeIO {
     public void toAlgaeRollerVelocity(final double algaeRollerVelocityRotsPerSec) {
         algaeRollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(algaeRollerVelocityRotsPerSec));
     }
+
     @Override
     public void toAlgaeRollerVoltage(final double volts) {
         algaeRollerMotor.setControl(voltageOut.withOutput(volts));
     }
+
     @Override
     public void toAlgaeRollerTorqueCurrent(final double torqueCurrentAmps) {
         algaeRollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
