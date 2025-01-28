@@ -367,9 +367,12 @@ public class Robot extends LoggedRobot {
                 .onFalse(scoreCommands.scoreProcessor());
         //intake upper algae
         this.coController.y(teleopEventLoop)
-                .whileTrue(scoreCommands.intakeLowerAlgae());
+                .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
+                .onFalse(scoreCommands.intakeUpperAlgae());
         //intake lower algae
-        this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeUpperAlgae());
+        this.coController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
+                .onFalse(scoreCommands.intakeLowerAlgae());
         //score net
         this.coController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftY, driverController::getLeftX))

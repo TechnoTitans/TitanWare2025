@@ -153,7 +153,7 @@ public class ScoreCommands {
                         () -> {
                             final Pose2d currentPose = swerve.getPose();
                             final Translation2d currentTranslation = currentPose.getTranslation();
-                            final Pose2d[] reefCenterPoses = FieldConstants.getReefCenterPoses();
+                            final Pose2d[] reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
                             final List<Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
                                     FieldConstants.getBranchScoringPositions();
 
@@ -263,14 +263,27 @@ public class ScoreCommands {
         );
     }
 
+    public Command readyIntakeAlgaeAtPosition() {
+        return Commands.defer(
+                () -> {
+                    final Pose2d currentPose = swerve.getPose();
+                    final Pose2d[] reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
+                    final Pose2d nearestCoralSide = currentPose.nearest(List.of(reefCenterPoses));
+
+                    return swerve.runToPose(() -> nearestCoralSide);
+                },
+                Set.of(swerve)
+        );
+    }
     public Command intakeLowerAlgae() {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
                         intake.runAlgaeRollerVoltage(8),
-                        Commands.waitUntil(intake.isAlgaePresent.negate())
+                        Commands.waitUntil(intake.isAlgaePresent)
                 ),
-                superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE)
+                superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
+                swerve.runWheelXCommand()
         );
     }
 
@@ -279,9 +292,10 @@ public class ScoreCommands {
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
                         intake.runAlgaeRollerVoltage(8),
-                        Commands.waitUntil(intake.isAlgaePresent.negate())
+                        Commands.waitUntil(intake.isAlgaePresent)
                 ),
-                superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE)
+                superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
+                swerve.runWheelXCommand()
         );
     }
 

@@ -96,7 +96,9 @@ public class FieldConstants {
 
         // Starting facing the driver station in clockwise order
         public static final Pose2d[] BLUE_CENTER_FACES = new Pose2d[6];
+        public static final Pose2d[] BLUE_CENTER_SCORING_FACES = new Pose2d[6];
         public static final Pose2d[] RED_CENTER_FACES = new Pose2d[6];
+        public static final Pose2d[] RED_CENTER_SCORING_FACES = new Pose2d[6];
         // Starting at the right branch facing the driver station in clockwise
         public static final List<Map<Side, Map<Level, Pose3d>>> BLUE_BRANCH_POSITIONS = new ArrayList<>();
         public static final List<Map<Side, Map<Level, Pose3d>>> RED_BRANCH_POSITIONS = new ArrayList<>();
@@ -135,9 +137,14 @@ public class FieldConstants {
                             Units.inchesToMeters(130.144),
                             Rotation2d.fromDegrees(-120));
 
+
+
             final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);
+            final Transform2d reefFaceScoringTransform = new Transform2d(Units.inchesToMeters(20), 0, Rotation2d.kPi);
             for (int face = 0; face < BLUE_CENTER_FACES.length; face++) {
                 RED_CENTER_FACES[face] = BLUE_CENTER_FACES[face].relativeTo(RED_ORIGIN);
+                BLUE_CENTER_SCORING_FACES[face] = BLUE_CENTER_FACES[face].transformBy(reefFaceScoringTransform);
+                RED_CENTER_SCORING_FACES[face] = RED_CENTER_FACES[face].transformBy(reefFaceScoringTransform);
 
                 final Map<Level, Pose3d> fillBlueRight = new HashMap<>();
                 final Map<Level, Pose3d> fillRedRight = new HashMap<>();
@@ -242,6 +249,10 @@ public class FieldConstants {
 
     public static Pose2d[] getReefCenterPoses() {
         return getAllianceFlipped(Reef.BLUE_CENTER_FACES, Reef.RED_CENTER_FACES);
+    }
+
+    public static Pose2d[] getReefScoringCenterPoses() {
+        return getAllianceFlipped(Reef.BLUE_CENTER_SCORING_FACES, Reef.RED_CENTER_SCORING_FACES);
     }
 
     public static List<Map<Reef.Side, Map<Reef.Level, Pose3d>>> getBranchPositions() {
