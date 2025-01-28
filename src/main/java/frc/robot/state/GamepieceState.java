@@ -4,6 +4,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.constants.Constants;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
@@ -38,10 +39,11 @@ public class GamepieceState extends VirtualSubsystem {
     public final Trigger hasCoral = isCoralHeld.or(isCoralScoring);
     public final Trigger hasAlgae = isAlgaeHeld.or(isAlgaeScoring);
 
-    public GamepieceState(final Intake intake) {
+    public GamepieceState(final Constants.RobotMode mode, final Intake intake) {
         this.intake = intake;
 
         configureStateTriggers();
+        if (mode != Constants.RobotMode.REAL)
         configureSimStateTriggers();
     }
 

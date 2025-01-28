@@ -99,6 +99,10 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/CoralRollerVelocitySetpoint", coralRollerVelocitySetpoint);
         Logger.recordOutput(LogKey + "/AlgaeRollerVelocitySetpoint", algaeRollerVelocitySetpoint);
 
+        Logger.recordOutput(LogKey + "/isCoralPresent", isCoralPresent);
+        Logger.recordOutput(LogKey + "/FilteredAlgae", getFilteredAlgaeCurrent());
+        Logger.recordOutput(LogKey + "/isAlgaePresent", isAlgaePresent);
+
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - intakePeriodicUpdateStart)
@@ -109,9 +113,12 @@ public class Intake extends SubsystemBase {
         return inputs.coralCANRangeIsDetected;
     }
 
+    private double getFilteredAlgaeCurrent() {
+        return algaeDetectionCurrentFilter.calculate(inputs.algaeRollerTorqueCurrentAmps);
+    }
+
     private boolean isAlgaePresent() {
-        final double filteredCurrent = algaeDetectionCurrentFilter.calculate(inputs.algaeRollerTorqueCurrentAmps);
-        return filteredCurrent >= 30;
+        return getFilteredAlgaeCurrent() >= 30;
     }
 
     private double getCoralDistance() {

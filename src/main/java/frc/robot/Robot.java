@@ -93,7 +93,7 @@ public class Robot extends LoggedRobot {
             HardwareConstants.INTAKE
     );
 
-    public final GamepieceState gamePieceState = new GamepieceState(intake);
+    public final GamepieceState gamePieceState = new GamepieceState(Constants.CURRENT_MODE, intake);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
 
     public final Autos autos = new Autos(swerve, photonVision);
@@ -351,11 +351,28 @@ public class Robot extends LoggedRobot {
         final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
                 scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
         this.driverController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
+                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier, intake.coralDistance))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
-        this.driverController.povDown().whileTrue(
+        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
+
+        this.driverController.povUp().whileTrue(
+                superstructure.toSuperstructureGoal(Superstructure.Goal.L4)
+        );
+
+        this.coController.b(teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreProcessor())
+                .onFalse(scoreCommands.scoreProcessor());
+        //intake upper algae
+        this.coController.y(teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreProcessor());
+        //intake lower algae
+        this.coController.a(teleopEventLoop).whileTrue(scoreCommands.readyScoreProcessor());
+        //score net
+        this.coController.x(teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftY, driverController::getLeftX))
+                .onFalse(scoreCommands.scoreNet());
     }
 }

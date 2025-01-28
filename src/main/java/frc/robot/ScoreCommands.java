@@ -2,6 +2,7 @@ package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -143,7 +144,10 @@ public class ScoreCommands {
                 : maybeDynamicSuperstructureGoal;
     }
 
-    public Command readyScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
+    public Command readyScoreAtPosition(
+            final Supplier<ScorePosition> scorePositionSupplier,
+            final DoubleSupplier coralDistanceOffset
+    ) {
         return Commands.parallel(
                 Commands.defer(
                         () -> {
@@ -174,9 +178,17 @@ public class ScoreCommands {
                             final Map<Reef.Side, Map<Reef.Level, Pose2d>> finalScoringPoseMap = scoringPoseMap;
                             return swerve.runToPose(() -> {
                                 final ScorePosition scorePosition = scorePositionSupplier.get();
-                                return finalScoringPoseMap
+                                final Pose2d scoringPose = finalScoringPoseMap
                                         .get(scorePosition.side)
                                         .get(scorePosition.level.level);
+
+                                return scoringPose.transformBy(
+                                        new Transform2d(
+                                                coralDistanceOffset.getAsDouble(),
+                                                0,
+                                                Rotation2d.kZero
+                                        )
+                                );
                             });
                         },
                         Set.of(swerve)
@@ -228,6 +240,51 @@ public class ScoreCommands {
                         () -> superstructure.toSuperstructureGoal(scorePosition.get().level.goal),
                         superstructure.getRequirements()
                 ),
+                swerve.runWheelXCommand()
+        );
+    }
+
+    public Command readyScoreProcessor() {
+        return Commands.parallel(
+                swerve.driveToPose(FieldConstants::getProcessorScoringPose),
+                superstructure.runSuperstructureGoal(Superstructure.Goal.PROCESSOR)
+        );
+    }
+
+    public Command scoreProcessor() {
+        return Commands.deadline(
+                Commands.sequence(
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        intake.runAlgaeRollerVoltage(-8),
+                        Commands.waitUntil(intake.isAlgaePresent.negate())
+                ),
+                superstructure.toSuperstructureGoal(Superstructure.Goal.PROCESSOR),
+                swerve.runWheelXCommand()
+        );
+    }
+
+    public Command readyScoreNet(
+            final DoubleSupplier leftStickXInput,
+            final DoubleSupplier leftStickYInput
+    ) {
+        return Commands.parallel(
+                swerve.teleopFacingAngleCommand(
+                        leftStickYInput,
+                        leftStickXInput,
+                        () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.kPi
+                ),
+                superstructure.runSuperstructureGoal(Superstructure.Goal.NET)
+        );
+    }
+
+    public Command scoreNet() {
+        return Commands.deadline(
+                Commands.sequence(
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        intake.runAlgaeRollerVoltage(-8),
+                        Commands.waitUntil(intake.isAlgaePresent.negate())
+                ),
+                superstructure.toSuperstructureGoal(Superstructure.Goal.NET),
                 swerve.runWheelXCommand()
         );
     }
