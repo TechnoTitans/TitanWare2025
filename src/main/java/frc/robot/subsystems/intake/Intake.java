@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Current;
@@ -25,8 +26,6 @@ import static edu.wpi.first.units.Units.*;
 
 public class Intake extends SubsystemBase {
     protected static final String LogKey = "Intake";
-    private static final double PositionToleranceRots = 0.005;
-    private static final double VelocityToleranceRotsPerSec = 0.01;
 
     private final IntakeIO intakeIO;
     private final IntakeIOInputsAutoLogged inputs;
@@ -50,6 +49,7 @@ public class Intake extends SubsystemBase {
     public final Trigger isAlgaePresent = new Trigger(this::isAlgaePresent);
 
     public final DoubleSupplier coralDistance = this::getCoralDistance;
+    public final LinearFilter algaeDetectionCurrentFilter = LinearFilter.movingAverage(16);
 
     public Intake(final Constants.RobotMode mode, final HardwareConstants.IntakeConstants constants) {
         this.intakeIO = switch (mode) {
@@ -110,7 +110,8 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isAlgaePresent() {
-        return inputs.algaeRollerTorqueCurrentAmps >= 30;
+        final double filteredCurrent = algaeDetectionCurrentFilter.calculate(inputs.algaeRollerTorqueCurrentAmps);
+        return filteredCurrent >= 30;
     }
 
     private double getCoralDistance() {
@@ -129,11 +130,11 @@ public class Intake extends SubsystemBase {
         return runEnd(
                 () -> {
                     coralRollerVelocitySetpoint = velocityRotsPerSec;
-                    intakeIO.toCoralRollerVelocity(velocityRotsPerSec);
+                    intakeIO.toCoralRollerVelocity(coralRollerVelocitySetpoint);
                 },
                 () -> {
                     coralRollerVelocitySetpoint = 0.0;
-                    intakeIO.toCoralRollerVelocity(0.0);
+                    intakeIO.toCoralRollerVelocity(coralRollerVelocitySetpoint);
                 }
         );
     }
@@ -179,6 +180,10 @@ public class Intake extends SubsystemBase {
                     intakeIO.toAlgaeRollerVoltage(0);
                 }
         );
+    }
+
+    public void setCANRangeDistance(final double gamepieceDistanceMeters) {
+        intakeIO.setCANRangeDistance(gamepieceDistanceMeters);
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(

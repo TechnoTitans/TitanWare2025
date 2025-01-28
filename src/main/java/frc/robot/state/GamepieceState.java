@@ -1,11 +1,14 @@
 package frc.robot.state;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class GamepieceState extends VirtualSubsystem {
     protected static final String LogKey = "GamepieceState";
@@ -39,6 +42,7 @@ public class GamepieceState extends VirtualSubsystem {
         this.intake = intake;
 
         configureStateTriggers();
+        configureSimStateTriggers();
     }
 
     @Override
@@ -77,7 +81,7 @@ public class GamepieceState extends VirtualSubsystem {
                 Commands.parallel(
                         setCoralState(State.HOLDING),
                         intake.runCoralRollerVoltage(-5)
-                )
+                ).withName("GameStateCoralHold")
         );
         intake.isCoralOuttaking.and(isCoralHeld).onTrue(setCoralState(State.SCORING));
         intake.isCoralOuttaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.NONE));
@@ -88,9 +92,32 @@ public class GamepieceState extends VirtualSubsystem {
                 Commands.parallel(
                         setAlgaeState(State.HOLDING),
                         intake.runAlgaeRollerVoltage(-5)
-                )
+                ).withName("GameStateAlgaeHold")
         );
         intake.isAlgaeOuttaking.and(isAlgaeHeld).onTrue(setAlgaeState(State.SCORING));
         intake.isAlgaeOuttaking.and(intake.isAlgaePresent.negate()).onTrue(setAlgaeState(State.NONE));
+    }
+
+    private Command waitRand(
+            final ThreadLocalRandom random,
+            final double lowerInclusiveSeconds,
+            final double upperExclusiveSeconds
+    ) {
+        return Commands.waitSeconds(random.nextDouble(lowerInclusiveSeconds, upperExclusiveSeconds));
+    }
+
+    private Command setCANRangeDistance(final double gamepieceDistanceMeters) {
+        return Commands.runOnce(() -> intake.setCANRangeDistance(gamepieceDistanceMeters));
+    }
+
+    public void configureSimStateTriggers() {
+        final ThreadLocalRandom random = ThreadLocalRandom.current();
+
+        intake.isCoralIntaking.and(hasCoral.negate()).whileTrue(
+                Commands.sequence(
+                    waitRand(random, 0.1, 2),
+                    Commands.waitSeconds(0.15),
+                        setCANRangeDistance(Units.inchesToMeters(6))
+        ));
     }
 }

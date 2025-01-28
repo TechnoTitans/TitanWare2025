@@ -137,11 +137,11 @@ public class ElevatorIOSim implements ElevatorIO {
 
     @Override
     public void config() {
-        final CANrangeConfiguration CANrangeConfiguration = new CANrangeConfiguration();
-        CANrangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
-        CANrangeConfiguration.ProximityParams.ProximityThreshold = 0.01;
-        CANrangeConfiguration.ProximityParams.ProximityHysteresis = 0.03;
-        canRange.getConfigurator().apply(CANrangeConfiguration);
+        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
+        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
+        CANRangeConfiguration.ProximityParams.ProximityThreshold = 0.01;
+        CANRangeConfiguration.ProximityParams.ProximityHysteresis = 0.03;
+        canRange.getConfigurator().apply(CANRangeConfiguration);
 
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()

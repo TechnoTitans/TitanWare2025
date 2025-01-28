@@ -52,9 +52,17 @@ public class FieldConstants {
                         Units.inchesToMeters(33.526),
                         Units.inchesToMeters(25.824),
                         Rotation2d.fromDegrees(144.011 - 90));
+        public static final List<Pose2d> BLUE_CORAL_STATIONS = List.of(
+                BLUE_LEFT_CENTER_FACE,
+                BLUE_RIGHT_CENTER_FACE
+        );
 
         public static final Pose2d RED_LEFT_CENTER_FACE = BLUE_LEFT_CENTER_FACE.relativeTo(RED_ORIGIN);
         public static final Pose2d RED_RIGHT_CENTER_FACE = BLUE_RIGHT_CENTER_FACE.relativeTo(RED_ORIGIN);
+        public static final List<Pose2d> RED_CORAL_STATIONS = List.of(
+                RED_LEFT_CENTER_FACE,
+                RED_RIGHT_CENTER_FACE
+        );
     }
 
     public static class Reef {
@@ -230,14 +238,6 @@ public class FieldConstants {
 
     public static Pose2d getProcessorScoringPose() {
         return getAllianceFlipped(Processor.BLUE_SCORING_POSE, Processor.RED_SCORING_POSE);
-    }
-
-    public static Pose2d getLeftCoralStationPose() {
-        return getAllianceFlipped(CoralStation.BLUE_LEFT_CENTER_FACE, CoralStation.RED_LEFT_CENTER_FACE);
-    }
-
-    public static Pose2d getRightCoralStationPose() {
-        return getAllianceFlipped(CoralStation.BLUE_RIGHT_CENTER_FACE, CoralStation.RED_RIGHT_CENTER_FACE);
     }
 
     public static Pose2d[] getReefCenterPoses() {

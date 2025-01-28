@@ -46,6 +46,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
@@ -87,17 +88,16 @@ public class Robot extends LoggedRobot {
             Constants.CURRENT_MODE,
             HardwareConstants.ELEVATOR_ARM
     );
+    public final IntakeArm intakeArm = new IntakeArm(
+            Constants.CURRENT_MODE,
+            HardwareConstants.INTAKE_ARM
+    );
+    public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
 
     public final Intake intake = new Intake(
             Constants.CURRENT_MODE,
             HardwareConstants.INTAKE
     );
-    public final IntakeArm intakeArm = new IntakeArm(
-            Constants.CURRENT_MODE,
-            HardwareConstants.INTAKE_ARM
-    );
-
-    public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
 
     public final GamepieceState gamePieceState = new GamepieceState(intake);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
@@ -361,34 +361,28 @@ public class Robot extends LoggedRobot {
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
         //noinspection SuspiciousNameCombination
-        this.driverController.povUp().whileTrue(
+        this.driverController.povDown().whileTrue(
                 Commands.parallel(
                         swerve.teleopFacingAngleCommand(
                                 driverController::getLeftY,
                                 driverController::getLeftX,
                                 () -> {
                                     final Pose2d currentPose = swerve.getPose();
+                                    final Pose2d nearestStation;
                                     if (IsRedAlliance.getAsBoolean()) {
-                                        if (currentPose.getY() < FieldConstants.FIELD_WIDTH_Y_METERS / 2) {
-                                            return FieldConstants.CoralStation.RED_LEFT_CENTER_FACE.getRotation()
-                                                    .rotateBy(Rotation2d.kPi);
-                                        } else {
-                                            return FieldConstants.CoralStation.RED_RIGHT_CENTER_FACE.getRotation()
-                                                    .rotateBy(Rotation2d.kPi);
-                                        }
+                                        nearestStation = currentPose.nearest(
+                                                FieldConstants.CoralStation.RED_CORAL_STATIONS
+                                        );
                                     } else {
-                                        if (currentPose.getY() < FieldConstants.FIELD_WIDTH_Y_METERS / 2) {
-                                            return FieldConstants.CoralStation.BLUE_RIGHT_CENTER_FACE.getRotation()
-                                                    .rotateBy(Rotation2d.kPi);
-                                        } else {
-                                            return FieldConstants.CoralStation.BLUE_LEFT_CENTER_FACE.getRotation()
-                                                    .rotateBy(Rotation2d.kPi);
-                                        }
+                                        nearestStation = currentPose.nearest(
+                                                FieldConstants.CoralStation.BLUE_CORAL_STATIONS
+                                        );
                                     }
+                                    return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
                                 }
                         ),
-                        superstructure.toSuperstructureGoal(Superstructure.Goal.HP)
-//                        intake.runCoralRollerVelocity(3)
+                        superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
+                        intake.runCoralRollerVelocity(3)
                 )
         );
     }

@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -165,6 +166,8 @@ public class IntakeIOSim implements IntakeIO {
 
         final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
         CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
+        CANRangeConfiguration.ProximityParams.ProximityThreshold = Units.inchesToMeters(11);
+        CANRangeConfiguration.ProximityParams.ProximityHysteresis = Units.inchesToMeters(5);
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -195,6 +198,7 @@ public class IntakeIOSim implements IntakeIO {
 
         coralRollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
         algaeRollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+        coralCANRange.getSimState().setDistance(0);
     }
 
     @Override
@@ -232,10 +236,12 @@ public class IntakeIOSim implements IntakeIO {
     public void toCoralRollerVelocity(final double coralRollerVelocityRotsPerSec) {
         coralRollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(coralRollerVelocityRotsPerSec));
     }
+
     @Override
     public void toCoralRollerVoltage(final double volts) {
         coralRollerMotor.setControl(voltageOut.withOutput(volts));
     }
+
     @Override
     public void toCoralRollerTorqueCurrent(final double torqueCurrentAmps) {
         coralRollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
@@ -245,12 +251,19 @@ public class IntakeIOSim implements IntakeIO {
     public void toAlgaeRollerVelocity(final double algaeRollerVelocityRotsPerSec) {
         algaeRollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(algaeRollerVelocityRotsPerSec));
     }
+
     @Override
     public void toAlgaeRollerVoltage(final double volts) {
         algaeRollerMotor.setControl(voltageOut.withOutput(volts));
     }
+
     @Override
     public void toAlgaeRollerTorqueCurrent(final double torqueCurrentAmps) {
         algaeRollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
+    }
+
+    @Override
+    public void setCANRangeDistance(final double gamepieceDistanceMeters) {
+        coralCANRange.getSimState().setDistance(gamepieceDistanceMeters);
     }
 }

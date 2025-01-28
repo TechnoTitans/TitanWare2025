@@ -43,4 +43,6 @@ public interface IntakeIO {
     default void toAlgaeRollerVoltage(final double volts) {}
 
     default void toAlgaeRollerTorqueCurrent(final double torqueCurrentAmps) {}
+
+    default void setCANRangeDistance(final double gamepieceDistanceMeters) {}
 }
