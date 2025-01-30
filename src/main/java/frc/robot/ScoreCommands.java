@@ -27,11 +27,11 @@ public class ScoreCommands {
         L3(Reef.Level.L3, Superstructure.Goal.L3),
         L4(Reef.Level.L4, Superstructure.Goal.L4);
 
-        public static final Map<Reef.Level, Level> LevelMap = new HashMap<>();
+        public static final Map<Reef.Level, Superstructure.Goal> LevelMap = new HashMap<>();
 
         static {
             for (final Level level : Level.values()) {
-                LevelMap.put(level.level, level);
+                LevelMap.put(level.level, level.goal);
             }
         }
 
@@ -51,6 +51,17 @@ public class ScoreCommands {
             Reef.Side side,
             Level level
     ) {}
+
+    public static final List<ScorePosition> ReefScoringPositions = List.of(
+            new ScorePosition(Reef.Side.RIGHT, Level.L4),
+            new ScorePosition(Reef.Side.LEFT, Level.L4),
+            new ScorePosition(Reef.Side.RIGHT, Level.L3),
+            new ScorePosition(Reef.Side.LEFT, Level.L3),
+            new ScorePosition(Reef.Side.RIGHT, Level.L2),
+            new ScorePosition(Reef.Side.LEFT, Level.L2),
+            new ScorePosition(Reef.Side.RIGHT, Level.L1),
+            new ScorePosition(Reef.Side.LEFT, Level.L1)
+    );
 
     private static final List<Superstructure.Goal> ScoreGoals = List.of(
             Superstructure.Goal.DYNAMIC,

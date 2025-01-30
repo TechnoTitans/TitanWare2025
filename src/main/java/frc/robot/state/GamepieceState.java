@@ -10,6 +10,7 @@ import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 
 public class GamepieceState extends VirtualSubsystem {
     protected static final String LogKey = "GamepieceState";
@@ -26,15 +27,15 @@ public class GamepieceState extends VirtualSubsystem {
     private State coralState = State.NONE;
     private State algaeState = State.NONE;
 
-    public final Trigger isCoralNone = isStateTrigger(coralState, State.NONE);
-    public final Trigger isCoralIntaking = isStateTrigger(coralState, State.INTAKING);
-    public final Trigger isCoralHeld = isStateTrigger(coralState, State.HOLDING);
-    public final Trigger isCoralScoring = isStateTrigger(coralState, State.SCORING);
+    public final Trigger isCoralNone = isStateTrigger(() -> coralState, State.NONE);
+    public final Trigger isCoralIntaking = isStateTrigger(() -> coralState, State.INTAKING);
+    public final Trigger isCoralHeld = isStateTrigger(() -> coralState, State.HOLDING);
+    public final Trigger isCoralScoring = isStateTrigger(() -> coralState, State.SCORING);
 
-    public final Trigger isAlgaeNone = isStateTrigger(algaeState, State.NONE);
-    public final Trigger isAlgaeIntaking = isStateTrigger(algaeState, State.INTAKING);
-    public final Trigger isAlgaeHeld = isStateTrigger(algaeState, State.HOLDING);
-    public final Trigger isAlgaeScoring = isStateTrigger(algaeState, State.SCORING);
+    public final Trigger isAlgaeNone = isStateTrigger(() -> algaeState, State.NONE);
+    public final Trigger isAlgaeIntaking = isStateTrigger(() -> algaeState, State.INTAKING);
+    public final Trigger isAlgaeHeld = isStateTrigger(() -> algaeState, State.HOLDING);
+    public final Trigger isAlgaeScoring = isStateTrigger(() -> algaeState, State.SCORING);
 
     public final Trigger hasCoral = isCoralHeld.or(isCoralScoring);
     public final Trigger hasAlgae = isAlgaeHeld.or(isAlgaeScoring);
@@ -43,8 +44,9 @@ public class GamepieceState extends VirtualSubsystem {
         this.intake = intake;
 
         configureStateTriggers();
-        if (mode != Constants.RobotMode.REAL)
-        configureSimStateTriggers();
+        if (mode != Constants.RobotMode.REAL) {
+            configureSimStateTriggers();
+        }
     }
 
     @Override
@@ -52,12 +54,22 @@ public class GamepieceState extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/CoralState", coralState.toString());
         Logger.recordOutput(LogKey + "/AlgaeState", algaeState.toString());
 
+        Logger.recordOutput(LogKey + "/IsCoralNone", isCoralNone.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsCoralIntaking", isCoralIntaking.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsCoralHeld", isCoralHeld.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsCoralScoring", isCoralScoring.getAsBoolean());
+
+        Logger.recordOutput(LogKey + "/IsAlgaeNone", isAlgaeNone.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsAlgaeIntaking", isAlgaeIntaking.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsAlgaeHeld", isAlgaeHeld.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsAlgaeScoring", isAlgaeScoring.getAsBoolean());
+
         Logger.recordOutput(LogKey + "/HasCoral", hasCoral.getAsBoolean());
         Logger.recordOutput(LogKey + "/HasAlgae", hasAlgae.getAsBoolean());
     }
 
-    public Trigger isStateTrigger(final State currentState, final State state) {
-        return new Trigger(() -> currentState == state);
+    public Trigger isStateTrigger(final Supplier<State> currentState, final State state) {
+        return new Trigger(() -> currentState.get() == state);
     }
 
     public Command setCoralState(final State coralState) {
@@ -79,7 +91,7 @@ public class GamepieceState extends VirtualSubsystem {
     public void configureStateTriggers() {
         intake.isCoralIntaking.and(hasCoral.negate()).onTrue(setCoralState(State.INTAKING));
         intake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setCoralState(State.NONE));
-        intake.isCoralIntaking.and(intake.isCoralPresent).onTrue(
+        intake.isCoralPresent.onTrue(
                 Commands.parallel(
                         setCoralState(State.HOLDING),
                         intake.runCoralRollerVoltage(-5)
@@ -119,7 +131,7 @@ public class GamepieceState extends VirtualSubsystem {
                 Commands.sequence(
                     waitRand(random, 0.1, 2),
                     Commands.waitSeconds(0.15),
-                        setCANRangeDistance(Units.inchesToMeters(6))
+                    setCANRangeDistance(Units.inchesToMeters(6))
         ));
 
         intake.isCoralOuttaking.and(hasCoral).whileTrue(

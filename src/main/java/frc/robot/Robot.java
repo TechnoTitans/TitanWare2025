@@ -96,7 +96,7 @@ public class Robot extends LoggedRobot {
     public final GamepieceState gamePieceState = new GamepieceState(Constants.CURRENT_MODE, intake);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
 
-    public final Autos autos = new Autos(swerve, photonVision);
+    public final Autos autos = new Autos(swerve, superstructure, intake, photonVision, scoreCommands, gamePieceState);
     public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(
             new AutoOption(
                     "DoNothing",
@@ -333,6 +333,12 @@ public class Robot extends LoggedRobot {
         autonomousEnabled.whileTrue(
                 Commands.defer(() -> autoChooser.getSelected().autoRoutine().cmd().asProxy(), Set.of())
         );
+
+        autoChooser.addAutoOption(new AutoOption(
+                "Cage0ToReef5",
+                autos.cage0ToReef5(),
+                Constants.CompetitionType.COMPETITION
+        ));
     }
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
@@ -365,15 +371,15 @@ public class Robot extends LoggedRobot {
         this.coController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())
                 .onFalse(scoreCommands.scoreProcessor());
-        //intake upper algae
+
         this.coController.y(teleopEventLoop)
                 .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
                 .onFalse(scoreCommands.intakeUpperAlgae());
-        //intake lower algae
+
         this.coController.a(teleopEventLoop)
                 .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
                 .onFalse(scoreCommands.intakeLowerAlgae());
-        //score net
+
         this.coController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftY, driverController::getLeftX))
                 .onFalse(scoreCommands.scoreNet());

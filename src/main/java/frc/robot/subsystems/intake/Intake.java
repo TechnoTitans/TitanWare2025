@@ -9,6 +9,7 @@ import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -38,15 +39,17 @@ public class Intake extends SubsystemBase {
     private double coralRollerVelocitySetpoint = 0.0;
     private double algaeRollerVelocitySetpoint = 0.0;
 
-    public final Trigger isCoralIntaking = new Trigger(() -> coralRollerVelocitySetpoint > 0.0);
-    public final Trigger isCoralOuttaking = new Trigger(() -> coralRollerVelocitySetpoint < 0.0);
-    public final Trigger isCoralIntakeStopped = isCoralIntaking.negate().and(isCoralOuttaking.negate());
-    public final Trigger isAlgaeIntaking = new Trigger(() -> algaeRollerVelocitySetpoint > 0.0);
-    public final Trigger isAlgaeOuttaking = new Trigger(() -> algaeRollerVelocitySetpoint < 0.0);
-    public final Trigger isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
+    private final EventLoop eventLoop;
 
-    public final Trigger isCoralPresent = new Trigger(this::isCoralPresent);
-    public final Trigger isAlgaePresent = new Trigger(this::isAlgaePresent);
+    public final Trigger isCoralIntaking;
+    public final Trigger isCoralOuttaking;
+    public final Trigger isCoralIntakeStopped;
+    public final Trigger isAlgaeIntaking;
+    public final Trigger isAlgaeOuttaking;
+    public final Trigger isAlgaeIntakeStopped;
+
+    public final Trigger isCoralPresent;
+    public final Trigger isAlgaePresent;
 
     public final DoubleSupplier coralDistance = this::getCoralDistance;
     public final LinearFilter algaeDetectionCurrentFilter = LinearFilter.movingAverage(16);
@@ -59,6 +62,18 @@ public class Intake extends SubsystemBase {
         };
 
         this.inputs = new IntakeIOInputsAutoLogged();
+        this.eventLoop = new EventLoop();
+
+        this.isCoralIntaking = new Trigger(eventLoop, () -> coralRollerVelocitySetpoint > 0.0);
+        this.isCoralOuttaking = new Trigger(eventLoop, () -> coralRollerVelocitySetpoint < 0.0);
+        this.isCoralIntakeStopped = isCoralIntaking.negate().and(isCoralOuttaking.negate());
+
+        this.isAlgaeIntaking = new Trigger(eventLoop, () -> algaeRollerVelocitySetpoint > 0.0);
+        this.isAlgaeOuttaking = new Trigger(eventLoop, () -> algaeRollerVelocitySetpoint < 0.0);
+        this.isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
+
+        this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent);
+        this.isAlgaePresent = new Trigger(eventLoop, this::isAlgaePresent);
 
         this.coralRollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
@@ -96,6 +111,8 @@ public class Intake extends SubsystemBase {
         intakeIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
+        eventLoop.poll();
+
         Logger.recordOutput(LogKey + "/CoralRollerVelocitySetpoint", coralRollerVelocitySetpoint);
         Logger.recordOutput(LogKey + "/AlgaeRollerVelocitySetpoint", algaeRollerVelocitySetpoint);
 
@@ -109,6 +126,10 @@ public class Intake extends SubsystemBase {
         );
     }
 
+    private double getCoralDistance() {
+        return inputs.coralCANRangeDistanceMeters;
+    }
+
     private boolean isCoralPresent() {
         return inputs.coralCANRangeIsDetected;
     }
@@ -119,10 +140,6 @@ public class Intake extends SubsystemBase {
 
     private boolean isAlgaePresent() {
         return getFilteredAlgaeCurrent() >= 30;
-    }
-
-    private double getCoralDistance() {
-        return inputs.coralCANRangeDistanceMeters;
     }
 
     public Command scoreCoral() {

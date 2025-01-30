@@ -711,7 +711,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public Command runWheelXCommand() {
-        return runOnce(this::wheelX);
+        return run(this::wheelX);
     }
 
     /**

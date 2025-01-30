@@ -69,9 +69,9 @@ public class Elevator extends SubsystemBase {
         HP(0.02),
         L1(0.028),
         L2(0.150),
-        LOWER_ALGAE(.250), //placeholder value
+        LOWER_ALGAE(0.16),
         L3(0.458),
-        UPPER_ALGAE(.600), //placeholder value
+        UPPER_ALGAE(0.5),
         L4(0.976),
         NET(3);
 
@@ -118,6 +118,7 @@ public class Elevator extends SubsystemBase {
         this.elevatorUpperLimit = new PositionSetpoint().withElevatorPositionRots(constants.upperLimitRots());
 
         this.elevatorIO.config();
+        this.home();
         this.elevatorIO.toPosition(setpoint.elevatorPositionRots);
     }
 
@@ -172,6 +173,14 @@ public class Elevator extends SubsystemBase {
         return inputs.canRangeDistanceMeters;
     }
 
+    public void home() {
+        this.elevatorIO.setPosition(inputs.canRangeDistanceMeters / drumCircumferenceMeters);
+    }
+
+    public Command homeCommand() {
+        return runOnce(this::home);
+    }
+
     public void setGoal(final Goal goal) {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
@@ -184,20 +193,6 @@ public class Elevator extends SubsystemBase {
             setpoint.elevatorPositionRots = positionMeters.getAsDouble() / drumCircumferenceMeters;
             elevatorIO.toPosition(setpoint.elevatorPositionRots);
         });
-    }
-
-    public Command home() {
-        return Commands.sequence(
-                run(() -> {
-                    this.desiredGoal = Goal.DYNAMIC;
-                    elevatorIO.toVoltage(-5);
-                }).until(isRetracted),
-                runOnce(() -> {
-                    elevatorIO.toVoltage(0);
-                    elevatorIO.setPosition(0);
-                    this.desiredGoal = Goal.IDLE;
-                })
-        );
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(
