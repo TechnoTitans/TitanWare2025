@@ -1,5 +1,8 @@
 package frc.robot.constants;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 
 public interface SimConstants {
@@ -27,5 +30,27 @@ public interface SimConstants {
          * Simulated steer voltage required to overcome friction.
          */
         double STEER_KS_VOLTS = 0.25;
+    }
+
+    interface Elevator {
+        double MASS_KG = Units.lbsToKilograms(19.15);
+        Translation3d ORIGIN = new Translation3d(-0.267, 0, 0.153);
+        double STAGE_1_MAX_EXTENSION_METERS = Units.inchesToMeters(20.75); // from base stage bottom plate to bottom plate on stage 1
+        double STAGE_2_MAX_EXTENSION_METERS = Units.inchesToMeters(20.5); // from stage 1 bottom plate to bottom plate on stage 2
+        double STAGE_2_TO_INTAKE = Units.inchesToMeters(29.5); // from stage 2 bottom plate to intake pivot point
+    }
+
+    interface ElevatorArm {
+        double RETRACTED_MOI_KG_M_SQUARED = 5.07674197;
+        double EXTENDED_MOI_KG_M_SQUARED = 18.505581775;
+        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(15.5);
+        Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(49.284);
+        double LENGTH_METERS = Units.inchesToMeters(31.876);
+    }
+
+    interface IntakeArm {
+        double LENGTH_METERS = Units.inchesToMeters(11.865);
+        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(74.463);
+        Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(0).plus(ZEROED_POSITION_TO_HORIZONTAL);
     }
 }

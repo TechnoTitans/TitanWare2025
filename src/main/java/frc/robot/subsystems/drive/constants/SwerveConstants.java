@@ -13,13 +13,12 @@ public class SwerveConstants {
 
     public static final SwerveConfig Config = new SwerveConfig(
             0.0508,
-            5.9,
+            6.75,
             150.0 / 7.0,
             50.0 / 16.0,
             Units.inchesToMeters(24),
             Units.inchesToMeters(24),
-            Units.feetToMeters(17.1),
-            Units.feetToMeters(80.0),
+            Units.feetToMeters(15.0),
             12,
             6,
             new Translation2d(0, 0)
@@ -77,7 +76,6 @@ public class SwerveConstants {
             double wheelBaseMeters,
             double trackWidthMeters,
             double maxLinearVelocityMeterPerSec,
-            double maxLinearAccelerationMetersPerSecSquared,
             double maxAngularVelocityRadsPerSec,
             double maxAngularAccelerationRadsPerSecSquared,
             Translation2d centerOfRotationMeters

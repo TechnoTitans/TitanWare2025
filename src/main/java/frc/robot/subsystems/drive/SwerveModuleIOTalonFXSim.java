@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Angle;
@@ -29,7 +30,7 @@ import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
 import frc.robot.utils.sim.SimUtils;
-import frc.robot.utils.sim.feedback.SimPhoenix6CANCoder;
+import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import static frc.robot.subsystems.drive.constants.SwerveConstants.Config;
@@ -123,7 +124,7 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
                 turnDCMotorSim::getAngularPositionRad,
                 turnDCMotorSim::getAngularVelocityRadPerSec
         );
-        this.turnSim.attachFeedbackSensor(new SimPhoenix6CANCoder(turnEncoder));
+        this.turnSim.attachFeedbackSensor(new SimCANCoder(turnEncoder));
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
         this.positionVoltage = new PositionVoltage(0);
@@ -202,10 +203,9 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
         velocityTorqueCurrentFOC.UpdateFreqHz = 0;
         positionVoltage.UpdateFreqHz = 0;
 
-        // TODO: this fix for CANCoder initialization in sim doesn't seem to work all the time...investigate!
-//      SimUtils.initializeCTRECANCoderSim(turnEncoder);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(driveMotor, driveInvertedValue);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(turnMotor, turnInvertedValue);
+        turnEncoder.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+        driveMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
+        turnMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
     }
 
     @SuppressWarnings("DuplicatedCode")
