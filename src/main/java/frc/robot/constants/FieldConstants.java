@@ -4,7 +4,6 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,16 +65,25 @@ public class FieldConstants {
     }
 
     public static class Reef {
+        public enum Face {
+            ZERO_FACING_DRIVERS,
+            ONE,
+            TWO,
+            THREE_FACING_CLIMB,
+            FOUR,
+            FIVE
+        }
+
         public enum Side {
             LEFT,
             RIGHT
         }
 
         public enum Level {
-            L1(Units.inchesToMeters(18), 0),
-            L2(Units.inchesToMeters(31.875), -35),
+            L4(Units.inchesToMeters(72), -90),
             L3(Units.inchesToMeters(47.625), -35),
-            L4(Units.inchesToMeters(72), -90);
+            L2(Units.inchesToMeters(31.875), -35),
+            L1(Units.inchesToMeters(18), 0);
 
             public final double heightMeters;
             public final double pitchDegrees;
@@ -95,56 +103,73 @@ public class FieldConstants {
         public static final double faceToZoneLine = Units.inchesToMeters(12);
 
         // Starting facing the driver station in clockwise order
-        public static final Pose2d[] BLUE_CENTER_FACES = new Pose2d[6];
-        public static final Pose2d[] BLUE_CENTER_SCORING_FACES = new Pose2d[6];
-        public static final Pose2d[] RED_CENTER_FACES = new Pose2d[6];
-        public static final Pose2d[] RED_CENTER_SCORING_FACES = new Pose2d[6];
+        public static final Map<Face, Pose2d> BLUE_CENTER_FACES = new HashMap<>();
+        public static final Map<Face, Pose2d> BLUE_CENTER_SCORING_FACES = new HashMap<>();
+        public static final Map<Face, Pose2d> RED_CENTER_FACES = new HashMap<>();
+        public static final Map<Face, Pose2d> RED_CENTER_SCORING_FACES = new HashMap<>();
         // Starting at the right branch facing the driver station in clockwise
-        public static final List<Map<Side, Map<Level, Pose3d>>> BLUE_BRANCH_POSITIONS = new ArrayList<>();
-        public static final List<Map<Side, Map<Level, Pose3d>>> RED_BRANCH_POSITIONS = new ArrayList<>();
-        public static final List<Map<Side, Map<Level, Pose2d>>> BLUE_BRANCH_SCORING_POSITIONS = new ArrayList<>();
-        public static final List<Map<Side, Map<Level, Pose2d>>> RED_BRANCH_SCORING_POSITIONS = new ArrayList<>();
+        public static final Map<Face, Map<Side, Map<Level, Pose3d>>> BLUE_BRANCH_POSITIONS = new HashMap<>();
+        public static final Map<Face, Map<Side, Map<Level, Pose3d>>> RED_BRANCH_POSITIONS = new HashMap<>();
+        public static final Map<Face, Map<Side, Map<Level, Pose2d>>> BLUE_BRANCH_SCORING_POSITIONS = new HashMap<>();
+        public static final Map<Face, Map<Side, Map<Level, Pose2d>>> RED_BRANCH_SCORING_POSITIONS = new HashMap<>();
 
         static {
-            BLUE_CENTER_FACES[0] =
+            BLUE_CENTER_FACES.put(
+                    Face.ZERO_FACING_DRIVERS,
                     new Pose2d(
                             Units.inchesToMeters(144.003),
                             Units.inchesToMeters(158.500),
-                            Rotation2d.fromDegrees(180));
-            BLUE_CENTER_FACES[1] =
+                            Rotation2d.fromDegrees(180))
+            );
+
+            BLUE_CENTER_FACES.put(
+                    Face.ONE,
                     new Pose2d(
                             Units.inchesToMeters(160.373),
                             Units.inchesToMeters(186.857),
-                            Rotation2d.fromDegrees(120));
-            BLUE_CENTER_FACES[2] =
+                            Rotation2d.fromDegrees(120))
+            );
+
+            BLUE_CENTER_FACES.put(
+                    Face.TWO,
                     new Pose2d(
                             Units.inchesToMeters(193.116),
                             Units.inchesToMeters(186.858),
-                            Rotation2d.fromDegrees(60));
-            BLUE_CENTER_FACES[3] =
+                            Rotation2d.fromDegrees(60))
+            );
+
+            BLUE_CENTER_FACES.put(
+                    Face.THREE_FACING_CLIMB,
                     new Pose2d(
                             Units.inchesToMeters(209.489),
                             Units.inchesToMeters(158.502),
-                            Rotation2d.fromDegrees(0));
-            BLUE_CENTER_FACES[4] =
+                            Rotation2d.fromDegrees(0))
+            );
+
+            BLUE_CENTER_FACES.put(
+                    Face.FOUR,
                     new Pose2d(
                             Units.inchesToMeters(193.118),
                             Units.inchesToMeters(130.145),
-                            Rotation2d.fromDegrees(-60));
-            BLUE_CENTER_FACES[5] =
+                            Rotation2d.fromDegrees(-60))
+            );
+
+            BLUE_CENTER_FACES.put(
+                    Face.FIVE,
                     new Pose2d(
                             Units.inchesToMeters(160.375),
                             Units.inchesToMeters(130.144),
-                            Rotation2d.fromDegrees(-120));
-
-
+                            Rotation2d.fromDegrees(-120))
+            );
 
             final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);
             final Transform2d reefFaceScoringTransform = new Transform2d(Units.inchesToMeters(20), 0, Rotation2d.kPi);
-            for (int face = 0; face < BLUE_CENTER_FACES.length; face++) {
-                RED_CENTER_FACES[face] = BLUE_CENTER_FACES[face].relativeTo(RED_ORIGIN);
-                BLUE_CENTER_SCORING_FACES[face] = BLUE_CENTER_FACES[face].transformBy(reefFaceScoringTransform);
-                RED_CENTER_SCORING_FACES[face] = RED_CENTER_FACES[face].transformBy(reefFaceScoringTransform);
+            for (final Map.Entry<Face, Pose2d> entry : BLUE_CENTER_FACES.entrySet()) {
+                RED_CENTER_FACES.put(entry.getKey(), entry.getValue().relativeTo(RED_ORIGIN));
+                BLUE_CENTER_SCORING_FACES.put(entry.getKey(), entry.getValue().transformBy(reefFaceScoringTransform));
+                RED_CENTER_SCORING_FACES.put(
+                        entry.getKey(), RED_CENTER_FACES.get(entry.getKey()).transformBy(reefFaceScoringTransform)
+                );
 
                 final Map<Level, Pose3d> fillBlueRight = new HashMap<>();
                 final Map<Level, Pose3d> fillRedRight = new HashMap<>();
@@ -157,7 +182,10 @@ public class FieldConstants {
                 final Map<Level, Pose2d> fillRedScoringLeft = new HashMap<>();
 
                 for (final Level level : Level.values()) {
-                    final Pose2d poseDirection = new Pose2d(BLUE_CENTER, Rotation2d.fromDegrees(180 - (60 * face)));
+                    final Pose2d poseDirection = new Pose2d(
+                            BLUE_CENTER,
+                            Rotation2d.fromDegrees(180 - (60 * entry.getKey().ordinal()))
+                    );
                     final double adjustX = Units.inchesToMeters(30.738);
                     final double adjustY = Units.inchesToMeters(6.469);
 
@@ -217,22 +245,22 @@ public class FieldConstants {
                 final Map<Side, Map<Level, Pose3d>> blueBranches = new HashMap<>();
                 blueBranches.put(Side.LEFT, fillBlueLeft);
                 blueBranches.put(Side.RIGHT, fillBlueRight);
-                BLUE_BRANCH_POSITIONS.add(blueBranches);
+                BLUE_BRANCH_POSITIONS.put(entry.getKey(), blueBranches);
 
                 final Map<Side, Map<Level, Pose3d>> redBranches = new HashMap<>();
                 redBranches.put(Side.LEFT, fillRedLeft);
                 redBranches.put(Side.RIGHT, fillRedRight);
-                RED_BRANCH_POSITIONS.add(redBranches);
+                RED_BRANCH_POSITIONS.put(entry.getKey(), redBranches);
 
                 final Map<Side, Map<Level, Pose2d>> blueScoringBranches = new HashMap<>();
                 blueScoringBranches.put(Side.LEFT, fillBlueScoringLeft);
                 blueScoringBranches.put(Side.RIGHT, fillBlueScoringRight);
-                BLUE_BRANCH_SCORING_POSITIONS.add(blueScoringBranches);
+                BLUE_BRANCH_SCORING_POSITIONS.put(entry.getKey(), blueScoringBranches);
 
                 final Map<Side, Map<Level, Pose2d>> redScoringBranches = new HashMap<>();
                 redScoringBranches.put(Side.LEFT, fillRedScoringLeft);
                 redScoringBranches.put(Side.RIGHT, fillRedScoringRight);
-                RED_BRANCH_SCORING_POSITIONS.add(redScoringBranches);
+                RED_BRANCH_SCORING_POSITIONS.put(entry.getKey(), redScoringBranches);
             }
         }
     }
@@ -247,19 +275,19 @@ public class FieldConstants {
         return getAllianceFlipped(Processor.BLUE_SCORING_POSE, Processor.RED_SCORING_POSE);
     }
 
-    public static Pose2d[] getReefCenterPoses() {
+    public static Map<Reef.Face, Pose2d> getReefCenterPoses() {
         return getAllianceFlipped(Reef.BLUE_CENTER_FACES, Reef.RED_CENTER_FACES);
     }
 
-    public static Pose2d[] getReefScoringCenterPoses() {
+    public static Map<Reef.Face, Pose2d> getReefScoringCenterPoses() {
         return getAllianceFlipped(Reef.BLUE_CENTER_SCORING_FACES, Reef.RED_CENTER_SCORING_FACES);
     }
 
-    public static List<Map<Reef.Side, Map<Reef.Level, Pose3d>>> getBranchPositions() {
+    public static Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose3d>>> getBranchPositions() {
         return getAllianceFlipped(Reef.BLUE_BRANCH_POSITIONS, Reef.RED_BRANCH_POSITIONS);
     }
 
-    public static List<Map<Reef.Side, Map<Reef.Level, Pose2d>>> getBranchScoringPositions() {
+    public static Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> getBranchScoringPositions() {
         return getAllianceFlipped(Reef.BLUE_BRANCH_SCORING_POSITIONS, Reef.RED_BRANCH_SCORING_POSITIONS);
     }
 }

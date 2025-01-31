@@ -52,17 +52,6 @@ public class ScoreCommands {
             Level level
     ) {}
 
-    public static final List<ScorePosition> ReefScoringPositions = List.of(
-            new ScorePosition(Reef.Side.RIGHT, Level.L4),
-            new ScorePosition(Reef.Side.LEFT, Level.L4),
-            new ScorePosition(Reef.Side.RIGHT, Level.L3),
-            new ScorePosition(Reef.Side.LEFT, Level.L3),
-            new ScorePosition(Reef.Side.RIGHT, Level.L2),
-            new ScorePosition(Reef.Side.LEFT, Level.L2),
-            new ScorePosition(Reef.Side.RIGHT, Level.L1),
-            new ScorePosition(Reef.Side.LEFT, Level.L1)
-    );
-
     private static final List<Superstructure.Goal> ScoreGoals = List.of(
             Superstructure.Goal.DYNAMIC,
             Superstructure.Goal.L1,
@@ -164,20 +153,20 @@ public class ScoreCommands {
                         () -> {
                             final Pose2d currentPose = swerve.getPose();
                             final Translation2d currentTranslation = currentPose.getTranslation();
-                            final Pose2d[] reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
-                            final List<Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
+                            final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
+                            final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
                                     FieldConstants.getBranchScoringPositions();
 
                             Map<Reef.Side, Map<Reef.Level, Pose2d>> scoringPoseMap = null;
                             double closestDistanceMeters = Double.MAX_VALUE;
-                            for (int i = 0; i < reefCenterPoses.length; i++) {
-                                final Pose2d centerFace = reefCenterPoses[i];
+                            for (final Reef.Face face : Reef.Face.values()) {
+                                final Pose2d centerFace = reefCenterPoses.get(face);
 
                                 final double distanceMeters = centerFace.getTranslation()
                                         .getDistance(currentTranslation);
 
                                 if (distanceMeters < closestDistanceMeters) {
-                                    scoringPoseMap = branchScoringPositions.get(i);
+                                    scoringPoseMap = branchScoringPositions.get(face);
                                     closestDistanceMeters = distanceMeters;
                                 }
                             }
@@ -278,8 +267,8 @@ public class ScoreCommands {
         return Commands.defer(
                 () -> {
                     final Pose2d currentPose = swerve.getPose();
-                    final Pose2d[] reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
-                    final Pose2d nearestCoralSide = currentPose.nearest(List.of(reefCenterPoses));
+                    final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
+                    final Pose2d nearestCoralSide = currentPose.nearest((List<Pose2d>) reefCenterPoses.values());
 
                     return swerve.runToPose(() -> nearestCoralSide);
                 },

@@ -17,6 +17,7 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.state.GamepieceState;
+import frc.robot.state.ReefState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.intake.Intake;
@@ -93,10 +94,19 @@ public class Robot extends LoggedRobot {
             HardwareConstants.INTAKE
     );
 
+    public final ReefState reefState = new ReefState();
     public final GamepieceState gamePieceState = new GamepieceState(Constants.CURRENT_MODE, intake);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
 
-    public final Autos autos = new Autos(swerve, superstructure, intake, photonVision, scoreCommands, gamePieceState);
+    public final Autos autos = new Autos(
+            swerve,
+            superstructure,
+            intake,
+            photonVision,
+            scoreCommands,
+            gamePieceState,
+            reefState
+    );
     public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(
             new AutoOption(
                     "DoNothing",
