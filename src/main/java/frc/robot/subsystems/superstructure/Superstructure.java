@@ -191,12 +191,8 @@ public class Superstructure extends VirtualSubsystem {
         );
     }
 
-    public Set<Subsystem> getRequirements(final Subsystem... subsystems) {
-        final Set<Subsystem> requirements = new HashSet<>(Set.of(elevator, elevatorArm, intakeArm));
-        if (subsystems.length > 0) {
-            requirements.addAll(List.of(subsystems));
-        }
-        return requirements;
+    public Set<Subsystem> getRequirements() {
+        return Set.of(elevator, elevatorArm, intakeArm);
     }
 
     public Optional<Goal> getClosestGoal() {

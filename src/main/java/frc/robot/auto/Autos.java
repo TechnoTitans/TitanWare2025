@@ -3,10 +3,13 @@ package frc.robot.auto;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.ScoreCommands;
@@ -19,6 +22,10 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.PhotonVision;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("DuplicatedCode")
 public class Autos {
@@ -102,8 +109,31 @@ public class Autos {
     private Command intakeCoralFromHP() {
         return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
-                intake.runCoralRollerVelocity(3)
+                intake.intakeCoralHP()
         );
+    }
+
+    private Command faceClosestHP() {
+        return swerve.faceAngle(() -> {
+            final Pose2d currentPose = swerve.getPose();
+            final Pose2d nearestStation;
+            if (Robot.IsRedAlliance.getAsBoolean()) {
+                nearestStation = currentPose.nearest(
+                        FieldConstants.CoralStation.RED_CORAL_STATIONS
+                );
+            } else {
+                nearestStation = currentPose.nearest(
+                        FieldConstants.CoralStation.BLUE_CORAL_STATIONS
+                );
+            }
+            return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
+        });
+    }
+
+    public Set<Subsystem> getRequirements() {
+        final Set<Subsystem> requirements = new HashSet<>(superstructure.getRequirements());
+        requirements.addAll(List.of(swerve, intake));
+        return requirements;
     }
 
     public AutoRoutine doNothing() {
@@ -142,7 +172,7 @@ public class Autos {
                                 () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
                                         .map(this::scoreAtLevel)
                                         .orElseGet(Commands::none),
-                                superstructure.getRequirements(intake, swerve)
+                                getRequirements()
                         ).onlyIf(hasCoral),
                         reef5ToRightHP.cmd()
                 )
@@ -150,12 +180,12 @@ public class Autos {
 
         final Trigger atHP = reef5ToRightHP.done();
         atHP.onTrue(
-                Commands.sequence(
-                        swerve.wheelXCommand(),
-                        Commands.parallel(
-                                intakeCoralFromHP().asProxy(),
-                                Commands.waitUntil(hasCoral)
-                                        .andThen(rightHPTOReef5.cmd())
+                Commands.parallel(
+                        intakeCoralFromHP().asProxy(),
+                        faceClosestHP(),
+                        Commands.sequence(
+                                Commands.waitUntil(hasCoral),
+                                rightHPTOReef5.cmd().asProxy()
                         )
                 )
         );
@@ -167,7 +197,7 @@ public class Autos {
                                 () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
                                         .map(this::scoreAtLevel)
                                         .orElseGet(Commands::none),
-                                superstructure.getRequirements(intake, swerve)
+                                getRequirements()
                         ).onlyIf(hasCoral),
                         reef5ToRightHP.cmd()
                 )

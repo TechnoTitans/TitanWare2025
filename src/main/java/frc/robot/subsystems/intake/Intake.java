@@ -142,6 +142,10 @@ public class Intake extends SubsystemBase {
         return getFilteredAlgaeCurrent() >= 30;
     }
 
+    public Command intakeCoralHP() {
+        return runCoralRollerVelocity(3);
+    }
+
     public Command scoreCoral() {
         return runCoralRollerVelocity(-2)
                 .onlyIf(isCoralPresent)

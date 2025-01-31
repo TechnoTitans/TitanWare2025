@@ -220,10 +220,14 @@ public class ScoreCommands {
                                                 superstructure.getRequirements()
                                         ),
                                         Commands.defer(
-                                                () -> superstructure.runWaitSuperstructureGoal(scorePositionSupplier.get().level.goal),
+                                                () -> superstructure.runWaitSuperstructureGoal(
+                                                        scorePositionSupplier.get().level.goal
+                                                ),
                                                 superstructure.getRequirements()
                                         ),
-                                        () -> ScoreCommands.ScoreGoals.contains(superstructure.getCurrentSuperstructureGoal())
+                                        () -> ScoreCommands.ScoreGoals.contains(
+                                                superstructure.getCurrentSuperstructureGoal()
+                                        )
                                 )
                         )
                 )

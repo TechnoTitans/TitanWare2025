@@ -374,10 +374,6 @@ public class Robot extends LoggedRobot {
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
 
-        this.driverController.povUp().whileTrue(
-                superstructure.toSuperstructureGoal(Superstructure.Goal.L4)
-        );
-
         this.coController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())
                 .onFalse(scoreCommands.scoreProcessor());

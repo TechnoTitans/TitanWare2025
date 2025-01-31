@@ -75,8 +75,8 @@ public class FieldConstants {
         }
 
         public enum Side {
-            LEFT,
-            RIGHT
+            RIGHT,
+            LEFT
         }
 
         public enum Level {

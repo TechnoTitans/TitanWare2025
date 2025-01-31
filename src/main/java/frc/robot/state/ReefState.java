@@ -36,13 +36,9 @@ public class ReefState {
         return reef.get(face).get(side).get(level);
     }
 
-    public BranchState getBranchState(final Branch branch) {
-        return this.getBranchState(branch.face(), branch.side(), branch.level());
-    }
-
     public Optional<Branch> getNextBranch(final Reef.Face face) {
-        for (final Reef.Side side : Reef.Side.values()) {
-            for (final Reef.Level level : Reef.Level.values()) {
+        for (final Reef.Level level : Reef.Level.values()) {
+            for (final Reef.Side side : Reef.Side.values()) {
                 if (getBranchState(face, side, level) == BranchState.NONE) {
                     return Optional.of(new Branch(face, side, level));
                 }
