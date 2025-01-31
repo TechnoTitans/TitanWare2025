@@ -171,7 +171,7 @@ public class Autos {
                         Commands.defer(
                                 () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
                                         .map(this::scoreAtLevel)
-                                        .orElseGet(Commands::none),
+                                        .orElseGet(Commands::idle),
                                 getRequirements()
                         ).onlyIf(hasCoral),
                         reef5ToRightHP.cmd()
@@ -196,7 +196,7 @@ public class Autos {
                         Commands.defer(
                                 () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
                                         .map(this::scoreAtLevel)
-                                        .orElseGet(Commands::none),
+                                        .orElseGet(Commands::idle),
                                 getRequirements()
                         ).onlyIf(hasCoral),
                         reef5ToRightHP.cmd()

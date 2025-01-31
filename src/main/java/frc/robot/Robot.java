@@ -1,6 +1,9 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.struct.Pose2dStruct;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -248,6 +251,34 @@ public class Robot extends LoggedRobot {
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
+
+        final Pose3d stationaryPose = new Pose3d(5.28, 2.83, 0, new Rotation3d(0, 0, Units.degreesToRadians(120)));
+        final Pose3d currentPose = new Pose3d(swerve.getPose());
+        final Pose3d camera1Pose3d = new Pose3d(swerve.getPose()).transformBy(
+                new Transform3d(
+                        0,
+                        Units.inchesToMeters(12),
+                        Units.inchesToMeters(12),
+                        Rotation3d.kZero
+                )
+        );
+
+        final Pose3d camera2Pose3d = new Pose3d(swerve.getPose()).transformBy(
+                new Transform3d(
+                        0,
+                        Units.inchesToMeters(12),
+                        Units.inchesToMeters(12),
+                        new Rotation3d(
+                                0,
+                                Units.degreesToRadians(-40),
+                                0
+                        )
+                )
+        );
+
+        Logger.recordOutput("CameraRoot", currentPose);
+        Logger.recordOutput("Camera1", camera1Pose3d);
+        Logger.recordOutput("Camera2", camera2Pose3d);
 
         Threads.setCurrentThreadPriority(true, 10);
     }
