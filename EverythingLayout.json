@@ -1,0 +1,707 @@
+{
+  "hubs": [
+    {
+      "x": 86,
+      "y": 118,
+      "width": 1105,
+      "height": 654,
+      "state": {
+        "sidebar": {
+          "width": 341,
+          "expanded": [
+            "/AdvantageKit",
+            "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/IntakeArm/PivotPositionSetpoint",
+            "/AdvantageKit/RealOutputs/Elevator/PositionSetpoint",
+            "/AdvantageKit/RealOutputs/ElevatorArm/PositionSetpoint",
+            "/AdvantageKit/RealOutputs/Swerve/HolonomicController",
+            "/AdvantageKit/RealOutputs/Auto",
+            "/AdvantageKit/RealOutputs/Auto/Trajectory",
+            "/AdvantageKit/Intake",
+            "/AdvantageKit/RealOutputs/Intake"
+          ]
+        },
+        "tabs": {
+          "selected": 6,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "s0qgde7zxf0kduysct8mr9orboinc698",
+              "renderer": "#/",
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "3D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Swerve/Odometry/Robot3d",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "model": "Robot2025"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Superstructure/Components",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "trajectory",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Auto/Trajectory/Path",
+                    "logType": "Pose2d[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "game": "2025 Field",
+                "origin": "blue"
+              },
+              "controllerUUID": "8cqd62mbuvunrvst8a82f01aq9hf9n4z",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  4.529572690893112,
+                  2.5752273770591922,
+                  -5.809078860538247
+                ],
+                "cameraTarget": [
+                  6.0340317113022985,
+                  -0.14149911879089863,
+                  -0.12451698971294041
+                ]
+              },
+              "controlsHeight": 185
+            },
+            {
+              "type": 1,
+              "title": "Superstructure",
+              "controller": {
+                "leftSources": [],
+                "rightSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Superstructure/AtSetpoint",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Superstructure/DesiredGoal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Superstructure/CurrentGoal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Superstructure/Profile",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "ltpajsg89z5kjokwba5aehh33dycu050",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "ElevatorArm",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/ElevatorArm/PositionSetpoint/PivotPositionRots",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/ElevatorArm/PivotPositionRots",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e48b32",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/ElevatorArm/AtPositionSetpoint",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/ElevatorArm/DesiredGoal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/ElevatorArm/CurrentGoal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "5fr2kuyncj8q5cl05kgq6dphkafu5o8v",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Elevator",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Elevator/PositionSetpoint/PositionRots",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e48b32",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/Elevator/MasterPositionRots",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#c0b487",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Elevator/ExtensionMeters",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Elevator/AtPositionSetpoint",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Elevator/DesiredGoal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Elevator/CurrentGoal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/Elevator/CanRangeIsDetected",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#858584"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "mxqnzinoei4gdjk7no6slb71an7zkgfb",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "IntakeArm",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/IntakeArm/PivotPositionSetpoint/PivotPositionRots",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/IntakeArm/PivotPositionRots",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/IntakeArm/AtPositionSetpoint",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/IntakeArm/DesiredPivotGoal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/IntakeArm/CurrentPivotGoal",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#e48b32"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "0y827l9yt2wbaakfe0fpryzicibjs0wh",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Intake",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/Intake/CoralRollerVelocityRotsPerSec",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Intake/CoralRollerVelocitySetpoint",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/Intake/AlgaeRollerVelocityRotsPerSec",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#af2437",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Intake/AlgaeRollerVelocitySetpoint",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#80588e",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/Intake/CoralCANRangeDistanceMeters",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#c0b487",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Intake/FilteredAlgae",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#858584",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/Intake/CoralCANRangeIsDetected",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#e48b32"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "4xa7h37qhb2f1evj410ld4xjeel1mlz5",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "GamepieceState",
+              "controller": {
+                "leftSources": [],
+                "rightSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/GamepieceState/CoralState",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/GamepieceState/HasCoral",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "12n1udy4ew2nfa3ere6lwrr55w7r9grp",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Commands",
+              "controller": {
+                "leftSources": [],
+                "rightSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Commands/Initialized",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Commands/Interrupted",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Commands/InterruptedRequirements",
+                    "logType": "StringArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Commands/Interrupter",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Commands/InterrupterRequirements",
+                    "logType": "StringArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#e48b32"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "6cvkm7pf70a9ctwjactkudi0zz3s7gm7",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Auto",
+              "controller": {
+                "leftSources": [],
+                "rightSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Swerve/HolonomicController/AtPoseSetpoint",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Auto/Trajectory/Name",
+                    "logType": "String",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Auto/Trajectory/Running",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "plo97yptlj2rxq7e80hgh9ovnnoe52rg",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Choreo",
+              "controller": {
+                "leftSources": [],
+                "rightSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Choreo Alerts/errors",
+                    "logType": "StringArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Choreo Alerts/infos",
+                    "logType": "StringArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#858584"
+                    }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Choreo Alerts/warnings",
+                    "logType": "StringArray",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "rightUnitConversion": {
+                  "type": null,
+                  "factor": 1
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "458063jcp5fx1n34n5ar2yhqktp1d99m",
+              "renderer": null,
+              "controlsHeight": 200
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": [],
+  "version": "4.1.1"
+}
