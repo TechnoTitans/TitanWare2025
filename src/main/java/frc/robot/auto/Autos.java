@@ -101,7 +101,8 @@ public class Autos {
                                 superstructure.toSuperstructureGoal(
                                         ScoreCommands.Level.LevelMap.get(branch.level())
                                 )
-                        )
+                        ),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint)
                 )
         );
     }

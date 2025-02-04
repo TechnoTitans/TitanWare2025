@@ -120,7 +120,7 @@ public class GamepieceState extends VirtualSubsystem {
         return Commands.waitSeconds(random.nextDouble(lowerInclusiveSeconds, upperExclusiveSeconds));
     }
 
-    private Command setCANRangeDistance(final double gamepieceDistanceMeters) {
+    private Command setCANRangeDistanceCommand(final double gamepieceDistanceMeters) {
         return Commands.runOnce(() -> intake.setCANRangeDistance(gamepieceDistanceMeters));
     }
 
@@ -131,14 +131,14 @@ public class GamepieceState extends VirtualSubsystem {
                 Commands.sequence(
                     waitRand(random, 0.1, 2),
                     Commands.waitSeconds(0.15),
-                    setCANRangeDistance(Units.inchesToMeters(6))
+                    setCANRangeDistanceCommand(Units.inchesToMeters(1))
         ));
 
         intake.isCoralOuttaking.and(hasCoral).whileTrue(
                 Commands.sequence(
                         waitRand(random, 0.1, 2),
                         Commands.waitSeconds(0.15),
-                        setCANRangeDistance(10)
+                        setCANRangeDistanceCommand(10)
         ));
     }
 }

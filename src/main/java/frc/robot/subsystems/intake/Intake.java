@@ -51,7 +51,7 @@ public class Intake extends SubsystemBase {
     public final Trigger isCoralPresent;
     public final Trigger isAlgaePresent;
 
-    public final DoubleSupplier coralDistance = this::getCoralDistance;
+    public final DoubleSupplier coralDistanceMeters = this::getCoralDistanceMeters;
     public final LinearFilter algaeDetectionCurrentFilter = LinearFilter.movingAverage(16);
 
     public Intake(final Constants.RobotMode mode, final HardwareConstants.IntakeConstants constants) {
@@ -126,7 +126,7 @@ public class Intake extends SubsystemBase {
         );
     }
 
-    private double getCoralDistance() {
+    private double getCoralDistanceMeters() {
         return inputs.coralCANRangeDistanceMeters;
     }
 

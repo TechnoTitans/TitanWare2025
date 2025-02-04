@@ -168,7 +168,8 @@ public class FieldConstants {
                 RED_CENTER_FACES.put(entry.getKey(), entry.getValue().relativeTo(RED_ORIGIN));
                 BLUE_CENTER_SCORING_FACES.put(entry.getKey(), entry.getValue().transformBy(reefFaceScoringTransform));
                 RED_CENTER_SCORING_FACES.put(
-                        entry.getKey(), RED_CENTER_FACES.get(entry.getKey()).transformBy(reefFaceScoringTransform)
+                        entry.getKey(),
+                        RED_CENTER_FACES.get(entry.getKey()).transformBy(reefFaceScoringTransform)
                 );
 
                 final Map<Level, Pose3d> fillBlueRight = new HashMap<>();

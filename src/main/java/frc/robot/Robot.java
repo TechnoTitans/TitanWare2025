@@ -1,8 +1,9 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
-import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.math.geometry.struct.Pose2dStruct;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -398,7 +399,7 @@ public class Robot extends LoggedRobot {
         final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
                 scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
         this.driverController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier, intake.coralDistance))
+                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier, intake.coralDistanceMeters))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(

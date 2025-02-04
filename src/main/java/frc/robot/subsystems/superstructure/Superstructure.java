@@ -15,7 +15,10 @@ import frc.robot.utils.solver.SuperstructureSolver;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
@@ -70,6 +73,12 @@ public class Superstructure extends VirtualSubsystem {
 
     private Goal desiredGoal = Goal.STOW;
     private Goal currentGoal = desiredGoal;
+
+    private final Trigger desiredGoalNotEqualCurrentGoal;
+    private final Trigger desiredGoalNotEqualDynamic;
+    private final Trigger desiredGoalEqualsStow;
+    private final Trigger allowedToChangeNonStowGoal;
+    private final Trigger allowedToChangeToStow;
     public final Trigger atSuperstructureSetpoint;
 
     public Superstructure(
@@ -80,26 +89,49 @@ public class Superstructure extends VirtualSubsystem {
         this.elevator = elevator;
         this.elevatorArm = elevatorArm;
         this.intakeArm = intakeArm;
+
+        this.desiredGoalNotEqualCurrentGoal = new Trigger(() -> desiredGoal != currentGoal);
+        this.desiredGoalNotEqualDynamic = new Trigger(() -> desiredGoal != Goal.DYNAMIC);
+        this.desiredGoalEqualsStow = new Trigger(() -> desiredGoal == Goal.STOW);
+        this.allowedToChangeNonStowGoal = desiredGoalNotEqualCurrentGoal
+                .and(desiredGoalNotEqualDynamic)
+                .and(desiredGoalEqualsStow.negate());
+        this.allowedToChangeToStow = desiredGoalNotEqualCurrentGoal.and(desiredGoalEqualsStow);
+
         this.atSuperstructureSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atPivotSetpoint)
                 .and(intakeArm.atPivotPositionSetpoint)
-                .and(() -> currentGoal == desiredGoal);
+                .and(desiredGoalNotEqualCurrentGoal.negate());
+
+        allowedToChangeNonStowGoal.onTrue(Commands.runOnce(() -> elevatorArm.setGoal(desiredGoal.elevatorArmGoal)));
+        allowedToChangeNonStowGoal.and(elevatorArm.atPivotSetpoint)
+                .onTrue(Commands.runOnce(() -> elevator.setGoal(desiredGoal.elevatorGoal)));
+        allowedToChangeNonStowGoal.and(elevatorArm.atPivotSetpoint).and(elevator.atSetpoint)
+                .onTrue(Commands.runOnce(() -> intakeArm.setGoal(desiredGoal.intakeArmGoal))
+                        .andThen(Commands.runOnce(() -> this.currentGoal = desiredGoal)));
+
+        allowedToChangeToStow.onTrue(Commands.runOnce(() -> intakeArm.setGoal(desiredGoal.intakeArmGoal)));
+        allowedToChangeToStow.and(intakeArm.atPivotPositionSetpoint)
+                .onTrue(Commands.runOnce(() -> elevator.setGoal(desiredGoal.elevatorGoal)));
+        allowedToChangeToStow.and(intakeArm.atPivotPositionSetpoint).and(elevator.atSetpoint)
+                .onTrue(Commands.runOnce(() -> elevatorArm.setGoal(desiredGoal.elevatorArmGoal))
+                        .andThen(Commands.runOnce(() -> this.currentGoal = desiredGoal)));
 
         this.elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
         this.elevator.setGoal(desiredGoal.elevatorGoal);
-        this.intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
+        this.intakeArm.setGoal(desiredGoal.intakeArmGoal);
     }
 
     @Override
     public void periodic() {
-        if (desiredGoal != currentGoal) {
-            if (desiredGoal != Goal.DYNAMIC) {
-                elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
-                elevator.setGoal(desiredGoal.elevatorGoal);
-                intakeArm.setPivotGoal(desiredGoal.intakeArmGoal);
-            }
-            this.currentGoal = desiredGoal;
-        }
+        Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
+        Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
+        Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint.getAsBoolean());
+        Logger.recordOutput(LogKey + "/Triggers/DesiredGoalNotEqualCurrentGoal", desiredGoalNotEqualCurrentGoal);
+        Logger.recordOutput(LogKey + "/Triggers/DesiredGoalNotEqualDynamic", desiredGoalNotEqualDynamic);
+        Logger.recordOutput(LogKey + "/Triggers/DesiredGoalEqualsStow", desiredGoalEqualsStow);
+        Logger.recordOutput(LogKey + "/Triggers/AllowedToChangeNonStowGoal", allowedToChangeNonStowGoal);
+        Logger.recordOutput(LogKey + "/Triggers/AllowedToChangeToStow", allowedToChangeToStow);
 
         Logger.recordOutput(
                 LogKey + "/Components",
@@ -109,10 +141,6 @@ public class Superstructure extends VirtualSubsystem {
                         intakeArm.getPivotPosition()
                 )
         );
-
-        Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
-        Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
-        Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint.getAsBoolean());
     }
 
     public Goal getCurrentSuperstructureGoal() {

@@ -146,7 +146,7 @@ public class ScoreCommands {
 
     public Command readyScoreAtPosition(
             final Supplier<ScorePosition> scorePositionSupplier,
-            final DoubleSupplier coralDistanceOffset
+            final DoubleSupplier coralDistanceOffsetMeters
     ) {
         return Commands.parallel(
                 Commands.defer(
@@ -181,14 +181,13 @@ public class ScoreCommands {
                                 final Pose2d scoringPose = finalScoringPoseMap
                                         .get(scorePosition.side)
                                         .get(scorePosition.level.level);
-
-                                return scoringPose.transformBy(
-                                        new Transform2d(
-                                                coralDistanceOffset.getAsDouble(),
-                                                0,
-                                                Rotation2d.kZero
-                                        )
+                                final Transform2d coralDistanceOffset = new Transform2d(
+                                        0,
+                                        coralDistanceOffsetMeters.getAsDouble(),
+                                        Rotation2d.kZero
                                 );
+
+                                return scoringPose.transformBy(coralDistanceOffset);
                             });
                         },
                         Set.of(swerve)

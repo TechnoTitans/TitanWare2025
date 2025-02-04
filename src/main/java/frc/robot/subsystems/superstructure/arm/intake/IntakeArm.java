@@ -160,14 +160,14 @@ public class IntakeArm extends SubsystemBase {
         return Rotation2d.fromRotations(inputs.pivotPositionRots);
     }
 
-    public void setPivotGoal(final IntakeArm.PivotGoal goal) {
+    public void setGoal(final IntakeArm.PivotGoal goal) {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
     }
 
     public Command runPivotGoalCommand(final IntakeArm.PivotGoal goal) {
-        return Commands.run(() -> setPivotGoal(goal));
+        return Commands.run(() -> setGoal(goal));
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(
