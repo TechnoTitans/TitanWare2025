@@ -253,6 +253,7 @@ public class Robot extends LoggedRobot {
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
 
+        //TODO: find best camera poses
         final Pose3d stationaryPose = new Pose3d(5.28, 2.83, 0, new Rotation3d(0, 0, Units.degreesToRadians(120)));
         final Pose3d currentPose = new Pose3d(swerve.getPose());
         final Pose3d camera1Pose3d = new Pose3d(swerve.getPose()).transformBy(
@@ -396,17 +397,21 @@ public class Robot extends LoggedRobot {
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ));
 
+        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
+                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+        );
+
         final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
                 scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
         this.driverController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier, intake.coralDistanceMeters))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
-        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
-                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
-        );
+        this.driverController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftY, driverController::getLeftX))
+                .onFalse(scoreCommands.scoreNet());
 
-        this.coController.b(teleopEventLoop)
+        this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())
                 .onFalse(scoreCommands.scoreProcessor());
 
@@ -417,9 +422,5 @@ public class Robot extends LoggedRobot {
         this.coController.a(teleopEventLoop)
                 .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
                 .onFalse(scoreCommands.intakeLowerAlgae());
-
-        this.coController.x(teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftY, driverController::getLeftX))
-                .onFalse(scoreCommands.scoreNet());
     }
 }

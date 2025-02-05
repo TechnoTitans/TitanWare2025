@@ -258,7 +258,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.runAlgaeRollerVoltage(-8),
+                        intake.runAlgaeRollerVelocity(-2),
                         Commands.waitUntil(intake.isAlgaePresent.negate())
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.PROCESSOR),
@@ -282,7 +282,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.runAlgaeRollerVoltage(8),
+                        intake.runAlgaeRollerVelocity(3),
                         Commands.waitUntil(intake.isAlgaePresent)
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
@@ -294,7 +294,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.runAlgaeRollerVoltage(8),
+                        intake.runAlgaeRollerVelocity(3),
                         Commands.waitUntil(intake.isAlgaePresent)
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
@@ -320,7 +320,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.runAlgaeRollerVoltage(-8),
+                        intake.runAlgaeRollerVelocity(-6),
                         Commands.waitUntil(intake.isAlgaePresent.negate())
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.NET),
