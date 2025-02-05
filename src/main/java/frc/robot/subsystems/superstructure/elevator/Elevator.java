@@ -67,6 +67,7 @@ public class Elevator extends SubsystemBase {
         DYNAMIC(0),
         IDLE(0),
         HP(0.02),
+        ALGAE_GROUND(2),
         L1(0.028),
         L2(0.150),
         LOWER_ALGAE(0.16),

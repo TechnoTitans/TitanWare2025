@@ -422,5 +422,7 @@ public class Robot extends LoggedRobot {
         this.coController.a(teleopEventLoop)
                 .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
                 .onFalse(scoreCommands.intakeLowerAlgae());
+        this.coController.x(teleopEventLoop)
+                .whileTrue(scoreCommands.intakeAlgaeFromGround());
     }
 }
