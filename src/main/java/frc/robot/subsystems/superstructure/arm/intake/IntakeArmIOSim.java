@@ -4,13 +4,12 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
-import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -24,7 +23,7 @@ import frc.robot.utils.MoreDCMotor;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.sim.feedback.SimCANCoder;
-import frc.robot.utils.sim.motors.TalonFXSim;
+import frc.robot.utils.sim.motors.TalonFXSSim;
 
 public class IntakeArmIOSim implements IntakeArmIO {
     private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
@@ -34,12 +33,11 @@ public class IntakeArmIOSim implements IntakeArmIO {
 
     private final SingleJointedArmSim pivotSim;
 
-    private final TalonFX pivotMotor;
+    private final TalonFXS pivotMotor;
     private final CANcoder pivotEncoder;
-    private final TalonFXSim pivotTalonFXSim;
+    private final TalonFXSSim pivotTalonFXSSim;
 
     private final PositionVoltage positionVoltage;
-    private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
 
     private final StatusSignal<Angle> pivotPosition;
@@ -69,10 +67,10 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 SimConstants.IntakeArm.STARTING_ANGLE.getRadians()
         );
 
-        this.pivotMotor = new TalonFX(constants.intakePivotMotorID(), constants.CANBus());
+        this.pivotMotor = new TalonFXS(constants.intakePivotMotorID(), constants.CANBus());
         this.pivotEncoder = new CANcoder(constants.intakePivotCANCoderId(), constants.CANBus());
 
-        this.pivotTalonFXSim = new TalonFXSim(
+        this.pivotTalonFXSSim = new TalonFXSSim(
                 pivotMotor,
                 constants.pivotGearing(),
                 pivotSim::update,
@@ -80,10 +78,9 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 () -> pivotSim.getAngleRads() - zeroedPositionToHorizontalRads,
                 pivotSim::getVelocityRadPerSec
         );
-        this.pivotTalonFXSim.attachFeedbackSensor(new SimCANCoder(pivotEncoder));
+        this.pivotTalonFXSSim.attachFeedbackSensor(new SimCANCoder(pivotEncoder));
 
         this.positionVoltage = new PositionVoltage(0);
-        this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
 
         this.pivotPosition = pivotMotor.getPosition();
@@ -96,7 +93,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
             final double dt = deltaTime.get();
-            pivotTalonFXSim.update(dt);
+            pivotTalonFXSSim.update(dt);
         });
         ToClose.add(simUpdateNotifier);
         simUpdateNotifier.setName(String.format(
@@ -113,19 +110,23 @@ public class IntakeArmIOSim implements IntakeArmIO {
         pivotCANCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         pivotEncoder.getConfigurator().apply(pivotCANCoderConfiguration);
 
-        final TalonFXConfiguration pivotConfiguration = new TalonFXConfiguration();
+        final TalonFXSConfiguration pivotConfiguration = new TalonFXSConfiguration();
+        pivotConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
+        pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         pivotConfiguration.Slot0 = new Slot0Configs()
                 .withKG(0.26)
                 .withGravityType(GravityTypeValue.Elevator_Static)
                 .withKP(21);
-        pivotConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
-        pivotConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        pivotConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-        pivotConfiguration.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
-        pivotConfiguration.Feedback.RotorToSensorRatio = constants.pivotGearing();
-        pivotConfiguration.Feedback.SensorToMechanismRatio = 1;
+        pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
+        pivotConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        pivotConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
+        pivotConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+        pivotConfiguration.ExternalFeedback.ExternalFeedbackSensorSource = ExternalFeedbackSensorSourceValue.FusedCANcoder;
+        pivotConfiguration.ExternalFeedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
+        pivotConfiguration.ExternalFeedback.RotorToSensorRatio = constants.pivotGearing();
+        pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = 1;
         pivotConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();
@@ -154,7 +155,8 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 pivotEncoder
         );
 
-        pivotMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
+        pivotMotor.getSimState().MotorOrientation = ChassisReference.Clockwise_Positive;
+        pivotMotor.getSimState().ExtSensorOrientation = ChassisReference.Clockwise_Positive;
         pivotEncoder.getSimState().Orientation = ChassisReference.Clockwise_Positive;
     }
 
@@ -183,12 +185,9 @@ public class IntakeArmIOSim implements IntakeArmIO {
     public void toPivotPosition(final double pivotPositionRots) {
         pivotMotor.setControl(positionVoltage.withPosition(pivotPositionRots));
     }
+
     @Override
     public void toPivotVoltage(final double volts) {
         pivotMotor.setControl(voltageOut.withOutput(volts));
-    }
-    @Override
-    public void toPivotTorqueCurrent(final double torqueCurrentAmps) {
-        pivotMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
     }
 }

@@ -29,6 +29,4 @@ public interface IntakeArmIO {
     default void toPivotPosition(final double pivotPositionRots) {}
 
     default void toPivotVoltage(final double volts) {}
-
-    default void toPivotTorqueCurrent(final double torqueCurrentAmps) {}
 }
