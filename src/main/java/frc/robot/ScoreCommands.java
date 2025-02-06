@@ -131,7 +131,7 @@ public class ScoreCommands {
                         }
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
-                intake.runCoralRollerVelocity(3)
+                intake.intakeCoralHP()
         );
     }
 
@@ -258,7 +258,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.runAlgaeRollerVelocity(-2),
+                        intake.scoreAlgae(),
                         Commands.waitUntil(intake.isAlgaePresent.negate())
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.PROCESSOR),
@@ -282,7 +282,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.runAlgaeRollerVelocity(3),
+                        intake.intakeAlgae(),
                         Commands.waitUntil(intake.isAlgaePresent)
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
@@ -294,7 +294,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.runAlgaeRollerVelocity(3),
+                        intake.intakeAlgae(),
                         Commands.waitUntil(intake.isAlgaePresent)
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
@@ -303,24 +303,17 @@ public class ScoreCommands {
     }
 
     public Command intakeAlgaeFromGround() {
-        return Commands.deadline(
-                Commands.sequence(
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.runAlgaeRollerVelocity(3),
-                        Commands.waitUntil(intake.isAlgaePresent)
-                ),
+        return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.ALGAE_GROUND),
-                swerve.runWheelXCommand()
-        );
+                intake.intakeAlgae()
+        ).until(intake.isAlgaePresent);
     }
 
-    public Command readyScoreNet(
-            final DoubleSupplier leftStickXInput,
-            final DoubleSupplier leftStickYInput
-    ) {
+    public Command readyScoreNet(final DoubleSupplier leftStickXInput) {
         return Commands.parallel(
-                swerve.teleopFacingAngleCommand(
-                        leftStickYInput,
+                swerve.teleopHoldAxisFacingAngleCommand(
+                        7,
+                        Swerve.DriveAxis.X,
                         leftStickXInput,
                         () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.kPi
                 ),
@@ -333,7 +326,8 @@ public class ScoreCommands {
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
                         intake.runAlgaeRollerVelocity(-6),
-                        Commands.waitUntil(intake.isAlgaePresent.negate())
+                        Commands.waitUntil(intake.isAlgaePresent.negate()),
+                        intake.algaeInstantStopCommand()
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.NET),
                 swerve.runWheelXCommand()

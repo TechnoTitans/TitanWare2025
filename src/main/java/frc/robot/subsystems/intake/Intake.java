@@ -154,6 +154,18 @@ public class Intake extends SubsystemBase {
                 .andThen(coralInstantStopCommand());
     }
 
+    public Command intakeAlgae() {
+        return runAlgaeRollerVelocity(3);
+    }
+
+    public Command scoreAlgae() {
+        return runAlgaeRollerVelocity(-2)
+                .onlyIf(isAlgaePresent)
+                .until(isAlgaePresent.negate())
+                .withTimeout(2)
+                .andThen(algaeInstantStopCommand());
+    }
+
     public Command runCoralRollerVelocity(final double velocityRotsPerSec) {
         return runEnd(
                 () -> {

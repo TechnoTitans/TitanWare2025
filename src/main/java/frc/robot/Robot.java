@@ -386,12 +386,12 @@ public class Robot extends LoggedRobot {
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
         this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
-        this.driverController.leftBumper(teleopEventLoop)
+        this.driverController.rightBumper(teleopEventLoop)
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST),
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ));
-        this.driverController.rightBumper(teleopEventLoop)
+        this.driverController.leftBumper(teleopEventLoop)
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW),
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
@@ -408,12 +408,15 @@ public class Robot extends LoggedRobot {
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
         this.driverController.a(teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftY, driverController::getLeftX))
+                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
                 .onFalse(scoreCommands.scoreNet());
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())
                 .onFalse(scoreCommands.scoreProcessor());
+
+        this.coController.x(teleopEventLoop)
+                .whileTrue(scoreCommands.intakeAlgaeFromGround());
 
         this.coController.y(teleopEventLoop)
                 .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
@@ -422,7 +425,5 @@ public class Robot extends LoggedRobot {
         this.coController.a(teleopEventLoop)
                 .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
                 .onFalse(scoreCommands.intakeLowerAlgae());
-        this.coController.x(teleopEventLoop)
-                .whileTrue(scoreCommands.intakeAlgaeFromGround());
     }
 }

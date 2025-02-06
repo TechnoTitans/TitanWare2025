@@ -570,6 +570,42 @@ public class Swerve extends SubsystemBase {
         ).finallyDo(() -> holonomicControllerActive = false);
     }
 
+    public Command teleopHoldAxisFacingAngleCommand(
+            final double holdPosition,
+            final DriveAxis holdAxis,
+            final DoubleSupplier speedSupplier,
+            final Supplier<Rotation2d> rotationTargetSupplier
+    ) {
+        return Commands.sequence(
+                runOnce(() -> {
+                    headingControllerActive = true;
+                    headingController.reset();
+                    holdAxisPID.reset();
+                }),
+                run(() -> {
+                    final Pose2d currentPose = getPose();
+                    this.headingTarget = rotationTargetSupplier.get();
+
+                    final double holdEffort = holdAxisPID.calculate(
+                            holdAxis == DriveAxis.X
+                                    ? currentPose.getX()
+                                    : currentPose.getY(),
+                            holdPosition
+                    );
+
+                    final double xSpeed = holdAxis == DriveAxis.X ? holdEffort : speedSupplier.getAsDouble();
+                    final double ySpeed = holdAxis == DriveAxis.Y ? holdEffort : speedSupplier.getAsDouble();
+                    drive(
+                            xSpeed,
+                            ySpeed,
+                            headingController.calculate(getYaw().getRadians(), headingTarget.getRadians()),
+                            true,
+                            false
+                    );
+                })
+        ).finallyDo(() -> headingControllerActive = false);
+    }
+
     public Command holdAxisFacingAngleAndDrive(
             final double holdPosition,
             final DriveAxis holdAxis,
