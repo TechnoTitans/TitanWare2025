@@ -302,6 +302,18 @@ public class ScoreCommands {
         );
     }
 
+    public Command intakeAlgaeFromGround() {
+        return Commands.deadline(
+                Commands.sequence(
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        intake.runAlgaeRollerVelocity(3),
+                        Commands.waitUntil(intake.isAlgaePresent)
+                ),
+                superstructure.toSuperstructureGoal(Superstructure.Goal.ALGAE_GROUND),
+                swerve.runWheelXCommand()
+        );
+    }
+
     public Command readyScoreNet(
             final DoubleSupplier leftStickXInput,
             final DoubleSupplier leftStickYInput
