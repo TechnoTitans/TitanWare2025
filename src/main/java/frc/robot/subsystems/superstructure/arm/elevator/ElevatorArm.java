@@ -72,7 +72,8 @@ public class ElevatorArm extends SubsystemBase {
         L3(Units.radiansToRotations(0.637)),
         UPPER_ALGAE(Units.radiansToRotations(.750)),
         L4(Units.radiansToRotations(0.881)),
-        CLIMB(Units.degreesToRotations(20));
+        CLIMB(Units.degreesToRotations(20)),
+        CLIMB_DOWN(Units.degreesToRotations(0));
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {

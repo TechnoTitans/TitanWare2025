@@ -26,6 +26,7 @@ public class Superstructure extends VirtualSubsystem {
         DYNAMIC(Elevator.Goal.DYNAMIC, ElevatorArm.Goal.DYNAMIC, IntakeArm.PivotGoal.STOW),
         STOW(Elevator.Goal.IDLE, ElevatorArm.Goal.STOW, IntakeArm.PivotGoal.STOW),
         CLIMB(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB, IntakeArm.PivotGoal.STOW),
+        CLIMB_DOWN(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB_DOWN, IntakeArm.PivotGoal.STOW),
         ALGAE_GROUND(Elevator.Goal.ALGAE_GROUND, ElevatorArm.Goal.ALGAE_GROUND, IntakeArm.PivotGoal.ALGAE_GROUND),
         UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.PivotGoal.ALGAE_REEF),
         LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.PivotGoal.ALGAE_REEF),

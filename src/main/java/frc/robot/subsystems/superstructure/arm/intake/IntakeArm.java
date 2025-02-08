@@ -3,9 +3,7 @@ package frc.robot.subsystems.superstructure.arm.intake;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.units.measure.Voltage;
@@ -33,7 +31,6 @@ public class IntakeArm extends SubsystemBase {
     private final IntakeArmIOInputsAutoLogged inputs;
 
     private final SysIdRoutine pivotVoltageSysIdRoutine;
-    private final SysIdRoutine pivotTorqueCurrentSysIdRoutine;
 
     private IntakeArm.PivotGoal desiredGoal = IntakeArm.PivotGoal.STOW;
     private IntakeArm.PivotGoal currentGoal = desiredGoal;
@@ -96,12 +93,6 @@ public class IntakeArm extends SubsystemBase {
                 Volts.of(10),
                 Seconds.of(10),
                 intakeArmIO::toPivotVoltage
-        );
-        this.pivotTorqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
-                Amps.of(4).per(Second),
-                Amp.of(40),
-                Seconds.of(10),
-                intakeArmIO::toPivotTorqueCurrent
         );
 
         this.pivotPositionSetpoint = new IntakeArm.PivotPositionSetpoint()
@@ -191,27 +182,6 @@ public class IntakeArm extends SubsystemBase {
         );
     }
 
-    private SysIdRoutine makeTorqueCurrentSysIdRoutine(
-            final Velocity<CurrentUnit> currentRampRate,
-            final Current stepCurrent,
-            final Time timeout,
-            final Consumer<Double> torqueCurrentConsumer
-    ) {
-        return new SysIdRoutine(
-                new SysIdRoutine.Config(
-                        Volts.per(Second).of(currentRampRate.baseUnitMagnitude()),
-                        Volts.of(stepCurrent.baseUnitMagnitude()),
-                        timeout,
-                        state -> SignalLogger.writeString(String.format("%s-state", LogKey), state.toString())
-                ),
-                new SysIdRoutine.Mechanism(
-                        voltageMeasure -> torqueCurrentConsumer.accept(voltageMeasure.in(Volts)),
-                        null,
-                        this
-                )
-        );
-    }
-
     private Command makeRollerSysIdCommand(final SysIdRoutine sysIdRoutine) {
         return Commands.sequence(
                 sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward),
@@ -238,8 +208,5 @@ public class IntakeArm extends SubsystemBase {
 
     public Command pivotVoltageSysIdCommand() {
         return makePivotSysIdCommand(pivotVoltageSysIdRoutine);
-    }
-    public Command pivotTorqueCurrentSysIdCommand() {
-        return makePivotSysIdCommand(pivotTorqueCurrentSysIdRoutine);
     }
 }

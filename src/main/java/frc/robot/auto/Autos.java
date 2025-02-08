@@ -157,9 +157,7 @@ public class Autos {
 
         routine.active().onTrue(
                 Commands.sequence(
-                        Commands.runOnce(() -> {
-                            intake.setCANRangeDistance(Units.inchesToMeters(6));
-                        }),
+                        Commands.runOnce(() -> intake.setCANRangeDistance(Units.inchesToMeters(6))),
                         cage0Reef5.resetOdometry(),
                         cage0Reef5.cmd()
                 )

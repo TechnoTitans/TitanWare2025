@@ -254,9 +254,9 @@ public class Robot extends LoggedRobot {
         coControllerDisconnected.set(!coController.getHID().isConnected());
 
         //TODO: find best camera poses
-        final Pose3d stationaryPose = new Pose3d(5.28, 2.83, 0, new Rotation3d(0, 0, Units.degreesToRadians(120)));
-        final Pose3d currentPose = new Pose3d(swerve.getPose());
-        final Pose3d camera1Pose3d = new Pose3d(swerve.getPose()).transformBy(
+        Pose3d currentPose = new Pose3d(5.28, 2.83, 0, new Rotation3d(0, 0, Units.degreesToRadians(120)));
+//        currentPose = new Pose3d(swerve.getPose());
+        final Pose3d camera1Pose3d = currentPose.transformBy(
                 new Transform3d(
                         0,
                         Units.inchesToMeters(12),
@@ -265,7 +265,7 @@ public class Robot extends LoggedRobot {
                 )
         );
 
-        final Pose3d camera2Pose3d = new Pose3d(swerve.getPose()).transformBy(
+        final Pose3d camera2Pose3d = currentPose.transformBy(
                 new Transform3d(
                         0,
                         Units.inchesToMeters(12),
@@ -278,9 +278,23 @@ public class Robot extends LoggedRobot {
                 )
         );
 
+        final Pose3d camera3Pose3d = currentPose.transformBy(
+                new Transform3d(
+                        Units.inchesToMeters(12),
+                        Units.inchesToMeters(-12),
+                        Units.inchesToMeters(6),
+                        new Rotation3d(
+                                0,
+                                Units.degreesToRadians(-40),
+                                Units.rotationsToDegrees(30)
+                        )
+                )
+        );
+
         Logger.recordOutput("CameraRoot", currentPose);
         Logger.recordOutput("Camera1", camera1Pose3d);
         Logger.recordOutput("Camera2", camera2Pose3d);
+        Logger.recordOutput("Camera3", camera3Pose3d);
 
         Threads.setCurrentThreadPriority(true, 10);
     }
@@ -398,7 +412,7 @@ public class Robot extends LoggedRobot {
                 ));
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
-                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftX, driverController::getLeftY)
         );
 
         final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
@@ -414,6 +428,10 @@ public class Robot extends LoggedRobot {
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())
                 .onFalse(scoreCommands.scoreProcessor());
+
+        this.driverController.x(teleopEventLoop)
+                .whileTrue(scoreCommands.readyClimb(driverController::getLeftX, driverController::getLeftY))
+                .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
 
         this.coController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.intakeAlgaeFromGround());

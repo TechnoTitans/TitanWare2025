@@ -107,8 +107,8 @@ public class ScoreCommands {
     }
 
     public Command intakeFacingClosestCoralStation(
-            final DoubleSupplier leftStickXInput,
-            final DoubleSupplier leftStickYInput
+            final DoubleSupplier leftStickYInput,
+            final DoubleSupplier leftStickXInput
     ) {
         //noinspection SuspiciousNameCombination
         return Commands.parallel(
@@ -331,6 +331,17 @@ public class ScoreCommands {
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.NET),
                 swerve.runWheelXCommand()
+        );
+    }
+
+    public Command readyClimb(final DoubleSupplier leftStickXInput, final DoubleSupplier leftStickYInput) {
+        return Commands.parallel(
+                swerve.teleopFacingAngleCommand(
+                        leftStickXInput,
+                        leftStickYInput,
+                        () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.kPi
+                ),
+                superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB)
         );
     }
 }
