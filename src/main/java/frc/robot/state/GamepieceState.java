@@ -140,5 +140,19 @@ public class GamepieceState extends VirtualSubsystem {
                         Commands.waitSeconds(0.15),
                         setCANRangeDistanceCommand(10)
         ));
+
+        intake.isAlgaeIntaking.and(hasAlgae.negate()).whileTrue(
+                Commands.sequence(
+                    waitRand(random, 0.1, 2),
+                    Commands.waitSeconds(0.15),
+                    setCANRangeDistanceCommand(Units.inchesToMeters(1))
+        ));
+
+        intake.isCoralOuttaking.and(hasCoral).whileTrue(
+                Commands.sequence(
+                        waitRand(random, 0.1, 2),
+                        Commands.waitSeconds(0.15),
+                        setCANRangeDistanceCommand(10)
+        ));
     }
 }

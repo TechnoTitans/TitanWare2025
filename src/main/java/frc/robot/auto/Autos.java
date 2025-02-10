@@ -131,7 +131,7 @@ public class Autos {
         });
     }
 
-    public Set<Subsystem> getRequirements() {
+    public Set<Subsystem> getAllRequirements() {
         final Set<Subsystem> requirements = new HashSet<>(superstructure.getRequirements());
         requirements.addAll(List.of(swerve, intake));
         return requirements;
@@ -171,7 +171,7 @@ public class Autos {
                                 () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
                                         .map(this::scoreAtLevel)
                                         .orElseGet(Commands::idle),
-                                getRequirements()
+                                getAllRequirements()
                         ).onlyIf(hasCoral),
                         reef5ToRightHP.cmd()
                 )
@@ -196,7 +196,7 @@ public class Autos {
                                 () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
                                         .map(this::scoreAtLevel)
                                         .orElseGet(Commands::idle),
-                                getRequirements()
+                                getAllRequirements()
                         ).onlyIf(hasCoral),
                         reef5ToRightHP.cmd()
                 )

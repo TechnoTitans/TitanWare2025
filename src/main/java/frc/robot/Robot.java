@@ -436,12 +436,12 @@ public class Robot extends LoggedRobot {
         this.coController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.intakeAlgaeFromGround());
 
-        this.coController.y(teleopEventLoop)
-                .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
-                .onFalse(scoreCommands.intakeUpperAlgae());
-
         this.coController.a(teleopEventLoop)
-                .whileTrue(scoreCommands.readyIntakeAlgaeAtPosition())
+                .whileTrue(scoreCommands.readyIntakeLowerAlgae())
                 .onFalse(scoreCommands.intakeLowerAlgae());
+
+        this.coController.y(teleopEventLoop)
+                .whileTrue(scoreCommands.readyIntakeUpperAlgae())
+                .onFalse(scoreCommands.intakeUpperAlgae());
     }
 }

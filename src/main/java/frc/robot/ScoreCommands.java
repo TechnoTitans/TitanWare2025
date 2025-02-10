@@ -144,10 +144,7 @@ public class ScoreCommands {
                 : maybeDynamicSuperstructureGoal;
     }
 
-    public Command readyScoreAtPosition(
-            final Supplier<ScorePosition> scorePositionSupplier,
-            final DoubleSupplier coralDistanceOffsetMeters
-    ) {
+    public Command readyScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         return Commands.parallel(
                 Commands.defer(
                         () -> {
@@ -183,7 +180,8 @@ public class ScoreCommands {
                                         .get(scorePosition.level.level);
                                 final Transform2d coralDistanceOffset = new Transform2d(
                                         0,
-                                        coralDistanceOffsetMeters.getAsDouble(),
+                                        //TODO: if coral not preset set offset to 0
+                                        intake.coralDistanceMeters.getAsDouble(),
                                         Rotation2d.kZero
                                 );
 
@@ -230,7 +228,7 @@ public class ScoreCommands {
                                 )
                         )
                 )
-        );
+        ).onlyIf(intake.isCoralPresent);
     }
 
     public Command scoreAtPosition(final Supplier<ScorePosition> scorePosition) {
@@ -244,7 +242,7 @@ public class ScoreCommands {
                         superstructure.getRequirements()
                 ),
                 swerve.runWheelXCommand()
-        );
+        ).onlyIf(intake.isCoralPresent);
     }
 
     public Command readyScoreProcessor() {
@@ -266,18 +264,31 @@ public class ScoreCommands {
         );
     }
 
-    public Command readyIntakeAlgaeAtPosition() {
+    private Command driveToClosestReefScoringFace() {
+        final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
+        final List<Pose2d> reefCenterPosesList = new ArrayList<>(reefCenterPoses.values());
+
         return Commands.defer(
                 () -> {
                     final Pose2d currentPose = swerve.getPose();
-                    final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
-                    final Pose2d nearestCoralSide = currentPose.nearest((List<Pose2d>) reefCenterPoses.values());
+                    final Pose2d nearestCoralSide = currentPose.nearest(reefCenterPosesList);
 
-                    return swerve.runToPose(() -> nearestCoralSide);
+                    return swerve.driveToPose(() -> nearestCoralSide);
                 },
                 Set.of(swerve)
         );
     }
+
+    public Command readyIntakeLowerAlgae() {
+        return Commands.sequence(
+                driveToClosestReefScoringFace(),
+                Commands.parallel(
+                        swerve.runWheelXCommand(),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE)
+                )
+        );
+    }
+
     public Command intakeLowerAlgae() {
         return Commands.deadline(
                 Commands.sequence(
@@ -287,6 +298,16 @@ public class ScoreCommands {
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
                 swerve.runWheelXCommand()
+        );
+    }
+
+    public Command readyIntakeUpperAlgae() {
+        return Commands.sequence(
+                driveToClosestReefScoringFace(),
+                Commands.parallel(
+                        swerve.runWheelXCommand(),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE)
+                )
         );
     }
 

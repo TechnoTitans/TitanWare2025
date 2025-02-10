@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -75,6 +76,8 @@ public class Superstructure extends VirtualSubsystem {
     private Goal desiredGoal = Goal.STOW;
     private Goal currentGoal = desiredGoal;
 
+    private final EventLoop eventLoop;
+
     private final Trigger desiredGoalNotEqualCurrentGoal;
     private final Trigger desiredGoalNotEqualDynamic;
     private final Trigger desiredGoalEqualsStow;
@@ -91,9 +94,10 @@ public class Superstructure extends VirtualSubsystem {
         this.elevatorArm = elevatorArm;
         this.intakeArm = intakeArm;
 
-        this.desiredGoalNotEqualCurrentGoal = new Trigger(() -> desiredGoal != currentGoal);
-        this.desiredGoalNotEqualDynamic = new Trigger(() -> desiredGoal != Goal.DYNAMIC);
-        this.desiredGoalEqualsStow = new Trigger(() -> desiredGoal == Goal.STOW);
+        this.eventLoop = new EventLoop();
+        this.desiredGoalNotEqualCurrentGoal = new Trigger(eventLoop, () -> desiredGoal != currentGoal);
+        this.desiredGoalNotEqualDynamic = new Trigger(eventLoop, () -> desiredGoal != Goal.DYNAMIC);
+        this.desiredGoalEqualsStow = new Trigger(eventLoop, () -> desiredGoal == Goal.STOW);
         this.allowedToChangeNonStowGoal = desiredGoalNotEqualCurrentGoal
                 .and(desiredGoalNotEqualDynamic)
                 .and(desiredGoalEqualsStow.negate());
@@ -125,6 +129,8 @@ public class Superstructure extends VirtualSubsystem {
 
     @Override
     public void periodic() {
+        eventLoop.poll();
+
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
         Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint.getAsBoolean());
