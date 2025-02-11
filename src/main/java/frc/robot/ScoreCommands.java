@@ -180,12 +180,14 @@ public class ScoreCommands {
                                         .get(scorePosition.level.level);
                                 final Transform2d coralDistanceOffset = new Transform2d(
                                         0,
-                                        //TODO: if coral not preset set offset to 0
-                                        intake.coralDistanceMeters.getAsDouble(),
+                                        intake.isCoralPresent.getAsBoolean()
+                                                ? intake.coralDistanceMeters.getAsDouble()
+                                                : 0,
                                         Rotation2d.kZero
                                 );
 
                                 return scoringPose.transformBy(coralDistanceOffset);
+
                             });
                         },
                         Set.of(swerve)

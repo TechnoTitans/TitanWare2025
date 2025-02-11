@@ -216,7 +216,11 @@ public class Robot extends LoggedRobot {
 
                 final String logPath = LogFileUtil.findReplayLog();
                 Logger.setReplaySource(new WPILOGReader(logPath));
-                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"), WPILOGWriter.AdvantageScopeOpenBehavior.AUTO));
+                Logger.addDataReceiver(
+                        new WPILOGWriter(
+                                LogFileUtil.addPathSuffix(logPath, "_sim"),
+                                WPILOGWriter.AdvantageScopeOpenBehavior.AUTO)
+                );
             }
         }
 
@@ -231,14 +235,32 @@ public class Robot extends LoggedRobot {
         SignalLogger.start();
         ToClose.add(SignalLogger::stop);
 
-        CommandScheduler.getInstance().onCommandInitialize(command -> Logger.recordOutput("Commands/Initialized", command.getName()));
-        CommandScheduler.getInstance().onCommandFinish(command -> Logger.recordOutput("Commands/Finished", command.getName()));
+        CommandScheduler.getInstance().onCommandInitialize(
+                command -> Logger.recordOutput("Commands/Initialized", command.getName())
+        );
+        CommandScheduler.getInstance().onCommandFinish(
+                command -> Logger.recordOutput("Commands/Finished", command.getName())
+        );
 
         CommandScheduler.getInstance().onCommandInterrupt((interrupted, interrupting) -> {
-            Logger.recordOutput("Commands/Interrupted", interrupted.getName());
-            Logger.recordOutput("Commands/InterruptedRequirements", LogUtils.getRequirementsFromSubsystems(interrupted.getRequirements()));
-            Logger.recordOutput("Commands/Interrupter", interrupting.isPresent() ? interrupting.get().getName() : "None");
-            Logger.recordOutput("Commands/InterrupterRequirements", LogUtils.getRequirementsFromSubsystems(interrupting.isPresent() ? interrupting.get().getRequirements() : Set.of()));
+            Logger.recordOutput(
+                    "Commands/Interrupted",
+                    interrupted.getName()
+            );
+            Logger.recordOutput(
+                    "Commands/InterruptedRequirements",
+                    LogUtils.getRequirementsFromSubsystems(interrupted.getRequirements())
+            );
+            Logger.recordOutput(
+                    "Commands/Interrupter",
+                    interrupting.isPresent() ? interrupting.get().getName() : "None"
+            );
+            Logger.recordOutput(
+                    "Commands/InterrupterRequirements",
+                    LogUtils.getRequirementsFromSubsystems(
+                            interrupting.isPresent() ? interrupting.get().getRequirements() : Set.of()
+                    )
+            );
         });
 
         Logger.start();
@@ -278,6 +300,7 @@ public class Robot extends LoggedRobot {
                 )
         );
 
+        //done
         final Pose3d camera3Pose3d = currentPose.transformBy(
                 new Transform3d(
                         Units.inchesToMeters(12),
@@ -381,9 +404,13 @@ public class Robot extends LoggedRobot {
     public void simulationPeriodic() {}
 
     public void configureStateTriggers() {
-        endgameTrigger.onTrue(ControllerUtils.rumbleForDurationCommand(driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1));
+        endgameTrigger.onTrue(ControllerUtils.rumbleForDurationCommand(
+                driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
+        );
 
-        intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1));
+        intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(
+                driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
+        );
     }
 
     public void configureAutos() {
@@ -418,7 +445,7 @@ public class Robot extends LoggedRobot {
         final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
                 scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
         this.driverController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier, intake.coralDistanceMeters))
+                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
         this.driverController.a(teleopEventLoop)
