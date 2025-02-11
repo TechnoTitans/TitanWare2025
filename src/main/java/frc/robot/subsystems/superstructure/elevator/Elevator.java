@@ -2,6 +2,7 @@ package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Current;
@@ -174,8 +175,12 @@ public class Elevator extends SubsystemBase {
         return inputs.canRangeDistanceMeters;
     }
 
+
+    //get distance from canrange minus thickness of elevator bottom plates
     public void home() {
-        this.elevatorIO.setPosition(inputs.canRangeDistanceMeters / drumCircumferenceMeters);
+        this.elevatorIO.setPosition(
+                (inputs.canRangeDistanceMeters - Units.inchesToMeters(0.50)) / drumCircumferenceMeters
+        );
     }
 
     public Command homeCommand() {
