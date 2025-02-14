@@ -32,7 +32,15 @@ public interface Constants {
     }
 
     interface Vision {
-        Transform3d ROBOT_TO_FL_APRILTAG = new Transform3d(
+        Transform3d ROBOT_TO_FR_APRILTAG = new Transform3d(
+                new Translation3d(Units.inchesToMeters(11.2175), Units.inchesToMeters(11.5665), Units.inchesToMeters(8.6855)),
+                new Rotation3d(0, Units.degreesToRadians(-40), Units.rotationsToDegrees(30))
+        );
+        Transform3d ROBOT_TO_FL_TOP_APRILTAG = new Transform3d(
+                new Translation3d(Units.inchesToMeters(11.862), Units.inchesToMeters(12.681), Units.inchesToMeters(8.947)),
+                new Rotation3d(0, Units.degreesToRadians(-25), Units.degreesToRadians(20))
+        );
+        Transform3d ROBOT_TO_FL_BOTTOM_APRILTAG = new Transform3d(
                 new Translation3d(Units.inchesToMeters(11.862), Units.inchesToMeters(12.681), Units.inchesToMeters(8.947)),
                 new Rotation3d(0, Units.degreesToRadians(-25), Units.degreesToRadians(20))
         );
