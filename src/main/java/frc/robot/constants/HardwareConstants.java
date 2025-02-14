@@ -15,8 +15,8 @@ public class HardwareConstants {
 
     public record ElevatorConstants(
             String CANBus,
-            int masterMotorId,
-            int followerMotorId,
+            int rightMotorId,
+            int leftMotorId,
             int CANrangeId,
             double gearing,
             double lowerLimitRots,
@@ -25,7 +25,7 @@ public class HardwareConstants {
     ) {}
 
     public static final ElevatorConstants ELEVATOR = new ElevatorConstants(
-            RobotMap.CanivoreCANBus,
+            RobotMap.RioCANBus,
             14,
             15,
             16,
@@ -66,7 +66,7 @@ public class HardwareConstants {
     ) {}
 
     public static final IntakeArmConstants INTAKE_ARM = new IntakeArmConstants(
-            RobotMap.CanivoreCANBus,
+            RobotMap.RioCANBus,
             19,
             20,
             0,
@@ -85,7 +85,7 @@ public class HardwareConstants {
     ) {}
 
     public static final IntakeConstants INTAKE = new IntakeConstants(
-            RobotMap.CanivoreCANBus,
+            RobotMap.RioCANBus,
             21,
             22,
             23,

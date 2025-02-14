@@ -88,8 +88,8 @@ public class ElevatorIOSim implements ElevatorIO {
                 lowerLimitMeters
         );
 
-        this.masterMotor = new TalonFX(constants.masterMotorId(), constants.CANBus());
-        this.followerMotor = new TalonFX(constants.followerMotorId(), constants.CANBus());
+        this.masterMotor = new TalonFX(constants.rightMotorId(), constants.CANBus());
+        this.followerMotor = new TalonFX(constants.leftMotorId(), constants.CANBus());
         this.canRange = new CANrange(constants.CANrangeId(), constants.CANBus());
 
         this.motorsSim = new TalonFXSim(
