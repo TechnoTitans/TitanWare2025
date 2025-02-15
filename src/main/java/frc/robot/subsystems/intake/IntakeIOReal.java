@@ -143,6 +143,7 @@ public class IntakeIOReal implements IntakeIO {
         );
 
         ParentDevice.optimizeBusUtilizationForAll(
+                4,
                 coralRollerMotor,
                 algaeRollerMotor,
                 coralCANRange

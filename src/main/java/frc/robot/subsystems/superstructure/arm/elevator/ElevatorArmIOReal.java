@@ -109,6 +109,7 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
                 pivotDeviceTemp
         );
         ParentDevice.optimizeBusUtilizationForAll(
+                4,
                 pivotMotor,
                 pivotCANCoder
         );
