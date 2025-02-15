@@ -20,12 +20,12 @@ public interface SimFeedbackSensor {
      *
      * @param deltaRotations The change in position in rotations
      */
-    void addPosition(final double deltaRotations);
+    default void addPosition(final double deltaRotations) {}
 
     /**
      * Sets the simulated velocity of the {@link SimFeedbackSensor}.
      *
      * @param rotationsPerSec The new velocity in rotations per second
      */
-    void setVelocity(final double rotationsPerSec);
+    default void setVelocity(final double rotationsPerSec) {}
 }

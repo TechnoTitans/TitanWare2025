@@ -33,8 +33,8 @@ import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
-import frc.robot.subsystems.drive.trajectory.HolonomicChoreoController;
-import frc.robot.subsystems.drive.trajectory.HolonomicDriveWithPIDController;
+import frc.robot.subsystems.drive.controllers.HolonomicChoreoController;
+import frc.robot.subsystems.drive.controllers.HolonomicDriveWithPIDController;
 import frc.robot.subsystems.gyro.Gyro;
 import frc.robot.utils.gyro.GyroUtils;
 import frc.robot.utils.logging.LogUtils;
@@ -557,6 +557,55 @@ public class Swerve extends SubsystemBase {
         ).finallyDo(() -> holonomicControllerActive = false);
     }
 
+    public Command runToPose(final Supplier<Pose2d> poseSupplier) {
+        return Commands.sequence(
+                runOnce(() -> {
+                    holonomicControllerActive = true;
+                    holonomicDriveWithPIDController.reset(getPose(), getRobotRelativeSpeeds());
+                }),
+                run(() -> {
+                    this.holonomicPoseTarget = poseSupplier.get();
+                    drive(holonomicDriveWithPIDController.calculate(getPose(), holonomicPoseTarget));
+                })
+        ).finallyDo(() -> holonomicControllerActive = false);
+    }
+
+    public Command teleopHoldAxisFacingAngleCommand(
+            final double holdPosition,
+            final DriveAxis holdAxis,
+            final DoubleSupplier speedSupplier,
+            final Supplier<Rotation2d> rotationTargetSupplier
+    ) {
+        return Commands.sequence(
+                runOnce(() -> {
+                    headingControllerActive = true;
+                    headingController.reset();
+                    holdAxisPID.reset();
+                }),
+                run(() -> {
+                    final Pose2d currentPose = getPose();
+                    this.headingTarget = rotationTargetSupplier.get();
+
+                    final double holdEffort = holdAxisPID.calculate(
+                            holdAxis == DriveAxis.X
+                                    ? currentPose.getX()
+                                    : currentPose.getY(),
+                            holdPosition
+                    );
+
+                    final double xSpeed = holdAxis == DriveAxis.X ? holdEffort : speedSupplier.getAsDouble();
+                    final double ySpeed = holdAxis == DriveAxis.Y ? holdEffort : speedSupplier.getAsDouble();
+                    drive(
+                            xSpeed,
+                            ySpeed,
+                            headingController.calculate(getYaw().getRadians(), headingTarget.getRadians()),
+                            true,
+                            false
+                    );
+                })
+        ).finallyDo(() -> headingControllerActive = false);
+    }
+
     public Command holdAxisFacingAngleAndDrive(
             final double holdPosition,
             final DriveAxis holdAxis,
@@ -695,6 +744,10 @@ public class Swerve extends SubsystemBase {
     @SuppressWarnings("unused")
     public Command wheelXCommand() {
         return runOnce(this::wheelX);
+    }
+
+    public Command runWheelXCommand() {
+        return run(this::wheelX);
     }
 
     /**

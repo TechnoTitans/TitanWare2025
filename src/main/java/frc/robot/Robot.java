@@ -1,6 +1,10 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -16,8 +20,16 @@ import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
+import frc.robot.state.GamepieceState;
+import frc.robot.state.ReefState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.superstructure.Profiles;
+import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
+import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
+import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.logging.LogUtils;
@@ -37,6 +49,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 public class Robot extends LoggedRobot {
     private static final String AKitLogPath = "/U/logs";
@@ -66,7 +79,38 @@ public class Robot extends LoggedRobot {
             swerve.getPoseEstimator()
     );
 
-    public final Autos autos = new Autos(swerve, photonVision);
+    public final Elevator elevator = new Elevator(
+            Constants.CURRENT_MODE,
+            HardwareConstants.ELEVATOR
+    );
+    public final ElevatorArm elevatorArm = new ElevatorArm(
+            Constants.CURRENT_MODE,
+            HardwareConstants.ELEVATOR_ARM
+    );
+    public final IntakeArm intakeArm = new IntakeArm(
+            Constants.CURRENT_MODE,
+            HardwareConstants.INTAKE_ARM
+    );
+    public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
+
+    public final Intake intake = new Intake(
+            Constants.CURRENT_MODE,
+            HardwareConstants.INTAKE
+    );
+
+    public final ReefState reefState = new ReefState();
+    public final GamepieceState gamePieceState = new GamepieceState(Constants.CURRENT_MODE, intake);
+    public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
+
+    public final Autos autos = new Autos(
+            swerve,
+            superstructure,
+            intake,
+            photonVision,
+            scoreCommands,
+            gamePieceState,
+            reefState
+    );
     public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(
             new AutoOption(
                     "DoNothing",
@@ -120,6 +164,26 @@ public class Robot extends LoggedRobot {
         // disable joystick not found warnings when in sim
         DriverStation.silenceJoystickConnectionWarning(Constants.CURRENT_MODE == Constants.RobotMode.SIM);
 
+        // record git metadata
+        Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
+        Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
+        Logger.recordMetadata("GitSHA", BuildConstants.GIT_SHA);
+        Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
+        Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
+        // no need to inspect this here because BuildConstants is a dynamically changing file upon compilation
+        //noinspection RedundantSuppression
+        switch (BuildConstants.DIRTY) {
+            //noinspection DataFlowIssue,RedundantSuppression
+            case 0 -> //noinspection UnreachableCode
+                    Logger.recordMetadata("GitDirty", "All changes committed");
+            //noinspection DataFlowIssue,RedundantSuppression
+            case 1 -> //noinspection UnreachableCode
+                    Logger.recordMetadata("GitDirty", "Uncommitted changes");
+            //noinspection DataFlowIssue,RedundantSuppression
+            default -> //noinspection UnreachableCode
+                    Logger.recordMetadata("GitDirty", "Unknown");
+        }
+
         switch (Constants.CURRENT_MODE) {
             case REAL -> {
                 try {
@@ -152,7 +216,11 @@ public class Robot extends LoggedRobot {
 
                 final String logPath = LogFileUtil.findReplayLog();
                 Logger.setReplaySource(new WPILOGReader(logPath));
-                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"), WPILOGWriter.AdvantageScopeOpenBehavior.AUTO));
+                Logger.addDataReceiver(
+                        new WPILOGWriter(
+                                LogFileUtil.addPathSuffix(logPath, "_sim"),
+                                WPILOGWriter.AdvantageScopeOpenBehavior.AUTO)
+                );
             }
         }
 
@@ -167,18 +235,32 @@ public class Robot extends LoggedRobot {
         SignalLogger.start();
         ToClose.add(SignalLogger::stop);
 
-        CommandScheduler.getInstance().onCommandInitialize(command -> Logger.recordOutput("Commands/Initialized", command.getName()));
-
-        CommandScheduler.getInstance().onCommandFinish(command -> Logger.recordOutput("Commands/Finished", command.getName()));
+        CommandScheduler.getInstance().onCommandInitialize(
+                command -> Logger.recordOutput("Commands/Initialized", command.getName())
+        );
+        CommandScheduler.getInstance().onCommandFinish(
+                command -> Logger.recordOutput("Commands/Finished", command.getName())
+        );
 
         CommandScheduler.getInstance().onCommandInterrupt((interrupted, interrupting) -> {
-            Logger.recordOutput("Commands/Interrupted", interrupted.getName());
-
-            Logger.recordOutput("Commands/InterruptedRequirements", LogUtils.getRequirementsFromSubsystems(interrupted.getRequirements()));
-
-            Logger.recordOutput("Commands/Interrupter", interrupting.isPresent() ? interrupting.get().getName() : "None");
-
-            Logger.recordOutput("Commands/InterrupterRequirements", LogUtils.getRequirementsFromSubsystems(interrupting.isPresent() ? interrupting.get().getRequirements() : Set.of()));
+            Logger.recordOutput(
+                    "Commands/Interrupted",
+                    interrupted.getName()
+            );
+            Logger.recordOutput(
+                    "Commands/InterruptedRequirements",
+                    LogUtils.getRequirementsFromSubsystems(interrupted.getRequirements())
+            );
+            Logger.recordOutput(
+                    "Commands/Interrupter",
+                    interrupting.isPresent() ? interrupting.get().getName() : "None"
+            );
+            Logger.recordOutput(
+                    "Commands/InterrupterRequirements",
+                    LogUtils.getRequirementsFromSubsystems(
+                            interrupting.isPresent() ? interrupting.get().getRequirements() : Set.of()
+                    )
+            );
         });
 
         Logger.start();
@@ -192,6 +274,51 @@ public class Robot extends LoggedRobot {
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
+
+        //TODO: find best camera poses
+        Pose3d currentPose = new Pose3d(5.28, 2.83, 0, new Rotation3d(0, 0, Units.degreesToRadians(120)));
+//        currentPose = new Pose3d(swerve.getPose());
+        final Pose3d camera1Pose3d = currentPose.transformBy(
+                new Transform3d(
+                        0,
+                        Units.inchesToMeters(12),
+                        Units.inchesToMeters(12),
+                        Rotation3d.kZero
+                )
+        );
+
+        final Pose3d camera2Pose3d = currentPose.transformBy(
+                new Transform3d(
+                        0,
+                        Units.inchesToMeters(12),
+                        Units.inchesToMeters(12),
+                        new Rotation3d(
+                                0,
+                                Units.degreesToRadians(-40),
+                                0
+                        )
+                )
+        );
+
+        //done
+        final Pose3d camera3Pose3d = currentPose.transformBy(
+                new Transform3d(
+                        Units.inchesToMeters(12),
+                        Units.inchesToMeters(-12),
+                        Units.inchesToMeters(6),
+                        new Rotation3d(
+                                0,
+                                Units.degreesToRadians(-40),
+                                Units.rotationsToDegrees(30)
+                        )
+                )
+        );
+
+        Logger.recordOutput("CameraRoot", currentPose);
+        Logger.recordOutput("Camera1", camera1Pose3d);
+        Logger.recordOutput("Camera2", camera2Pose3d);
+        Logger.recordOutput("Camera3", camera3Pose3d);
+
         Threads.setCurrentThreadPriority(true, 10);
     }
 
@@ -207,7 +334,14 @@ public class Robot extends LoggedRobot {
     @Override
     public void teleopInit() {
         //noinspection SuspiciousNameCombination
-        swerve.setDefaultCommand(swerve.teleopDriveCommand(driverController::getLeftY, driverController::getLeftX, driverController::getRightX, IsRedAlliance));
+        swerve.setDefaultCommand(
+                swerve.teleopDriveCommand(
+                        driverController::getLeftY,
+                        driverController::getLeftX,
+                        driverController::getRightX,
+                        IsRedAlliance
+                )
+        );
     }
 
     @Override
@@ -221,10 +355,44 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-        driverController.y(testEventLoop).whileTrue(swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward));
-        driverController.a(testEventLoop).whileTrue(swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse));
-        driverController.b(testEventLoop).whileTrue(swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kForward));
-        driverController.x(testEventLoop).whileTrue(swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kReverse));
+        driverController.y(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+        );
+        driverController.a(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
+        );
+        driverController.b(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kForward)
+        );
+        driverController.x(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
+        );
+
+        driverController.povUp().onTrue(
+                Commands.sequence(
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1)
+                                .until(superstructure.atSuperstructureSetpoint),
+                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L3_TO_L4).withTimeout(1.5),
+                        superstructure.runProfile(Profiles.L4_TO_L1).withTimeout(1.5),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                )
+        );
     }
 
     @Override
@@ -236,20 +404,74 @@ public class Robot extends LoggedRobot {
     public void simulationPeriodic() {}
 
     public void configureStateTriggers() {
-        endgameTrigger.onTrue(ControllerUtils.rumbleForDurationCommand(driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1));
+        endgameTrigger.onTrue(ControllerUtils.rumbleForDurationCommand(
+                driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
+        );
+
+        intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(
+                driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
+        );
     }
 
     public void configureAutos() {
         autonomousEnabled.whileTrue(
                 Commands.defer(() -> autoChooser.getSelected().autoRoutine().cmd().asProxy(), Set.of())
         );
+
+        autoChooser.addAutoOption(new AutoOption(
+                "Cage0ToReef5",
+                autos.cage0ToReef5(),
+                Constants.CompetitionType.COMPETITION
+        ));
     }
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
         this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
+        this.driverController.rightBumper(teleopEventLoop)
+                .whileTrue(Commands.startEnd(
+                        () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST),
+                        () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
+                ));
+        this.driverController.leftBumper(teleopEventLoop)
+                .whileTrue(Commands.startEnd(
+                        () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW),
+                        () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
+                ));
 
-        this.driverController.leftBumper(teleopEventLoop).whileTrue(Commands.startEnd(() -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST), () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)));
+        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
+                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+        );
 
-        this.driverController.rightBumper(teleopEventLoop).whileTrue(Commands.startEnd(() -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW), () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)));
+        final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
+                scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
+        this.driverController.rightTrigger(0.5, teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
+                .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
+
+        this.driverController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
+                .onFalse(scoreCommands.scoreNet());
+
+        this.driverController.b(teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreProcessor())
+                .onFalse(scoreCommands.scoreProcessor());
+
+        this.driverController.x(teleopEventLoop)
+                .whileTrue(scoreCommands.readyClimb(driverController::getLeftX, driverController::getLeftY))
+                .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
+
+        this.coController.rightTrigger(0.5, teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(scorePositionSupplier))
+                .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
+        this.coController.x(teleopEventLoop)
+                .whileTrue(scoreCommands.intakeAlgaeFromGround());
+
+        this.coController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.readyIntakeLowerAlgae())
+                .onFalse(scoreCommands.intakeLowerAlgae());
+
+        this.coController.y(teleopEventLoop)
+                .whileTrue(scoreCommands.readyIntakeUpperAlgae())
+                .onFalse(scoreCommands.intakeUpperAlgae());
     }
 }

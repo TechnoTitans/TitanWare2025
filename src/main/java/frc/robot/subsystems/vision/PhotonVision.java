@@ -44,7 +44,8 @@ public class PhotonVision extends VirtualSubsystem {
     public static final AprilTagFieldLayout apriltagFieldLayout;
 
     static {
-        apriltagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2024Crescendo);
+        //TODO: Change apriltag layout depending on the field setup
+        apriltagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
         apriltagFieldLayout.setOrigin(AprilTagFieldLayout.OriginPosition.kBlueAllianceWallRightSide);
     }
 
@@ -76,7 +77,9 @@ public class PhotonVision extends VirtualSubsystem {
             case REAL -> new RealVisionRunner(
                     PhotonVision.apriltagFieldLayout,
                     PhotonVision.makeVisionIOInputsMap(
-                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_APRILTAG)
+                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FR_APRILTAG),
+                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_TOP_APRILTAG),
+                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
                     )
             );
             case SIM -> {
@@ -92,14 +95,18 @@ public class PhotonVision extends VirtualSubsystem {
                         PhotonVision.apriltagFieldLayout,
                         visionSystemSim,
                         PhotonVision.makeVisionIOInputsMap(
-                                new SimVisionRunner.VisionIOApriltagsSim(TitanCamera.PHOTON_FL_APRILTAG, visionSystemSim)
+                                new SimVisionRunner.VisionIOApriltagsSim(TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim),
+                                new SimVisionRunner.VisionIOApriltagsSim(TitanCamera.PHOTON_FL_TOP_APRILTAG, visionSystemSim),
+                                new SimVisionRunner.VisionIOApriltagsSim(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim)
                         )
                 );
             }
             case REPLAY -> new ReplayVisionRunner(
                     PhotonVision.apriltagFieldLayout,
                     PhotonVision.makeVisionIOInputsMap(
-                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_APRILTAG)
+                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FR_APRILTAG),
+                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_TOP_APRILTAG),
+                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
                     )
             );
             case DISABLED -> new PhotonVisionRunner() {};
