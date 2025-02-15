@@ -115,11 +115,11 @@ public enum TitanCamera {
             "FL_BOTTOM_Apriltag",
             Constants.Vision.ROBOT_TO_FL_BOTTOM_APRILTAG,
             CameraProperties.ARDUCAM_OV9281,
-            1.0,
+            2.5,
             true,
             new TitanCameraCalibration()
                     .withCalibration(
-                            CameraProperties.Resolution.R1920x1080,
+                            CameraProperties.Resolution.R640x480,
                             MatBuilder.fill(
                                     Nat.N3(),
                                     Nat.N3(),
@@ -134,30 +134,20 @@ public enum TitanCamera {
                                     0.0,
                                     1.0
                             ),
-                            //TODO: We had 5 before, now it wants 8. I just put 0s for them for now
-                            VecBuilder.fill( // distort
-                                    -0.35148800442491696,
-                                    0.16199158054202314,
-                                    0.0003847806133909519,
-                                    0.000042723769639477994,
-                                    -0.042523738490321664,
-                                    0,
-                                    0,
-                                    0
-                            )
+                            SimCameraProperties.PERFECT_90DEG().getDistCoeffs()
                     )
                     .withCalibrationError(
-                            CameraProperties.Resolution.R1920x1080,
-                            0.15223032073535464,
+                            CameraProperties.Resolution.R640x480,
+                            0.54,
                             0.06
                     )
                     .withFPS(
-                            CameraProperties.Resolution.R1920x1080,
-                            60
+                            CameraProperties.Resolution.R640x480,
+                            130
                     )
                     .withLatency(
-                            CameraProperties.Resolution.R1920x1080,
-                            7,
+                            CameraProperties.Resolution.R640x480,
+                            6,
                             3
                     ),
             false
