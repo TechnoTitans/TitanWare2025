@@ -80,7 +80,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final Elevator elevator = new Elevator(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             HardwareConstants.ELEVATOR
     );
     public final ElevatorArm elevatorArm = new ElevatorArm(
@@ -88,13 +88,13 @@ public class Robot extends LoggedRobot {
             HardwareConstants.ELEVATOR_ARM
     );
     public final IntakeArm intakeArm = new IntakeArm(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             HardwareConstants.INTAKE_ARM
     );
     public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
 
     public final Intake intake = new Intake(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             HardwareConstants.INTAKE
     );
 
@@ -356,8 +356,12 @@ public class Robot extends LoggedRobot {
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
         driverController.y(testEventLoop).whileTrue(
-                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+                elevatorArm.voltageSysIdCommand()
         );
+
+//        driverController.y(testEventLoop).whileTrue(
+//                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+//        );
         driverController.a(testEventLoop).whileTrue(
                 swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
         );

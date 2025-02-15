@@ -16,8 +16,8 @@ public class SwerveConstants {
             6.75,
             150.0 / 7.0,
             50.0 / 16.0,
-            Units.inchesToMeters(24),
-            Units.inchesToMeters(24),
+            Units.inchesToMeters(22.75),
+            Units.inchesToMeters(22.75),
             Units.feetToMeters(15.0),
             12,
             6,
@@ -31,7 +31,7 @@ public class SwerveConstants {
             1,
             2,
             3,
-            0.083984375,
+            0.13623046875,
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 
@@ -42,7 +42,7 @@ public class SwerveConstants {
             4,
             5,
             6,
-            -0.421875,
+            -0.77294921875,
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 
@@ -53,7 +53,7 @@ public class SwerveConstants {
             7,
             8,
             9,
-            0.048828125,
+            -0.09619140624999999,
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 
@@ -64,7 +64,7 @@ public class SwerveConstants {
             10,
             11,
             12,
-            0.28515625,
+            0.08349609375,
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 

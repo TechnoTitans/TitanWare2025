@@ -95,9 +95,9 @@ public class ElevatorArm extends SubsystemBase {
         this.inputs = new ElevatorArmIOInputsAutoLogged();
 
         this.voltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(4).per(Second),
-                Volts.of(8),
-                Seconds.of(6)
+                Volts.of(6).per(Second),
+                Volts.of(4),
+                Seconds.of(5)
         );
         this.torqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
                 Amps.of(2).per(Second),
@@ -220,11 +220,11 @@ public class ElevatorArm extends SubsystemBase {
     private Command makeSysIdCommand(final SysIdRoutine sysIdRoutine) {
         return Commands.sequence(
                 sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).until(atPivotUpperLimit),
-                Commands.waitSeconds(4),
+                Commands.waitSeconds(1),
                 sysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse).until(atPivotLowerLimit),
-                Commands.waitSeconds(4),
+                Commands.waitSeconds(1),
                 sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).until(atPivotUpperLimit),
-                Commands.waitSeconds(4),
+                Commands.waitSeconds(1),
                 sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(atPivotLowerLimit)
         );
     }

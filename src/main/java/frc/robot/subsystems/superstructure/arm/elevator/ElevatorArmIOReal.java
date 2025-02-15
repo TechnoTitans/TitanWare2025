@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -21,7 +22,7 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
     private final TalonFX pivotMotor;
     private final CANcoder pivotCANCoder;
 
-    private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
+    private final MotionMagicExpoVoltage motionMagicExpoVoltage;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
 
@@ -40,7 +41,7 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
         this.pivotMotor = new TalonFX(constants.motorId(), constants.CANBus());
         this.pivotCANCoder = new CANcoder(constants.CANCoderId(), constants.CANBus());
 
-        this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
+        this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
 
@@ -63,18 +64,19 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig.Slot0 = new Slot0Configs()
-                .withKS(0)
-                .withKG(0.11)
+                .withKS(0.215)
+                .withKG(0.465)
                 .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(13.97)
-                .withKA(0.015)
-                .withKP(50);
+                .withKV(27.25)
+                .withKA(0.735)
+                .withKP(800)
+                .withKD(67.204);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 13.97;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 0.015;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 27.25;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 0.735;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
-        pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 60;
+        pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 80;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLimit = 50;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
@@ -82,8 +84,8 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
         pivotMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         pivotMotorConfig.Feedback.FeedbackRemoteSensorID = pivotCANCoder.getDeviceID();
-        pivotMotorConfig.Feedback.RotorToSensorRatio = constants.gearing();
         pivotMotorConfig.Feedback.SensorToMechanismRatio = 1;
+        pivotMotorConfig.Feedback.RotorToSensorRatio = constants.gearing();
         pivotMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.upperLimitRots();
@@ -136,7 +138,7 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
     @Override
     public void toPivotPosition(final double pivotPositionRots) {
-        pivotMotor.setControl(motionMagicExpoTorqueCurrentFOC.withPosition(pivotPositionRots));
+        pivotMotor.setControl(motionMagicExpoVoltage.withPosition(pivotPositionRots));
     }
 
     @Override

@@ -11,6 +11,7 @@ import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Threads;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -316,16 +317,16 @@ public class OdometryThreadRunner {
 
         final BaseStatusSignal[] allSignalsArray = allSignals.toArray(BaseStatusSignal[]::new);
         BaseStatusSignal.setUpdateFrequencyForAll(UPDATE_FREQUENCY_HZ, allSignalsArray);
+        Threads.setCurrentThreadPriority(true, threadPriorityToSet);
 
         while (running) {
-            final int statusCodeValue;
+            final StatusCode statusCode;
             try {
                 signalReadWriteLock.writeLock().lock();
-                final StatusCode statusCode = BaseStatusSignal.waitForAll(
+                statusCode = BaseStatusSignal.waitForAll(
                         2.0 / UPDATE_FREQUENCY_HZ, allSignalsArray
                 );
 
-                statusCodeValue = statusCode.value;
                 if (!statusCode.isOK()) {
                     failedDAQs++;
                 }
@@ -346,8 +347,10 @@ public class OdometryThreadRunner {
 
                 state.running = running;
                 state.failedDAQs = failedDAQs;
-                state.statusCode = statusCodeValue;
                 state.odometryPeriodSeconds = averageLoopTimeSeconds;
+                if (!statusCode.isOK()) {
+                    state.statusCode = statusCode.value;
+                }
 
                 final int signalCount = allSignals.size();
                 double totalLatencySeconds = 0;
@@ -393,6 +396,7 @@ public class OdometryThreadRunner {
             // This is inherently synchronous, since lastThreadPriority is only written
             // here and threadPriorityToSet is only read here
             if (threadPriorityToSet != lastThreadPriority) {
+                Threads.setCurrentThreadPriority(true, threadPriorityToSet);
                 lastThreadPriority = threadPriorityToSet;
             }
         }

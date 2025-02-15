@@ -25,7 +25,7 @@ public class HardwareConstants {
     ) {}
 
     public static final ElevatorConstants ELEVATOR = new ElevatorConstants(
-            RobotMap.RioCANBus,
+            RobotMap.CanivoreCANBus,
             14,
             15,
             16,
@@ -46,13 +46,13 @@ public class HardwareConstants {
     ) {}
 
     public static final ElevatorArmConstants ELEVATOR_ARM = new ElevatorArmConstants(
-            RobotMap.CanivoreCANBus,
+            RobotMap.RioCANBus,
             17,
             18,
             225,
+            -0.244384765625,
             0,
-            0,
-            0.27
+            0.19775390625
     );
 
     public record IntakeArmConstants(
