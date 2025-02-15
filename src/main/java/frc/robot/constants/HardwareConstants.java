@@ -31,8 +31,8 @@ public class HardwareConstants {
             16,
             4,
             0,
-            (Units.inchesToMeters(41.25) / (0.0508 * Math.PI)),
-            Units.inchesToMeters(2)
+            6.18,
+            Units.inchesToMeters(2) //TODO: measure drum
     );
 
     public record ElevatorArmConstants(
@@ -69,9 +69,9 @@ public class HardwareConstants {
             RobotMap.RioCANBus,
             19,
             20,
-            0,
+            -0.087890625,
             60,
-            Units.degreesToRotations(-146),
+            -0.365, //Units.degreesToRotations(-146),
             0
     );
 

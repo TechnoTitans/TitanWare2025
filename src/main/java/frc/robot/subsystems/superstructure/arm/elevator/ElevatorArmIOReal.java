@@ -69,11 +69,11 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
                 .withGravityType(GravityTypeValue.Arm_Cosine)
                 .withKV(27.25)
                 .withKA(0.735)
-                .withKP(800)
-                .withKD(67.204);
+                .withKP(200)
+                .withKD(10);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 27.25;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 0.735;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 10;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 80;

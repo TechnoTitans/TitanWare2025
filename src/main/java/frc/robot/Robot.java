@@ -74,13 +74,13 @@ public class Robot extends LoggedRobot {
     );
 
     public final PhotonVision photonVision = new PhotonVision(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             swerve,
             swerve.getPoseEstimator()
     );
 
     public final Elevator elevator = new Elevator(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             HardwareConstants.ELEVATOR
     );
     public final ElevatorArm elevatorArm = new ElevatorArm(
@@ -88,13 +88,13 @@ public class Robot extends LoggedRobot {
             HardwareConstants.ELEVATOR_ARM
     );
     public final IntakeArm intakeArm = new IntakeArm(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             HardwareConstants.INTAKE_ARM
     );
     public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
 
     public final Intake intake = new Intake(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             HardwareConstants.INTAKE
     );
 
@@ -356,7 +356,7 @@ public class Robot extends LoggedRobot {
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
         driverController.y(testEventLoop).whileTrue(
-                elevatorArm.voltageSysIdCommand()
+                intakeArm.pivotVoltageSysIdCommand()
         );
 
 //        driverController.y(testEventLoop).whileTrue(
@@ -464,9 +464,12 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftX, driverController::getLeftY))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
 
+        final Supplier<ScoreCommands.ScorePosition> backupScorePositionSupplier =
+                scoreCommands.getScorePositionSupplier(coController::getRightX, coController::getRightY);
         this.coController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(scorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
+                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(backupScorePositionSupplier))
+                .onFalse(scoreCommands.scoreAtPosition(backupScorePositionSupplier));
+
         this.coController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.intakeAlgaeFromGround());
 

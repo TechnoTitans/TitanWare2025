@@ -31,7 +31,7 @@ public class SwerveConstants {
             1,
             2,
             3,
-            0.13623046875,
+            0.13623046875, //TODO: remove the negative sign from this later in the config set
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 

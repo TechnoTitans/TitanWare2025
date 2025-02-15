@@ -104,8 +104,8 @@ public class Elevator extends SubsystemBase {
         this.inputs = new ElevatorIOInputsAutoLogged();
 
         this.voltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(2).per(Second),
-                Volts.of(10),
+                Volts.of(0.5).per(Second),
+                Volts.of(4),
                 Seconds.of(10)
         );
         this.torqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
@@ -178,9 +178,10 @@ public class Elevator extends SubsystemBase {
 
     //get distance from canrange minus thickness of elevator bottom plates
     public void home() {
-        this.elevatorIO.setPosition(
-                (inputs.canRangeDistanceMeters - Units.inchesToMeters(0.50)) / drumCircumferenceMeters
-        );
+        this.elevatorIO.setPosition(0);
+//        this.elevatorIO.setPosition(
+//                (inputs.canRangeDistanceMeters - Units.inchesToMeters(0.50)) / drumCircumferenceMeters
+//        );
     }
 
     public Command homeCommand() {
@@ -248,11 +249,11 @@ public class Elevator extends SubsystemBase {
     private Command makeSysIdCommand(final SysIdRoutine sysIdRoutine) {
         return Commands.sequence(
                 sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).until(atUpperLimit),
-                Commands.waitSeconds(1),
+                Commands.waitSeconds(0.1),
                 sysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse).until(atLowerLimit),
-                Commands.waitSeconds(1),
+                Commands.waitSeconds(0.1),
                 sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).until(atUpperLimit),
-                Commands.waitSeconds(1),
+                Commands.waitSeconds(0.1),
                 sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(atLowerLimit)
         );
     }

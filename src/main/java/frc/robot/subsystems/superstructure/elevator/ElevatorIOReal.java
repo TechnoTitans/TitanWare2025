@@ -5,14 +5,12 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.Phoenix6Utils;
@@ -24,7 +22,7 @@ public class ElevatorIOReal implements ElevatorIO {
     private final TalonFX followerMotor;
     private final CANrange canRange;
 
-    private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
+    private final MotionMagicExpoVoltage motionMagicExpoVoltage;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
     private final Follower follower;
@@ -51,10 +49,10 @@ public class ElevatorIOReal implements ElevatorIO {
         this.followerMotor = new TalonFX(constants.leftMotorId(), constants.CANBus());
         this.canRange = new CANrange(constants.CANrangeId(), constants.CANBus());
 
-        this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
+        this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
-        this.follower = new Follower(masterMotor.getDeviceID(), false);
+        this.follower = new Follower(masterMotor.getDeviceID(), true);
 
         this.masterPosition = masterMotor.getPosition();
         this.masterVelocity = masterMotor.getVelocity();
@@ -82,15 +80,16 @@ public class ElevatorIOReal implements ElevatorIO {
 
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0) //torquecurrentfoc
-                .withKG(0.11)//torquecurrentfoc
+                .withKS(0.10757)
+                .withKG(0.53544)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(0)
-                .withKA(0.015) //torquecurrentfoc
-                .withKP(50); //expomotionmagic
+                .withKV(0.51808)
+                .withKA(0.012291)
+                .withKP(40)
+                .withKD(0.5);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 13.97; //voltageout
-        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.015;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 1;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
         motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;
@@ -179,7 +178,7 @@ public class ElevatorIOReal implements ElevatorIO {
 
     @Override
     public void toPosition(final double positionRots) {
-        masterMotor.setControl(motionMagicExpoTorqueCurrentFOC.withPosition(positionRots));
+        masterMotor.setControl(motionMagicExpoVoltage.withPosition(positionRots));
         followerMotor.setControl(follower);
     }
 

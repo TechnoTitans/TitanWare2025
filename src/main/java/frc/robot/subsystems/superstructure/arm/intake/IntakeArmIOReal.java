@@ -62,15 +62,16 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         pivotConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0)
-                .withKG(0.11)
-                .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(13.97)
-                .withKA(0.015)
-                .withKP(50);
+                .withKS(0.21241)
+                .withKG(0.13301)
+                .withGravityType(GravityTypeValue.Elevator_Static)
+                .withKV(5.3852)
+                .withKA(0.2765)
+                .withKP(45)
+                .withKD(6);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 13.97;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.015;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;

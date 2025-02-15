@@ -147,11 +147,10 @@ public class Intake extends SubsystemBase {
     }
 
     public Command scoreCoral() {
-        return toCoralRollerVelocity(-2)
+        return toCoralRollerVoltage(2)//TODO: fix roller direction
                 .onlyIf(isCoralPresent)
                 .until(isCoralPresent.negate())
-                .withTimeout(2)
-                .andThen(coralInstantStopCommand());
+                .withTimeout(2);
     }
 
     public Command intakeAlgae() {

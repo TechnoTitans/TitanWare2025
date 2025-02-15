@@ -59,7 +59,7 @@ public class IntakeArm extends SubsystemBase {
 
     public enum PivotGoal {
         STOW(0),
-        HP(-0.2),
+        HP(-0.1),
         ALGAE_GROUND(-0.25),
         ALGAE_REEF(-0.4),
         NET(-0.15),
@@ -89,8 +89,8 @@ public class IntakeArm extends SubsystemBase {
         this.inputs = new IntakeArmIOInputsAutoLogged();
 
         this.pivotVoltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(2).per(Second),
-                Volts.of(10),
+                Volts.of(0.5).per(Second),
+                Volts.of(4),
                 Seconds.of(10),
                 intakeArmIO::toPivotVoltage
         );
