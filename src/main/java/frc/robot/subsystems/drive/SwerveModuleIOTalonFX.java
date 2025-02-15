@@ -102,7 +102,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     public void config() {
         // TODO: check StatusCode of some/most of these blocking config calls... maybe retry if failed?
         final CANcoderConfiguration canCoderConfiguration = new CANcoderConfiguration();
-        canCoderConfiguration.MagnetSensor.MagnetOffset = -magnetOffset;
+        canCoderConfiguration.MagnetSensor.MagnetOffset = magnetOffset;
         canCoderConfiguration.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
         turnEncoder.getConfigurator().apply(canCoderConfiguration);
 

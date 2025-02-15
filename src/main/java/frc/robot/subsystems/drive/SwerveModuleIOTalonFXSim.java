@@ -165,7 +165,7 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
     @Override
     public void config() {
         final CANcoderConfiguration canCoderConfiguration = new CANcoderConfiguration();
-        canCoderConfiguration.MagnetSensor.MagnetOffset = -magnetOffset;
+        canCoderConfiguration.MagnetSensor.MagnetOffset = magnetOffset;
         canCoderConfiguration.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
         turnEncoder.getConfigurator().apply(canCoderConfiguration);
 
