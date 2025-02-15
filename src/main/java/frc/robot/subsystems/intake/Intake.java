@@ -143,11 +143,11 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeCoralHP() {
-        return runCoralRollerVelocity(3);
+        return toCoralRollerVelocity(3);
     }
 
     public Command scoreCoral() {
-        return runCoralRollerVelocity(-2)
+        return toCoralRollerVelocity(-2)
                 .onlyIf(isCoralPresent)
                 .until(isCoralPresent.negate())
                 .withTimeout(2)
@@ -155,18 +155,18 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeAlgae() {
-        return runAlgaeRollerVelocity(3);
+        return toAlgaeRollerVelocity(3);
     }
 
     public Command scoreAlgae() {
-        return runAlgaeRollerVelocity(-2)
+        return toAlgaeRollerVelocity(-2)
                 .onlyIf(isAlgaePresent)
                 .until(isAlgaePresent.negate())
                 .withTimeout(2)
                 .andThen(algaeInstantStopCommand());
     }
 
-    public Command runCoralRollerVelocity(final double velocityRotsPerSec) {
+    public Command toCoralRollerVelocity(final double velocityRotsPerSec) {
         return runEnd(
                 () -> {
                     coralRollerVelocitySetpoint = velocityRotsPerSec;
@@ -179,7 +179,7 @@ public class Intake extends SubsystemBase {
         );
     }
 
-    public Command runAlgaeRollerVelocity(final double velocityRotsPerSec) {
+    public Command toAlgaeRollerVelocity(final double velocityRotsPerSec) {
         return runEnd(
                 () -> {
                     algaeRollerVelocitySetpoint = velocityRotsPerSec;
@@ -192,14 +192,14 @@ public class Intake extends SubsystemBase {
         );
     }
 
-    public Command runCoralRollerVoltage(final double volts) {
+    public Command toCoralRollerVoltage(final double volts) {
         return runEnd(
                 () -> intakeIO.toCoralRollerVoltage(volts),
                 () -> intakeIO.toCoralRollerVoltage(0.0)
         );
     }
 
-    public Command runAlgaeRollerVoltage(final double volts) {
+    public Command toAlgaeRollerVoltage(final double volts) {
         return runEnd(
                 () -> intakeIO.toAlgaeRollerVoltage(volts),
                 () -> intakeIO.toAlgaeRollerVoltage(0.0)

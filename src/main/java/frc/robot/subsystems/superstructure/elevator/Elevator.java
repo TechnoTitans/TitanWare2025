@@ -75,7 +75,7 @@ public class Elevator extends SubsystemBase {
         L3(0.458),
         UPPER_ALGAE(0.5),
         L4(0.976),
-        NET(3);
+        NET(1);
 
         private final double positionGoalMeters;
         Goal(final double positionGoalMeters) {

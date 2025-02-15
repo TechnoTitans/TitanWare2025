@@ -80,21 +80,21 @@ public class Robot extends LoggedRobot {
     );
 
     public final Elevator elevator = new Elevator(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             HardwareConstants.ELEVATOR
     );
     public final ElevatorArm elevatorArm = new ElevatorArm(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             HardwareConstants.ELEVATOR_ARM
     );
     public final IntakeArm intakeArm = new IntakeArm(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             HardwareConstants.INTAKE_ARM
     );
     public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
 
     public final Intake intake = new Intake(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             HardwareConstants.INTAKE
     );
 
@@ -439,7 +439,7 @@ public class Robot extends LoggedRobot {
                 ));
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
-                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftX, driverController::getLeftY)
+                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
 
         final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
@@ -460,6 +460,9 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftX, driverController::getLeftY))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
 
+        this.coController.rightTrigger(0.5, teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(scorePositionSupplier))
+                .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
         this.coController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.intakeAlgaeFromGround());
 
