@@ -47,6 +47,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
 
     private final StatusSignal<Angle> pivotPosition;
     private final StatusSignal<AngularVelocity> pivotVelocity;
+    private final StatusSignal<AngularAcceleration> pivotAcceleration;
     private final StatusSignal<Voltage> pivotVoltage;
     private final StatusSignal<Current> pivotTorqueCurrent;
     private final StatusSignal<Temperature> pivotDeviceTemp;
@@ -96,6 +97,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
 
         this.pivotPosition = pivotMotor.getPosition();
         this.pivotVelocity = pivotMotor.getVelocity();
+        this.pivotAcceleration = pivotMotor.getAcceleration();
         this.pivotVoltage = pivotMotor.getMotorVoltage();
         this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent();
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
@@ -149,6 +151,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
                 100,
                 pivotPosition,
                 pivotVelocity,
+                pivotAcceleration,
                 pivotVoltage,
                 pivotTorqueCurrent,
                 pivotCANCoderPosition,
@@ -172,6 +175,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         BaseStatusSignal.refreshAll(
                 pivotPosition,
                 pivotVelocity,
+                pivotAcceleration,
                 pivotVoltage,
                 pivotTorqueCurrent,
                 pivotCANCoderPosition,
@@ -180,6 +184,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
 
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
+        inputs.pivotAccelerationRotsPerSec2 = pivotAcceleration.getValueAsDouble();
         inputs.pivotVoltageVolts = pivotVoltage.getValueAsDouble();
         inputs.pivotTorqueCurrentAmps = pivotTorqueCurrent.getValueAsDouble();
         inputs.pivotTempCelsius = pivotDeviceTemp.getValueAsDouble();

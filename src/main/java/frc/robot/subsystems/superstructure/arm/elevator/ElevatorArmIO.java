@@ -7,6 +7,7 @@ public interface ElevatorArmIO {
     class ElevatorArmIOInputs {
         double pivotPositionRots = 0.0;
         double pivotVelocityRotsPerSec = 0.0;
+        double pivotAccelerationRotsPerSec2 = 0.0;
         double pivotVoltageVolts = 0.0;
         double pivotTorqueCurrentAmps = 0.0;
         double pivotTempCelsius = 0.0;

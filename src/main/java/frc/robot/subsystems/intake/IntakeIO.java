@@ -7,12 +7,14 @@ public interface IntakeIO {
     class IntakeIOInputs {
         public double coralRollerPositionRots = 0.0;
         public double coralRollerVelocityRotsPerSec = 0.0;
+        public double coralRollerAccelerationRotsPerSec2 = 0.0;
         public double coralRollerVoltage = 0.0;
         public double coralRollerTorqueCurrentAmps = 0.0;
         public double coralRollerTempCelsius = 0.0;
 
         public double algaeRollerPositionRots = 0.0;
         public double algaeRollerVelocityRotsPerSec = 0.0;
+        public double algaeRollerAccelerationRotsPerSec2 = 0.0;
         public double algaeRollerVoltage = 0.0;
         public double algaeRollerTorqueCurrentAmps = 0.0;
         public double algaeRollerTempCelsius = 0.0;

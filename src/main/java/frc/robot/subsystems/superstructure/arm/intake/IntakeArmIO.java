@@ -7,6 +7,7 @@ public interface IntakeArmIO {
     class IntakeArmIOInputs {
         public double pivotPositionRots = 0.0;
         public double pivotVelocityRotsPerSec = 0.0;
+        public double pivotAccelerationRotsPerSec2 = 0.0;
         public double pivotVoltage = 0.0;
         public double pivotTorqueCurrentAmps = 0.0;
         public double pivotTempCelsius = 0.0;

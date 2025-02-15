@@ -54,11 +54,13 @@ public class ElevatorIOSim implements ElevatorIO {
 
     private final StatusSignal<Angle> masterPosition;
     private final StatusSignal<AngularVelocity> masterVelocity;
+    private final StatusSignal<AngularAcceleration> masterAcceleration;
     private final StatusSignal<Voltage> masterVoltage;
     private final StatusSignal<Current> masterTorqueCurrent;
     private final StatusSignal<Temperature> masterDeviceTemp;
     private final StatusSignal<Angle> followerPosition;
     private final StatusSignal<AngularVelocity> followerVelocity;
+    private final StatusSignal<AngularAcceleration> followerAcceleration;
     private final StatusSignal<Voltage> followerVoltage;
     private final StatusSignal<Current> followerTorqueCurrent;
     private final StatusSignal<Temperature> followerDeviceTemp;
@@ -111,11 +113,13 @@ public class ElevatorIOSim implements ElevatorIO {
 
         this.masterPosition = masterMotor.getPosition();
         this.masterVelocity = masterMotor.getVelocity();
+        this.masterAcceleration = masterMotor.getAcceleration();
         this.masterVoltage = masterMotor.getMotorVoltage();
         this.masterTorqueCurrent = masterMotor.getTorqueCurrent();
         this.masterDeviceTemp = masterMotor.getDeviceTemp();
         this.followerPosition = followerMotor.getPosition();
         this.followerVelocity = followerMotor.getVelocity();
+        this.followerAcceleration = followerMotor.getAcceleration();
         this.followerVoltage = followerMotor.getMotorVoltage();
         this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
         this.followerDeviceTemp = followerMotor.getDeviceTemp();
@@ -167,10 +171,12 @@ public class ElevatorIOSim implements ElevatorIO {
                 100,
                 masterPosition,
                 masterVelocity,
+                masterAcceleration,
                 masterVoltage,
                 masterTorqueCurrent,
                 followerPosition,
                 followerVelocity,
+                followerAcceleration,
                 followerVoltage,
                 followerTorqueCurrent,
                 canRangeDistance,
@@ -196,11 +202,13 @@ public class ElevatorIOSim implements ElevatorIO {
         BaseStatusSignal.refreshAll(
                 masterPosition,
                 masterVelocity,
+                masterAcceleration,
                 masterVoltage,
                 masterTorqueCurrent,
                 masterDeviceTemp,
                 followerPosition,
                 followerVelocity,
+                followerAcceleration,
                 followerVoltage,
                 followerTorqueCurrent,
                 followerDeviceTemp,
@@ -210,11 +218,13 @@ public class ElevatorIOSim implements ElevatorIO {
 
         inputs.masterPositionRots = masterPosition.getValueAsDouble();
         inputs.masterVelocityRotsPerSec = masterVelocity.getValueAsDouble();
+        inputs.masterAccelerationRotsPerSec2 = masterAcceleration.getValueAsDouble();
         inputs.masterVoltage = masterVoltage.getValueAsDouble();
         inputs.masterTorqueCurrentAmps = masterTorqueCurrent.getValueAsDouble();
         inputs.masterTempCelsius = masterDeviceTemp.getValueAsDouble();
         inputs.followerPositionRots = followerPosition.getValueAsDouble();
         inputs.followerVelocityRotsPerSec = followerVelocity.getValueAsDouble();
+        inputs.followerAccelerationRotsPerSec2 = followerAcceleration.getValueAsDouble();
         inputs.followerVoltage = followerVoltage.getValueAsDouble();
         inputs.followerTorqueCurrentAmps = followerTorqueCurrent.getValueAsDouble();
         inputs.followerTempCelsius = followerDeviceTemp.getValueAsDouble();

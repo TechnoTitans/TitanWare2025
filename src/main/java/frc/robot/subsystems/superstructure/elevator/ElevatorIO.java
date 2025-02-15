@@ -7,12 +7,14 @@ public interface ElevatorIO {
     class ElevatorIOInputs {
         public double masterPositionRots = 0.0;
         public double masterVelocityRotsPerSec = 0.0;
+        public double masterAccelerationRotsPerSec2 = 0.0;
         public double masterVoltage = 0.0;
         public double masterTorqueCurrentAmps = 0.0;
         public double masterTempCelsius = 0.0;
 
         public double followerPositionRots = 0.0;
         public double followerVelocityRotsPerSec = 0.0;
+        public double followerAccelerationRotsPerSec2 = 0.0;
         public double followerVoltage = 0.0;
         public double followerTorqueCurrentAmps = 0.0;
         public double followerTempCelsius = 0.0;
