@@ -82,14 +82,14 @@ public class ElevatorIOReal implements ElevatorIO {
 
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0)
-                .withKG(0.11)
+                .withKS(0) //torquecurrentfoc
+                .withKG(0.11)//torquecurrentfoc
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(13.97)
-                .withKA(0.015)
-                .withKP(50);
+                .withKV(0)
+                .withKA(0.015) //torquecurrentfoc
+                .withKP(50); //expomotionmagic
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 13.97;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 13.97; //voltageout
         motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.015;
         motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
