@@ -72,7 +72,7 @@ public class Intake extends SubsystemBase {
         this.isAlgaeOuttaking = new Trigger(eventLoop, () -> algaeRollerVelocitySetpoint < 0.0);
         this.isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
 
-        this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent);
+        this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent).debounce(0.5);
         this.isAlgaePresent = new Trigger(eventLoop, this::isAlgaePresent);
 
         this.coralRollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
@@ -143,11 +143,11 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeCoralHP() {
-        return toCoralRollerVelocity(3);
+        return toCoralRollerVelocity(6);
     }
 
     public Command scoreCoral() {
-        return toCoralRollerVoltage(2)//TODO: fix roller direction
+        return toCoralRollerVelocity(-6)
                 .onlyIf(isCoralPresent)
                 .until(isCoralPresent.negate())
                 .withTimeout(2);

@@ -87,7 +87,7 @@ public class IntakeIOReal implements IntakeIO {
         coralConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
         coralConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
         coralConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        coralConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        coralConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         coralConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
         coralConfiguration.Feedback.SensorToMechanismRatio = constants.coralGearing();
         coralRollerMotor.getConfigurator().apply(coralConfiguration);
