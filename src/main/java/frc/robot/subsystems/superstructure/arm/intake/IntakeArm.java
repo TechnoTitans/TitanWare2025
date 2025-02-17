@@ -24,7 +24,7 @@ import static edu.wpi.first.units.Units.*;
 
 public class IntakeArm extends SubsystemBase {
     protected static final String LogKey = "IntakeArm";
-    private static final double PositionToleranceRots = 0.005;
+    private static final double PositionToleranceRots = 0.0075;
     private static final double VelocityToleranceRotsPerSec = 0.01;
 
     private final IntakeArmIO intakeArmIO;
@@ -75,7 +75,7 @@ public class IntakeArm extends SubsystemBase {
         ALGAE_GROUND(-0.25),
         ALGAE_REEF(-0.4),
         NET(-0.15),
-        L4(-0.23),
+        L4(-0.15),
         L3(-0.1),
         L2(-0.1),
         L1(-0.1);
@@ -101,8 +101,8 @@ public class IntakeArm extends SubsystemBase {
         this.inputs = new IntakeArmIOInputsAutoLogged();
 
         this.pivotVoltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(0.5).per(Second),
-                Volts.of(4),
+                Volts.of(0.2).per(Second),
+                Volts.of(2),
                 Seconds.of(10),
                 intakeArmIO::toPivotVoltage
         );
@@ -216,13 +216,13 @@ public class IntakeArm extends SubsystemBase {
 
     private Command makePivotSysIdCommand(final SysIdRoutine sysIdRoutine) {
         return Commands.sequence(
-                sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).until(atPivotUpperLimit),
-                Commands.waitSeconds(1),
                 sysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse).until(atPivotLowerLimit),
                 Commands.waitSeconds(1),
-                sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).until(atPivotUpperLimit),
+                sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).until(atPivotUpperLimit),
                 Commands.waitSeconds(1),
-                sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(atPivotLowerLimit)
+                sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(atPivotLowerLimit),
+                Commands.waitSeconds(1),
+                sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).until(atPivotUpperLimit)
         );
     }
 

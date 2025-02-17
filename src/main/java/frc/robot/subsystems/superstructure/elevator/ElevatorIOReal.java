@@ -128,7 +128,6 @@ public class ElevatorIOReal implements ElevatorIO {
                 followerDeviceTemp
         );
         ParentDevice.optimizeBusUtilizationForAll(
-                4,
                 masterMotor,
                 followerMotor,
                 canRange

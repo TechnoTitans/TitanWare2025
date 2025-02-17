@@ -64,16 +64,16 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig.Slot0 = new Slot0Configs()
-                .withKS(0.215)
-                .withKG(0.465)
+                .withKS(0.32792)
+                .withKG(0.41572)
                 .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(27.25)
-                .withKA(0.735)
-                .withKP(200)
-                .withKD(10);
+                .withKV(28.616)
+                .withKA(0.83199)
+                .withKP(100)
+                .withKD(3);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 27.25;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 10;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 10;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 8;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 80;
@@ -109,7 +109,6 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
                 pivotDeviceTemp
         );
         ParentDevice.optimizeBusUtilizationForAll(
-                4,
                 pivotMotor,
                 pivotCANCoder
         );

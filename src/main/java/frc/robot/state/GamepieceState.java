@@ -94,7 +94,7 @@ public class GamepieceState extends VirtualSubsystem {
         intake.isCoralPresent.whileTrue(
                 Commands.parallel(
                         setCoralState(State.HOLDING),
-                        intake.toCoralRollerVoltage(4)
+                        intake.toCoralRollerVoltage(7)
                 ).withName("GameStateCoralHold")
         );
         intake.isCoralOuttaking.and(isCoralHeld).onTrue(setCoralState(State.SCORING));

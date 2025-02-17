@@ -49,6 +49,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
         this.encoderPosition = pivotEncoder.getPosition();
         this.encoderVelocity = pivotEncoder.getVelocity();
+
+        this.pivotMotor.setPosition(0);
     }
 
     @Override
@@ -62,13 +64,13 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         pivotConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.21241)
-                .withKG(0.13301)
+                .withKS(0.3415)
+                .withKG(0.1083)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(5.3852)
-                .withKA(0.2765)
-                .withKP(45)
-                .withKD(6);
+                .withKV(5.1579)
+                .withKA(0.1686)
+                .withKP(57.24)
+                .withKD(1);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
@@ -91,7 +93,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotMotor.getConfigurator().apply(pivotConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
-                100,
+                250,
                 pivotPosition,
                 pivotVelocity,
                 pivotAcceleration,
@@ -107,7 +109,6 @@ public class IntakeArmIOReal implements IntakeArmIO {
         );
 
         ParentDevice.optimizeBusUtilizationForAll(
-                4,
                 pivotMotor,
                 pivotEncoder
         );

@@ -28,7 +28,7 @@ import static edu.wpi.first.units.Units.*;
 
 public class ElevatorArm extends SubsystemBase {
     protected static final String LogKey = "ElevatorArm";
-    private static final double PositionToleranceRots = 0.005;
+    private static final double PositionToleranceRots = 0.0065;
     private static final double VelocityToleranceRotsPerSec = 0.01;
 
     private final ElevatorArmIO elevatorArmIO;
@@ -104,9 +104,9 @@ public class ElevatorArm extends SubsystemBase {
         this.inputs = new ElevatorArmIOInputsAutoLogged();
 
         this.voltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(6).per(Second),
-                Volts.of(4),
-                Seconds.of(5)
+                Volts.of(2).per(Second),
+                Volts.of(3),
+                Seconds.of(6)
         );
         this.torqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
                 Amps.of(2).per(Second),

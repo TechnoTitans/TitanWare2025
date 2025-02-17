@@ -143,14 +143,14 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeCoralHP() {
-        return toCoralRollerVelocity(6);
+        return toCoralRollerVelocity(12);
     }
 
     public Command scoreCoral() {
-        return toCoralRollerVelocity(-6)
+        return toCoralRollerVelocity(-30)
                 .onlyIf(isCoralPresent)
                 .until(isCoralPresent.negate())
-                .withTimeout(2);
+                .withTimeout(4);
     }
 
     public Command intakeAlgae() {

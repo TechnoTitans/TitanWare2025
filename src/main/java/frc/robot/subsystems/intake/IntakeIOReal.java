@@ -76,10 +76,10 @@ public class IntakeIOReal implements IntakeIO {
     public void config() {
         final TalonFXConfiguration coralConfiguration = new TalonFXConfiguration();
         coralConfiguration.Slot0 = new Slot0Configs()
-//                .withKS(3.3326)
-//                .withKV(0.15104)
-//                .withKA(0.2004)
-                .withKP(10.746);
+                .withKS(4.711)
+                .withKV(0.14182)
+                .withKA(0.090762)
+                .withKP(10);
         coralConfiguration.CurrentLimits.StatorCurrentLimit = 20;
         coralConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         coralConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
@@ -141,7 +141,6 @@ public class IntakeIOReal implements IntakeIO {
         );
 
         ParentDevice.optimizeBusUtilizationForAll(
-                4,
                 coralRollerMotor,
                 algaeRollerMotor,
                 coralCANRange
