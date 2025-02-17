@@ -32,32 +32,44 @@ public class IntakeArm extends SubsystemBase {
 
     private final SysIdRoutine pivotVoltageSysIdRoutine;
 
-    private IntakeArm.PivotGoal desiredGoal = IntakeArm.PivotGoal.STOW;
-    private IntakeArm.PivotGoal currentGoal = desiredGoal;
+    private Goal desiredGoal = Goal.STOW;
+    private Goal currentGoal = desiredGoal;
 
-    private final IntakeArm.PivotPositionSetpoint pivotPositionSetpoint;
-    private final IntakeArm.PivotPositionSetpoint pivotLowerLimit;
-    private final IntakeArm.PivotPositionSetpoint pivotUpperLimit;
+    private final PositionSetpoint positionSetpoint;
+    private final PositionSetpoint pivotLowerLimit;
+    private final PositionSetpoint pivotUpperLimit;
 
     public final Trigger atSetpoint = new Trigger(this::atPivotPositionSetpoint);
     public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
     public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
 
-    public static class PivotPositionSetpoint {
+    public static class PositionSetpoint {
         public double pivotPositionRots = 0.0;
 
-        public IntakeArm.PivotPositionSetpoint withPivotPositionRots(final double pivotPositionRots) {
+        public PositionSetpoint withPivotPositionRots(final double pivotPositionRots) {
             this.pivotPositionRots = pivotPositionRots;
             return this;
         }
 
-        public boolean atSetpoint(final double pivotPositionRots, final double pivotVelocityRotsPerSec) {
-            return MathUtil.isNear(this.pivotPositionRots, pivotPositionRots, PositionToleranceRots)
+        public static boolean atSetpoint(
+                final double setpointPivotPositionRots,
+                final double pivotPositionRots,
+                final double pivotVelocityRotsPerSec
+        ) {
+            return MathUtil.isNear(setpointPivotPositionRots, pivotPositionRots, PositionToleranceRots)
                     && MathUtil.isNear(0, pivotVelocityRotsPerSec, VelocityToleranceRotsPerSec);
+        }
+
+        public boolean atSetpoint(final double pivotPositionRots, final double pivotVelocityRotsPerSec) {
+            return PositionSetpoint.atSetpoint(
+                    this.pivotPositionRots,
+                    pivotPositionRots,
+                    pivotVelocityRotsPerSec
+            );
         }
     }
 
-    public enum PivotGoal {
+    public enum Goal {
         STOW(0),
         HP(-0.1),
         ALGAE_GROUND(-0.25),
@@ -70,7 +82,7 @@ public class IntakeArm extends SubsystemBase {
 
         private final double pivotPositionGoalRots;
 
-        PivotGoal(final double pivotPositionGoalRots) {
+        Goal(final double pivotPositionGoalRots) {
             this.pivotPositionGoalRots = pivotPositionGoalRots;
         }
 
@@ -95,13 +107,13 @@ public class IntakeArm extends SubsystemBase {
                 intakeArmIO::toPivotVoltage
         );
 
-        this.pivotPositionSetpoint = new IntakeArm.PivotPositionSetpoint()
+        this.positionSetpoint = new PositionSetpoint()
                 .withPivotPositionRots(desiredGoal.getPivotPositionGoalRots());
-        this.pivotLowerLimit = new IntakeArm.PivotPositionSetpoint().withPivotPositionRots(constants.pivotLowerLimitRots());
-        this.pivotUpperLimit = new IntakeArm.PivotPositionSetpoint().withPivotPositionRots(constants.pivotUpperLimitRots());
+        this.pivotLowerLimit = new PositionSetpoint().withPivotPositionRots(constants.pivotLowerLimitRots());
+        this.pivotUpperLimit = new PositionSetpoint().withPivotPositionRots(constants.pivotUpperLimitRots());
 
         this.intakeArmIO.config();
-        this.intakeArmIO.toPivotPosition(pivotPositionSetpoint.pivotPositionRots);
+        this.intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
     }
 
     @Override
@@ -112,8 +124,8 @@ public class IntakeArm extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
-            pivotPositionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
-            intakeArmIO.toPivotPosition(pivotPositionSetpoint.pivotPositionRots);
+            positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+            intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
 
             this.currentGoal = desiredGoal;
         }
@@ -122,7 +134,7 @@ public class IntakeArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
         Logger.recordOutput(
                 LogKey + "/PivotPositionSetpoint/PivotPositionRots",
-                pivotPositionSetpoint.pivotPositionRots
+                positionSetpoint.pivotPositionRots
         );
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPivotPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atPivotLowerLimit());
@@ -134,8 +146,16 @@ public class IntakeArm extends SubsystemBase {
         );
     }
 
+    public boolean atGoal(final Goal goal) {
+        return PositionSetpoint.atSetpoint(
+                goal.getPivotPositionGoalRots(),
+                inputs.pivotPositionRots,
+                inputs.pivotVelocityRotsPerSec
+        );
+    }
+
     private boolean atPivotPositionSetpoint() {
-        return pivotPositionSetpoint.atSetpoint(inputs.pivotPositionRots, inputs.pivotVelocityRotsPerSec)
+        return positionSetpoint.atSetpoint(inputs.pivotPositionRots, inputs.pivotVelocityRotsPerSec)
                 && currentGoal == desiredGoal;
     }
 
@@ -151,13 +171,13 @@ public class IntakeArm extends SubsystemBase {
         return Rotation2d.fromRotations(inputs.pivotPositionRots);
     }
 
-    public void setGoal(final IntakeArm.PivotGoal goal) {
+    public void setGoal(final Goal goal) {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
     }
 
-    public Command runPivotGoalCommand(final IntakeArm.PivotGoal goal) {
+    public Command runPivotGoalCommand(final Goal goal) {
         return Commands.run(() -> setGoal(goal));
     }
 

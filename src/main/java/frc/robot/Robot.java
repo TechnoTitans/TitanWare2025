@@ -138,6 +138,13 @@ public class Robot extends LoggedRobot {
             .and(DriverStation::isFMSAttached)
             .and(RobotModeTriggers.teleop());
 
+    final Supplier<ScoreCommands.ScorePosition> driverScorePositionSupplier =
+                scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
+
+    final Supplier<ScoreCommands.ScorePosition> coDriverScorePositionSupplier =
+            scoreCommands.getScorePositionSupplier(coController::getRightX, coController::getRightY);
+
+
     @Override
     public void robotInit() {
         if ((RobotBase.isReal() && Constants.CURRENT_MODE != Constants.RobotMode.REAL) ||
@@ -275,49 +282,8 @@ public class Robot extends LoggedRobot {
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
 
-        //TODO: find best camera poses
-        Pose3d currentPose = new Pose3d(5.28, 2.83, 0, new Rotation3d(0, 0, Units.degreesToRadians(120)));
-//        currentPose = new Pose3d(swerve.getPose());
-        final Pose3d camera1Pose3d = currentPose.transformBy(
-                new Transform3d(
-                        0,
-                        Units.inchesToMeters(12),
-                        Units.inchesToMeters(12),
-                        Rotation3d.kZero
-                )
-        );
-
-        final Pose3d camera2Pose3d = currentPose.transformBy(
-                new Transform3d(
-                        0,
-                        Units.inchesToMeters(12),
-                        Units.inchesToMeters(12),
-                        new Rotation3d(
-                                0,
-                                Units.degreesToRadians(-40),
-                                0
-                        )
-                )
-        );
-
-        //done
-        final Pose3d camera3Pose3d = currentPose.transformBy(
-                new Transform3d(
-                        Units.inchesToMeters(12),
-                        Units.inchesToMeters(-12),
-                        Units.inchesToMeters(6),
-                        new Rotation3d(
-                                0,
-                                Units.degreesToRadians(-40),
-                                Units.rotationsToDegrees(30)
-                        )
-                )
-        );
-
-        Logger.recordOutput("CameraRoot", currentPose);
-        Logger.recordOutput("Camera1", camera1Pose3d);
-        Logger.recordOutput("Camera2", camera2Pose3d);
-        Logger.recordOutput("Camera3", camera3Pose3d);
+        Logger.recordOutput("ScorePosition/Driver", driverScorePositionSupplier.get());
+        Logger.recordOutput("ScorePosition/CoDriver", coDriverScorePositionSupplier.get());
 
         Threads.setCurrentThreadPriority(true, 10);
     }
@@ -430,7 +396,7 @@ public class Robot extends LoggedRobot {
     }
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
-//        this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
+        this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
         this.driverController.rightBumper(teleopEventLoop)
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST),
@@ -446,22 +412,13 @@ public class Robot extends LoggedRobot {
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
 
-        this.driverController.a(teleopEventLoop)
-                .onTrue(Commands.either(
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L4),
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L2),
-                        () -> superstructure.getDesiredSuperstructureGoal() == Superstructure.Goal.L2
-                ));
-
-        final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
-                scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
         this.driverController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
+                .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
+                .onFalse(scoreCommands.scoreAtPosition(driverScorePositionSupplier));
 
-//        this.driverController.a(teleopEventLoop)
-//                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
-//                .onFalse(scoreCommands.scoreNet());
+        this.driverController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
+                .onFalse(scoreCommands.scoreNet());
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())
@@ -471,11 +428,9 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftX, driverController::getLeftY))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
 
-        final Supplier<ScoreCommands.ScorePosition> backupScorePositionSupplier =
-                scoreCommands.getScorePositionSupplier(coController::getRightX, coController::getRightY);
         this.coController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(backupScorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition(backupScorePositionSupplier));
+                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(coDriverScorePositionSupplier))
+                .onFalse(scoreCommands.scoreAtPosition(coDriverScorePositionSupplier));
 
         this.coController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.intakeAlgaeFromGround());

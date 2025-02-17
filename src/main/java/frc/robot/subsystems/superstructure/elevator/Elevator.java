@@ -2,7 +2,6 @@ package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Current;
@@ -58,9 +57,21 @@ public class Elevator extends SubsystemBase {
             return this;
         }
 
-        public boolean atSetpoint(final double elevatorPositionRots, final double elevatorVelocityRotsPerSec) {
-            return MathUtil.isNear(this.elevatorPositionRots, elevatorPositionRots, PositionToleranceRots)
+        public static boolean atSetpoint(
+                final double setpointElevatorPositionRots,
+                final double elevatorPositionRots,
+                final double elevatorVelocityRotsPerSec
+        ) {
+            return MathUtil.isNear(setpointElevatorPositionRots, elevatorPositionRots, PositionToleranceRots)
                     && MathUtil.isNear(0, elevatorVelocityRotsPerSec, VelocityToleranceRotsPerSec);
+        }
+
+        public boolean atSetpoint(final double elevatorPositionRots, final double elevatorVelocityRotsPerSec) {
+            return PositionSetpoint.atSetpoint(
+                    this.elevatorPositionRots,
+                    elevatorPositionRots,
+                    elevatorVelocityRotsPerSec
+            );
         }
     }
 
@@ -154,6 +165,14 @@ public class Elevator extends SubsystemBase {
         );
     }
 
+    public boolean atGoal(final Goal goal) {
+        return PositionSetpoint.atSetpoint(
+                goal.getPositionGoalRots(constants),
+                inputs.masterPositionRots,
+                inputs.masterVelocityRotsPerSec
+        );
+    }
+
     private boolean atPositionSetpoint() {
         return setpoint.atSetpoint(inputs.masterPositionRots, inputs.masterVelocityRotsPerSec)
                 && currentGoal == desiredGoal;
@@ -194,7 +213,7 @@ public class Elevator extends SubsystemBase {
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
     }
 
-    public Command toPositionMetersCommand(final DoubleSupplier positionMeters) {
+    public Command runPositionMetersCommand(final DoubleSupplier positionMeters) {
         return run(() -> {
             this.desiredGoal = Goal.DYNAMIC;
             setpoint.elevatorPositionRots = positionMeters.getAsDouble() / drumCircumferenceMeters;

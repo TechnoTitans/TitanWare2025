@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
+import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
@@ -55,9 +56,17 @@ public class ElevatorArm extends SubsystemBase {
             return this;
         }
 
-        public boolean atSetpoint(final double pivotPositionRots, final double pivotVelocityRotsPerSec) {
-            return MathUtil.isNear(this.pivotPositionRots, pivotPositionRots, PositionToleranceRots)
+        public static boolean atSetpoint(
+                final double setpointPivotPositionRots,
+                final double pivotPositionRots,
+                final double pivotVelocityRotsPerSec
+        ) {
+            return MathUtil.isNear(setpointPivotPositionRots, pivotPositionRots, PositionToleranceRots)
                     && MathUtil.isNear(0, pivotVelocityRotsPerSec, VelocityToleranceRotsPerSec);
+        }
+
+        public boolean atSetpoint(final double pivotPositionRots, final double pivotVelocityRotsPerSec) {
+            return PositionSetpoint.atSetpoint(this.pivotPositionRots, pivotPositionRots, pivotVelocityRotsPerSec);
         }
     }
 
@@ -142,6 +151,14 @@ public class ElevatorArm extends SubsystemBase {
         );
     }
 
+    public boolean atGoal(final Goal goal) {
+        return PositionSetpoint.atSetpoint(
+                goal.getPivotPositionGoalRots(),
+                inputs.pivotPositionRots,
+                inputs.pivotVelocityRotsPerSec
+        );
+    }
+
     private boolean atPositionSetpoint() {
         return setpoint.atSetpoint(inputs.pivotPositionRots, inputs.pivotVelocityRotsPerSec)
                 && currentGoal == desiredGoal;
@@ -165,7 +182,7 @@ public class ElevatorArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
     }
 
-    public Command toPositionCommand(final DoubleSupplier positionRots) {
+    public Command runPositionCommand(final DoubleSupplier positionRots) {
         return run(() -> {
             this.desiredGoal = Goal.DYNAMIC;
             setpoint.pivotPositionRots = positionRots.getAsDouble();
