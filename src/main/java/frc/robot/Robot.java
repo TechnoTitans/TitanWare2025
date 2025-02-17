@@ -430,7 +430,7 @@ public class Robot extends LoggedRobot {
     }
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
-        this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
+//        this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
         this.driverController.rightBumper(teleopEventLoop)
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST),
@@ -446,13 +446,12 @@ public class Robot extends LoggedRobot {
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
 
-        this.driverController.povUp().onTrue(
-                Commands.sequence(
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L4).asProxy(),
-                        Commands.waitSeconds(5),
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L2).asProxy()
-                )
-        );
+        this.driverController.a(teleopEventLoop)
+                .onTrue(Commands.either(
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L4),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L2),
+                        () -> superstructure.getDesiredSuperstructureGoal() == Superstructure.Goal.L2
+                ));
 
         final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =
                 scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
@@ -460,9 +459,9 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
-        this.driverController.a(teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
-                .onFalse(scoreCommands.scoreNet());
+//        this.driverController.a(teleopEventLoop)
+//                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
+//                .onFalse(scoreCommands.scoreNet());
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())
