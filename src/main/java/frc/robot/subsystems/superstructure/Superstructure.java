@@ -2,6 +2,7 @@ package frc.robot.subsystems.superstructure;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -40,16 +41,15 @@ public class Superstructure extends VirtualSubsystem {
         L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.PivotGoal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.PivotGoal.NET);
 
-        private static final Map<Goal, Pose2d> GoalPoses = new HashMap<>();
+        private static final Map<Goal, Translation2d> GoalTranslations = new HashMap<>();
 
         static {
             for (final Goal goal : Goal.values()) {
-                final Pose2d goalPose = new Pose2d(
-                        0.0,
+                final Translation2d goalTranslation = new Translation2d(
                         goal.elevatorGoal.getPositionGoalMeters(),
                         Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots())
                 );
-                GoalPoses.put(goal, goalPose);
+                GoalTranslations.put(goal, goalTranslation);
             }
         }
 
@@ -102,14 +102,6 @@ public class Superstructure extends VirtualSubsystem {
         this.intakeArm = intakeArm;
 
         this.eventLoop = new EventLoop();
-//        this.desiredGoalEqualsLastDesiredGoal = new Trigger(eventLoop, () -> desiredGoal == lastDesiredGoal);
-//        this.desiredGoalNotEqualCurrentGoal = new Trigger(eventLoop, () -> desiredGoal != currentGoal);
-//        this.desiredGoalNotEqualDynamic = new Trigger(eventLoop, () -> desiredGoal != Goal.DYNAMIC);
-//        this.desiredGoalEqualsStow = new Trigger(eventLoop, () -> desiredGoal == Goal.STOW);
-//        this.allowedToChangeNonStowGoal = desiredGoalNotEqualCurrentGoal
-//                .and(desiredGoalNotEqualDynamic)
-//                .and(desiredGoalEqualsStow.negate());
-//        this.allowedToChangeToStow = desiredGoalNotEqualCurrentGoal.and(desiredGoalEqualsStow);
 
         this.desiredGoalIsRunningGoal = new Trigger(eventLoop, () -> desiredGoal == runningGoal);
         this.atSuperstructureSetpoint = elevator.atSetpoint
@@ -123,13 +115,13 @@ public class Superstructure extends VirtualSubsystem {
         this.allowedToChangeGoal = desiredGoalIsDynamic.negate()
                 .and((desiredGoalIsAtGoal.and(atSuperstructureSetpoint)).negate());
         this.desiresUpwardsMotion = new Trigger(eventLoop, () -> {
-            final Pose2d currentPose = getCurrentPose();
-            final Pose2d desiredPose = Goal.GoalPoses.get(desiredGoal);
+            final Translation2d currentTranslation = getCurrentTranslation();
+            final Translation2d desiredTranslation = Goal.GoalTranslations.get(desiredGoal);
 
-            Logger.recordOutput("CurrentPose", currentPose);
-            Logger.recordOutput("DesiredPose", desiredPose);
+            Logger.recordOutput("CurrentTranslation", currentTranslation);
+            Logger.recordOutput("DesiredTranslation", desiredTranslation);
 
-            return desiredPose.getY() >= currentPose.getY();
+            return desiredTranslation.getY() >= currentTranslation.getY();
         });
         this.desiresDownwardsMotion = desiresUpwardsMotion.negate();
 
@@ -152,8 +144,9 @@ public class Superstructure extends VirtualSubsystem {
                                         .and(intakeArm.atSetpoint)),
 
                         Commands.runOnce(() -> this.atGoal = runningGoal)
-                ).onlyWhile(() -> desiredGoal == runningGoal)
-                        .withName("UpwardsGoalChange")
+                ).onlyWhile(
+                        () -> desiredGoal == runningGoal
+                ).withName("UpwardsGoalChange")
         );
 
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresDownwardsMotion).onTrue(
@@ -174,54 +167,10 @@ public class Superstructure extends VirtualSubsystem {
                                         .and(elevator.atSetpoint)
                                         .and(intakeArm.atSetpoint)),
                         Commands.runOnce(() -> this.atGoal = runningGoal)
-                ).onlyWhile(() -> desiredGoal == runningGoal)
-                        .withName("DownwardsGoalChange")
+                ).onlyWhile(
+                        () -> desiredGoal == runningGoal
+                ).withName("DownwardsGoalChange")
         );
-
-//        desiredGoalEqualsLastDesiredGoal.onFalse(Commands.runOnce(() -> this.lastDesiredGoal = desiredGoal).withName("RunInstanceCmd"));
-//
-//        desiredGoalEqualsLastDesiredGoal.whileTrue(
-//                Commands.sequence(
-//                        Commands.runOnce(() -> elevatorArm.setGoal(currentGoal.elevatorArmGoal)),
-//
-//                        Commands.waitUntil(elevatorArm.atSetpoint),
-//                        Commands.runOnce(() -> elevator.setGoal(currentGoal.elevatorGoal)),
-//
-//                        Commands.waitUntil(
-//                                elevatorArm.atSetpoint
-//                                        .and(elevator.atSetpoint)),
-//                        Commands.runOnce(() -> intakeArm.setGoal(currentGoal.intakeArmGoal)),
-//
-//                        Commands.waitUntil(
-//                                elevatorArm.atSetpoint
-//                                        .and(elevator.atSetpoint)
-//                                        .and(intakeArm.atSetpoint)),
-//                        Commands.runOnce(() -> this.currentGoal = lastDesiredGoal)
-//                ).withName("BigSuperstructureSetter")
-//        );
-
-//        allowedToChangeNonStowGoal.and(desiredGoalChanged).onTrue(Commands.runOnce(() -> {
-//            this.lastDesiredGoal = desiredGoal;
-//            elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
-//        }));
-//        allowedToChangeNonStowGoal.and(desiredGoalChanged.negate()).and(elevatorArm.atPivotSetpoint)
-//                .onTrue(Commands.runOnce(() -> elevator.setGoal(desiredGoal.elevatorGoal)));
-//        allowedToChangeNonStowGoal
-//                .and(desiredGoalChanged.negate())
-//                .and(elevatorArm.atPivotSetpoint)
-//                .and(elevator.atSetpoint)
-//                .onTrue(Commands.runOnce(() -> intakeArm.setGoal(desiredGoal.intakeArmGoal))
-//                        .andThen(Commands.runOnce(() -> this.currentGoal = desiredGoal)));
-//
-//        allowedToChangeToStow.onTrue(Commands.runOnce(() -> {
-//            this.lastDesiredGoal = desiredGoal;
-//            intakeArm.setGoal(desiredGoal.intakeArmGoal);
-//        }));
-//        allowedToChangeToStow.and(intakeArm.atPivotPositionSetpoint)
-//                .onTrue(Commands.runOnce(() -> elevator.setGoal(desiredGoal.elevatorGoal)));
-//        allowedToChangeToStow.and(intakeArm.atPivotPositionSetpoint).and(elevator.atSetpoint)
-//                .onTrue(Commands.runOnce(() -> elevatorArm.setGoal(desiredGoal.elevatorArmGoal))
-//                        .andThen(Commands.runOnce(() -> this.currentGoal = desiredGoal)));
 
         elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
         elevator.setGoal(desiredGoal.elevatorGoal);
@@ -326,27 +275,25 @@ public class Superstructure extends VirtualSubsystem {
         return Set.of(elevator, elevatorArm, intakeArm);
     }
 
-    private Pose2d getCurrentPose() {
-        return new Pose2d(
-                0.0,
+    private Translation2d getCurrentTranslation() {
+        return new Translation2d(
                 elevator.getExtensionMeters(),
                 elevatorArm.getPivotPosition().minus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
         );
     }
 
     public Optional<Goal> getClosestGoal() {
-        final Pose2d currentPose = getCurrentPose();
+        final Translation2d translation2d = getCurrentTranslation();
 
         Goal closestGoal = null;
         double minDistance = Double.MAX_VALUE;
-        for (final Map.Entry<Goal, Pose2d> goalPoseEntry : Goal.GoalPoses.entrySet()) {
-            final double distance = goalPoseEntry
+        for (final Map.Entry<Goal, Translation2d> goalTranslationEntry : Goal.GoalTranslations.entrySet()) {
+            final double distance = goalTranslationEntry
                     .getValue()
-                    .getTranslation()
-                    .getDistance(currentPose.getTranslation());
+                    .getDistance(translation2d);
 
             if (distance < minDistance) {
-                closestGoal = goalPoseEntry.getKey();
+                closestGoal = goalTranslationEntry.getKey();
                 minDistance = distance;
             }
         }
