@@ -39,7 +39,7 @@ public class IntakeArm extends SubsystemBase {
     private final IntakeArm.PivotPositionSetpoint pivotLowerLimit;
     private final IntakeArm.PivotPositionSetpoint pivotUpperLimit;
 
-    public final Trigger atPivotPositionSetpoint = new Trigger(this::atPivotPositionSetpoint);
+    public final Trigger atSetpoint = new Trigger(this::atPivotPositionSetpoint);
     public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
     public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
 

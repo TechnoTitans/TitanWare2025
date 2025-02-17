@@ -71,7 +71,7 @@ public class HardwareConstants {
             20,
             -0.087890625,
             60,
-            -0.365, //Units.degreesToRotations(-146),
+            -0.365,
             0
     );
 
@@ -89,7 +89,7 @@ public class HardwareConstants {
             21,
             22,
             23,
-            4,
-            4
+            2.5,
+            2.5
     );
 }

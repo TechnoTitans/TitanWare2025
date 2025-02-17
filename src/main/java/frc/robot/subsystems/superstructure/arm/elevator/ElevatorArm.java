@@ -43,7 +43,7 @@ public class ElevatorArm extends SubsystemBase {
     private final PositionSetpoint pivotLowerSetpoint;
     private final PositionSetpoint pivotUpperSetpoint;
 
-    public final Trigger atPivotSetpoint = new Trigger(this::atPositionSetpoint);
+    public final Trigger atSetpoint = new Trigger(this::atPositionSetpoint);
     public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
     public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
 

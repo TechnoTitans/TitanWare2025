@@ -138,7 +138,7 @@ public class ScoreCommands {
 
     private Superstructure.Goal getNonDynamicGoal() {
         final Superstructure.Goal maybeDynamicSuperstructureGoal =
-                superstructure.getCurrentSuperstructureGoal();
+                superstructure.getDesiredSuperstructureGoal();
 
         return maybeDynamicSuperstructureGoal == Superstructure.Goal.DYNAMIC
                 ? superstructure.getClosestGoal().orElseThrow()

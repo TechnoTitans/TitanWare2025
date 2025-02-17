@@ -108,7 +108,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
     @Override
     public void config() {
         final CANcoderConfiguration pivotCANCoderConfiguration = new CANcoderConfiguration();
-        pivotCANCoderConfiguration.MagnetSensor.MagnetOffset = constants.intakePivotCANCoderOffset();
+        pivotCANCoderConfiguration.MagnetSensor.MagnetOffset = 0;
         pivotCANCoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         pivotEncoder.getConfigurator().apply(pivotCANCoderConfiguration);
 
@@ -118,7 +118,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         pivotConfiguration.Slot0 = new Slot0Configs()
                 .withKG(0.26)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKP(21);
+                .withKP(26);
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;

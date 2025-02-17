@@ -412,7 +412,7 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
-        intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(
+        intake.isCoralPresent.whileTrue(ControllerUtils.rumbleForDurationCommand(
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
     }
@@ -444,6 +444,14 @@ public class Robot extends LoggedRobot {
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+        );
+
+        this.driverController.povUp().onTrue(
+                Commands.sequence(
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L4).asProxy(),
+                        Commands.waitSeconds(5),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.L2).asProxy()
+                )
         );
 
         final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier =

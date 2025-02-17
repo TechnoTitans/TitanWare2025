@@ -119,7 +119,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
     @Override
     public void config() {
         final CANcoderConfiguration pivotCANCoderConfig = new CANcoderConfiguration();
-        pivotCANCoderConfig.MagnetSensor.MagnetOffset = constants.CANCoderOffset();
+        pivotCANCoderConfig.MagnetSensor.MagnetOffset = 0;
         pivotCANCoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
         pivotCANCoder.getConfigurator().apply(pivotCANCoderConfig);
 
