@@ -2,6 +2,7 @@ package frc.robot.subsystems.superstructure;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class Profiles {
     public static final SplineProfile L1_TO_L2 = new SplineProfile(
@@ -136,6 +137,10 @@ public class Profiles {
                     Superstructure.Goal.L3, L4_TO_L3
             )
     );
+
+    public static Set<Superstructure.Goal> getStartingGoals() {
+        return profiles.keySet();
+    }
 
     public static Optional<SplineProfile> getProfile(Superstructure.Goal start, Superstructure.Goal end) {
         final Map<Superstructure.Goal, SplineProfile> startProfiles = profiles.get(start);

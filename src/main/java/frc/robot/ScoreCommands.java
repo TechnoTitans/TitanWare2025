@@ -53,7 +53,7 @@ public class ScoreCommands {
             Level level
     ) {}
 
-    private static final List<Superstructure.Goal> ScoreGoals = List.of(
+    private static final Set<Superstructure.Goal> ScoreGoals = Set.of(
             Superstructure.Goal.DYNAMIC,
             Superstructure.Goal.L1,
             Superstructure.Goal.L2,
@@ -136,15 +136,6 @@ public class ScoreCommands {
         );
     }
 
-    private Superstructure.Goal getNonDynamicGoal() {
-        final Superstructure.Goal maybeDynamicSuperstructureGoal =
-                superstructure.getCurrentSuperstructureGoal();
-
-        return maybeDynamicSuperstructureGoal == Superstructure.Goal.DYNAMIC
-                ? superstructure.getClosestGoal().orElseThrow()
-                : maybeDynamicSuperstructureGoal;
-    }
-
     private Command readyDriveScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         return Commands.defer(
                 () -> {
@@ -194,18 +185,34 @@ public class ScoreCommands {
         );
     }
 
+    private Optional<Superstructure.Goal> getClosestProfileStartGoal() {
+        final Set<Superstructure.Goal> availableStartGoals = Profiles.getStartingGoals();
+        final Superstructure.Goal maybeDynamicSuperstructureGoal =
+                superstructure.getCurrentSuperstructureGoal();
+
+        return maybeDynamicSuperstructureGoal == Superstructure.Goal.DYNAMIC
+                ? superstructure.getClosestGoal(availableStartGoals)
+                : Optional.of(maybeDynamicSuperstructureGoal);
+    }
+
     private Command readySuperstructureScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         return Commands.repeatingSequence(
                 Commands.either(
                         Commands.defer(
                                 () -> {
                                     final ScorePosition scorePosition = scorePositionSupplier.get();
-                                    final Superstructure.Goal superstructureGoal = getNonDynamicGoal();
+                                    final Optional<Superstructure.Goal> superstructureGoal =
+                                            getClosestProfileStartGoal();
 
-                                    final Optional<SplineProfile> splineProfile = Profiles.getProfile(
-                                            superstructureGoal,
-                                            scorePosition.level.goal
-                                    );
+                                    final Optional<SplineProfile> splineProfile;
+                                    if (superstructureGoal.isPresent()) {
+                                        splineProfile = Profiles.getProfile(
+                                                superstructureGoal.get(),
+                                                scorePosition.level.goal
+                                        );
+                                    } else {
+                                        splineProfile = Optional.empty();
+                                    }
 
                                     final BooleanSupplier desiredScorePositionNotEqualLast =
                                             () -> !scorePosition.equals(scorePositionSupplier.get());
