@@ -380,8 +380,8 @@ public class ScoreCommands {
     public Command readyClimb(final DoubleSupplier leftStickXInput, final DoubleSupplier leftStickYInput) {
         return Commands.parallel(
                 swerve.teleopFacingAngleCommand(
-                        leftStickXInput,
                         leftStickYInput,
+                        leftStickXInput,
                         () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.kPi
                 ),
                 superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB)

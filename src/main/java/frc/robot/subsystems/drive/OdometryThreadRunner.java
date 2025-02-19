@@ -318,25 +318,18 @@ public class OdometryThreadRunner {
 
         final BaseStatusSignal[] allSignalsArray = allSignals.toArray(BaseStatusSignal[]::new);
         BaseStatusSignal.setUpdateFrequencyForAll(UPDATE_FREQUENCY_HZ, allSignalsArray);
-        //Threads.setCurrentThreadPriority(true, threadPriorityToSet);
+//        Threads.setCurrentThreadPriority(true, threadPriorityToSet);
 
         while (running) {
             final StatusCode statusCode;
             try {
                 signalReadWriteLock.writeLock().lock();
-                final double startTimestamp = Timer.getFPGATimestamp();
                 statusCode = BaseStatusSignal.waitForAll(
                         2.0 / UPDATE_FREQUENCY_HZ, allSignalsArray
                 );
-                final double waitedFor = (Timer.getFPGATimestamp() - startTimestamp) * 1000;
 
 
                 if (!statusCode.isOK()) {
-//                    System.out.println(waitedFor);
-//                    System.out.println(statusCode);
-//                    for (final BaseStatusSignal statusSignal : allSignalsArray) {
-//                        System.out.println(statusSignal.getName() + " | " + statusSignal.getAppliedUpdateFrequency() + " | " + statusSignal.getStatus());
-//                    }
                     failedDAQs++;
                 }
             } finally {
@@ -405,7 +398,7 @@ public class OdometryThreadRunner {
             // This is inherently synchronous, since lastThreadPriority is only written
             // here and threadPriorityToSet is only read here
             if (threadPriorityToSet != lastThreadPriority) {
-                //Threads.setCurrentThreadPriority(true, threadPriorityToSet);
+//                Threads.setCurrentThreadPriority(true, threadPriorityToSet);
                 lastThreadPriority = threadPriorityToSet;
             }
         }

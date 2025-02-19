@@ -78,14 +78,14 @@ public class Elevator extends SubsystemBase {
     public enum Goal {
         DYNAMIC(0),
         IDLE(0),
-        HP(0.02),
+        HP(0.07),
         ALGAE_GROUND(0),
-        L1(0.028),
-        L2(0.150),
         LOWER_ALGAE(0.16),
-        L3(0.458),
         UPPER_ALGAE(0.5),
-        L4(0.976),
+        L1(0),
+        L2(0.01),
+        L3(0.364),
+        L4(0.967),
         NET(1);
 
         private final double positionGoalMeters;
@@ -153,6 +153,7 @@ public class Elevator extends SubsystemBase {
 
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
+        Logger.recordOutput(LogKey + "/ElevatorMetersFromDrumRots", drumRotsToElevatorMeters(inputs.masterPositionRots));
         Logger.recordOutput(LogKey + "/PositionSetpoint/PositionRots", setpoint.elevatorPositionRots);
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atLowerLimit());
@@ -163,6 +164,10 @@ public class Elevator extends SubsystemBase {
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - elevatorPeriodicUpdateStart)
         );
+    }
+
+    private double drumRotsToElevatorMeters(final double rots) {
+        return rots * (constants.spoolDiameterMeters() * Math.PI);
     }
 
     public boolean atGoal(final Goal goal) {

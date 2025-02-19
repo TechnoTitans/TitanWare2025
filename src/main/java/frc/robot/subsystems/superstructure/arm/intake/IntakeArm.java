@@ -71,14 +71,15 @@ public class IntakeArm extends SubsystemBase {
 
     public enum Goal {
         STOW(0),
-        HP(-0.1),
+        HP(0),
         ALGAE_GROUND(-0.25),
-        ALGAE_REEF(-0.4),
+        ALGAE_REEF(-0.3),
+        CLIMB(-0.36),
         NET(-0.15),
-        L4(-0.15),
-        L3(-0.1),
-        L2(-0.1),
-        L1(-0.1);
+        L4(-0.2),
+        L3(-0.1943),
+        L2(-0.157),
+        L1(-0.1885);
 
         private final double pivotPositionGoalRots;
 

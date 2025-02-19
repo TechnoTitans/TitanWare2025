@@ -74,7 +74,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final PhotonVision photonVision = new PhotonVision(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             swerve,
             swerve.getPoseEstimator()
     );
@@ -285,7 +285,7 @@ public class Robot extends LoggedRobot {
         Logger.recordOutput("ScorePosition/Driver", driverScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition/CoDriver", coDriverScorePositionSupplier.get());
 
-        Threads.setCurrentThreadPriority(true, 10);
+        Threads.setCurrentThreadPriority(false, 10);
     }
 
     @Override
@@ -378,7 +378,7 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
-        intake.isCoralPresent.whileTrue(ControllerUtils.rumbleForDurationCommand(
+        intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
     }

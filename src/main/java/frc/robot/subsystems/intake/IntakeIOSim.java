@@ -239,7 +239,6 @@ public class IntakeIOSim implements IntakeIO {
         inputs.algaeRollerTorqueCurrentAmps = algaeTorqueCurrent.getValueAsDouble();
         inputs.algaeRollerTempCelsius = algaeDeviceTemp.getValueAsDouble();
         inputs.coralCANRangeDistanceMeters = coralCANRangeDistance.getValueAsDouble();
-        inputs.coralCANRangeIsDetected = coralCANRangeIsDetected.getValue();
     }
 
     @Override

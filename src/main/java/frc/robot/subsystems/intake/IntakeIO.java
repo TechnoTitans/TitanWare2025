@@ -20,7 +20,6 @@ public interface IntakeIO {
         public double algaeRollerTempCelsius = 0.0;
 
         public double coralCANRangeDistanceMeters = 0.0;
-        public boolean coralCANRangeIsDetected = false;
     }
 
     /**

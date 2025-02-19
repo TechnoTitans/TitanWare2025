@@ -80,7 +80,7 @@ public class IntakeIOReal implements IntakeIO {
                 .withKV(0.14182)
                 .withKA(0.090762)
                 .withKP(10);
-        coralConfiguration.CurrentLimits.StatorCurrentLimit = 20;
+        coralConfiguration.CurrentLimits.StatorCurrentLimit = 25;
         coralConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         coralConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
         coralConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
@@ -113,9 +113,8 @@ public class IntakeIOReal implements IntakeIO {
         algaeRollerMotor.getConfigurator().apply(algaeConfiguration);
 
         final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
-        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
-        CANRangeConfiguration.ProximityParams.ProximityThreshold = Units.inchesToMeters(11);
-        CANRangeConfiguration.ProximityParams.ProximityHysteresis = Units.inchesToMeters(1);
+        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRangeUserFreq;
+        CANRangeConfiguration.ToFParams.UpdateFrequency = 50;
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -148,7 +147,7 @@ public class IntakeIOReal implements IntakeIO {
     }
 
     @Override
-    public void updateInputs(IntakeIOInputs inputs) {
+    public void updateInputs(final IntakeIOInputs inputs) {
         BaseStatusSignal.refreshAll(
                 coralPosition,
                 coralVelocity,
@@ -179,7 +178,6 @@ public class IntakeIOReal implements IntakeIO {
         inputs.algaeRollerTorqueCurrentAmps = algaeTorqueCurrent.getValueAsDouble();
         inputs.algaeRollerTempCelsius = algaeDeviceTemp.getValueAsDouble();
         inputs.coralCANRangeDistanceMeters = coralCANRangeDistance.getValueAsDouble();
-        inputs.coralCANRangeIsDetected = coralCANRangeIsDetected.getValue();
     }
 
     @Override
