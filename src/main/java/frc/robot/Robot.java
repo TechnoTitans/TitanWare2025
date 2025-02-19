@@ -1,6 +1,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -267,6 +268,8 @@ public class Robot extends LoggedRobot {
         });
 
         Logger.start();
+
+        Logger.recordOutput("EmptyPose", new Pose3d());
     }
 
     @Override
@@ -356,6 +359,31 @@ public class Robot extends LoggedRobot {
                         superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(2.5),
                         superstructure.runProfile(Profiles.L3_TO_L4).withTimeout(2.5),
                         superstructure.runProfile(Profiles.L4_TO_L1).withTimeout(2.5),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                )
+        );
+
+        driverController.povDown().onTrue(
+                Commands.sequence(
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
                 )
         );

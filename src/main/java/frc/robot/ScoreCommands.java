@@ -227,9 +227,9 @@ public class ScoreCommands {
                                 superstructure.getRequirements()
                         ),
                         Commands.defer(
-                                () -> superstructure.runWaitSuperstructureGoal(
+                                () -> superstructure.runUntilSuperstructureGoal(
                                         scorePositionSupplier.get().level.goal
-                                ),
+                                ).withTimeout(4),
                                 superstructure.getRequirements()
                         ),
                         () -> ScoreCommands.ScoreGoals.contains(
