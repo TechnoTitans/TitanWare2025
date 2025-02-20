@@ -264,6 +264,10 @@ public class Superstructure extends VirtualSubsystem {
         return runSuperstructureGoal(goal).until(atSuperstructureSetpoint);
     }
 
+    public Command runUntilSuperstructureGoal(final Supplier<Goal> goal) {
+        return runSuperstructureGoal(goal).until(atSuperstructureSetpoint);
+    }
+
     public Command runSuperstructureGoal(final Goal goal) {
         return Commands.run(
                 () -> this.desiredGoal = goal,

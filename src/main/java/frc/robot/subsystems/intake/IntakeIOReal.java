@@ -15,6 +15,10 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
+import edu.wpi.first.units.BaseUnits;
+import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.Unit;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 
@@ -42,7 +46,6 @@ public class IntakeIOReal implements IntakeIO {
     private final StatusSignal<Current> algaeTorqueCurrent;
     private final StatusSignal<Temperature> algaeDeviceTemp;
     private final StatusSignal<Distance> coralCANRangeDistance;
-    private final StatusSignal<Boolean> coralCANRangeIsDetected;
 
     public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
         this.constants = constants;
@@ -68,7 +71,6 @@ public class IntakeIOReal implements IntakeIO {
         this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
         this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
         this.coralCANRangeDistance = coralCANRange.getDistance();
-        this.coralCANRangeIsDetected = coralCANRange.getIsDetected();
     }
 
     @Override
@@ -128,8 +130,7 @@ public class IntakeIOReal implements IntakeIO {
                 algaeAcceleration,
                 algaeVoltage,
                 algaeTorqueCurrent,
-                coralCANRangeDistance,
-                coralCANRangeIsDetected
+                coralCANRangeDistance
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -160,8 +161,7 @@ public class IntakeIOReal implements IntakeIO {
                 algaeVoltage,
                 algaeTorqueCurrent,
                 algaeDeviceTemp,
-                coralCANRangeDistance,
-                coralCANRangeIsDetected
+                coralCANRangeDistance
         );
 
         inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();

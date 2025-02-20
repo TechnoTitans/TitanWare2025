@@ -163,7 +163,7 @@ public class FieldConstants {
             );
 
             final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);
-            final Transform2d reefFaceScoringTransform = new Transform2d(Units.inchesToMeters(20), 0, Rotation2d.kPi);
+            final Transform2d reefFaceScoringTransform = new Transform2d(Units.inchesToMeters(17), 0, Rotation2d.kPi);
             for (final Map.Entry<Face, Pose2d> entry : BLUE_CENTER_FACES.entrySet()) {
                 RED_CENTER_FACES.put(entry.getKey(), entry.getValue().relativeTo(RED_ORIGIN));
                 BLUE_CENTER_SCORING_FACES.put(entry.getKey(), entry.getValue().transformBy(reefFaceScoringTransform));
@@ -206,7 +206,7 @@ public class FieldConstants {
                     );
                     final Pose2d rightScoringPose = rightPose.toPose2d().transformBy(
                             new Transform2d(
-                                    Units.inchesToMeters(22),
+                                    Units.inchesToMeters(17),
                                     0,
                                     Rotation2d.k180deg
                             )
@@ -232,7 +232,7 @@ public class FieldConstants {
                     );
                     final Pose2d leftScoringPose = leftPose.toPose2d().transformBy(
                             new Transform2d(
-                                    Units.inchesToMeters(22),
+                                    Units.inchesToMeters(17),
                                     0,
                                     Rotation2d.k180deg
                             )

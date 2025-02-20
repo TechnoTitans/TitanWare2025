@@ -52,6 +52,7 @@ public class Intake extends SubsystemBase {
     public final Trigger isAlgaePresent;
 
     public final DoubleSupplier coralDistanceMeters = this::getCoralDistanceMeters;
+    public final DoubleSupplier coralDistanceIntakeCenterMeters = this::getCoralDistanceFromCenterIntakeMeters;
     public final LinearFilter algaeDetectionCurrentFilter = LinearFilter.movingAverage(16);
 
     public Intake(final Constants.RobotMode mode, final HardwareConstants.IntakeConstants constants) {
@@ -130,6 +131,10 @@ public class Intake extends SubsystemBase {
         return inputs.coralCANRangeDistanceMeters;
     }
 
+    private double getCoralDistanceFromCenterIntakeMeters() {
+        return getCoralDistanceMeters() - 0.1524;
+    }
+
     private boolean isCoralPresent() {
         return getCoralDistanceMeters() < 0.3;
     }
@@ -147,10 +152,12 @@ public class Intake extends SubsystemBase {
     }
 
     public Command scoreCoral() {
-        return toCoralRollerVelocity(-30)
-                .onlyIf(isCoralPresent)
-                .until(isCoralPresent.negate())
-                .withTimeout(4);
+        return Commands.sequence(
+                toInstantCoralRollerVoltage(-9),
+                Commands.waitUntil(isCoralPresent.negate()),
+                Commands.waitSeconds(1),
+                coralInstantStopCommand()
+        ).onlyIf(isCoralPresent);
     }
 
     public Command intakeAlgae() {
@@ -163,6 +170,15 @@ public class Intake extends SubsystemBase {
                 .until(isAlgaePresent.negate())
                 .withTimeout(2)
                 .andThen(algaeInstantStopCommand());
+    }
+
+    public Command toInstantCoralRollerVelocity(final double velocityRotsPerSec) {
+        return runOnce(
+                () -> {
+                    coralRollerVelocitySetpoint = velocityRotsPerSec;
+                    intakeIO.toCoralRollerVelocity(coralRollerVelocitySetpoint);
+                }
+        );
     }
 
     public Command toCoralRollerVelocity(final double velocityRotsPerSec) {
@@ -188,6 +204,12 @@ public class Intake extends SubsystemBase {
                     algaeRollerVelocitySetpoint = 0.0;
                     intakeIO.toAlgaeRollerVelocity(0.0);
                 }
+        );
+    }
+
+    public Command toInstantCoralRollerVoltage(final double volts) {
+        return runOnce(
+                () -> intakeIO.toCoralRollerVoltage(volts)
         );
     }
 
@@ -282,6 +304,7 @@ public class Intake extends SubsystemBase {
     public Command coralVoltageSysIdCommand() {
         return makeRollerSysIdCommand(coralRollerVoltageSysIdRoutine);
     }
+
     public Command coralTorqueCurrentSysIdCommand() {
         return makeRollerSysIdCommand(coralRollerTorqueCurrentSysIdRoutine);
     }
@@ -289,6 +312,7 @@ public class Intake extends SubsystemBase {
     public Command algaeVoltageSysIdCommand() {
         return makeRollerSysIdCommand(algaeRollerVoltageSysIdRoutine);
     }
+
     public Command algaeTorqueCurrentSysIdCommand() {
         return makeRollerSysIdCommand(algaeRollerTorqueCurrentSysIdRoutine);
     }

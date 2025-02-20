@@ -171,8 +171,8 @@ public class ScoreCommands {
                                 .get(scorePosition.level.level);
                         final Transform2d coralDistanceOffset = new Transform2d(
                                 0,
-                                intake.isCoralPresent.getAsBoolean()
-                                        ? intake.coralDistanceMeters.getAsDouble()
+                                gamepieceState.hasCoral.getAsBoolean()
+                                        ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
                                         : 0,
                                 Rotation2d.kZero
                         );
@@ -196,47 +196,7 @@ public class ScoreCommands {
     }
 
     private Command readySuperstructureScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
-        return Commands.repeatingSequence(
-                Commands.either(
-                        Commands.defer(
-                                () -> {
-                                    final ScorePosition scorePosition = scorePositionSupplier.get();
-                                    final Optional<Superstructure.Goal> superstructureGoal =
-                                            getClosestProfileStartGoal();
-
-                                    final Optional<SplineProfile> splineProfile;
-                                    if (superstructureGoal.isPresent()) {
-                                        splineProfile = Profiles.getProfile(
-                                                superstructureGoal.get(),
-                                                scorePosition.level.goal
-                                        );
-                                    } else {
-                                        splineProfile = Optional.empty();
-                                    }
-
-                                    final BooleanSupplier desiredScorePositionNotEqualLast =
-                                            () -> !scorePosition.equals(scorePositionSupplier.get());
-
-                                    if (splineProfile.isEmpty()) {
-                                        return Commands.idle().until(desiredScorePositionNotEqualLast);
-                                    } else {
-                                        return superstructure.runProfile(splineProfile.get())
-                                                .until(desiredScorePositionNotEqualLast);
-                                    }
-                                },
-                                superstructure.getRequirements()
-                        ),
-                        Commands.defer(
-                                () -> superstructure.runUntilSuperstructureGoal(
-                                        scorePositionSupplier.get().level.goal
-                                ).withTimeout(4),
-                                superstructure.getRequirements()
-                        ),
-                        () -> ScoreCommands.ScoreGoals.contains(
-                                superstructure.getCurrentSuperstructureGoal()
-                        )
-                )
-        );
+        return superstructure.runUntilSuperstructureGoal(() -> scorePositionSupplier.get().level.goal);
     }
 
     public Command readyScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
@@ -256,7 +216,7 @@ public class ScoreCommands {
     public Command scoreAtPosition(final Supplier<ScorePosition> scorePosition) {
         return Commands.deadline(
                 Commands.sequence(
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(2),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
                         intake.scoreCoral()
                 ),
                 Commands.defer(

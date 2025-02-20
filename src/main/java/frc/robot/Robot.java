@@ -320,13 +320,13 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-        driverController.y(testEventLoop).whileTrue(
-                intakeArm.pivotVoltageSysIdCommand()
-        );
-
 //        driverController.y(testEventLoop).whileTrue(
-//                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+//                intakeArm.pivotVoltageSysIdCommand()
 //        );
+
+        driverController.y(testEventLoop).whileTrue(
+                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+        );
         driverController.a(testEventLoop).whileTrue(
                 swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
         );
