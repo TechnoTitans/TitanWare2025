@@ -9,9 +9,9 @@ import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.SimCameraProperties;
 
 public enum TitanCamera {
-    PHOTON_FL_APRILTAG(
-            "FL_Apriltag",
-            Constants.Vision.ROBOT_TO_FL_APRILTAG,
+    PHOTON_FR_APRILTAG(
+            "FR_Apriltag",
+            Constants.Vision.ROBOT_TO_FR_APRILTAG,
             CameraProperties.SEE3CAM_24CUG,
             1.0,
             true,
@@ -56,6 +56,98 @@ public enum TitanCamera {
                     .withLatency(
                             CameraProperties.Resolution.R1920x1080,
                             7,
+                            3
+                    ),
+            false
+    ),
+    PHOTON_FL_TOP_APRILTAG(
+            "FL_TOP_Apriltag",
+            Constants.Vision.ROBOT_TO_FL_TOP_APRILTAG,
+            CameraProperties.SEE3CAM_24CUG,
+            1.0,
+            true,
+            new TitanCameraCalibration()
+                    .withCalibration(
+                            CameraProperties.Resolution.R1920x1080,
+                            MatBuilder.fill(
+                                    Nat.N3(),
+                                    Nat.N3(),
+                                    // intrinsic
+                                    1040.7268360455328,
+                                    0.0,
+                                    988.2378226542257,
+                                    0.0,
+                                    1040.4068711002674,
+                                    544.230023439286,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                            ),
+                            //TODO: We had 5 before, now it wants 8. I just put 0s for them for now
+                            VecBuilder.fill( // distort
+                                    -0.35148800442491696,
+                                    0.16199158054202314,
+                                    0.0003847806133909519,
+                                    0.000042723769639477994,
+                                    -0.042523738490321664,
+                                    0,
+                                    0,
+                                    0
+                            )
+                    )
+                    .withCalibrationError(
+                            CameraProperties.Resolution.R1920x1080,
+                            0.15223032073535464,
+                            0.06
+                    )
+                    .withFPS(
+                            CameraProperties.Resolution.R1920x1080,
+                            60
+                    )
+                    .withLatency(
+                            CameraProperties.Resolution.R1920x1080,
+                            7,
+                            3
+                    ),
+            false
+    ),
+    PHOTON_FL_BOTTOM_APRILTAG(
+            "FL_BOTTOM_Apriltag",
+            Constants.Vision.ROBOT_TO_FL_BOTTOM_APRILTAG,
+            CameraProperties.ARDUCAM_OV9281,
+            2.5,
+            true,
+            new TitanCameraCalibration()
+                    .withCalibration(
+                            CameraProperties.Resolution.R640x480,
+                            MatBuilder.fill(
+                                    Nat.N3(),
+                                    Nat.N3(),
+                                    // intrinsic
+                                    1040.7268360455328,
+                                    0.0,
+                                    988.2378226542257,
+                                    0.0,
+                                    1040.4068711002674,
+                                    544.230023439286,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                            ),
+                            SimCameraProperties.PERFECT_90DEG().getDistCoeffs()
+                    )
+                    .withCalibrationError(
+                            CameraProperties.Resolution.R640x480,
+                            0.54,
+                            0.06
+                    )
+                    .withFPS(
+                            CameraProperties.Resolution.R640x480,
+                            130
+                    )
+                    .withLatency(
+                            CameraProperties.Resolution.R640x480,
+                            6,
                             3
                     ),
             false

@@ -1,6 +1,8 @@
 # This gitignore has been specially created by the WPILib team.
 # If you remove items from this file, intellisense might break.
 
+src/main/java/frc/robot/BuildConstants.java
+
 # Ignore wpilib, ctre(hoot) logs
 *.wpilog
 *.hoot
@@ -174,8 +176,7 @@ out/
 
 # Simulation GUI and other tools window save file
 networktables.json
-simgui.json
-*-window.json
+simgui*.json
 
 # Simulation data log directory
 logs/
@@ -189,3 +190,4 @@ compile_commands.json
 
 # Eclipse generated file for annotation processors
 .factorypath
+userAssets/

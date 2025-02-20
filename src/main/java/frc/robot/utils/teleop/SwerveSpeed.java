@@ -6,7 +6,7 @@ public class SwerveSpeed {
     public enum Speeds {
         FAST(Units.feetToMeters(15), 2 * Math.PI),
         NORMAL(Units.feetToMeters(12), 1.5 * Math.PI),
-        SLOW(Units.feetToMeters(3), 0.2 * Math.PI);
+        SLOW(Units.feetToMeters(3), 0.8 * Math.PI);
 
         private final double translationSpeed;
         private final double rotationSpeed;

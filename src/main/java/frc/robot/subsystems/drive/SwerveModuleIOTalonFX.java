@@ -57,6 +57,8 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     private final StatusSignal<Current> turnTorqueCurrent;
     private final StatusSignal<Temperature> turnDeviceTemp;
 
+
+
     // Odometry StatusSignal update buffers
     private final DoubleCircularBuffer timestampBuffer;
     private final DoubleCircularBuffer drivePositionSignalBuffer;
@@ -100,22 +102,23 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     public void config() {
         // TODO: check StatusCode of some/most of these blocking config calls... maybe retry if failed?
         final CANcoderConfiguration canCoderConfiguration = new CANcoderConfiguration();
-        canCoderConfiguration.MagnetSensor.MagnetOffset = -magnetOffset;
+        canCoderConfiguration.MagnetSensor.MagnetOffset = magnetOffset;
         canCoderConfiguration.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
         turnEncoder.getConfigurator().apply(canCoderConfiguration);
 
         // TODO: drive and azimuth gains both need to be re-tuned
         driveTalonFXConfiguration.Slot0 = new Slot0Configs()
-                .withKS(3.239825)
+                .withKS(2.2557)
                 .withKV(0)
-                .withKA(1.34145)
+                .withKA(3.1912)
                 .withKP(42);
         driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
         driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
         driveTalonFXConfiguration.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.2;
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        driveTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         driveMotor.getConfigurator().apply(driveTalonFXConfiguration);
 
         turnTalonFXConfiguration.Slot0 = new Slot0Configs()
@@ -131,9 +134,12 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         turnTalonFXConfiguration.Feedback.RotorToSensorRatio = turnReduction;
         turnTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         turnTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        turnTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         turnMotor.getConfigurator().apply(turnTalonFXConfiguration);
 
+        velocityTorqueCurrentFOC.UseTimesync = true;
         velocityTorqueCurrentFOC.UpdateFreqHz = 0;
+        positionVoltage.UseTimesync = true;
         positionVoltage.UpdateFreqHz = 0;
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -143,12 +149,15 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         );
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
-                this.driveVelocity,
-                this.driveTorqueCurrent,
-                this.driveDeviceTemp,
-                this.turnVelocity,
-                this.turnTorqueCurrent,
-                this.turnDeviceTemp
+                driveVelocity,
+                driveTorqueCurrent,
+                turnVelocity,
+                turnTorqueCurrent
+        );
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                4,
+                driveDeviceTemp,
+                turnDeviceTemp
         );
         ParentDevice.optimizeBusUtilizationForAll(driveMotor, turnMotor, turnEncoder);
     }

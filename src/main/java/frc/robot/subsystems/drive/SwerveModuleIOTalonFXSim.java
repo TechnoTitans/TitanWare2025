@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Angle;
@@ -29,7 +30,7 @@ import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
 import frc.robot.utils.sim.SimUtils;
-import frc.robot.utils.sim.feedback.SimPhoenix6CANCoder;
+import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import static frc.robot.subsystems.drive.constants.SwerveConstants.Config;
@@ -123,7 +124,7 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
                 turnDCMotorSim::getAngularPositionRad,
                 turnDCMotorSim::getAngularVelocityRadPerSec
         );
-        this.turnSim.attachFeedbackSensor(new SimPhoenix6CANCoder(turnEncoder));
+        this.turnSim.attachFeedbackSensor(new SimCANCoder(turnEncoder));
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
         this.positionVoltage = new PositionVoltage(0);
@@ -164,26 +165,25 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
     @Override
     public void config() {
         final CANcoderConfiguration canCoderConfiguration = new CANcoderConfiguration();
-        canCoderConfiguration.MagnetSensor.MagnetOffset = -magnetOffset;
+        canCoderConfiguration.MagnetSensor.MagnetOffset = magnetOffset;
         canCoderConfiguration.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
         turnEncoder.getConfigurator().apply(canCoderConfiguration);
 
         // TODO: I think we need to look at VoltageConfigs and/or CurrentLimitConfigs for limiting the
         //  current we can apply in sim, this is cause we use VelocityVoltage in sim instead of VelocityTorqueCurrentFOC
         //  which means that TorqueCurrent.PeakForwardTorqueCurrent and related won't affect it
-        final InvertedValue driveInvertedValue = InvertedValue.Clockwise_Positive;
         driveTalonFXConfiguration.Slot0 = new Slot0Configs()
-                .withKP(50)
-                .withKS(4.796)
-                .withKA(2.549);
-        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
-        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
-        driveTalonFXConfiguration.CurrentLimits.StatorCurrentLimit = 80;
-        driveTalonFXConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
+                .withKS(2.2557)
+                .withKV(0)
+                .withKA(3.1912)
+                .withKP(42);
+        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
+        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
         driveTalonFXConfiguration.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.2;
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        driveTalonFXConfiguration.MotorOutput.Inverted = driveInvertedValue;
+        driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        driveTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         driveMotor.getConfigurator().apply(driveTalonFXConfiguration);
 
         final InvertedValue turnInvertedValue = InvertedValue.Clockwise_Positive;
@@ -202,10 +202,9 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
         velocityTorqueCurrentFOC.UpdateFreqHz = 0;
         positionVoltage.UpdateFreqHz = 0;
 
-        // TODO: this fix for CANCoder initialization in sim doesn't seem to work all the time...investigate!
-//      SimUtils.initializeCTRECANCoderSim(turnEncoder);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(driveMotor, driveInvertedValue);
-        SimUtils.setCTRETalonFXSimStateMotorInverted(turnMotor, turnInvertedValue);
+        turnEncoder.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+        driveMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
+        turnMotor.getSimState().Orientation = ChassisReference.Clockwise_Positive;
     }
 
     @SuppressWarnings("DuplicatedCode")
