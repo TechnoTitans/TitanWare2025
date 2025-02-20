@@ -172,19 +172,18 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
         // TODO: I think we need to look at VoltageConfigs and/or CurrentLimitConfigs for limiting the
         //  current we can apply in sim, this is cause we use VelocityVoltage in sim instead of VelocityTorqueCurrentFOC
         //  which means that TorqueCurrent.PeakForwardTorqueCurrent and related won't affect it
-        final InvertedValue driveInvertedValue = InvertedValue.Clockwise_Positive;
         driveTalonFXConfiguration.Slot0 = new Slot0Configs()
-                .withKP(50)
-                .withKS(4.796)
-                .withKA(2.549);
-        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
-        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
-        driveTalonFXConfiguration.CurrentLimits.StatorCurrentLimit = 80;
-        driveTalonFXConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
+                .withKS(2.2557)
+                .withKV(0)
+                .withKA(3.1912)
+                .withKP(42);
+        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
+        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
         driveTalonFXConfiguration.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.2;
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        driveTalonFXConfiguration.MotorOutput.Inverted = driveInvertedValue;
+        driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        driveTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         driveMotor.getConfigurator().apply(driveTalonFXConfiguration);
 
         final InvertedValue turnInvertedValue = InvertedValue.Clockwise_Positive;

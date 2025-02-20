@@ -14,16 +14,18 @@ public class FieldConstants {
     public static final double FIELD_WIDTH_Y_METERS = Units.inchesToMeters(317);
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
+    private static final double SCORING_DISTANCE_OFFSET_METERS = Units.inchesToMeters(19);
+
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =
                 new Pose2d(Units.inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90));
         public static final Pose2d RED_CENTER_FACE = BLUE_CENTER_FACE.relativeTo(RED_ORIGIN);
 
         public static final Pose2d BLUE_SCORING_POSE = BLUE_CENTER_FACE.transformBy(
-                new Transform2d(Units.inchesToMeters(20), 0, Rotation2d.k180deg)
+                new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
         );
         public static final Pose2d RED_SCORING_POSE = RED_CENTER_FACE.transformBy(
-                new Transform2d(Units.inchesToMeters(20), 0, Rotation2d.k180deg)
+                new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
         );
     }
 
@@ -163,7 +165,7 @@ public class FieldConstants {
             );
 
             final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);
-            final Transform2d reefFaceScoringTransform = new Transform2d(Units.inchesToMeters(17), 0, Rotation2d.kPi);
+            final Transform2d reefFaceScoringTransform = new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.kPi);
             for (final Map.Entry<Face, Pose2d> entry : BLUE_CENTER_FACES.entrySet()) {
                 RED_CENTER_FACES.put(entry.getKey(), entry.getValue().relativeTo(RED_ORIGIN));
                 BLUE_CENTER_SCORING_FACES.put(entry.getKey(), entry.getValue().transformBy(reefFaceScoringTransform));
@@ -206,7 +208,7 @@ public class FieldConstants {
                     );
                     final Pose2d rightScoringPose = rightPose.toPose2d().transformBy(
                             new Transform2d(
-                                    Units.inchesToMeters(17),
+                                    SCORING_DISTANCE_OFFSET_METERS,
                                     0,
                                     Rotation2d.k180deg
                             )
@@ -232,7 +234,7 @@ public class FieldConstants {
                     );
                     final Pose2d leftScoringPose = leftPose.toPose2d().transformBy(
                             new Transform2d(
-                                    Units.inchesToMeters(17),
+                                    SCORING_DISTANCE_OFFSET_METERS,
                                     0,
                                     Rotation2d.k180deg
                             )

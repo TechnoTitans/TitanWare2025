@@ -12,12 +12,10 @@ import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Profiles;
-import frc.robot.subsystems.superstructure.SplineProfile;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.teleop.SwerveSpeed;
 
 import java.util.*;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -196,7 +194,7 @@ public class ScoreCommands {
     }
 
     private Command readySuperstructureScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
-        return superstructure.runUntilSuperstructureGoal(() -> scorePositionSupplier.get().level.goal);
+        return superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level().goal);
     }
 
     public Command readyScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
@@ -216,7 +214,7 @@ public class ScoreCommands {
     public Command scoreAtPosition(final Supplier<ScorePosition> scorePosition) {
         return Commands.deadline(
                 Commands.sequence(
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(5),
                         intake.scoreCoral()
                 ),
                 Commands.defer(

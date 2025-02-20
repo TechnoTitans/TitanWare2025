@@ -7,7 +7,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -18,7 +17,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.Measure;
@@ -154,13 +152,7 @@ public class Swerve extends SubsystemBase {
         this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
                 new PIDController(4, 0, 0),
                 new PIDController(4, 0, 0),
-                new ProfiledPIDController(
-                        headingController.getP(), headingController.getI(), headingController.getD(),
-                        new TrapezoidProfile.Constraints(
-                                Config.maxAngularVelocityRadsPerSec() * 0.95,
-                                Config.maxAngularAccelerationRadsPerSecSquared() * 0.75
-                        )
-                ),
+                headingController,
                 new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6))
         );
         this.atHolonomicDrivePose = new Trigger(holonomicDriveWithPIDController::atReference);

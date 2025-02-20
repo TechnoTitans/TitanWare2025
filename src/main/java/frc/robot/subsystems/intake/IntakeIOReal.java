@@ -15,10 +15,6 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
-import edu.wpi.first.units.BaseUnits;
-import edu.wpi.first.units.DistanceUnit;
-import edu.wpi.first.units.Unit;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 
@@ -81,7 +77,7 @@ public class IntakeIOReal implements IntakeIO {
                 .withKV(0.14182)
                 .withKA(0.090762)
                 .withKP(10);
-        coralConfiguration.CurrentLimits.StatorCurrentLimit = 25;
+        coralConfiguration.CurrentLimits.StatorCurrentLimit = 35;
         coralConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         coralConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
         coralConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
