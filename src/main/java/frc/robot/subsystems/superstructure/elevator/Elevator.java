@@ -78,7 +78,7 @@ public class Elevator extends SubsystemBase {
     public enum Goal {
         DYNAMIC(0),
         IDLE(0),
-        HP(0.07),
+        HP(0.065),
         ALGAE_GROUND(0),
         LOWER_ALGAE(0.16),
         UPPER_ALGAE(0.5),

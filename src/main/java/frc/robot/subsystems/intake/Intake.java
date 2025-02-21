@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Current;
@@ -121,6 +122,8 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/FilteredAlgae", getFilteredAlgaeCurrent());
         Logger.recordOutput(LogKey + "/isAlgaePresent", isAlgaePresent);
 
+        Logger.recordOutput(LogKey + "/CoralDistanceFromCenterIntakeMeters", getCoralDistanceFromCenterIntakeMeters());
+
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - intakePeriodicUpdateStart)
@@ -132,7 +135,7 @@ public class Intake extends SubsystemBase {
     }
 
     private double getCoralDistanceFromCenterIntakeMeters() {
-        return getCoralDistanceMeters() - 0.1524;
+        return getCoralDistanceMeters() - Units.inchesToMeters(0.25) - Units.inchesToMeters(0.25) + Units.inchesToMeters(4.5/2) - Units.inchesToMeters(11.5/2);
     }
 
     private boolean isCoralPresent() {
@@ -155,7 +158,7 @@ public class Intake extends SubsystemBase {
         return Commands.sequence(
                 toInstantCoralRollerVoltage(-9),
                 Commands.waitUntil(isCoralPresent.negate()),
-                Commands.waitSeconds(1),
+                Commands.waitSeconds(0.5),
                 coralInstantStopCommand()
         ).onlyIf(isCoralPresent);
     }

@@ -150,10 +150,10 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
-                new PIDController(4, 0, 0),
-                new PIDController(4, 0, 0),
+                new PIDController(3, 0, 0),
+                new PIDController(3, 0, 0),
                 headingController,
-                new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6))
+                new Pose2d(0.07, 0.07, Rotation2d.fromDegrees(6))
         );
         this.atHolonomicDrivePose = new Trigger(holonomicDriveWithPIDController::atReference);
 

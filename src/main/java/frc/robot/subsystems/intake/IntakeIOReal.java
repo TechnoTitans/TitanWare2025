@@ -16,7 +16,9 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.CAN;
 import frc.robot.constants.HardwareConstants;
+import org.littletonrobotics.junction.Logger;
 
 public class IntakeIOReal implements IntakeIO {
     private final HardwareConstants.IntakeConstants constants;
@@ -42,6 +44,7 @@ public class IntakeIOReal implements IntakeIO {
     private final StatusSignal<Current> algaeTorqueCurrent;
     private final StatusSignal<Temperature> algaeDeviceTemp;
     private final StatusSignal<Distance> coralCANRangeDistance;
+    private final StatusSignal<Double> coralCANSignalStrength;
 
     public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
         this.constants = constants;
@@ -67,6 +70,7 @@ public class IntakeIOReal implements IntakeIO {
         this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
         this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
         this.coralCANRangeDistance = coralCANRange.getDistance();
+        this.coralCANSignalStrength = coralCANRange.getSignalStrength();
     }
 
     @Override
@@ -77,7 +81,7 @@ public class IntakeIOReal implements IntakeIO {
                 .withKV(0.14182)
                 .withKA(0.090762)
                 .withKP(10);
-        coralConfiguration.CurrentLimits.StatorCurrentLimit = 35;
+        coralConfiguration.CurrentLimits.StatorCurrentLimit = 30;
         coralConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         coralConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
         coralConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
@@ -112,6 +116,7 @@ public class IntakeIOReal implements IntakeIO {
         final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
         CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRangeUserFreq;
         CANRangeConfiguration.ToFParams.UpdateFrequency = 50;
+        CANRangeConfiguration.ProximityParams.MinSignalStrengthForValidMeasurement = 20000;
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -126,7 +131,8 @@ public class IntakeIOReal implements IntakeIO {
                 algaeAcceleration,
                 algaeVoltage,
                 algaeTorqueCurrent,
-                coralCANRangeDistance
+                coralCANRangeDistance,
+                coralCANSignalStrength
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -159,6 +165,8 @@ public class IntakeIOReal implements IntakeIO {
                 algaeDeviceTemp,
                 coralCANRangeDistance
         );
+
+        Logger.recordOutput(Intake.LogKey + "/SignalStrength", coralCANSignalStrength.getValue());
 
         inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();
         inputs.coralRollerVelocityRotsPerSec = coralVelocity.getValueAsDouble();
