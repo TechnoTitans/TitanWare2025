@@ -14,7 +14,7 @@ public class FieldConstants {
     public static final double FIELD_WIDTH_Y_METERS = Units.inchesToMeters(317);
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
-    private static final double SCORING_DISTANCE_OFFSET_METERS = Units.inchesToMeters(20.25);
+    private static final double SCORING_DISTANCE_OFFSET_METERS = Units.inchesToMeters(20.5);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =

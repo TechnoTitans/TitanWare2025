@@ -225,7 +225,8 @@ public class ScoreCommands {
                         ),
                         swerve.runWheelXCommand()
                 ),
-                Commands.waitSeconds(1)).withName("ScoreAtPositionTeleop");
+                Commands.waitSeconds(1)
+        ).withName("ScoreAtPositionTeleop");
     }
 
     public Command readyScoreProcessor() {
