@@ -168,7 +168,7 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isAlgaePresent() {
-        return getFilteredAlgaeCurrent() >= 30;
+        return getFilteredAlgaeCurrent() >= 50;
     }
 
     public Command intakeCoralHP() {
@@ -236,6 +236,15 @@ public class Intake extends SubsystemBase {
                 () -> {
                     coralRollerVoltageSetpoint = volts;
                     intakeIO.toCoralRollerVoltage(volts);
+                }
+        ).withName("ToInstantCoralRollerVoltage");
+    }
+
+    public Command toInstantAlgaeRollerVoltage(final double volts) {
+        return runOnce(
+                () -> {
+                    algaeRollerVoltageSetpoint = volts;
+                    intakeIO.toAlgaeRollerVoltage(volts);
                 }
         ).withName("ToInstantCoralRollerVoltage");
     }

@@ -456,8 +456,7 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(coDriverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(coDriverScorePositionSupplier));
 
-        this.coController.x(teleopEventLoop)
-                .whileTrue(scoreCommands.intakeAlgaeFromGround());
+        this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
 
         this.coController.y(teleopEventLoop).whileTrue(scoreCommands.readyIntakeUpperAlgae());
 

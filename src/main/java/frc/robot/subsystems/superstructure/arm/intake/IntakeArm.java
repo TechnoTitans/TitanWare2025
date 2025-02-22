@@ -72,7 +72,7 @@ public class IntakeArm extends SubsystemBase {
     public enum Goal {
         STOW(0),
         HP(0),
-        ALGAE_GROUND(-0.25),
+        ALGAE_GROUND(-0.35),
         ALGAE_REEF(-0.25),
         CLIMB(-0.36),
         NET(-0.15),

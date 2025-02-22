@@ -95,7 +95,7 @@ public class GamepieceState extends VirtualSubsystem {
         intake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setCoralState(State.NONE));
         intake.isCoralPresent.onTrue(setCoralState(State.HOLDING));
 
-        isCoralHolding.onTrue(intake.toCoralRollerVoltage(3));
+        isCoralHolding.onTrue(intake.toInstantCoralRollerVoltage(3));
 
         intake.isCoralOuttaking.and(isCoralHolding).onTrue(setCoralState(State.SCORING));
         intake.isCoralOuttaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.NONE));
@@ -103,6 +103,9 @@ public class GamepieceState extends VirtualSubsystem {
         intake.isAlgaeIntaking.and(hasAlgae.negate()).onTrue(setAlgaeState(State.INTAKING));
         intake.isAlgaeIntaking.negate().and(isAlgaeIntaking).onTrue(setAlgaeState(State.NONE));
         intake.isAlgaePresent.onTrue(setAlgaeState(State.HOLDING));
+
+        isAlgaeHolding.onTrue(intake.toInstantAlgaeRollerVoltage(5));
+
         intake.isAlgaeOuttaking.and(isAlgaeHolding).onTrue(setAlgaeState(State.SCORING));
         intake.isAlgaeOuttaking.and(intake.isAlgaePresent.negate()).onTrue(setAlgaeState(State.NONE));
     }

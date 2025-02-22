@@ -278,7 +278,7 @@ public class ScoreCommands {
         return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.ALGAE_GROUND),
                 intake.intakeAlgae()
-        ).until(intake.isAlgaePresent);
+        );
     }
 
     public Command readyScoreNet(final DoubleSupplier leftStickXInput) {
