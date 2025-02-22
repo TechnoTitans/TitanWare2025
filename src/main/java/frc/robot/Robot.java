@@ -440,13 +440,13 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(driverScorePositionSupplier));
 
-        this.driverController.a(teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
-                .onFalse(scoreCommands.scoreNet());
+//        this.driverController.a(teleopEventLoop)
+//                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
+//                .onFalse(scoreCommands.scoreNet());
 
-        this.driverController.b(teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreProcessor())
-                .onFalse(scoreCommands.scoreProcessor());
+//        this.driverController.b(teleopEventLoop)
+//                .whileTrue(scoreCommands.readyScoreProcessor())
+//                .onFalse(scoreCommands.scoreProcessor());
 
         this.driverController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftX, driverController::getLeftY))
