@@ -80,8 +80,8 @@ public class Elevator extends SubsystemBase {
         IDLE(0),
         HP(0.065),
         ALGAE_GROUND(0),
-        LOWER_ALGAE(0.16),
-        UPPER_ALGAE(0.5),
+        LOWER_ALGAE(0.0623),
+        UPPER_ALGAE(0.35),
         L1(0),
         L2(0.03),
         L3(0.394),
@@ -153,7 +153,6 @@ public class Elevator extends SubsystemBase {
 
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
-        Logger.recordOutput(LogKey + "/ElevatorMetersFromDrumRots", drumRotsToElevatorMeters(inputs.masterPositionRots));
         Logger.recordOutput(LogKey + "/PositionSetpoint/PositionRots", setpoint.elevatorPositionRots);
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atLowerLimit());
@@ -164,10 +163,6 @@ public class Elevator extends SubsystemBase {
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - elevatorPeriodicUpdateStart)
         );
-    }
-
-    private double drumRotsToElevatorMeters(final double rots) {
-        return rots * (constants.spoolDiameterMeters() * Math.PI);
     }
 
     public boolean atGoal(final Goal goal) {

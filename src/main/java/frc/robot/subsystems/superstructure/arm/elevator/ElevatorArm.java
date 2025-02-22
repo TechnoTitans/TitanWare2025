@@ -75,14 +75,14 @@ public class ElevatorArm extends SubsystemBase {
         UPRIGHT(Units.degreesToRotations(45)),
         HP(Units.degreesToRotations(33)),
         ALGAE_GROUND(Units.radiansToRotations(0)),
-        LOWER_ALGAE(Units.radiansToRotations(0.540)),
-        UPPER_ALGAE(Units.radiansToRotations(.750)),
+        LOWER_ALGAE(0.0615),
+        UPPER_ALGAE(0.106),
         L1(0.10986),
         L2(0.126),
         L3(0.1536),
         L4(0.1707),
         CLIMB(0.19),
-        CLIMB_DOWN(-6);
+        CLIMB_DOWN(-4.5);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {
@@ -135,7 +135,8 @@ public class ElevatorArm extends SubsystemBase {
                 elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
             }
             if (desiredGoal == Goal.CLIMB_DOWN) {
-                elevatorArmIO.toPivotVoltage(setpoint.pivotPositionRots);
+                setpoint.pivotPositionRots = 0;
+                elevatorArmIO.toPivotVoltage(desiredGoal.pivotPositionGoalRots);
             }
 
             this.currentGoal = desiredGoal;

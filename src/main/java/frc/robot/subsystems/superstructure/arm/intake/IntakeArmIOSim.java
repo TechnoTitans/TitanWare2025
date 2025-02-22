@@ -42,7 +42,6 @@ public class IntakeArmIOSim implements IntakeArmIO {
 
     private final StatusSignal<Angle> pivotPosition;
     private final StatusSignal<AngularVelocity> pivotVelocity;
-    private final StatusSignal<AngularAcceleration> pivotAcceleration;
     private final StatusSignal<Voltage> pivotVoltage;
     private final StatusSignal<Current> pivotTorqueCurrent;
     private final StatusSignal<Temperature> pivotDeviceTemp;
@@ -86,7 +85,6 @@ public class IntakeArmIOSim implements IntakeArmIO {
 
         this.pivotPosition = pivotMotor.getPosition();
         this.pivotVelocity = pivotMotor.getVelocity();
-        this.pivotAcceleration = pivotMotor.getAcceleration();
         this.pivotVoltage = pivotMotor.getMotorVoltage();
         this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent();
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
@@ -141,7 +139,6 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 100,
                 pivotPosition,
                 pivotVelocity,
-                pivotAcceleration,
                 pivotVoltage,
                 pivotTorqueCurrent,
                 encoderPosition,
@@ -168,7 +165,6 @@ public class IntakeArmIOSim implements IntakeArmIO {
         BaseStatusSignal.refreshAll(
                 pivotPosition,
                 pivotVelocity,
-                pivotAcceleration,
                 pivotVoltage,
                 pivotTorqueCurrent,
                 pivotDeviceTemp,
@@ -178,7 +174,6 @@ public class IntakeArmIOSim implements IntakeArmIO {
 
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
-        inputs.pivotAccelerationRotsPerSec2 = pivotAcceleration.getValueAsDouble();
         inputs.pivotVoltage = pivotVoltage.getValueAsDouble();
         inputs.pivotTorqueCurrentAmps = pivotTorqueCurrent.getValueAsDouble();
         inputs.pivotTempCelsius = pivotDeviceTemp.getValueAsDouble();

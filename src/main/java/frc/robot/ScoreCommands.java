@@ -260,47 +260,17 @@ public class ScoreCommands {
         );
     }
 
-    public Command readyIntakeLowerAlgae() {
-        return Commands.sequence(
-                driveToClosestReefScoringFace(),
-                Commands.parallel(
-                        swerve.runWheelXCommand(),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE)
-                )
-        );
-    }
-
     public Command intakeLowerAlgae() {
-        return Commands.deadline(
-                Commands.sequence(
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.intakeAlgae(),
-                        Commands.waitUntil(intake.isAlgaePresent)
-                ),
+        return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
-                swerve.runWheelXCommand()
+                intake.intakeAlgae()
         );
     }
 
     public Command readyIntakeUpperAlgae() {
-        return Commands.sequence(
-                driveToClosestReefScoringFace(),
-                Commands.parallel(
-                        swerve.runWheelXCommand(),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE)
-                )
-        );
-    }
-
-    public Command intakeUpperAlgae() {
-        return Commands.deadline(
-                Commands.sequence(
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.intakeAlgae(),
-                        Commands.waitUntil(intake.isAlgaePresent)
-                ),
+        return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
-                swerve.runWheelXCommand()
+                intake.intakeAlgae()
         );
     }
 

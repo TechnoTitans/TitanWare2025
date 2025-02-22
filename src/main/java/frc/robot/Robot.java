@@ -320,13 +320,13 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-//        driverController.y(testEventLoop).whileTrue(
-//                intakeArm.pivotVoltageSysIdCommand()
-//        );
-
         driverController.y(testEventLoop).whileTrue(
-                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+                intake.algaeTorqueCurrentSysIdCommand()
         );
+
+//        driverController.y(testEventLoop).whileTrue(
+//                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+//        );
         driverController.a(testEventLoop).whileTrue(
                 swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
         );
@@ -459,12 +459,8 @@ public class Robot extends LoggedRobot {
         this.coController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.intakeAlgaeFromGround());
 
-        this.coController.a(teleopEventLoop)
-                .whileTrue(scoreCommands.readyIntakeLowerAlgae())
-                .onFalse(scoreCommands.intakeLowerAlgae());
+        this.coController.y(teleopEventLoop).whileTrue(scoreCommands.readyIntakeUpperAlgae());
 
-        this.coController.y(teleopEventLoop)
-                .whileTrue(scoreCommands.readyIntakeUpperAlgae())
-                .onFalse(scoreCommands.intakeUpperAlgae());
+        this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
     }
 }

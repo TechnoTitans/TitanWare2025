@@ -185,7 +185,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeAlgae() {
-        return toAlgaeRollerVelocity(3).withName("IntakeAlgae");
+        return toAlgaeRollerVelocity(15).withName("IntakeAlgae");
     }
 
     public Command scoreAlgae() {

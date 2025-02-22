@@ -46,13 +46,11 @@ public class IntakeIOSim implements IntakeIO {
 
     private final StatusSignal<Angle> coralPosition;
     private final StatusSignal<AngularVelocity> coralVelocity;
-    private final StatusSignal<AngularAcceleration> coralAcceleration;
     private final StatusSignal<Voltage> coralVoltage;
     private final StatusSignal<Current> coralTorqueCurrent;
     private final StatusSignal<Temperature> coralDeviceTemp;
     private final StatusSignal<Angle> algaePosition;
     private final StatusSignal<AngularVelocity> algaeVelocity;
-    private final StatusSignal<AngularAcceleration> algaeAcceleration;
     private final StatusSignal<Voltage> algaeVoltage;
     private final StatusSignal<Current> algaeTorqueCurrent;
     private final StatusSignal<Temperature> algaeDeviceTemp;
@@ -105,13 +103,11 @@ public class IntakeIOSim implements IntakeIO {
 
         this.coralPosition = coralRollerMotor.getPosition();
         this.coralVelocity = coralRollerMotor.getVelocity();
-        this.coralAcceleration = coralRollerMotor.getAcceleration();
         this.coralVoltage = coralRollerMotor.getMotorVoltage();
         this.coralTorqueCurrent = coralRollerMotor.getTorqueCurrent();
         this.coralDeviceTemp = coralRollerMotor.getDeviceTemp();
         this.algaePosition = algaeRollerMotor.getPosition();
         this.algaeVelocity = algaeRollerMotor.getVelocity();
-        this.algaeAcceleration = algaeRollerMotor.getAcceleration();
         this.algaeVoltage = algaeRollerMotor.getMotorVoltage();
         this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
         this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
@@ -178,12 +174,10 @@ public class IntakeIOSim implements IntakeIO {
                 100,
                 coralPosition,
                 coralVelocity,
-                coralAcceleration,
                 coralVoltage,
                 coralTorqueCurrent,
                 algaePosition,
                 algaeVelocity,
-                algaeAcceleration,
                 algaeVoltage,
                 algaeTorqueCurrent,
                 coralCANRangeDistance,
@@ -212,13 +206,11 @@ public class IntakeIOSim implements IntakeIO {
         BaseStatusSignal.refreshAll(
                 coralPosition,
                 coralVelocity,
-                coralAcceleration,
                 coralVoltage,
                 coralTorqueCurrent,
                 coralDeviceTemp,
                 algaePosition,
                 algaeVelocity,
-                algaeAcceleration,
                 algaeVoltage,
                 algaeTorqueCurrent,
                 algaeDeviceTemp,
@@ -228,13 +220,11 @@ public class IntakeIOSim implements IntakeIO {
 
         inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();
         inputs.coralRollerVelocityRotsPerSec = coralVelocity.getValueAsDouble();
-        inputs.coralRollerAccelerationRotsPerSec2 = coralAcceleration.getValueAsDouble();
         inputs.coralRollerVoltage = coralVoltage.getValueAsDouble();
         inputs.coralRollerTorqueCurrentAmps = coralTorqueCurrent.getValueAsDouble();
         inputs.coralRollerTempCelsius = coralDeviceTemp.getValueAsDouble();
         inputs.algaeRollerPositionRots = algaePosition.getValueAsDouble();
         inputs.algaeRollerVelocityRotsPerSec = algaeVelocity.getValueAsDouble();
-        inputs.algaeRollerAccelerationRotsPerSec2 = algaeAcceleration.getValueAsDouble();
         inputs.algaeRollerVoltage = algaeVoltage.getValueAsDouble();
         inputs.algaeRollerTorqueCurrentAmps = algaeTorqueCurrent.getValueAsDouble();
         inputs.algaeRollerTempCelsius = algaeDeviceTemp.getValueAsDouble();
