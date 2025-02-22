@@ -93,6 +93,7 @@ public class Autos {
                         .get(branch.level())),
                 Commands.sequence(
                         Commands.waitUntil(swerve.atHolonomicDrivePose),
+                        swerve.wheelXCommand(),
                         Commands.sequence(
                                 Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
                                 intake.scoreCoral(),
@@ -114,6 +115,23 @@ public class Autos {
     }
 
     private Command faceClosestHP() {
+        return swerve.faceAngle(() -> {
+            final Pose2d currentPose = swerve.getPose();
+            final Pose2d nearestStation;
+            if (Robot.IsRedAlliance.getAsBoolean()) {
+                nearestStation = currentPose.nearest(
+                        FieldConstants.CoralStation.RED_CORAL_STATIONS
+                );
+            } else {
+                nearestStation = currentPose.nearest(
+                        FieldConstants.CoralStation.BLUE_CORAL_STATIONS
+                );
+            }
+            return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
+        });
+    }
+
+    private Command driveToClosestHP() {
         return swerve.faceAngle(() -> {
             final Pose2d currentPose = swerve.getPose();
             final Pose2d nearestStation;
@@ -166,7 +184,6 @@ public class Autos {
         final Trigger atReef5FromStart = cage0Reef5.done();
         atReef5FromStart.onTrue(
                 Commands.sequence(
-                        swerve.wheelXCommand(),
                         Commands.defer(
                                 () -> reefState.getAndSetNextBranch(Reef.Face.FIVE)
                                         .map(this::scoreAtLevel)

@@ -136,10 +136,10 @@ public class Robot extends LoggedRobot {
             .and(RobotModeTriggers.teleop());
 
     final Supplier<ScoreCommands.ScorePosition> driverScorePositionSupplier =
-                scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
+                scoreCommands.getScorePositionSupplier(driverController);
 
     final Supplier<ScoreCommands.ScorePosition> coDriverScorePositionSupplier =
-            scoreCommands.getScorePositionSupplier(coController::getRightX, coController::getRightY);
+            scoreCommands.getScorePositionSupplier(coController);
 
 
     @Override
@@ -307,6 +307,8 @@ public class Robot extends LoggedRobot {
                         IsRedAlliance
                 )
         );
+
+        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW);
     }
 
     @Override

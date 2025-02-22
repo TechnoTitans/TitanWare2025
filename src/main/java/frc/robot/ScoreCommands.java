@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
@@ -76,29 +77,28 @@ public class ScoreCommands {
         this.gamepieceState = gamepieceState;
     }
 
-    public Supplier<ScorePosition> getScorePositionSupplier(
-            final DoubleSupplier rightStickXInput,
-            final DoubleSupplier rightStickYInput
-    ) {
+    public Supplier<ScorePosition> getScorePositionSupplier(final CommandXboxController controller) {
         return () -> {
             final Reef.Side side;
             final Level level;
 
-            if (rightStickXInput.getAsDouble() > 0) {
+            if (controller.getRightX() > 0) {
                 side = Reef.Side.RIGHT;
             } else {
                 side = Reef.Side.LEFT;
             }
 
-            final double yStickPosition = -rightStickYInput.getAsDouble();
-            if (yStickPosition >= 0.75) {
+            final int povPosition = controller.getHID().getPOV();
+            if (povPosition == 0) {
                 level = Level.L4;
-            } else if (yStickPosition >= 0.25) {
+            } else if (povPosition == 90) {
                 level = Level.L3;
-            } else if (yStickPosition >= -0.5) {
+            } else if (povPosition == 180) {
                 level = Level.L2;
-            } else {
+            } else if (povPosition == 270) {
                 level = Level.L1;
+            } else {
+                level = Level.L2;
             }
 
             return new ScorePosition(side, level);
@@ -212,18 +212,20 @@ public class ScoreCommands {
     }
 
     public Command scoreAtPosition(final Supplier<ScorePosition> scorePosition) {
-        return (Commands.deadline(
-                Commands.sequence(
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
-                        intake.scoreCoral(),
-                        Commands.waitSeconds(0.2)
+        return Commands.sequence(
+                Commands.deadline(
+                        Commands.sequence(
+                                Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
+                                intake.scoreCoral(),
+                                Commands.waitSeconds(0.2)
+                        ),
+                        Commands.defer(
+                                () -> superstructure.toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
+                                superstructure.getRequirements()
+                        ),
+                        swerve.runWheelXCommand()
                 ),
-                Commands.defer(
-                        () -> superstructure.toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
-                        superstructure.getRequirements()
-                ),
-                swerve.runWheelXCommand()
-        )).withName("ScoreAtPositionTeleop");
+                Commands.waitSeconds(1)).withName("ScoreAtPositionTeleop");
     }
 
     public Command readyScoreProcessor() {
@@ -311,7 +313,7 @@ public class ScoreCommands {
                 swerve.teleopFacingAngleCommand(
                         leftStickYInput,
                         leftStickXInput,
-                        () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.kPi
+                        () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kPi : Rotation2d.kZero
                 ),
                 superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB)
         );
