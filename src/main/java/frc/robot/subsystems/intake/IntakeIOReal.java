@@ -44,7 +44,6 @@ public class IntakeIOReal implements IntakeIO {
     private final StatusSignal<Current> algaeTorqueCurrent;
     private final StatusSignal<Temperature> algaeDeviceTemp;
     private final StatusSignal<Distance> coralCANRangeDistance;
-    private final StatusSignal<Double> coralCANSignalStrength;
 
     public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
         this.constants = constants;
@@ -70,7 +69,6 @@ public class IntakeIOReal implements IntakeIO {
         this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
         this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
         this.coralCANRangeDistance = coralCANRange.getDistance();
-        this.coralCANSignalStrength = coralCANRange.getSignalStrength();
     }
 
     @Override
@@ -114,9 +112,10 @@ public class IntakeIOReal implements IntakeIO {
         algaeRollerMotor.getConfigurator().apply(algaeConfiguration);
 
         final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
-        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRangeUserFreq;
+        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
         CANRangeConfiguration.ToFParams.UpdateFrequency = 50;
-        CANRangeConfiguration.ProximityParams.MinSignalStrengthForValidMeasurement = 20000;
+        CANRangeConfiguration.FovParams.FOVRangeX = 7;
+        CANRangeConfiguration.FovParams.FOVRangeY = 7;
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -131,8 +130,7 @@ public class IntakeIOReal implements IntakeIO {
                 algaeAcceleration,
                 algaeVoltage,
                 algaeTorqueCurrent,
-                coralCANRangeDistance,
-                coralCANSignalStrength
+                coralCANRangeDistance
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -165,8 +163,6 @@ public class IntakeIOReal implements IntakeIO {
                 algaeDeviceTemp,
                 coralCANRangeDistance
         );
-
-        Logger.recordOutput(Intake.LogKey + "/SignalStrength", coralCANSignalStrength.getValue());
 
         inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();
         inputs.coralRollerVelocityRotsPerSec = coralVelocity.getValueAsDouble();

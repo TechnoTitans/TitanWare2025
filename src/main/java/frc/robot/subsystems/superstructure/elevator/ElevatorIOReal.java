@@ -90,8 +90,8 @@ public class ElevatorIOReal implements ElevatorIO {
                 .withKP(40)
                 .withKD(0.5);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 1;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.51808;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.25;
         motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;

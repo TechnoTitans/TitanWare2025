@@ -134,7 +134,7 @@ public class Swerve extends SubsystemBase {
 
         this.headingController = new PIDController(4, 0, 0);
         this.headingController.enableContinuousInput(-Math.PI, Math.PI);
-        this.headingController.setTolerance(Units.degreesToRadians(3), Units.degreesToRadians(6));
+        this.headingController.setTolerance(Units.degreesToRadians(4), Units.degreesToRadians(6));
         this.atHeadingSetpoint = new Trigger(
                 () -> headingControllerActive &&
                         MathUtil.isNear(
@@ -150,10 +150,10 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
-                new PIDController(3, 0, 0),
-                new PIDController(3, 0, 0),
+                new PIDController(4, 0, 0.03),
+                new PIDController(4, 0, 0.03),
                 headingController,
-                new Pose2d(0.07, 0.07, Rotation2d.fromDegrees(6))
+                new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(4))
         );
         this.atHolonomicDrivePose = new Trigger(holonomicDriveWithPIDController::atReference);
 

@@ -180,7 +180,7 @@ public class ScoreCommands {
                     });
                 },
                 Set.of(swerve)
-        );
+        ).withName("ReadyDriveScoreAtPositionTeleop");
     }
 
     private Optional<Superstructure.Goal> getClosestProfileStartGoal() {
@@ -212,17 +212,18 @@ public class ScoreCommands {
     }
 
     public Command scoreAtPosition(final Supplier<ScorePosition> scorePosition) {
-        return Commands.deadline(
+        return (Commands.deadline(
                 Commands.sequence(
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(5),
-                        intake.scoreCoral()
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
+                        intake.scoreCoral(),
+                        Commands.waitSeconds(0.2)
                 ),
                 Commands.defer(
-                        () -> superstructure.toSuperstructureGoal(scorePosition.get().level.goal),
+                        () -> superstructure.toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
                         superstructure.getRequirements()
                 ),
                 swerve.runWheelXCommand()
-        );
+        )).withName("ScoreAtPositionTeleop");
     }
 
     public Command readyScoreProcessor() {

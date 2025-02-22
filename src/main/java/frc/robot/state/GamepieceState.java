@@ -29,16 +29,16 @@ public class GamepieceState extends VirtualSubsystem {
 
     public final Trigger isCoralNone = isStateTrigger(() -> coralState, State.NONE);
     public final Trigger isCoralIntaking = isStateTrigger(() -> coralState, State.INTAKING);
-    public final Trigger isCoralHeld = isStateTrigger(() -> coralState, State.HOLDING);
+    public final Trigger isCoralHolding = isStateTrigger(() -> coralState, State.HOLDING);
     public final Trigger isCoralScoring = isStateTrigger(() -> coralState, State.SCORING);
 
     public final Trigger isAlgaeNone = isStateTrigger(() -> algaeState, State.NONE);
     public final Trigger isAlgaeIntaking = isStateTrigger(() -> algaeState, State.INTAKING);
-    public final Trigger isAlgaeHeld = isStateTrigger(() -> algaeState, State.HOLDING);
+    public final Trigger isAlgaeHolding = isStateTrigger(() -> algaeState, State.HOLDING);
     public final Trigger isAlgaeScoring = isStateTrigger(() -> algaeState, State.SCORING);
 
-    public final Trigger hasCoral = isCoralHeld.or(isCoralScoring);
-    public final Trigger hasAlgae = isAlgaeHeld.or(isAlgaeScoring);
+    public final Trigger hasCoral = isCoralHolding.or(isCoralScoring);
+    public final Trigger hasAlgae = isAlgaeHolding.or(isAlgaeScoring);
 
     public GamepieceState(final Constants.RobotMode mode, final Intake intake) {
         this.intake = intake;
@@ -56,12 +56,12 @@ public class GamepieceState extends VirtualSubsystem {
 
         Logger.recordOutput(LogKey + "/IsCoralNone", isCoralNone.getAsBoolean());
         Logger.recordOutput(LogKey + "/IsCoralIntaking", isCoralIntaking.getAsBoolean());
-        Logger.recordOutput(LogKey + "/IsCoralHeld", isCoralHeld.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsCoralHeld", isCoralHolding.getAsBoolean());
         Logger.recordOutput(LogKey + "/IsCoralScoring", isCoralScoring.getAsBoolean());
 
         Logger.recordOutput(LogKey + "/IsAlgaeNone", isAlgaeNone.getAsBoolean());
         Logger.recordOutput(LogKey + "/IsAlgaeIntaking", isAlgaeIntaking.getAsBoolean());
-        Logger.recordOutput(LogKey + "/IsAlgaeHeld", isAlgaeHeld.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsAlgaeHeld", isAlgaeHolding.getAsBoolean());
         Logger.recordOutput(LogKey + "/IsAlgaeScoring", isAlgaeScoring.getAsBoolean());
 
         Logger.recordOutput(LogKey + "/HasCoral", hasCoral.getAsBoolean());
@@ -73,11 +73,13 @@ public class GamepieceState extends VirtualSubsystem {
     }
 
     public Command setCoralState(final State coralState) {
-        return Commands.runOnce(() -> this.coralState = coralState);
+        return Commands.runOnce(() -> this.coralState = coralState)
+                .withName("GameStateSetCoralState: " + coralState.toString());
     }
 
     public Command setAlgaeState(final State algaeState) {
-        return Commands.runOnce(() -> this.algaeState = algaeState);
+        return Commands.runOnce(() -> this.algaeState = algaeState)
+                .withName("GameStateSetAlgaeState: " + algaeState.toString());
     }
 
     public State getCoralState() {
@@ -89,15 +91,13 @@ public class GamepieceState extends VirtualSubsystem {
     }
 
     public void configureStateTriggers() {
-        intake.isCoralIntaking.and(hasCoral.negate()).onTrue(setCoralState(State.INTAKING));
+        intake.isCoralIntaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.INTAKING));
         intake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setCoralState(State.NONE));
-        intake.isCoralPresent.whileTrue(
-                Commands.parallel(
-                        setCoralState(State.HOLDING),
-                        intake.toCoralRollerVoltage(3)
-                ).withName("GameStateCoralHold")
-        );
-        intake.isCoralOuttaking.and(isCoralHeld).onTrue(setCoralState(State.SCORING));
+        intake.isCoralPresent.whileTrue(setCoralState(State.HOLDING));
+
+        isCoralHolding.onTrue(intake.toCoralRollerVoltage(3));
+
+        intake.isCoralOuttaking.and(isCoralHolding).onTrue(setCoralState(State.SCORING));
         intake.isCoralOuttaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.NONE));
 
         intake.isAlgaeIntaking.and(hasAlgae.negate()).onTrue(setAlgaeState(State.INTAKING));
@@ -108,7 +108,7 @@ public class GamepieceState extends VirtualSubsystem {
                         intake.toAlgaeRollerVoltage(4)
                 ).withName("GameStateAlgaeHold")
         );
-        intake.isAlgaeOuttaking.and(isAlgaeHeld).onTrue(setAlgaeState(State.SCORING));
+        intake.isAlgaeOuttaking.and(isAlgaeHolding).onTrue(setAlgaeState(State.SCORING));
         intake.isAlgaeOuttaking.and(intake.isAlgaePresent.negate()).onTrue(setAlgaeState(State.NONE));
     }
 

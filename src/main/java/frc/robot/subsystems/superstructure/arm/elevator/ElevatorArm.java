@@ -82,7 +82,7 @@ public class ElevatorArm extends SubsystemBase {
         L3(0.1536),
         L4(0.1707),
         CLIMB(0.19),
-        CLIMB_DOWN(Units.degreesToRotations(0));
+        CLIMB_DOWN(-6);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {
@@ -130,9 +130,12 @@ public class ElevatorArm extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
-            if (desiredGoal != Goal.DYNAMIC) {
+            if (desiredGoal != Goal.DYNAMIC && desiredGoal != Goal.CLIMB_DOWN) {
                 setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
                 elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
+            }
+            if (desiredGoal == Goal.CLIMB_DOWN) {
+                elevatorArmIO.toPivotVoltage(setpoint.pivotPositionRots);
             }
 
             this.currentGoal = desiredGoal;

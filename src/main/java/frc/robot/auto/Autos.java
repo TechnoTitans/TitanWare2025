@@ -93,16 +93,15 @@ public class Autos {
                         .get(branch.level())),
                 Commands.sequence(
                         Commands.waitUntil(swerve.atHolonomicDrivePose),
-                        Commands.deadline(
-                                Commands.parallel(
-                                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                                        intake.scoreCoral()
-                                ),
-                                superstructure.toSuperstructureGoal(
-                                        ScoreCommands.Level.LevelMap.get(branch.level())
-                                )
+                        Commands.sequence(
+                                Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
+                                intake.scoreCoral(),
+                                Commands.waitSeconds(0.2)
                         ),
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint)
+                        Commands.defer(
+                                () -> superstructure.toSuperstructureGoal(ScoreCommands.Level.LevelMap.get(branch.level())),
+                                superstructure.getRequirements()
+                        )
                 )
         );
     }
@@ -158,6 +157,7 @@ public class Autos {
         routine.active().onTrue(
                 Commands.sequence(
                         Commands.runOnce(() -> intake.setCANRangeDistance(Units.inchesToMeters(6))),
+                        gamepieceState.setCoralState(GamepieceState.State.HOLDING),
                         cage0Reef5.resetOdometry(),
                         cage0Reef5.cmd()
                 )
@@ -168,7 +168,7 @@ public class Autos {
                 Commands.sequence(
                         swerve.wheelXCommand(),
                         Commands.defer(
-                                () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
+                                () -> reefState.getAndSetNextBranch(Reef.Face.FIVE)
                                         .map(this::scoreAtLevel)
                                         .orElseGet(Commands::idle),
                                 getAllRequirements()
@@ -193,7 +193,7 @@ public class Autos {
         atReef.onTrue(
                 Commands.sequence(
                         Commands.defer(
-                                () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
+                                () -> reefState.getAndSetNextBranch(Reef.Face.FIVE)
                                         .map(this::scoreAtLevel)
                                         .orElseGet(Commands::idle),
                                 getAllRequirements()
