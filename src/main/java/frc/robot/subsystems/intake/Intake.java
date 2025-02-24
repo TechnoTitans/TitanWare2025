@@ -183,7 +183,8 @@ public class Intake extends SubsystemBase {
         return Commands.sequence(
                 runOnce(() -> this.coralOuttaking = true),
                 toInstantCoralRollerVoltage(-9),
-                Commands.waitUntil(isCoralPresent.negate()).withTimeout(1),
+                Commands.waitUntil(isCoralPresent.negate())
+                        .withTimeout(2),
                 Commands.waitSeconds(0.1),
                 coralInstantStopCommand()
         ).finallyDo(() -> this.coralOuttaking = false).withName("ScoreCoral");

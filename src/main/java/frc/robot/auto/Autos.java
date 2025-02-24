@@ -183,7 +183,7 @@ public class Autos {
         final AutoRoutine routine = autoFactory.newRoutine("Cage0ToReef4");
         final AutoTrajectory cage0Reef4 = routine.trajectory("Cage0Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
-        final AutoTrajectory rightHPTOReef4 = routine.trajectory("RightHPTOReef4");
+        final AutoTrajectory rightHPToReef4 = routine.trajectory("RightHPToReef4");
 
         routine.active().onTrue(runStartingTrajectory(cage0Reef4));
 
@@ -207,12 +207,12 @@ public class Autos {
                         faceClosestHP().asProxy(),
                         Commands.sequence(
                                 Commands.waitUntil(gamepieceState.hasCoral),
-                                rightHPTOReef4.cmd().asProxy()
+                                rightHPToReef4.cmd().asProxy()
                         )
                 )
         );
 
-        final Trigger atReef = rightHPTOReef4.done();
+        final Trigger atReef = rightHPToReef4.done();
         atReef.onTrue(
                 Commands.sequence(
                         Commands.defer(

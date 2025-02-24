@@ -98,6 +98,8 @@ public class GamepieceState extends VirtualSubsystem {
 
         intake.isCoralOuttaking.and(isCoralHolding).onTrue(setCoralState(State.SCORING));
         intake.isCoralOuttaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.NONE));
+        intake.isCoralOuttaking.negate().and(isCoralScoring).and(intake.isCoralPresent)
+                .onTrue(setCoralState(State.HOLDING));
 
         intake.isAlgaeIntaking.and(hasAlgae.negate()).onTrue(setAlgaeState(State.INTAKING));
         intake.isAlgaeIntaking.negate().and(isAlgaeIntaking).onTrue(setAlgaeState(State.NONE));
@@ -124,28 +126,18 @@ public class GamepieceState extends VirtualSubsystem {
 
         intake.isCoralIntaking.and(hasCoral.negate()).whileTrue(
                 Commands.sequence(
-                    waitRand(random, 0.5, 2),
-                    Commands.waitSeconds(0.15),
-                    setCANRangeDistanceCommand(0.1)
-        ));
+                        waitRand(random, 0.5, 1.5),
+                        Commands.waitSeconds(0.15),
+                        setCANRangeDistanceCommand(0.1)
+                )
+        );
 
         intake.isCoralOuttaking.and(hasCoral).whileTrue(
                 Commands.sequence(
-                        waitRand(random, 0.3, 2),
+                        waitRand(random, 0.3, 1.5),
                         Commands.waitSeconds(0.15),
                         setCANRangeDistanceCommand(0.5)
-        ));
-
-        intake.isAlgaeIntaking.and(hasAlgae.negate()).whileTrue(
-                Commands.sequence(
-                    waitRand(random, 0.5, 2),
-                    Commands.waitSeconds(0.15)
-        ));
-
-        intake.isCoralOuttaking.and(hasCoral).whileTrue(
-                Commands.sequence(
-                        waitRand(random, 0.5, 2),
-                        Commands.waitSeconds(0.15)
-        ));
+                )
+        );
     }
 }
