@@ -153,10 +153,20 @@ public class Autos {
         });
     }
 
-    public Set<Subsystem> getAllRequirements() {
+    private Set<Subsystem> getAllRequirements() {
         final Set<Subsystem> requirements = new HashSet<>(superstructure.getRequirements());
         requirements.addAll(List.of(swerve, intake));
         return requirements;
+    }
+
+    private Command runStartingTrajectory(final AutoTrajectory startingTrajectory) {
+        return Commands.sequence(
+                Commands.runOnce(() -> intake.setCANRangeDistance(Units.inchesToMeters(6))),
+                gamepieceState.setCoralState(GamepieceState.State.HOLDING),
+                Commands.runOnce(reefState::reset),
+                startingTrajectory.resetOdometry(),
+                startingTrajectory.cmd()
+        );
     }
 
     public AutoRoutine doNothing() {
@@ -175,14 +185,7 @@ public class Autos {
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
         final AutoTrajectory rightHPTOReef4 = routine.trajectory("RightHPTOReef4");
 
-        routine.active().onTrue(
-                Commands.sequence(
-                        Commands.runOnce(() -> intake.setCANRangeDistance(Units.inchesToMeters(6))),
-                        gamepieceState.setCoralState(GamepieceState.State.HOLDING),
-                        cage0Reef4.resetOdometry(),
-                        cage0Reef4.cmd()
-                )
-        );
+        routine.active().onTrue(runStartingTrajectory(cage0Reef4));
 
         final Trigger atReef4FromStart = cage0Reef4.done();
         atReef4FromStart.onTrue(

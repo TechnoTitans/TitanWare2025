@@ -52,4 +52,14 @@ public class ReefState {
         maybeBranch.ifPresent(branch -> setBranchState(branch, BranchState.CORAL));
         return maybeBranch;
     }
+
+    public void reset() {
+        for (final Reef.Face face : Reef.Face.values()) {
+            for (final Reef.Side side : Reef.Side.values()) {
+                for (final Reef.Level level : Reef.Level.values()) {
+                    reef.get(face).get(side).put(level, BranchState.NONE);
+                }
+            }
+        }
+    }
 }

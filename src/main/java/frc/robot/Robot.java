@@ -108,10 +108,10 @@ public class Robot extends LoggedRobot {
             gamePieceState,
             reefState
     );
-    public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(
+    public final AutoChooser autoChooser = new AutoChooser(
             new AutoOption(
                     "DoNothing",
-                    autos.doNothing(),
+                    autos::doNothing,
                     Constants.CompetitionType.COMPETITION
             )
     );
@@ -411,12 +411,12 @@ public class Robot extends LoggedRobot {
 
     public void configureAutos() {
         autonomousEnabled.whileTrue(
-                Commands.defer(() -> autoChooser.getSelected().autoRoutine().cmd().asProxy(), Set.of())
+                Commands.defer(() -> autoChooser.getSelected().cmd().asProxy(), Set.of())
         );
 
         autoChooser.addAutoOption(new AutoOption(
                 "Cage0ToReef4",
-                autos.cage0ToReef4(),
+                autos::cage0ToReef4,
                 Constants.CompetitionType.COMPETITION
         ));
     }

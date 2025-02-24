@@ -16,9 +16,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.CAN;
 import frc.robot.constants.HardwareConstants;
-import org.littletonrobotics.junction.Logger;
 
 public class IntakeIOReal implements IntakeIO {
     private final HardwareConstants.IntakeConstants constants;
