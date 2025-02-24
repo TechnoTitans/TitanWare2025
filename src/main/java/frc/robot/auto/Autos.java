@@ -6,11 +6,10 @@ import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot;
 import frc.robot.ScoreCommands;
 import frc.robot.constants.FieldConstants;
@@ -112,11 +111,18 @@ public class Autos {
         );
     }
 
-    private Command intakeCoralFromHP() {
+    private Command intakeCoralFromHP(final AutoTrajectory nextTrajectory) {
         return Commands.parallel(
-                superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
-                intake.intakeCoralHP()
-        ).until(gamepieceState.hasCoral);
+                Commands.parallel(
+                        superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
+                        intake.intakeCoralHP()
+                ).until(gamepieceState.hasCoral).asProxy(),
+                faceClosestHP().asProxy(),
+                Commands.sequence(
+                        Commands.waitUntil(gamepieceState.hasCoral),
+                        nextTrajectory.cmd().asProxy()
+                )
+        );
     }
 
     private Command faceClosestHP() {
@@ -173,7 +179,7 @@ public class Autos {
         final AutoRoutine routine = autoFactory.newRoutine("DoNothing");
 
         routine.active().whileTrue(
-                Commands.waitUntil(() -> !DriverStation.isAutonomousEnabled())
+                Commands.waitUntil(RobotModeTriggers.autonomous().negate())
         );
 
         return routine;
@@ -184,44 +190,54 @@ public class Autos {
         final AutoTrajectory cage0Reef4 = routine.trajectory("Cage0Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
         final AutoTrajectory rightHPToReef4 = routine.trajectory("RightHPToReef4");
+        final AutoTrajectory reef4ToRightHPForReef5 = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory rightHPToReef5Right = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory rightHPToReef5Left = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
 
         routine.active().onTrue(runStartingTrajectory(cage0Reef4));
 
-        final Trigger atReef4FromStart = cage0Reef4.done();
-        atReef4FromStart.onTrue(
+        cage0Reef4.done().onTrue(
                 Commands.sequence(
-                        Commands.defer(
-                                () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
-                                        .map(this::scoreAtLevel)
-                                        .orElseGet(swerve::runWheelXCommand),
-                                getAllRequirements()
-                        ).onlyIf(gamepieceState.hasCoral),
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
                         reef4ToRightHP.cmd()
                 )
         );
 
-        final Trigger atHP = reef4ToRightHP.done();
-        atHP.onTrue(
-                Commands.parallel(
-                        intakeCoralFromHP().asProxy(),
-                        faceClosestHP().asProxy(),
-                        Commands.sequence(
-                                Commands.waitUntil(gamepieceState.hasCoral),
-                                rightHPToReef4.cmd().asProxy()
-                        )
+        reef4ToRightHP.done().onTrue(
+                intakeCoralFromHP(rightHPToReef4)
+        );
+
+        rightHPToReef4.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHPForReef5.cmd()
                 )
         );
 
-        final Trigger atReef = rightHPToReef4.done();
-        atReef.onTrue(
+        reef4ToRightHPForReef5.done().onTrue(
+                intakeCoralFromHP(rightHPToReef5Right)
+        );
+
+        rightHPToReef5Right.done().onTrue(
                 Commands.sequence(
-                        Commands.defer(
-                                () -> reefState.getAndSetNextBranch(Reef.Face.FOUR)
-                                        .map(this::scoreAtLevel)
-                                        .orElseGet(swerve::runWheelXCommand),
-                                getAllRequirements()
-                        ).onlyIf(gamepieceState.hasCoral),
-                        reef4ToRightHP.cmd()
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef5ToRightHP.cmd()
+                )
+        );
+
+        reef5ToRightHP.done().onTrue(
+                intakeCoralFromHP(rightHPToReef5Left)
+        );
+
+        rightHPToReef5Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        swerve.runWheelXCommand()
                 )
         );
 

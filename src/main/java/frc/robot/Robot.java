@@ -290,9 +290,6 @@ public class Robot extends LoggedRobot {
     public void disabledPeriodic() {}
 
     @Override
-    public void autonomousInit() {}
-
-    @Override
     public void autonomousPeriodic() {}
 
     @Override
