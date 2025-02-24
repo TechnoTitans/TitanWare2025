@@ -22,7 +22,6 @@ import frc.robot.state.ReefState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.superstructure.Profiles;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
 import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
@@ -108,10 +107,10 @@ public class Robot extends LoggedRobot {
             gamePieceState,
             reefState
     );
-    public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(
+    public final AutoChooser autoChooser = new AutoChooser(
             new AutoOption(
                     "DoNothing",
-                    autos.doNothing(),
+                    autos::doNothing,
                     Constants.CompetitionType.COMPETITION
             )
     );
@@ -291,9 +290,6 @@ public class Robot extends LoggedRobot {
     public void disabledPeriodic() {}
 
     @Override
-    public void autonomousInit() {}
-
-    @Override
     public void autonomousPeriodic() {}
 
     @Override
@@ -337,32 +333,6 @@ public class Robot extends LoggedRobot {
         );
         driverController.x(testEventLoop).whileTrue(
                 swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
-        );
-
-        driverController.povUp().onTrue(
-                Commands.sequence(
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L1).withTimeout(2.5),
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
-                )
         );
 
         driverController.povDown().onTrue(
@@ -410,13 +380,11 @@ public class Robot extends LoggedRobot {
     }
 
     public void configureAutos() {
-        autonomousEnabled.whileTrue(
-                Commands.defer(() -> autoChooser.getSelected().autoRoutine().cmd().asProxy(), Set.of())
-        );
+        autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
-                "Cage0ToReef5",
-                autos.cage0ToReef5(),
+                "Cage0ToReef4",
+                autos::cage0ToReef4,
                 Constants.CompetitionType.COMPETITION
         ));
     }

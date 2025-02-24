@@ -17,7 +17,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -55,7 +54,6 @@ public class IntakeIOSim implements IntakeIO {
     private final StatusSignal<Current> algaeTorqueCurrent;
     private final StatusSignal<Temperature> algaeDeviceTemp;
     private final StatusSignal<Distance> coralCANRangeDistance;
-    private final StatusSignal<Boolean> coralCANRangeIsDetected;
 
     public IntakeIOSim(final HardwareConstants.IntakeConstants constants) {
         this.deltaTime = new DeltaTime(true);
@@ -112,7 +110,6 @@ public class IntakeIOSim implements IntakeIO {
         this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
         this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
         this.coralCANRangeDistance = coralCANRange.getDistance();
-        this.coralCANRangeIsDetected = coralCANRange.getIsDetected();
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
         final double dt = deltaTime.get();
@@ -130,6 +127,13 @@ public class IntakeIOSim implements IntakeIO {
 
     @Override
     public void config() {
+        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
+        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
+        CANRangeConfiguration.ToFParams.UpdateFrequency = 50;
+        CANRangeConfiguration.FovParams.FOVRangeX = 7;
+        CANRangeConfiguration.FovParams.FOVRangeY = 7;
+        coralCANRange.getConfigurator().apply(CANRangeConfiguration);
+
         final InvertedValue coralRollerInvertedValue = InvertedValue.CounterClockwise_Positive;
         final TalonFXConfiguration coralConfiguration = new TalonFXConfiguration();
         coralConfiguration.Slot0 = new Slot0Configs()
@@ -164,12 +168,6 @@ public class IntakeIOSim implements IntakeIO {
         algaeConfiguration.Feedback.SensorToMechanismRatio = constants.algaeGearing();
         algaeRollerMotor.getConfigurator().apply(algaeConfiguration);
 
-        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
-        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
-        CANRangeConfiguration.ProximityParams.ProximityThreshold = Units.inchesToMeters(11);
-        CANRangeConfiguration.ProximityParams.ProximityHysteresis = Units.inchesToMeters(1);
-        coralCANRange.getConfigurator().apply(CANRangeConfiguration);
-
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
                 coralPosition,
@@ -180,8 +178,7 @@ public class IntakeIOSim implements IntakeIO {
                 algaeVelocity,
                 algaeVoltage,
                 algaeTorqueCurrent,
-                coralCANRangeDistance,
-                coralCANRangeIsDetected
+                coralCANRangeDistance
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -214,8 +211,7 @@ public class IntakeIOSim implements IntakeIO {
                 algaeVoltage,
                 algaeTorqueCurrent,
                 algaeDeviceTemp,
-                coralCANRangeDistance,
-                coralCANRangeIsDetected
+                coralCANRangeDistance
         );
 
         inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();

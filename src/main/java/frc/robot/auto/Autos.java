@@ -5,13 +5,11 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot;
 import frc.robot.ScoreCommands;
 import frc.robot.constants.FieldConstants;
@@ -26,7 +24,6 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @SuppressWarnings("DuplicatedCode")
@@ -87,45 +84,44 @@ public class Autos {
         );
     }
 
-    private Command scoreAtLevel(final ReefState.Branch branch, final Trigger atSuperstructureSetpoint) {
+    private Command scoreAtLevel(final ReefState.Branch branch) {
         return Commands.parallel(
-                swerve.driveToPose(() -> {
-                    final Pose2d branchPose = FieldConstants.getBranchScoringPositions()
-                            .get(branch.face())
-                            .get(branch.side())
-                            .get(branch.level());
-
-                    final Transform2d coralDistanceOffset = new Transform2d(
-                            0,
-                            gamepieceState.hasCoral.getAsBoolean()
-                                    ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
-                                    : 0,
-                            Rotation2d.kZero
-                    );
-
-                    return branchPose.transformBy(coralDistanceOffset);
-                }),
                 Commands.sequence(
-                        Commands.waitUntil(swerve.atHolonomicDrivePose).withTimeout(5),
+                        swerve.driveToPose(() -> FieldConstants.getBranchScoringPositions()
+                                .get(branch.face())
+                                .get(branch.side())
+                                .get(branch.level())),
+                        swerve.wheelXCommand()
+                ),
+                Commands.sequence(
+                        Commands.waitUntil(swerve.atHolonomicDrivePose).withTimeout(3),
                         Commands.deadline(
                                 Commands.sequence(
-                                        Commands.waitSeconds(1),
-                                        Commands.waitUntil(atSuperstructureSetpoint),
-                                        intake.scoreCoral(),
-                                        Commands.waitSeconds(0.2)
+                                        Commands.waitUntil(superstructure.atSuperstructureSetpoint
+                                                .and(superstructure.desiredGoalNotStow)),
+                                        intake.scoreCoral()
                                 ),
-                                superstructure.toSuperstructureGoal(ScoreCommands.Level.LevelMap.get(branch.level()))
-                                //swerve.wheelXCommand().asProxy()
+                                superstructure.toSuperstructureGoal(
+                                        ScoreCommands.Level.LevelMap.get(branch.level())
+                                )
                         ),
-                        Commands.waitSeconds(2)
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint)
+                                .withTimeout(1)
                 )
         );
     }
 
-    private Command intakeCoralFromHP() {
+    private Command intakeCoralFromHP(final AutoTrajectory nextTrajectory) {
         return Commands.parallel(
-                superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
-                intake.intakeCoralHP()
+                Commands.parallel(
+                        superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
+                        intake.intakeCoralHP()
+                ).until(gamepieceState.hasCoral).asProxy(),
+                faceClosestHP().asProxy(),
+                Commands.sequence(
+                        Commands.waitUntil(gamepieceState.hasCoral),
+                        nextTrajectory.cmd().asProxy()
+                )
         );
     }
 
@@ -163,84 +159,85 @@ public class Autos {
         });
     }
 
-    public Set<Subsystem> getAllRequirements() {
+    private Set<Subsystem> getAllRequirements() {
         final Set<Subsystem> requirements = new HashSet<>(superstructure.getRequirements());
         requirements.addAll(List.of(swerve, intake));
         return requirements;
+    }
+
+    private Command runStartingTrajectory(final AutoTrajectory startingTrajectory) {
+        return Commands.sequence(
+                Commands.runOnce(() -> intake.setCANRangeDistance(Units.inchesToMeters(6))),
+                gamepieceState.setCoralState(GamepieceState.State.HOLDING),
+                Commands.runOnce(reefState::reset),
+                startingTrajectory.resetOdometry(),
+                startingTrajectory.cmd()
+        );
     }
 
     public AutoRoutine doNothing() {
         final AutoRoutine routine = autoFactory.newRoutine("DoNothing");
 
         routine.active().whileTrue(
-                Commands.waitUntil(() -> !DriverStation.isAutonomousEnabled())
+                Commands.waitUntil(RobotModeTriggers.autonomous().negate())
         );
 
         return routine;
     }
 
-    public AutoRoutine cage0ToReef5() {
-        final AutoRoutine routine = autoFactory.newRoutine("Cage0ToReef5");
-        final AutoTrajectory cage0Reef5 = routine.trajectory("Cage0Reef5");
+    public AutoRoutine cage0ToReef4() {
+        final AutoRoutine routine = autoFactory.newRoutine("Cage0ToReef4");
+        final AutoTrajectory cage0Reef4 = routine.trajectory("Cage0Reef4");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory rightHPToReef4 = routine.trajectory("RightHPToReef4");
+        final AutoTrajectory reef4ToRightHPForReef5 = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory rightHPToReef5Right = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory rightHPToReef5Left = routine.trajectory("RightHPToReef5");
         final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
-        final AutoTrajectory rightHPTOReef5 = routine.trajectory("RightHPTOReef5");
 
-        final Trigger hasCoral = routine.observe(gamepieceState.hasCoral);
-        final Trigger atSuperstructureSetpoint = routine.observe(superstructure.atSuperstructureSetpoint);
+        routine.active().onTrue(runStartingTrajectory(cage0Reef4));
 
-        routine.active().onTrue(
+        cage0Reef4.done().onTrue(
                 Commands.sequence(
-                        Commands.runOnce(() -> intake.setCANRangeDistance(Units.inchesToMeters(6))),
-                        gamepieceState.setCoralState(GamepieceState.State.HOLDING),
-                        intake.toInstantCoralRollerVoltage(6),
-                        cage0Reef5.resetOdometry(),
-                        cage0Reef5.cmd()
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHP.cmd()
                 )
         );
 
-        final Trigger atReef5FromStart = cage0Reef5.done();
-        atReef5FromStart.onTrue(
+        reef4ToRightHP.done().onTrue(
+                intakeCoralFromHP(rightHPToReef4)
+        );
+
+        rightHPToReef4.done().onTrue(
                 Commands.sequence(
-                        Commands.defer(
-                                () -> {
-                                    final Optional<ReefState.Branch> maybeScorePose =
-                                            reefState.getAndSetNextBranch(Reef.Face.FOUR);
-                                    return maybeScorePose.map(
-                                            branch -> scoreAtLevel(branch, atSuperstructureSetpoint)
-                                    ).orElseGet(Commands::idle);
-                                },
-                                getAllRequirements()
-                        ).onlyIf(hasCoral),
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHPForReef5.cmd()
+                )
+        );
+
+        reef4ToRightHPForReef5.done().onTrue(
+                intakeCoralFromHP(rightHPToReef5Right)
+        );
+
+        rightHPToReef5Right.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
                         reef5ToRightHP.cmd()
                 )
         );
 
-        final Trigger atHP = reef5ToRightHP.done();
-        atHP.onTrue(
-                Commands.parallel(
-                        intakeCoralFromHP().asProxy(),
-                        driveToClosestHP(),
-                        Commands.sequence(
-                                Commands.waitUntil(hasCoral),
-                                rightHPTOReef5.cmd().asProxy()
-                        )
-                )
+        reef5ToRightHP.done().onTrue(
+                intakeCoralFromHP(rightHPToReef5Left)
         );
 
-        final Trigger atReef = rightHPTOReef5.done();
-        atReef.onTrue(
+        rightHPToReef5Left.done().onTrue(
                 Commands.sequence(
-                        Commands.defer(
-                                () -> {
-                                    final Optional<ReefState.Branch> maybeScorePose =
-                                            reefState.getAndSetNextBranch(Reef.Face.FOUR);
-                                    return maybeScorePose.map(
-                                            branch -> scoreAtLevel(branch, atSuperstructureSetpoint)
-                                    ).orElseGet(Commands::idle);
-                                },
-                                getAllRequirements()
-                        ).onlyIf(hasCoral),
-                        reef5ToRightHP.cmd()
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        swerve.runWheelXCommand()
                 )
         );
 

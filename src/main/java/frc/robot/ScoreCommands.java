@@ -12,7 +12,6 @@ import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.superstructure.Profiles;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.teleop.SwerveSpeed;
 
@@ -183,16 +182,6 @@ public class ScoreCommands {
         ).withName("ReadyDriveScoreAtPositionTeleop");
     }
 
-    private Optional<Superstructure.Goal> getClosestProfileStartGoal() {
-        final Set<Superstructure.Goal> availableStartGoals = Profiles.getStartingGoals();
-        final Superstructure.Goal maybeDynamicSuperstructureGoal =
-                superstructure.getCurrentSuperstructureGoal();
-
-        return maybeDynamicSuperstructureGoal == Superstructure.Goal.DYNAMIC
-                ? superstructure.getClosestGoal(availableStartGoals)
-                : Optional.of(maybeDynamicSuperstructureGoal);
-    }
-
     private Command readySuperstructureScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         return superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level().goal);
     }
@@ -216,8 +205,7 @@ public class ScoreCommands {
                 Commands.deadline(
                         Commands.sequence(
                                 Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
-                                intake.scoreCoral(),
-                                Commands.waitSeconds(0.2)
+                                intake.scoreCoral()
                         ),
                         Commands.defer(
                                 () -> superstructure.toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
@@ -300,7 +288,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.toAlgaeRollerVelocity(-6)
+                        intake.scoreAlgae()
                                 .until(intake.isAlgaePresent.negate())
                                 .withTimeout(1)
                 ),
@@ -309,6 +297,7 @@ public class ScoreCommands {
         );
     }
 
+    @SuppressWarnings("SuspiciousNameCombination")
     public Command readyClimb(final DoubleSupplier leftStickXInput, final DoubleSupplier leftStickYInput) {
         return Commands.parallel(
                 swerve.teleopFacingAngleCommand(
