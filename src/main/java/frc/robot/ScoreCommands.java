@@ -216,8 +216,7 @@ public class ScoreCommands {
                 Commands.deadline(
                         Commands.sequence(
                                 Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
-                                intake.scoreCoral(),
-                                Commands.waitSeconds(0.2)
+                                intake.scoreCoral()
                         ),
                         Commands.defer(
                                 () -> superstructure.toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
@@ -299,7 +298,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint),
-                        intake.toAlgaeRollerVelocity(-6)
+                        intake.scoreAlgae()
                                 .until(intake.isAlgaePresent.negate())
                                 .withTimeout(1)
                 ),
@@ -308,6 +307,7 @@ public class ScoreCommands {
         );
     }
 
+    @SuppressWarnings("SuspiciousNameCombination")
     public Command readyClimb(final DoubleSupplier leftStickXInput, final DoubleSupplier leftStickYInput) {
         return Commands.parallel(
                 swerve.teleopFacingAngleCommand(

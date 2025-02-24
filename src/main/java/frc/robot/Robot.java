@@ -415,8 +415,8 @@ public class Robot extends LoggedRobot {
         );
 
         autoChooser.addAutoOption(new AutoOption(
-                "Cage0ToReef5",
-                autos.cage0ToReef5(),
+                "Cage0ToReef4",
+                autos.cage0ToReef4(),
                 Constants.CompetitionType.COMPETITION
         ));
     }

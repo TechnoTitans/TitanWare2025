@@ -91,6 +91,7 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger desiredGoalChanged;
 
     public final Trigger atSuperstructureSetpoint;
+    public final Trigger desiredGoalNotStow;
 
     public Superstructure(
             final Elevator elevator,
@@ -107,10 +108,11 @@ public class Superstructure extends VirtualSubsystem {
         this.desiredGoalChanged = new Trigger(eventLoop, () -> desiredGoal != runningGoal);
         this.desiredGoalIsAtGoal = new Trigger(eventLoop, () -> desiredGoal == atGoal);
         this.desiredGoalIsDynamic = new Trigger(eventLoop, () -> desiredGoal == Superstructure.Goal.DYNAMIC);
+        this.desiredGoalNotStow = new Trigger(eventLoop, () -> desiredGoal != Goal.STOW);
         this.atSuperstructureSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atSetpoint)
                 .and(intakeArm.atSetpoint)
-                .and(desiredGoalIsRunningGoal);
+                .and(desiredGoalIsAtGoal);
 
         this.allowedToChangeGoal = desiredGoalIsDynamic.negate()
                 .and((desiredGoalIsAtGoal.and(atSuperstructureSetpoint)).negate());

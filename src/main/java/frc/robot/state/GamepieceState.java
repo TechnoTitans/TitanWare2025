@@ -95,7 +95,7 @@ public class GamepieceState extends VirtualSubsystem {
         intake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setCoralState(State.NONE));
         intake.isCoralPresent.onTrue(setCoralState(State.HOLDING));
 
-        isCoralHolding.onTrue(intake.toInstantCoralRollerVoltage(3));
+        isCoralHolding.onTrue(intake.holdCoral());
 
         intake.isCoralOuttaking.and(isCoralHolding).onTrue(setCoralState(State.SCORING));
         intake.isCoralOuttaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.NONE));
@@ -125,30 +125,28 @@ public class GamepieceState extends VirtualSubsystem {
 
         intake.isCoralIntaking.and(hasCoral.negate()).whileTrue(
                 Commands.sequence(
-                    waitRand(random, 0.1, 2),
+                    waitRand(random, 0.5, 2),
                     Commands.waitSeconds(0.15),
-                    setCANRangeDistanceCommand(Units.inchesToMeters(1))
+                    setCANRangeDistanceCommand(0.1)
         ));
 
         intake.isCoralOuttaking.and(hasCoral).whileTrue(
                 Commands.sequence(
-                        waitRand(random, 0.11, 2.1),
+                        waitRand(random, 0.3, 2),
                         Commands.waitSeconds(0.15),
-                        setCANRangeDistanceCommand(10)
+                        setCANRangeDistanceCommand(0.5)
         ));
 
         intake.isAlgaeIntaking.and(hasAlgae.negate()).whileTrue(
                 Commands.sequence(
-                    waitRand(random, 0.1, 2),
-                    Commands.waitSeconds(0.15),
-                    setCANRangeDistanceCommand(Units.inchesToMeters(1))
+                    waitRand(random, 0.5, 2),
+                    Commands.waitSeconds(0.15)
         ));
 
         intake.isCoralOuttaking.and(hasCoral).whileTrue(
                 Commands.sequence(
-                        waitRand(random, 0.1, 2),
-                        Commands.waitSeconds(0.15),
-                        setCANRangeDistanceCommand(10)
+                        waitRand(random, 0.5, 2),
+                        Commands.waitSeconds(0.15)
         ));
     }
 }

@@ -265,7 +265,7 @@ public class Swerve extends SubsystemBase {
 
         Logger.recordOutput(LogKey + "/HolonomicController/Active", holonomicControllerActive);
         Logger.recordOutput(LogKey + "/HolonomicController/TargetPose", holonomicPoseTarget);
-        Logger.recordOutput(LogKey + "/HolonomicController/AtPoseSetpoint", atHolonomicDrivePose.getAsBoolean());
+        Logger.recordOutput(LogKey + "/HolonomicController/AtHolonomicSetpoint", atHolonomicDrivePose.getAsBoolean());
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
