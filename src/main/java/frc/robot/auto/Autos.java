@@ -203,7 +203,7 @@ public class Autos {
         final Trigger atHP = reef4ToRightHP.done();
         atHP.onTrue(
                 Commands.parallel(
-                        intakeCoralFromHP(),
+                        intakeCoralFromHP().asProxy(),
                         faceClosestHP().asProxy(),
                         Commands.sequence(
                                 Commands.waitUntil(gamepieceState.hasCoral),

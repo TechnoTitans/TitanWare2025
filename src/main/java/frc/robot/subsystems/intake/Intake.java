@@ -133,10 +133,10 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/CoralRollerVoltageSetpoint", coralRollerVoltageSetpoint);
         Logger.recordOutput(LogKey + "/AlgaeRollerVoltageSetpoint", algaeRollerVoltageSetpoint);
 
-        Logger.recordOutput(LogKey + "/Trigger/isCoralPresent", isCoralPresent);
-        Logger.recordOutput(LogKey + "/Trigger/isCoralOuttaking", isCoralOuttaking);
-        Logger.recordOutput(LogKey + "/Trigger/isCoralIntakeStopped", isCoralIntakeStopped);
-        Logger.recordOutput(LogKey + "/Trigger/isAlgaePresent", isAlgaePresent);
+        Logger.recordOutput(LogKey + "/Trigger/IsCoralPresent", isCoralPresent);
+        Logger.recordOutput(LogKey + "/Trigger/IsCoralOuttaking", isCoralOuttaking);
+        Logger.recordOutput(LogKey + "/Trigger/IsCoralIntakeStopped", isCoralIntakeStopped);
+        Logger.recordOutput(LogKey + "/Trigger/IsAlgaePresent", isAlgaePresent);
         Logger.recordOutput(LogKey + "/FilteredAlgae", getFilteredAlgaeCurrent());
 
         Logger.recordOutput(LogKey + "/OffsetCoralDistanceMeters", getCoralDistanceMeters());
