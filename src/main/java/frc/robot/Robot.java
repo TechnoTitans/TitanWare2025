@@ -22,7 +22,6 @@ import frc.robot.state.ReefState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.superstructure.Profiles;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
 import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
@@ -339,32 +338,6 @@ public class Robot extends LoggedRobot {
                 swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
         );
 
-        driverController.povUp().onTrue(
-                Commands.sequence(
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L1).withTimeout(2.5),
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
-                )
-        );
-
         driverController.povDown().onTrue(
                 Commands.sequence(
                         superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
@@ -410,9 +383,7 @@ public class Robot extends LoggedRobot {
     }
 
     public void configureAutos() {
-        autonomousEnabled.whileTrue(
-                Commands.defer(() -> autoChooser.getSelected().cmd().asProxy(), Set.of())
-        );
+        autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
                 "Cage0ToReef4",

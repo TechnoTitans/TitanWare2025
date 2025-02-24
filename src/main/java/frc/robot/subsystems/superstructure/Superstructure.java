@@ -1,10 +1,7 @@
 package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -21,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
@@ -207,44 +203,6 @@ public class Superstructure extends VirtualSubsystem {
 
     public Goal getDesiredSuperstructureGoal() {
         return desiredGoal;
-    }
-
-    public Command runProfile(final SplineProfile profile) {
-        final Timer timer = new Timer();
-        final Supplier<Pose2d> sampler = profile.sampler(timer::get);
-        final Goal endingGoal = profile.endingGoal;
-        final BooleanSupplier atGoal =
-                () -> elevatorArm.atGoal(endingGoal.elevatorArmGoal)
-                        && elevator.atGoal(endingGoal.elevatorGoal)
-                        && intakeArm.atGoal(IntakeArm.Goal.STOW);
-
-        return (Commands.parallel(
-                Commands.runOnce(() -> {
-                    this.desiredGoal = Superstructure.Goal.DYNAMIC;
-                    this.runningGoal = Superstructure.Goal.DYNAMIC;
-                    this.atGoal = Superstructure.Goal.DYNAMIC;
-                    timer.restart();
-                }),
-                Commands.run(() -> {
-                    Logger.recordOutput(LogKey + "/AtProfileGoal", atGoal);
-                    Logger.recordOutput(LogKey + "/ProfileTime", timer.get());
-                    Logger.recordOutput(LogKey + "/Profile", profile.toString());
-                }),
-                elevatorArm.runPositionCommand(() -> {
-                    final Pose2d sample = sampler.get();
-                    return Units.radiansToRotations(sample.getX());
-                }),
-                elevator.runPositionMetersCommand(() -> {
-                    final Pose2d sample = sampler.get();
-                    return sample.getY();
-                }),
-                intakeArm.runPivotGoalCommand(IntakeArm.Goal.STOW)
-        ).until(
-                atGoal
-        ).finallyDo(() -> {
-            Logger.recordOutput(LogKey + "/Profile", "None");
-            timer.stop();
-        }).onlyIf(() -> profile.totalTime > 0)).andThen(runSuperstructureGoal(endingGoal));
     }
 
     public Command toInstantSuperstructureGoal(final Goal goal) {

@@ -12,7 +12,6 @@ import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.superstructure.Profiles;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.teleop.SwerveSpeed;
 
@@ -181,16 +180,6 @@ public class ScoreCommands {
                 },
                 Set.of(swerve)
         ).withName("ReadyDriveScoreAtPositionTeleop");
-    }
-
-    private Optional<Superstructure.Goal> getClosestProfileStartGoal() {
-        final Set<Superstructure.Goal> availableStartGoals = Profiles.getStartingGoals();
-        final Superstructure.Goal maybeDynamicSuperstructureGoal =
-                superstructure.getCurrentSuperstructureGoal();
-
-        return maybeDynamicSuperstructureGoal == Superstructure.Goal.DYNAMIC
-                ? superstructure.getClosestGoal(availableStartGoals)
-                : Optional.of(maybeDynamicSuperstructureGoal);
     }
 
     private Command readySuperstructureScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
