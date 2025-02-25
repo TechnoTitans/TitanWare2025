@@ -305,6 +305,9 @@ public class Robot extends LoggedRobot {
         );
 
         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW);
+        elevatorArm.setGoal(ElevatorArm.Goal.STOW);
+        elevator.setGoal(Elevator.Goal.STOW);
+        intakeArm.setGoal(IntakeArm.Goal.STOW);
     }
 
     @Override

@@ -23,9 +23,9 @@ import java.util.function.Supplier;
 public class Superstructure extends VirtualSubsystem {
     public enum Goal {
         DYNAMIC(Elevator.Goal.DYNAMIC, ElevatorArm.Goal.DYNAMIC, IntakeArm.Goal.STOW),
-        STOW(Elevator.Goal.IDLE, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW),
-        CLIMB(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB, IntakeArm.Goal.CLIMB),
-        CLIMB_DOWN(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB_DOWN, IntakeArm.Goal.CLIMB),
+        STOW(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW),
+        CLIMB(Elevator.Goal.STOW, ElevatorArm.Goal.CLIMB, IntakeArm.Goal.CLIMB),
+        CLIMB_DOWN(Elevator.Goal.STOW, ElevatorArm.Goal.CLIMB_DOWN, IntakeArm.Goal.CLIMB),
         ALGAE_GROUND(Elevator.Goal.ALGAE_GROUND, ElevatorArm.Goal.ALGAE_GROUND, IntakeArm.Goal.ALGAE_GROUND),
         UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.Goal.ALGAE_REEF),
         LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.ALGAE_REEF),
