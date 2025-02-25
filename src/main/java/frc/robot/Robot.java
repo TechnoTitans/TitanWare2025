@@ -269,11 +269,12 @@ public class Robot extends LoggedRobot {
         Logger.start();
 
         Logger.recordOutput("EmptyPose", new Pose3d());
+
+        Threads.setCurrentThreadPriority(true, 10);
     }
 
     @Override
     public void robotPeriodic() {
-        Threads.setCurrentThreadPriority(true, 99);
         CommandScheduler.getInstance().run();
         VirtualSubsystem.run();
 
@@ -282,8 +283,6 @@ public class Robot extends LoggedRobot {
 
         Logger.recordOutput("ScorePosition/Driver", driverScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition/CoDriver", coDriverScorePositionSupplier.get());
-
-        Threads.setCurrentThreadPriority(false, 10);
     }
 
     @Override
