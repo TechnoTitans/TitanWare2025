@@ -319,7 +319,7 @@ public class Robot extends LoggedRobot {
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
         driverController.y(testEventLoop).whileTrue(
-                intake.algaeTorqueCurrentSysIdCommand()
+                elevatorArm.voltageSysIdCommand()
         );
 
 //        driverController.y(testEventLoop).whileTrue(
@@ -387,6 +387,12 @@ public class Robot extends LoggedRobot {
                 autos::cage0ToReef4,
                 Constants.CompetitionType.COMPETITION
         ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage0ToReef5",
+                autos::twoPieceCage0ToReef5,
+                Constants.CompetitionType.COMPETITION
+        ));
     }
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
@@ -419,7 +425,7 @@ public class Robot extends LoggedRobot {
 //                .onFalse(scoreCommands.scoreProcessor());
 
         this.driverController.x(teleopEventLoop)
-                .whileTrue(scoreCommands.readyClimb(driverController::getLeftX, driverController::getLeftY))
+                .whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
 
         this.coController.rightTrigger(0.5, teleopEventLoop)

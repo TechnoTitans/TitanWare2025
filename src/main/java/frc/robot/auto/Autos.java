@@ -94,7 +94,7 @@ public class Autos {
                         swerve.wheelXCommand()
                 ),
                 Commands.sequence(
-                        Commands.waitUntil(swerve.atHolonomicDrivePose).withTimeout(3),
+                        Commands.waitUntil(swerve.atHolonomicDrivePose).withTimeout(5),
                         Commands.deadline(
                                 Commands.sequence(
                                         Commands.waitUntil(superstructure.atSuperstructureSetpoint
@@ -222,6 +222,37 @@ public class Autos {
         );
 
         rightHPToReef5Right.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef5ToRightHP.cmd()
+                )
+        );
+
+        reef5ToRightHP.done().onTrue(
+                intakeCoralFromHP(rightHPToReef5Left)
+        );
+
+        rightHPToReef5Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        swerve.runWheelXCommand()
+                )
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage0ToReef5() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage0ToReef52");
+        final AutoTrajectory cage0Reef5 = routine.trajectory("Cage0Reef5");
+        final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
+        final AutoTrajectory rightHPToReef5Left = routine.trajectory("RightHPToReef5");
+
+        routine.active().onTrue(runStartingTrajectory(cage0Reef5));
+
+        cage0Reef5.done().onTrue(
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),

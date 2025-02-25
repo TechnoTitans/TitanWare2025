@@ -61,16 +61,16 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig.Slot0 = new Slot0Configs()
-                .withKS(0.32792)
-                .withKG(0.41572)
+                .withKS(0.27721)
+                .withKG(0.4366)
                 .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(28.616)
-                .withKA(0.83199)
-                .withKP(100)
-                .withKD(3);
+                .withKV(39.374)
+                .withKA(0.55684)
+                .withKP(61.772)
+                .withKD(0);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 10;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 8;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 39.374;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 2.5;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 80;

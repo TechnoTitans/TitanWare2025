@@ -296,16 +296,4 @@ public class ScoreCommands {
                 swerve.runWheelXCommand()
         );
     }
-
-    @SuppressWarnings("SuspiciousNameCombination")
-    public Command readyClimb(final DoubleSupplier leftStickXInput, final DoubleSupplier leftStickYInput) {
-        return Commands.parallel(
-                swerve.teleopFacingAngleCommand(
-                        leftStickYInput,
-                        leftStickXInput,
-                        () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kPi : Rotation2d.kZero
-                ),
-                superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB)
-        );
-    }
 }
