@@ -37,7 +37,7 @@ public class Elevator extends SubsystemBase {
     private final SysIdRoutine voltageSysIdRoutine;
     private final SysIdRoutine torqueCurrentSysIdRoutine;
 
-    private Goal desiredGoal = Goal.IDLE;
+    private Goal desiredGoal = Goal.STOW;
     private Goal currentGoal = desiredGoal;
 
     private final PositionSetpoint setpoint;
@@ -77,15 +77,15 @@ public class Elevator extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        IDLE(0),
-        HP(0.02),
+        STOW(0),
+        HP(0.065),
         ALGAE_GROUND(0),
-        L1(0.028),
-        L2(0.150),
-        LOWER_ALGAE(0.16),
-        L3(0.458),
-        UPPER_ALGAE(0.5),
-        L4(0.976),
+        LOWER_ALGAE(0.0623),
+        UPPER_ALGAE(0.35),
+        L1(0),
+        L2(0.03),
+        L3(0.394),
+        L4(0.967),
         NET(1);
 
         private final double positionGoalMeters;

@@ -108,16 +108,16 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
         // TODO: drive and azimuth gains both need to be re-tuned
         driveTalonFXConfiguration.Slot0 = new Slot0Configs()
-                .withKS(3.239825)
+                .withKS(2.2557)
                 .withKV(0)
-                .withKA(1.34145)
+                .withKA(3.1912)
                 .withKP(42);
         driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
         driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
         driveTalonFXConfiguration.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.2;
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         driveTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         driveMotor.getConfigurator().apply(driveTalonFXConfiguration);
 

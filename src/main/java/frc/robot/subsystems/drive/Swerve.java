@@ -7,7 +7,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -18,7 +17,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.Measure;
@@ -136,7 +134,7 @@ public class Swerve extends SubsystemBase {
 
         this.headingController = new PIDController(4, 0, 0);
         this.headingController.enableContinuousInput(-Math.PI, Math.PI);
-        this.headingController.setTolerance(Units.degreesToRadians(3), Units.degreesToRadians(6));
+        this.headingController.setTolerance(Units.degreesToRadians(4), Units.degreesToRadians(6));
         this.atHeadingSetpoint = new Trigger(
                 () -> headingControllerActive &&
                         MathUtil.isNear(
@@ -152,16 +150,10 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
-                new PIDController(4, 0, 0),
-                new PIDController(4, 0, 0),
-                new ProfiledPIDController(
-                        headingController.getP(), headingController.getI(), headingController.getD(),
-                        new TrapezoidProfile.Constraints(
-                                Config.maxAngularVelocityRadsPerSec() * 0.95,
-                                Config.maxAngularAccelerationRadsPerSecSquared() * 0.75
-                        )
-                ),
-                new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6))
+                new PIDController(5, 0, 0.03),
+                new PIDController(5, 0, 0.03),
+                headingController,
+                new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(4))
         );
         this.atHolonomicDrivePose = new Trigger(holonomicDriveWithPIDController::atReference);
 
@@ -273,7 +265,7 @@ public class Swerve extends SubsystemBase {
 
         Logger.recordOutput(LogKey + "/HolonomicController/Active", holonomicControllerActive);
         Logger.recordOutput(LogKey + "/HolonomicController/TargetPose", holonomicPoseTarget);
-        Logger.recordOutput(LogKey + "/HolonomicController/AtPoseSetpoint", atHolonomicDrivePose.getAsBoolean());
+        Logger.recordOutput(LogKey + "/HolonomicController/AtHolonomicSetpoint", atHolonomicDrivePose.getAsBoolean());
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
@@ -770,13 +762,13 @@ public class Swerve extends SubsystemBase {
         final double[] moduleForcesX = swerveSample.moduleForcesX();
         final double[] moduleForcesY = swerveSample.moduleForcesY();
 
-        for (int i = 0; i < swerveModules.length; i++) {
-            final Vector<N2> forceVec = new Translation2d(moduleForcesX[i], moduleForcesY[i])
-                    .rotateBy(Rotation2d.fromRadians(swerveSample.heading).unaryMinus())
-                    .toVector();
+//        for (int i = 0; i < swerveModules.length; i++) {
+//            final Vector<N2> forceVec = new Translation2d(moduleForcesX[i], moduleForcesY[i])
+//                    .rotateBy(Rotation2d.fromRadians(swerveSample.heading).unaryMinus())
+//                    .toVector();
 
-            moduleForceVectors.add(forceVec);
-        }
+//            moduleForceVectors.add(forceVec);
+//        }
 
         Logger.recordOutput(Autos.LogKey + "/Timestamp", swerveSample.getTimestamp());
         Logger.recordOutput(Autos.LogKey + "/CurrentPose", currentPose);
@@ -793,7 +785,7 @@ public class Swerve extends SubsystemBase {
                 MathUtil.angleModulus(currentPose.getRotation().getRadians())
         );
 
-        drive(speeds, moduleForceVectors);
+        drive(speeds);
     }
 
     private SysIdRoutine makeLinearVoltageSysIdRoutine() {

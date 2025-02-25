@@ -3,25 +3,24 @@ package frc.robot.subsystems.drive.controllers;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 public class HolonomicDriveWithPIDController {
     private final PIDController xController;
     private final PIDController yController;
-    private final ProfiledPIDController rotationController;
+    private final PIDController rotationController;
 
     /**
      * Constructs a {@link HolonomicDriveWithPIDController}
      *
      * @param xController        A {@link PIDController} to respond to error in the field-relative X direction
      * @param yController        A {@link PIDController} to respond to error in the field-relative Y direction
-     * @param rotationController A {@link ProfiledPIDController} controller to respond to error in rotation
+     * @param rotationController A {@link PIDController} controller to respond to error in rotation
      */
     public HolonomicDriveWithPIDController(
             final PIDController xController,
             final PIDController yController,
-            final ProfiledPIDController rotationController,
+            final PIDController rotationController,
             final Pose2d poseTolerance
     ) {
         this.xController = xController;
@@ -30,12 +29,7 @@ public class HolonomicDriveWithPIDController {
         this.yController = yController;
         this.yController.setTolerance(poseTolerance.getY(), poseTolerance.getX() * 1.5);
 
-        final Rotation2d rotationTolerance = poseTolerance.getRotation();
         this.rotationController = rotationController;
-        this.rotationController.setTolerance(
-                rotationTolerance.getRadians(),
-                rotationTolerance.getRadians() * 1.5
-        );
         this.rotationController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
@@ -48,7 +42,7 @@ public class HolonomicDriveWithPIDController {
     public void reset(final Pose2d currentPose, final ChassisSpeeds robotRelativeSpeeds) {
         xController.reset();
         yController.reset();
-        rotationController.reset(currentPose.getRotation().getRadians(), robotRelativeSpeeds.omegaRadiansPerSecond);
+        rotationController.reset();
     }
 
     /**
@@ -59,7 +53,7 @@ public class HolonomicDriveWithPIDController {
     public boolean atReference() {
         return xController.atSetpoint()
                 && yController.atSetpoint()
-                && rotationController.atGoal();
+                && rotationController.atSetpoint();
     }
 
     public void setTolerance(final Pose2d poseTolerance) {
@@ -78,7 +72,6 @@ public class HolonomicDriveWithPIDController {
         final double xFeedback = xController.calculate(currentPose.getX(), targetPose.getX());
         final double yFeedback = yController.calculate(currentPose.getY(), targetPose.getY());
 
-        final double rotationFF = rotationController.getSetpoint().velocity;
         final double rotationFeedback = rotationController.calculate(
                 currentPose.getRotation().getRadians(),
                 targetPose.getRotation().getRadians()
@@ -87,7 +80,7 @@ public class HolonomicDriveWithPIDController {
         return ChassisSpeeds.fromFieldRelativeSpeeds(
                 xFeedback,
                 yFeedback,
-                rotationFF + rotationFeedback,
+                rotationFeedback,
                 currentPose.getRotation()
         );
     }

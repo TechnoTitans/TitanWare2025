@@ -1,10 +1,7 @@
 package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -21,19 +18,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
     public enum Goal {
         DYNAMIC(Elevator.Goal.DYNAMIC, ElevatorArm.Goal.DYNAMIC, IntakeArm.Goal.STOW),
-        STOW(Elevator.Goal.IDLE, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW),
-        CLIMB(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB, IntakeArm.Goal.STOW),
-        CLIMB_DOWN(Elevator.Goal.IDLE, ElevatorArm.Goal.CLIMB_DOWN, IntakeArm.Goal.STOW),
+        STOW(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW),
+        CLIMB(Elevator.Goal.STOW, ElevatorArm.Goal.CLIMB, IntakeArm.Goal.CLIMB),
+        CLIMB_DOWN(Elevator.Goal.STOW, ElevatorArm.Goal.CLIMB_DOWN, IntakeArm.Goal.CLIMB),
         ALGAE_GROUND(Elevator.Goal.ALGAE_GROUND, ElevatorArm.Goal.ALGAE_GROUND, IntakeArm.Goal.ALGAE_GROUND),
         UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.Goal.ALGAE_REEF),
         LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.ALGAE_REEF),
-        HP(Elevator.Goal.HP, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.HP),
+        HP(Elevator.Goal.HP, ElevatorArm.Goal.HP, IntakeArm.Goal.HP),
         PROCESSOR(Elevator.Goal.HP, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.HP),
         L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1),
         L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2),
@@ -91,6 +87,7 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger desiredGoalChanged;
 
     public final Trigger atSuperstructureSetpoint;
+    public final Trigger desiredGoalNotStow;
 
     public Superstructure(
             final Elevator elevator,
@@ -107,10 +104,11 @@ public class Superstructure extends VirtualSubsystem {
         this.desiredGoalChanged = new Trigger(eventLoop, () -> desiredGoal != runningGoal);
         this.desiredGoalIsAtGoal = new Trigger(eventLoop, () -> desiredGoal == atGoal);
         this.desiredGoalIsDynamic = new Trigger(eventLoop, () -> desiredGoal == Superstructure.Goal.DYNAMIC);
+        this.desiredGoalNotStow = new Trigger(eventLoop, () -> desiredGoal != Goal.STOW);
         this.atSuperstructureSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atSetpoint)
                 .and(intakeArm.atSetpoint)
-                .and(desiredGoalIsRunningGoal);
+                .and(desiredGoalIsAtGoal);
 
         this.allowedToChangeGoal = desiredGoalIsDynamic.negate()
                 .and((desiredGoalIsAtGoal.and(atSuperstructureSetpoint)).negate());
@@ -128,18 +126,18 @@ public class Superstructure extends VirtualSubsystem {
                         Commands.sequence(
                                 Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
 
-                                Commands.waitUntil(elevatorArm.atSetpoint),
+                                Commands.waitUntil(elevatorArm.atSetpoint).withTimeout(4),
                                 Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
 
                                 Commands.waitUntil(
                                         elevatorArm.atSetpoint
-                                                .and(elevator.atSetpoint)),
+                                                .and(elevator.atSetpoint)).withTimeout(4),
                                 Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
 
                                 Commands.waitUntil(
                                         elevatorArm.atSetpoint
                                                 .and(elevator.atSetpoint)
-                                                .and(intakeArm.atSetpoint)),
+                                                .and(intakeArm.atSetpoint)).withTimeout(4),
                                 Commands.runOnce(() -> this.atGoal = runningGoal)
                         ).onlyWhile(() -> desiredGoal == runningGoal)
                 ).withName("UpwardsGoalChange")
@@ -151,18 +149,18 @@ public class Superstructure extends VirtualSubsystem {
                         Commands.sequence(
                                 Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
 
-                                Commands.waitUntil(intakeArm.atSetpoint),
+                                Commands.waitUntil(intakeArm.atSetpoint).withTimeout(4),
                                 Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
 
                                 Commands.waitUntil(
                                         elevator.atSetpoint
-                                                .and(intakeArm.atSetpoint)),
+                                                .and(intakeArm.atSetpoint)).withTimeout(4),
                                 Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
 
                                 Commands.waitUntil(
                                         elevatorArm.atSetpoint
                                                 .and(elevator.atSetpoint)
-                                                .and(intakeArm.atSetpoint)),
+                                                .and(intakeArm.atSetpoint)).withTimeout(4),
                                 Commands.runOnce(() -> this.atGoal = runningGoal)
                         ).onlyWhile(() -> desiredGoal == runningGoal)
                 ).withName("DownwardsGoalChange")
@@ -181,6 +179,12 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
         Logger.recordOutput(LogKey + "/AtGoal", atGoal.toString());
         Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint.getAsBoolean());
+        Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsRunningGoal", desiredGoalIsRunningGoal);
+        Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsAtGoal", desiredGoalIsAtGoal);
+        Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsDynamic", desiredGoalIsDynamic);
+        Logger.recordOutput(LogKey + "/Triggers/AllowedToChangeGoal", allowedToChangeGoal);
+        Logger.recordOutput(LogKey + "/Triggers/DesiresUpwardsMotion", desiresUpwardsMotion);
+        Logger.recordOutput(LogKey + "/Triggers/DesiresDownwardsMotion", desiresDownwardsMotion);
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalChanged", desiredGoalChanged);
 
         Logger.recordOutput(
@@ -201,44 +205,6 @@ public class Superstructure extends VirtualSubsystem {
         return desiredGoal;
     }
 
-    public Command runProfile(final SplineProfile profile) {
-        final Timer timer = new Timer();
-        final Supplier<Pose2d> sampler = profile.sampler(timer::get);
-        final Goal endingGoal = profile.endingGoal;
-        final BooleanSupplier atGoal =
-                () -> elevatorArm.atGoal(endingGoal.elevatorArmGoal)
-                        && elevator.atGoal(endingGoal.elevatorGoal)
-                        && intakeArm.atGoal(IntakeArm.Goal.STOW);
-
-        return Commands.parallel(
-                Commands.runOnce(() -> {
-                    this.desiredGoal = Superstructure.Goal.DYNAMIC;
-                    this.runningGoal = Superstructure.Goal.DYNAMIC;
-                    this.atGoal = Superstructure.Goal.DYNAMIC;
-                    timer.restart();
-                }),
-                Commands.run(() -> {
-                    Logger.recordOutput(LogKey + "/AtProfileGoal", atGoal);
-                    Logger.recordOutput(LogKey + "/ProfileTime", timer.get());
-                    Logger.recordOutput(LogKey + "/Profile", profile.toString());
-                }),
-                elevatorArm.runPositionCommand(() -> {
-                    final Pose2d sample = sampler.get();
-                    return Units.radiansToRotations(sample.getX());
-                }),
-                elevator.runPositionMetersCommand(() -> {
-                    final Pose2d sample = sampler.get();
-                    return sample.getY();
-                }),
-                intakeArm.runPivotGoalCommand(IntakeArm.Goal.STOW)
-        ).until(
-                atGoal
-        ).finallyDo(() -> {
-            Logger.recordOutput(LogKey + "/Profile", "None");
-            timer.stop();
-        }).andThen(runSuperstructureGoal(endingGoal));
-    }
-
     public Command toInstantSuperstructureGoal(final Goal goal) {
         return Commands.runOnce(
                 () -> this.desiredGoal = goal,
@@ -254,11 +220,12 @@ public class Superstructure extends VirtualSubsystem {
         );
     }
 
-    public Command runWaitSuperstructureGoal(final Goal goal) {
-        return Commands.run(
-                () -> this.desiredGoal = goal,
-                elevator, elevatorArm, intakeArm
-        ).until(atSuperstructureSetpoint);
+    public Command runUntilSuperstructureGoal(final Goal goal) {
+        return runSuperstructureGoal(goal).until(atSuperstructureSetpoint);
+    }
+
+    public Command runUntilSuperstructureGoal(final Supplier<Goal> goal) {
+        return runSuperstructureGoal(goal).until(atSuperstructureSetpoint);
     }
 
     public Command runSuperstructureGoal(final Goal goal) {

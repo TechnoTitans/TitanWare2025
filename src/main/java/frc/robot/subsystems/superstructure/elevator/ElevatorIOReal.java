@@ -5,12 +5,14 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.*;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.Phoenix6Utils;
@@ -29,13 +31,11 @@ public class ElevatorIOReal implements ElevatorIO {
 
     private final StatusSignal<Angle> masterPosition;
     private final StatusSignal<AngularVelocity> masterVelocity;
-    private final StatusSignal<AngularAcceleration> masterAcceleration;
     private final StatusSignal<Voltage> masterVoltage;
     private final StatusSignal<Current> masterTorqueCurrent;
     private final StatusSignal<Temperature> masterDeviceTemp;
     private final StatusSignal<Angle> followerPosition;
     private final StatusSignal<AngularVelocity> followerVelocity;
-    private final StatusSignal<AngularAcceleration> followerAcceleration;
     private final StatusSignal<Voltage> followerVoltage;
     private final StatusSignal<Current> followerTorqueCurrent;
     private final StatusSignal<Temperature> followerDeviceTemp;
@@ -56,13 +56,11 @@ public class ElevatorIOReal implements ElevatorIO {
 
         this.masterPosition = masterMotor.getPosition();
         this.masterVelocity = masterMotor.getVelocity();
-        this.masterAcceleration = masterMotor.getAcceleration();
         this.masterVoltage = masterMotor.getMotorVoltage();
         this.masterTorqueCurrent = masterMotor.getTorqueCurrent();
         this.masterDeviceTemp = masterMotor.getDeviceTemp();
         this.followerPosition = followerMotor.getPosition();
         this.followerVelocity = followerMotor.getVelocity();
-        this.followerAcceleration = followerMotor.getAcceleration();
         this.followerVoltage = followerMotor.getMotorVoltage();
         this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
         this.followerDeviceTemp = followerMotor.getDeviceTemp();
@@ -88,8 +86,8 @@ public class ElevatorIOReal implements ElevatorIO {
                 .withKP(40)
                 .withKD(0.5);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 1;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.51808;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.25;
         motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;
@@ -111,12 +109,10 @@ public class ElevatorIOReal implements ElevatorIO {
                 100,
                 masterPosition,
                 masterVelocity,
-                masterAcceleration,
                 masterVoltage,
                 masterTorqueCurrent,
                 followerPosition,
                 followerVelocity,
-                followerAcceleration,
                 followerVoltage,
                 followerTorqueCurrent,
                 canRangeDistance,
@@ -139,13 +135,11 @@ public class ElevatorIOReal implements ElevatorIO {
         BaseStatusSignal.refreshAll(
                 masterPosition,
                 masterVelocity,
-                masterAcceleration,
                 masterVoltage,
                 masterTorqueCurrent,
                 masterDeviceTemp,
                 followerPosition,
                 followerVelocity,
-                followerAcceleration,
                 followerVoltage,
                 followerTorqueCurrent,
                 followerDeviceTemp,
@@ -155,13 +149,11 @@ public class ElevatorIOReal implements ElevatorIO {
 
         inputs.masterPositionRots = masterPosition.getValueAsDouble();
         inputs.masterVelocityRotsPerSec = masterVelocity.getValueAsDouble();
-        inputs.masterAccelerationRotsPerSec2 = masterAcceleration.getValueAsDouble();
         inputs.masterVoltage = masterVoltage.getValueAsDouble();
         inputs.masterTorqueCurrentAmps = masterTorqueCurrent.getValueAsDouble();
         inputs.masterTempCelsius = masterDeviceTemp.getValueAsDouble();
         inputs.followerPositionRots = followerPosition.getValueAsDouble();
         inputs.followerVelocityRotsPerSec = followerVelocity.getValueAsDouble();
-        inputs.followerAccelerationRotsPerSec2 = followerAcceleration.getValueAsDouble();
         inputs.followerVoltage = followerVoltage.getValueAsDouble();
         inputs.followerTorqueCurrentAmps = followerTorqueCurrent.getValueAsDouble();
         inputs.followerTempCelsius = followerDeviceTemp.getValueAsDouble();

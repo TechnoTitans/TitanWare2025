@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
-import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
@@ -72,17 +71,18 @@ public class ElevatorArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        STOW(Units.degreesToRotations(35)),
+        STOW(Units.degreesToRotations(37)),
         UPRIGHT(Units.degreesToRotations(45)),
-        ALGAE_GROUND(Units.radiansToRotations(0)),
-        L1(Units.radiansToRotations(0.159)),
-        L2(Units.radiansToRotations(0.433)),
-        LOWER_ALGAE(Units.radiansToRotations(0.540)),
-        L3(Units.radiansToRotations(0.637)),
-        UPPER_ALGAE(Units.radiansToRotations(.750)),
-        L4(Units.radiansToRotations(0.881)),
-        CLIMB(Units.degreesToRotations(20)),
-        CLIMB_DOWN(Units.degreesToRotations(0));
+        HP(Units.degreesToRotations(33)),
+        ALGAE_GROUND(0),
+        LOWER_ALGAE(0.0615),
+        UPPER_ALGAE(0.106),
+        L1(0.10986),
+        L2(0.126),
+        L3(0.1536),
+        L4(0.174),
+        CLIMB(0.19),
+        CLIMB_DOWN(-5.5);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {
@@ -130,9 +130,13 @@ public class ElevatorArm extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
-            if (desiredGoal != Goal.DYNAMIC) {
+            if (desiredGoal != Goal.DYNAMIC && desiredGoal != Goal.CLIMB_DOWN) {
                 setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
                 elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
+            }
+            if (desiredGoal == Goal.CLIMB_DOWN) {
+                setpoint.pivotPositionRots = 0;
+                elevatorArmIO.toPivotVoltage(desiredGoal.pivotPositionGoalRots);
             }
 
             this.currentGoal = desiredGoal;

@@ -5,7 +5,6 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -28,7 +27,6 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
     private final StatusSignal<Angle> pivotPosition;
     private final StatusSignal<AngularVelocity> pivotVelocity;
-    private final StatusSignal<AngularAcceleration> pivotAcceleration;
     private final StatusSignal<Voltage> pivotVoltage;
     private final StatusSignal<Current> pivotTorqueCurrent;
     private final StatusSignal<Temperature> pivotDeviceTemp;
@@ -47,7 +45,6 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
         this.pivotPosition = pivotMotor.getPosition();
         this.pivotVelocity = pivotMotor.getVelocity();
-        this.pivotAcceleration = pivotMotor.getAcceleration();
         this.pivotVoltage = pivotMotor.getMotorVoltage();
         this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent();
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
@@ -64,16 +61,16 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig.Slot0 = new Slot0Configs()
-                .withKS(0.32792)
-                .withKG(0.41572)
+                .withKS(0.27721)
+                .withKG(0.4366)
                 .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(28.616)
-                .withKA(0.83199)
-                .withKP(100)
-                .withKD(3);
+                .withKV(39.374)
+                .withKA(0.55684)
+                .withKP(61.772)
+                .withKD(0);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 10;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 8;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 39.374;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 2.5;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 80;
@@ -98,7 +95,6 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
                 100,
                 pivotPosition,
                 pivotVelocity,
-                pivotAcceleration,
                 pivotVoltage,
                 pivotTorqueCurrent,
                 pivotCANCoderPosition,
@@ -119,7 +115,6 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
         BaseStatusSignal.refreshAll(
                 pivotPosition,
                 pivotVelocity,
-                pivotAcceleration,
                 pivotVoltage,
                 pivotTorqueCurrent,
                 pivotCANCoderPosition,
@@ -128,7 +123,6 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
-        inputs.pivotAccelerationRotsPerSec2 = pivotAcceleration.getValueAsDouble();
         inputs.pivotVoltageVolts = pivotVoltage.getValueAsDouble();
         inputs.pivotTorqueCurrentAmps = pivotTorqueCurrent.getValueAsDouble();
         inputs.pivotTempCelsius = pivotDeviceTemp.getValueAsDouble();

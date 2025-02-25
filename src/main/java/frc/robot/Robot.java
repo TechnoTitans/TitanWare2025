@@ -2,9 +2,6 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -25,7 +22,6 @@ import frc.robot.state.ReefState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.superstructure.Profiles;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
 import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
@@ -74,7 +70,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final PhotonVision photonVision = new PhotonVision(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             swerve,
             swerve.getPoseEstimator()
     );
@@ -111,10 +107,10 @@ public class Robot extends LoggedRobot {
             gamePieceState,
             reefState
     );
-    public final AutoChooser<String, AutoOption> autoChooser = new AutoChooser<>(
+    public final AutoChooser autoChooser = new AutoChooser(
             new AutoOption(
                     "DoNothing",
-                    autos.doNothing(),
+                    autos::doNothing,
                     Constants.CompetitionType.COMPETITION
             )
     );
@@ -139,10 +135,10 @@ public class Robot extends LoggedRobot {
             .and(RobotModeTriggers.teleop());
 
     final Supplier<ScoreCommands.ScorePosition> driverScorePositionSupplier =
-                scoreCommands.getScorePositionSupplier(driverController::getRightX, driverController::getRightY);
+                scoreCommands.getScorePositionSupplier(driverController);
 
     final Supplier<ScoreCommands.ScorePosition> coDriverScorePositionSupplier =
-            scoreCommands.getScorePositionSupplier(coController::getRightX, coController::getRightY);
+            scoreCommands.getScorePositionSupplier(coController);
 
 
     @Override
@@ -271,6 +267,8 @@ public class Robot extends LoggedRobot {
         });
 
         Logger.start();
+
+        Logger.recordOutput("EmptyPose", new Pose3d());
     }
 
     @Override
@@ -285,14 +283,11 @@ public class Robot extends LoggedRobot {
         Logger.recordOutput("ScorePosition/Driver", driverScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition/CoDriver", coDriverScorePositionSupplier.get());
 
-        Threads.setCurrentThreadPriority(true, 10);
+        Threads.setCurrentThreadPriority(false, 10);
     }
 
     @Override
     public void disabledPeriodic() {}
-
-    @Override
-    public void autonomousInit() {}
 
     @Override
     public void autonomousPeriodic() {}
@@ -308,6 +303,11 @@ public class Robot extends LoggedRobot {
                         IsRedAlliance
                 )
         );
+
+        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW);
+        elevatorArm.setGoal(ElevatorArm.Goal.STOW);
+        elevator.setGoal(Elevator.Goal.STOW);
+        intakeArm.setGoal(IntakeArm.Goal.STOW);
     }
 
     @Override
@@ -322,7 +322,7 @@ public class Robot extends LoggedRobot {
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
         driverController.y(testEventLoop).whileTrue(
-                intakeArm.pivotVoltageSysIdCommand()
+                elevatorArm.voltageSysIdCommand()
         );
 
 //        driverController.y(testEventLoop).whileTrue(
@@ -338,28 +338,27 @@ public class Robot extends LoggedRobot {
                 swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
         );
 
-        driverController.povUp().onTrue(
+        driverController.povDown().onTrue(
                 Commands.sequence(
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1)
-                                .until(superstructure.atSuperstructureSetpoint),
-                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L1).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L1_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L2).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L2_TO_L3).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L3_TO_L4).withTimeout(2.5),
-                        superstructure.runProfile(Profiles.L4_TO_L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
                 )
         );
@@ -378,19 +377,23 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
-        intake.isCoralPresent.whileTrue(ControllerUtils.rumbleForDurationCommand(
+        intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
     }
 
     public void configureAutos() {
-        autonomousEnabled.whileTrue(
-                Commands.defer(() -> autoChooser.getSelected().autoRoutine().cmd().asProxy(), Set.of())
-        );
+        autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
-                "Cage0ToReef5",
-                autos.cage0ToReef5(),
+                "Cage0ToReef4",
+                autos::cage0ToReef4,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage0ToReef5",
+                autos::twoPieceCage0ToReef5,
                 Constants.CompetitionType.COMPETITION
         ));
     }
@@ -416,31 +419,26 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(driverScorePositionSupplier));
 
-        this.driverController.a(teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
-                .onFalse(scoreCommands.scoreNet());
+//        this.driverController.a(teleopEventLoop)
+//                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
+//                .onFalse(scoreCommands.scoreNet());
 
-        this.driverController.b(teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreProcessor())
-                .onFalse(scoreCommands.scoreProcessor());
+//        this.driverController.b(teleopEventLoop)
+//                .whileTrue(scoreCommands.readyScoreProcessor())
+//                .onFalse(scoreCommands.scoreProcessor());
 
         this.driverController.x(teleopEventLoop)
-                .whileTrue(scoreCommands.readyClimb(driverController::getLeftX, driverController::getLeftY))
+                .whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
 
         this.coController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(coDriverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(coDriverScorePositionSupplier));
 
-        this.coController.x(teleopEventLoop)
-                .whileTrue(scoreCommands.intakeAlgaeFromGround());
+        this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
 
-        this.coController.a(teleopEventLoop)
-                .whileTrue(scoreCommands.readyIntakeLowerAlgae())
-                .onFalse(scoreCommands.intakeLowerAlgae());
+        this.coController.y(teleopEventLoop).whileTrue(scoreCommands.readyIntakeUpperAlgae());
 
-        this.coController.y(teleopEventLoop)
-                .whileTrue(scoreCommands.readyIntakeUpperAlgae())
-                .onFalse(scoreCommands.intakeUpperAlgae());
+        this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
     }
 }
