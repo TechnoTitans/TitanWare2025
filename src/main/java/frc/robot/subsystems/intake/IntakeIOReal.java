@@ -94,12 +94,12 @@ public class IntakeIOReal implements IntakeIO {
 
         final TalonFXConfiguration algaeConfiguration = new TalonFXConfiguration();
         algaeConfiguration.Slot0 = new Slot0Configs()
-                .withKS(12.585)
-                .withKV(0.16008)
-                .withKA(0.14731)
-                .withKP(25);
-        algaeConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 60;
-        algaeConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -60;
+                .withKS(6.8743)
+                .withKV(0.14234)
+                .withKA(0.058098)
+                .withKP(45);
+        algaeConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
+        algaeConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         algaeConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         algaeConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         algaeConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
