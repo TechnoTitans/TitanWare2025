@@ -3,6 +3,7 @@ package frc.robot.subsystems.superstructure.arm.intake;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
@@ -23,6 +24,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
     private final MotionMagicExpoVoltage motionMagicExpoVoltage;
     private final VoltageOut voltageOut;
 
+    private final MotionMagicConfigs motionMagicConfigs;
+
     private final StatusSignal<Angle> pivotPosition;
     private final StatusSignal<AngularVelocity> pivotVelocity;
     private final StatusSignal<Voltage> pivotVoltage;
@@ -39,6 +42,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.voltageOut = new VoltageOut(0);
+
+        this.motionMagicConfigs = new MotionMagicConfigs();
 
         this.pivotPosition = pivotMotor.getPosition();
         this.pivotVelocity = pivotMotor.getVelocity();
@@ -69,9 +74,10 @@ public class IntakeArmIOReal implements IntakeArmIO {
                 .withKA(0.1686)
                 .withKP(57.24)
                 .withKD(1);
-        pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
+        motionMagicConfigs.MotionMagicCruiseVelocity = 0;
+        motionMagicConfigs.MotionMagicExpo_kV = 5;
+        motionMagicConfigs.MotionMagicExpo_kA = 0.5;
+        pivotConfiguration.MotionMagic = motionMagicConfigs;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
@@ -130,6 +136,14 @@ public class IntakeArmIOReal implements IntakeArmIO {
         inputs.pivotTempCelsius = pivotDeviceTemp.getValueAsDouble();
         inputs.encoderPositionRots = encoderPosition.getValueAsDouble();
         inputs.encoderVelocityRotsPerSec = encoderVelocity.getValueAsDouble();
+    }
+
+    @Override
+    public void setMotionMagicCruiseVelocity(final double cruiseVelocity) {
+        if (motionMagicConfigs.MotionMagicCruiseVelocity != cruiseVelocity) {
+            motionMagicConfigs.MotionMagicCruiseVelocity = cruiseVelocity;
+            pivotMotor.getConfigurator().apply(motionMagicConfigs);
+        }
     }
 
     @Override

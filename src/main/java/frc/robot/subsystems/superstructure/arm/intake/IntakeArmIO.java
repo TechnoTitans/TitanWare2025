@@ -26,6 +26,8 @@ public interface IntakeArmIO {
 
     default void config() {}
 
+    default void setMotionMagicCruiseVelocity(final double cruiseVelocity) {}
+
     default void toPivotPosition(final double pivotPositionRots) {}
 
     default void toPivotVoltage(final double volts) {}

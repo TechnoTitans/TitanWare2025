@@ -125,6 +125,12 @@ public class IntakeArm extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
+            if (currentGoal == Goal.ALGAE_GROUND || currentGoal == Goal.ALGAE_REEF) {
+                intakeArmIO.setMotionMagicCruiseVelocity(0.1);
+            } else {
+                intakeArmIO.setMotionMagicCruiseVelocity(0);
+            }
+
             positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
             intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
 
