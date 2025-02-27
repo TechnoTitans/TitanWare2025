@@ -109,7 +109,7 @@ public class Robot extends LoggedRobot {
     public final AutoChooser autoChooser = new AutoChooser(
             new AutoOption(
                     "DoNothing",
-                    autos::twoPieceCage0ToReef5,
+                    autos::doNothing,
                     Constants.CompetitionType.COMPETITION
             )
     );

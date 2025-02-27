@@ -175,7 +175,6 @@ public class ScoreCommands {
                         );
 
                         return scoringPose.transformBy(coralDistanceOffset);
-
                     });
                 },
                 Set.of(swerve)
