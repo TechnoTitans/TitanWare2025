@@ -4,11 +4,9 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Robot;
 import frc.robot.ScoreCommands;
@@ -22,20 +20,13 @@ import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.PhotonVision;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-@SuppressWarnings("DuplicatedCode")
 public class Autos {
     public static final String LogKey = "Auto";
 
     private final Swerve swerve;
     private final Superstructure superstructure;
     private final Intake intake;
-    private final PhotonVision photonVision;
 
-    private final ScoreCommands scoreCommands;
     private final ReefState reefState;
     private final GamepieceState gamepieceState;
 
@@ -46,16 +37,13 @@ public class Autos {
             final Superstructure superstructure,
             final Intake intake,
             final PhotonVision photonVision,
-            final ScoreCommands scoreCommands,
             final GamepieceState gamepieceState,
             final ReefState reefState
     ) {
         this.swerve = swerve;
         this.superstructure = superstructure;
         this.intake = intake;
-        this.photonVision = photonVision;
 
-        this.scoreCommands = scoreCommands;
         this.gamepieceState = gamepieceState;
         this.reefState = reefState;
 
@@ -111,58 +99,23 @@ public class Autos {
         );
     }
 
-    private Command intakeCoralFromHP(final AutoTrajectory nextTrajectory) {
-        return Commands.parallel(
+    private Command intakeCoralFromHP() {
+        return Commands.deadline(
                 Commands.parallel(
                         superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
-                        intake.intakeCoralHP()
-                ).until(gamepieceState.hasCoral).asProxy(),
-                faceClosestHP().asProxy(),
-                Commands.sequence(
-                        Commands.waitUntil(gamepieceState.hasCoral),
-                        nextTrajectory.cmd().asProxy()
-                )
+                        intake.intakeCoralHP().asProxy()
+                ).until(gamepieceState.hasCoral),
+                driveToCenterHP()
         );
     }
 
-    private Command faceClosestHP() {
-        return swerve.faceAngle(() -> {
-            final Pose2d currentPose = swerve.getPose();
-            final Pose2d nearestStation;
-            if (Robot.IsRedAlliance.getAsBoolean()) {
-                nearestStation = currentPose.nearest(
-                        FieldConstants.CoralStation.RED_CORAL_STATIONS
-                );
-            } else {
-                nearestStation = currentPose.nearest(
-                        FieldConstants.CoralStation.BLUE_CORAL_STATIONS
-                );
-            }
-            return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
-        });
-    }
-
-    private Command driveToClosestHP() {
+    private Command driveToCenterHP() {
         return swerve.driveToPose(() -> {
             final Pose2d currentPose = swerve.getPose();
-            final Pose2d nearestStation;
-            if (Robot.IsRedAlliance.getAsBoolean()) {
-                nearestStation = currentPose.nearest(
-                        FieldConstants.CoralStation.RED_CORAL_STATIONS
-                );
-            } else {
-                nearestStation = currentPose.nearest(
-                        FieldConstants.CoralStation.BLUE_CORAL_STATIONS
-                );
-            }
-            return nearestStation.rotateBy(Rotation2d.kPi);
+            return currentPose.nearest(
+                    FieldConstants.getHPPickupPoses()
+            );
         });
-    }
-
-    private Set<Subsystem> getAllRequirements() {
-        final Set<Subsystem> requirements = new HashSet<>(superstructure.getRequirements());
-        requirements.addAll(List.of(swerve, intake));
-        return requirements;
     }
 
     private Command runStartingTrajectory(final AutoTrajectory startingTrajectory) {
@@ -185,6 +138,7 @@ public class Autos {
         return routine;
     }
 
+    @SuppressWarnings("DuplicatedCode")
     public AutoRoutine cage0ToReef4() {
         final AutoRoutine routine = autoFactory.newRoutine("Cage0ToReef4");
         final AutoTrajectory cage0Reef4 = routine.trajectory("Cage0Reef4");
@@ -206,7 +160,10 @@ public class Autos {
         );
 
         reef4ToRightHP.done().onTrue(
-                intakeCoralFromHP(rightHPToReef4)
+                Commands.sequence(
+                        intakeCoralFromHP(),
+                        rightHPToReef4.cmd()
+                )
         );
 
         rightHPToReef4.done().onTrue(
@@ -218,7 +175,10 @@ public class Autos {
         );
 
         reef4ToRightHPForReef5.done().onTrue(
-                intakeCoralFromHP(rightHPToReef5Right)
+                Commands.sequence(
+                        intakeCoralFromHP(),
+                        rightHPToReef5Right.cmd()
+                )
         );
 
         rightHPToReef5Right.done().onTrue(
@@ -230,7 +190,10 @@ public class Autos {
         );
 
         reef5ToRightHP.done().onTrue(
-                intakeCoralFromHP(rightHPToReef5Left)
+                Commands.sequence(
+                        intakeCoralFromHP(),
+                        rightHPToReef5Left.cmd()
+                )
         );
 
         rightHPToReef5Left.done().onTrue(
@@ -244,6 +207,7 @@ public class Autos {
         return routine;
     }
 
+    @SuppressWarnings("DuplicatedCode")
     public AutoRoutine twoPieceCage0ToReef5() {
         final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage0ToReef52");
         final AutoTrajectory cage0Reef5 = routine.trajectory("Cage0Reef5");
@@ -261,7 +225,10 @@ public class Autos {
         );
 
         reef5ToRightHP.done().onTrue(
-                intakeCoralFromHP(rightHPToReef5Left)
+                Commands.sequence(
+                        intakeCoralFromHP(),
+                        rightHPToReef5Left.cmd()
+                )
         );
 
         rightHPToReef5Left.done().onTrue(

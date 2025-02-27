@@ -57,12 +57,28 @@ public class FieldConstants {
                 BLUE_LEFT_CENTER_FACE,
                 BLUE_RIGHT_CENTER_FACE
         );
+        public static final List<Pose2d> BLUE_PICKUP_CORAL_STATIONS_POSES = List.of(
+                BLUE_LEFT_CENTER_FACE.transformBy(
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
+                ),
+                BLUE_RIGHT_CENTER_FACE.transformBy(
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
+                )
+        );
 
         public static final Pose2d RED_LEFT_CENTER_FACE = BLUE_LEFT_CENTER_FACE.relativeTo(RED_ORIGIN);
         public static final Pose2d RED_RIGHT_CENTER_FACE = BLUE_RIGHT_CENTER_FACE.relativeTo(RED_ORIGIN);
         public static final List<Pose2d> RED_CORAL_STATIONS = List.of(
                 RED_LEFT_CENTER_FACE,
                 RED_RIGHT_CENTER_FACE
+        );
+        public static final List<Pose2d> RED_PICKUP_CORAL_STATIONS_POSES = List.of(
+                RED_LEFT_CENTER_FACE.transformBy(
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
+                ),
+                RED_RIGHT_CENTER_FACE.transformBy(
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
+                )
         );
     }
 
@@ -276,6 +292,12 @@ public class FieldConstants {
 
     public static Pose2d getProcessorScoringPose() {
         return getAllianceFlipped(Processor.BLUE_SCORING_POSE, Processor.RED_SCORING_POSE);
+    }
+
+    public static List<Pose2d> getHPPickupPoses() {
+        return getAllianceFlipped(
+                CoralStation.BLUE_PICKUP_CORAL_STATIONS_POSES, CoralStation.RED_PICKUP_CORAL_STATIONS_POSES
+        );
     }
 
     public static Map<Reef.Face, Pose2d> getReefCenterPoses() {

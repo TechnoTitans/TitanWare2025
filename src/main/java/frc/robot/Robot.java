@@ -103,14 +103,13 @@ public class Robot extends LoggedRobot {
             superstructure,
             intake,
             photonVision,
-            scoreCommands,
             gamePieceState,
             reefState
     );
     public final AutoChooser autoChooser = new AutoChooser(
             new AutoOption(
                     "DoNothing",
-                    autos::doNothing,
+                    autos::twoPieceCage0ToReef5,
                     Constants.CompetitionType.COMPETITION
             )
     );
