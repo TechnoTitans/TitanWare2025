@@ -72,8 +72,10 @@ public class IntakeArm extends SubsystemBase {
     public enum Goal {
         STOW(0),
         HP(0),
-        ALGAE_GROUND(-0.35),
-        ALGAE_REEF(-0.25),
+        ALGAE_GROUND(-0.363),
+        UPPER_ALGAE(-0.27),
+        LOWER_ALGAE(-0.25),
+        PROCESSOR(-0.24),
         CLIMB(-0.36),
         NET(-0.15),
         L4(-0.2),
@@ -125,8 +127,12 @@ public class IntakeArm extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
-            if (currentGoal == Goal.ALGAE_GROUND || currentGoal == Goal.ALGAE_REEF) {
-                intakeArmIO.setMotionMagicCruiseVelocity(0.1);
+            if (currentGoal == Goal.ALGAE_GROUND
+                    || currentGoal == Goal.LOWER_ALGAE
+                    || currentGoal == Goal.UPPER_ALGAE
+                    || desiredGoal == Goal.PROCESSOR
+            ) {
+                intakeArmIO.setMotionMagicCruiseVelocity(0.4);
             } else {
                 intakeArmIO.setMotionMagicCruiseVelocity(0);
             }

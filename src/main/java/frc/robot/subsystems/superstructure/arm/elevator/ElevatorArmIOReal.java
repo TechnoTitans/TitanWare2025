@@ -70,7 +70,7 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
                 .withKD(0);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 39.374;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 2.5;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 3;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 80;

@@ -418,17 +418,17 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(driverScorePositionSupplier));
 
-//        this.driverController.a(teleopEventLoop)
-//                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
-//                .onFalse(scoreCommands.scoreNet());
-
-//        this.driverController.b(teleopEventLoop)
-//                .whileTrue(scoreCommands.readyScoreProcessor())
-//                .onFalse(scoreCommands.scoreProcessor());
-
         this.driverController.x(teleopEventLoop)
                 .whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
+
+//        this.coController.pov(0, 0, teleopEventLoop)
+//                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
+//                .onFalse(scoreCommands.scoreNet());
+
+        this.coController.b(teleopEventLoop)
+                .whileTrue(scoreCommands.readyScoreProcessor())
+                .onFalse(scoreCommands.scoreProcessor());
 
         this.coController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(coDriverScorePositionSupplier))
@@ -436,7 +436,7 @@ public class Robot extends LoggedRobot {
 
         this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
 
-        this.coController.y(teleopEventLoop).whileTrue(scoreCommands.readyIntakeUpperAlgae());
+        this.coController.y(teleopEventLoop).whileTrue(scoreCommands.intakeUpperAlgae());
 
         this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
     }

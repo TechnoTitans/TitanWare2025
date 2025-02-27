@@ -91,7 +91,7 @@ public class HardwareConstants {
             22,
             23,
             0.0254,
-            7.5,
+            10.0,
             2.5
     );
 }

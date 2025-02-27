@@ -218,18 +218,15 @@ public class ScoreCommands {
     }
 
     public Command readyScoreProcessor() {
-        return Commands.parallel(
-                swerve.driveToPose(FieldConstants::getProcessorScoringPose),
-                superstructure.runSuperstructureGoal(Superstructure.Goal.PROCESSOR)
-        );
+        return superstructure.runSuperstructureGoal(Superstructure.Goal.PROCESSOR);
     }
 
     public Command scoreProcessor() {
         return Commands.deadline(
                 Commands.sequence(
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(2),
                         intake.scoreAlgae(),
-                        Commands.waitUntil(intake.isAlgaePresent.negate())
+                        Commands.waitUntil(intake.isAlgaePresent.negate()).withTimeout(2)
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.PROCESSOR),
                 swerve.runWheelXCommand()
@@ -254,14 +251,14 @@ public class ScoreCommands {
     public Command intakeLowerAlgae() {
         return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
-                intake.intakeAlgae()
+                intake.intakeAlgae().asProxy()
         );
     }
 
-    public Command readyIntakeUpperAlgae() {
+    public Command intakeUpperAlgae() {
         return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
-                intake.intakeAlgae()
+                intake.intakeAlgae().asProxy()
         );
     }
 

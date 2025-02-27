@@ -136,7 +136,10 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/Trigger/IsCoralPresent", isCoralPresent);
         Logger.recordOutput(LogKey + "/Trigger/IsCoralOuttaking", isCoralOuttaking);
         Logger.recordOutput(LogKey + "/Trigger/IsCoralIntakeStopped", isCoralIntakeStopped);
+
         Logger.recordOutput(LogKey + "/Trigger/IsAlgaePresent", isAlgaePresent);
+        Logger.recordOutput(LogKey + "/Trigger/IsAlgaeOuttaking", isAlgaeOuttaking);
+        Logger.recordOutput(LogKey + "/Trigger/IsAlgaeIntakeStopped", isAlgaeIntakeStopped);
         Logger.recordOutput(LogKey + "/FilteredAlgae", getFilteredAlgaeCurrent());
 
         Logger.recordOutput(LogKey + "/OffsetCoralDistanceMeters", getCoralDistanceMeters());
@@ -157,7 +160,7 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isCoralPresent() {
-        return getCoralDistanceMeters() < 0.29;
+        return getCoralDistanceMeters() < 0.33;
     }
 
     private double getFilteredAlgaeCurrent() {
@@ -165,7 +168,7 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isAlgaePresent() {
-        return getFilteredAlgaeCurrent() >= 50;
+        return getFilteredAlgaeCurrent() >= 25;
     }
 
     public Command intakeCoralHP() {
@@ -177,6 +180,10 @@ public class Intake extends SubsystemBase {
 
     public Command holdCoral() {
         return toInstantCoralRollerVoltage(3).withName("HoldCoral");
+    }
+
+    public Command holdAlgae() {
+        return toInstantAlgaeRollerVoltage(6).withName("HoldAlgae");
     }
 
     public Command scoreCoral() {
@@ -193,14 +200,14 @@ public class Intake extends SubsystemBase {
     public Command intakeAlgae() {
         return Commands.sequence(
                 runOnce(() -> this.algaeIntaking = true),
-                toAlgaeRollerVelocity(20)
+                toAlgaeRollerVelocity(5)
         ).finallyDo(() -> this.algaeIntaking = false).withName("IntakeAlgae");
     }
 
     public Command scoreAlgae() {
         return Commands.sequence(
                 runOnce(() -> this.algaeOuttaking = true),
-                toInstantAlgaeRollerVoltage(-3),
+                toInstantAlgaeRollerVoltage(-9),
                 Commands.waitUntil(isAlgaePresent.negate()).withTimeout(1),
                 Commands.waitSeconds(0.1),
                 algaeInstantStopCommand()
