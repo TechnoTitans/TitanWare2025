@@ -282,7 +282,7 @@ public class Robot extends LoggedRobot {
 
         Logger.recordOutput("ScorePosition/Driver", driverScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition/CoDriver", coDriverScorePositionSupplier.get());
-        Threads.setCurrentThreadPriority(false, 10);
+        Threads.setCurrentThreadPriority(true, 10);
     }
 
     @Override
