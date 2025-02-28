@@ -98,12 +98,12 @@ public class IntakeIOReal implements IntakeIO {
                 .withKV(0.42405)
                 .withKA(0.22306)
                 .withKP(30);
-        algaeConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 30;
-        algaeConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -30;
-        algaeConfiguration.CurrentLimits.StatorCurrentLimit = 60;
+        algaeConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 27;
+        algaeConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -27;
+        algaeConfiguration.CurrentLimits.StatorCurrentLimit = 35;
         algaeConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        algaeConfiguration.CurrentLimits.SupplyCurrentLimit = 30;
-        algaeConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 30;
+        algaeConfiguration.CurrentLimits.SupplyCurrentLimit = 27;
+        algaeConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 27;
         algaeConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
         algaeConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
         algaeConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;

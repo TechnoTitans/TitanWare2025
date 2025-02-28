@@ -151,8 +151,8 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
-                new PIDController(5, 0, 0.03),
-                new PIDController(5, 0, 0.03),
+                new PIDController(6, 0, 0.16),
+                new PIDController(6, 0, 0.16),
                 new TrapezoidProfile.Constraints(
                         Config.maxLinearVelocityMeterPerSec(),
                         Config.maxLinearVelocityMeterPerSec() * 1.5
@@ -873,7 +873,7 @@ public class Swerve extends SubsystemBase {
                 new SysIdRoutine.Mechanism(
                         voltageMeasure -> {
                             // convert the voltage measure to an amperage measure by tricking it
-                            final double volts = voltageMeasure.in(Volts);
+                            final double volts = -voltageMeasure.in(Volts);
                             frontLeft.driveVoltageCharacterization(volts, -0.125);
                             frontRight.driveVoltageCharacterization(volts, 0.625);
                             backLeft.driveVoltageCharacterization(volts, 0.125);

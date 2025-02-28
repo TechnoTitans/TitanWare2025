@@ -319,21 +319,21 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-        driverController.y(testEventLoop).whileTrue(
-                intake.algaeTorqueCurrentSysIdCommand()
-        );
-
 //        driverController.y(testEventLoop).whileTrue(
-//                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+//                intake.algaeTorqueCurrentSysIdCommand()
 //        );
+
+        driverController.y(testEventLoop).whileTrue(
+                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+        );
         driverController.a(testEventLoop).whileTrue(
-                swerve.linearTorqueCurrentSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
+                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
         );
         driverController.b(testEventLoop).whileTrue(
-                swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kForward)
+                swerve.angularVoltageSysIdDynamicCommand(SysIdRoutine.Direction.kForward)
         );
         driverController.x(testEventLoop).whileTrue(
-                swerve.linearTorqueCurrentSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
+                swerve.angularVoltageSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
         );
 
         driverController.povDown().onTrue(
@@ -417,7 +417,7 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition(driverScorePositionSupplier));
 
-        this.driverController.x(teleopEventLoop)
+        this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
 
