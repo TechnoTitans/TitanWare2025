@@ -209,7 +209,7 @@ public class Autos {
 
     @SuppressWarnings("DuplicatedCode")
     public AutoRoutine twoPieceCage0ToReef5() {
-        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage0ToReef52");
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage0ToReef5");
         final AutoTrajectory cage0Reef5 = routine.trajectory("Cage0Reef5");
         final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
         final AutoTrajectory rightHPToReef5Left = routine.trajectory("RightHPToReef5");
@@ -234,6 +234,41 @@ public class Autos {
         rightHPToReef5Left.done().onTrue(
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        swerve.runWheelXCommand()
+                )
+        );
+
+        return routine;
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    public AutoRoutine twoPieceCage5ToReef1() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage5ToReef1");
+        final AutoTrajectory cage5Reef1 = routine.trajectory("Cage5Reef1");
+        final AutoTrajectory reef1ToLeftHP = routine.trajectory("Reef1ToLeftHP");
+        final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
+
+        routine.active().onTrue(runStartingTrajectory(cage5Reef1));
+
+        cage5Reef1.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef1ToLeftHP.cmd()
+                )
+        );
+
+        reef1ToLeftHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(),
+                        leftHPToReef1Left.cmd()
+                )
+        );
+
+        leftHPToReef1Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.RIGHT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
                         swerve.runWheelXCommand()
                 )
