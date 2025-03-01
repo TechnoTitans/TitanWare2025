@@ -103,7 +103,8 @@ public class Autos {
     private Command intakeCoralFromHP() {
         return Commands.parallel(
                         superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
-                        intake.intakeCoralHP().asProxy()
+                        intake.intakeCoralHP().asProxy(),
+                        swerve.runWheelXCommand()
                 ).until(gamepieceState.hasCoral);
     }
 
