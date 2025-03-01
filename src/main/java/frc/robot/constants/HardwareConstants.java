@@ -90,7 +90,7 @@ public class HardwareConstants {
             21,
             22,
             23,
-            0.0254,
+            0.0254 + Units.inchesToMeters(0.3),
             10.0,
             2.5
     );

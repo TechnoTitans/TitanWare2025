@@ -63,6 +63,7 @@ public class Intake extends SubsystemBase {
     public final Trigger isAlgaePresent;
 
     public final DoubleSupplier coralDistanceMeters = this::getCoralDistanceMeters;
+    public final LinearFilter coralDistanceFilter = LinearFilter.movingAverage(16);
     public final DoubleSupplier coralDistanceIntakeCenterMeters = this::getCoralDistanceFromCenterIntakeMeters;
     public final LinearFilter algaeDetectionCurrentFilter = LinearFilter.movingAverage(16);
 
@@ -151,8 +152,12 @@ public class Intake extends SubsystemBase {
         );
     }
 
+    private double getFilteredCoralDistanceMeters() {
+        return coralDistanceFilter.calculate(inputs.coralCANRangeDistanceMeters);
+    }
+
     private double getCoralDistanceMeters() {
-        return inputs.coralCANRangeDistanceMeters - constants.coralCANRangeOffsetMeters();
+        return getFilteredCoralDistanceMeters() - constants.coralCANRangeOffsetMeters();
     }
 
     private double getCoralDistanceFromCenterIntakeMeters() {
@@ -192,7 +197,7 @@ public class Intake extends SubsystemBase {
                 toInstantCoralRollerVoltage(-9),
                 Commands.waitUntil(isCoralPresent.negate())
                         .withTimeout(2),
-                Commands.waitSeconds(0.1),
+                Commands.waitSeconds(0.2),
                 coralInstantStopCommand()
         ).finallyDo(() -> this.coralOuttaking = false).withName("ScoreCoral");
     }

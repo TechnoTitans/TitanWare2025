@@ -228,7 +228,8 @@ public class ScoreCommands {
                                 () -> superstructure.toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
                                 superstructure.getRequirements()
                         ),
-                        swerve.runWheelXCommand()
+                        swerve.runWheelXCommand(),
+                        Commands.waitSeconds(1)
                 )
         ).withName("ScoreAtPositionTeleop");
     }
