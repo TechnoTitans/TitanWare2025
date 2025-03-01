@@ -386,12 +386,18 @@ public class Robot extends LoggedRobot {
         autoChooser.addAutoOption(new AutoOption(
                 "Cage0ToReef4",
                 autos::cage0ToReef4,
-                Constants.CompetitionType.COMPETITION
+                Constants.CompetitionType.TESTING
         ));
 
         autoChooser.addAutoOption(new AutoOption(
                 "TwoPieceCage0ToReef5",
                 autos::twoPieceCage0ToReef5,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+            autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage5ToReef1",
+                autos::twoPieceCage5ToReef1,
                 Constants.CompetitionType.COMPETITION
         ));
     }

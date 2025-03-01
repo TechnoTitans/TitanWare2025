@@ -98,16 +98,19 @@ public class FieldConstants {
         }
 
         public enum Level {
-            L4(Units.inchesToMeters(72), -90),
-            L3(Units.inchesToMeters(47.625), -35),
-            L2(Units.inchesToMeters(31.875), -35),
-            L1(Units.inchesToMeters(18), 0);
+            L4(Units.inchesToMeters(72), -90, Transform2d.kZero),
+            L3(Units.inchesToMeters(47.625), -35, Transform2d.kZero),
+            L2(Units.inchesToMeters(31.875), -35, Transform2d.kZero),
+            L1(Units.inchesToMeters(18), 0, new Transform2d(Units.inchesToMeters(-5), 0, Rotation2d.kZero));
 
             public final double heightMeters;
             public final double pitchDegrees;
-            Level(final double heightMeters, double pitchDegrees) {
+            public final Transform2d scoringOffset;
+
+            Level(final double heightMeters, final double pitchDegrees, final Transform2d scoringOffset) {
                 this.heightMeters = heightMeters;
                 this.pitchDegrees = pitchDegrees;
+                this.scoringOffset = scoringOffset;
             }
         }
 
@@ -200,6 +203,9 @@ public class FieldConstants {
                 final Map<Level, Pose2d> fillBlueScoringLeft = new HashMap<>();
                 final Map<Level, Pose2d> fillRedScoringLeft = new HashMap<>();
 
+                final Transform2d scoringTransform =
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg);
+
                 for (final Level level : Level.values()) {
                     final Pose2d poseDirection = new Pose2d(
                             BLUE_CENTER,
@@ -222,13 +228,10 @@ public class FieldConstants {
                                             Units.degreesToRadians(level.pitchDegrees),
                                             poseDirection.getRotation().getRadians())
                     );
-                    final Pose2d rightScoringPose = rightPose.toPose2d().transformBy(
-                            new Transform2d(
-                                    SCORING_DISTANCE_OFFSET_METERS,
-                                    0,
-                                    Rotation2d.k180deg
-                            )
-                    );
+                    final Pose2d rightScoringPose = rightPose.toPose2d()
+                            .transformBy(scoringTransform)
+                            .transformBy(level.scoringOffset);
+
                     fillBlueRight.put(level, rightPose);
                     fillRedRight.put(level, rightPose.relativeTo(RED_ORIGIN_POSE3D));
                     fillBlueScoringRight.put(level, rightScoringPose);
@@ -248,13 +251,10 @@ public class FieldConstants {
                                             Units.degreesToRadians(level.pitchDegrees),
                                             poseDirection.getRotation().getRadians())
                     );
-                    final Pose2d leftScoringPose = leftPose.toPose2d().transformBy(
-                            new Transform2d(
-                                    SCORING_DISTANCE_OFFSET_METERS,
-                                    0,
-                                    Rotation2d.k180deg
-                            )
-                    );
+                    final Pose2d leftScoringPose = leftPose.toPose2d()
+                            .transformBy(scoringTransform)
+                            .transformBy(level.scoringOffset);
+
                     fillBlueLeft.put(level, leftPose);
                     fillRedLeft.put(level, leftPose.relativeTo(RED_ORIGIN_POSE3D));
                     fillBlueScoringLeft.put(level, leftScoringPose);

@@ -190,7 +190,7 @@ public class ScoreCommands {
                             });
                         },
                         Set.of(swerve)
-                ).withName("ReadyDriveScoreAtPositionTeleop"),
+                ),
                 Commands.sequence(
                         Commands.waitUntil(swerve.atHolonomicDrivePose),
                         Commands.repeatingSequence(
@@ -211,7 +211,7 @@ public class ScoreCommands {
                                 }, superstructure.getRequirements())
                         )
                 )
-        );
+        ).withName("ReadyScoreAtPosition");
     }
 
     public Command readyScoreAtPositionNoLineup(final Supplier<ScorePosition> scorePositionSupplier) {
@@ -221,10 +221,9 @@ public class ScoreCommands {
     public Command scoreAtPosition() {
         return Commands.sequence(
                 Commands.deadline(
-                        Commands.sequence(
-                                Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
-                                intake.scoreCoral()
-                        ),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint)
+                                .withTimeout(3)
+                                .andThen(intake.scoreCoral()),
                         Commands.defer(
                                 () -> superstructure.toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
                                 superstructure.getRequirements()
