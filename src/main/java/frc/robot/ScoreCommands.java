@@ -18,6 +18,7 @@ import frc.robot.utils.teleop.SwerveSpeed;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -139,7 +140,8 @@ public class ScoreCommands {
     public Command readyScoreAtPosition(final Supplier<ScorePosition> wantScorePosition) {
         final Container<ScorePosition> driveToScorePosition = Container.of(wantScorePosition.get());
         final Supplier<ScorePosition> driveToScorePositionSupplier = () -> driveToScorePosition.value;
-        final Runnable updateDriveToScorePosition = () -> driveToScorePosition.value = wantScorePosition.get();
+        final Consumer<ScorePosition> setDriveToScorePosition =
+                (scorePosition) -> driveToScorePosition.value = scorePosition;
 
         return Commands.parallel(
                 Commands.defer(
@@ -197,21 +199,15 @@ public class ScoreCommands {
                                     final BooleanSupplier desiredScorePositionNotEqualLast =
                                             () -> !scorePosition.equals(wantScorePosition.get());
 
-                                    return Commands.either(
-                                            Commands.sequence(
-                                                    superstructure.runSuperstructureGoal(Superstructure.Goal.SAFE)
-                                                            .until(superstructure.atSuperstructureSetpoint
-                                                                    .and(superstructure.unsafeToDrive)),
-                                                    Commands.runOnce(updateDriveToScorePosition),
-                                                    Commands.waitUntil(swerve.atHolonomicDrivePose),
-                                                    superstructure.runSuperstructureGoal(scorePosition.level.goal)
-                                            ).until(desiredScorePositionNotEqualLast),
-                                            Commands.sequence(
-                                                    Commands.runOnce(updateDriveToScorePosition),
-                                                    superstructure.runSuperstructureGoal(scorePosition.level.goal)
-                                            ).until(desiredScorePositionNotEqualLast),
-                                            superstructure.unsafeToDrive
-                                    );
+                                    return Commands.sequence(
+                                            superstructure.runSuperstructureGoal(Superstructure.Goal.SAFE)
+                                                    .until(superstructure.atSuperstructureSetpoint
+                                                            .and(superstructure.unsafeToDrive))
+                                                    .onlyIf(superstructure.unsafeToDrive),
+                                            Commands.runOnce(() -> setDriveToScorePosition.accept(scorePosition)),
+                                            Commands.waitUntil(swerve.atHolonomicDrivePose),
+                                            superstructure.runSuperstructureGoal(scorePosition.level.goal)
+                                    ).until(desiredScorePositionNotEqualLast);
                                 }, superstructure.getRequirements())
                         )
                 )
