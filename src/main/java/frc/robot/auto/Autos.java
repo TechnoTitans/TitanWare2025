@@ -20,6 +20,7 @@ import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.PhotonVision;
 import org.littletonrobotics.junction.Logger;
 
+// C:\Users\TechnoTitans\AppData\Local\Choreo>choreo-cli.exe --chor C:\Users\TechnoTitans\Documents\Repos\TitanWare2025\src\main\deploy\choreo\choreo.chor --all-trajectory --generate
 public class Autos {
     public static final String LogKey = "Auto";
 
