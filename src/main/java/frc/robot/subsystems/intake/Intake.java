@@ -165,7 +165,7 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isCoralPresent() {
-        return getCoralDistanceMeters() < 0.3;
+        return getCoralDistanceMeters() < 0.285;
     }
 
     private double getFilteredAlgaeCurrent() {
