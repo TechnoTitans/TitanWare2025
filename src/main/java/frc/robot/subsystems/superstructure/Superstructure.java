@@ -35,9 +35,7 @@ public class Superstructure extends VirtualSubsystem {
         L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2),
         L3(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
         L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
-        NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
-
-        SAFE(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.Goal.STOW);
+        NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET);
 
         private static final Map<Goal, Translation2d> GoalTranslations = new HashMap<>();
 
@@ -67,8 +65,6 @@ public class Superstructure extends VirtualSubsystem {
     }
 
     protected static final String LogKey = "Superstructure";
-    public static final double AllowableExtensionForDrivingMeters =
-            Goal.GoalTranslations.get(Goal.SAFE).getNorm();
 
     private final Elevator elevator;
     private final ElevatorArm elevatorArm;
@@ -93,8 +89,6 @@ public class Superstructure extends VirtualSubsystem {
     public final Trigger desiredGoalNotStow;
     public final Trigger atSuperstructureSetpoint;
 
-    public final Trigger unsafeToDrive;
-
     public Superstructure(
             final Elevator elevator,
             final ElevatorArm elevatorArm,
@@ -115,9 +109,6 @@ public class Superstructure extends VirtualSubsystem {
                 .and(elevatorArm.atSetpoint)
                 .and(intakeArm.atSetpoint)
                 .and(desiredGoalIsAtGoal);
-
-        this.unsafeToDrive = new Trigger(eventLoop, () ->
-                getCurrentTranslation().getNorm() > AllowableExtensionForDrivingMeters);
 
         this.allowedToChangeGoal = desiredGoalIsDynamic.negate()
                 .and((desiredGoalIsAtGoal.and(atSuperstructureSetpoint)).negate());

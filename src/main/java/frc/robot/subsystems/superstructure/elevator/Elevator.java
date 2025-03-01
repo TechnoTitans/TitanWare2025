@@ -25,7 +25,7 @@ import static edu.wpi.first.units.Units.*;
 
 public class Elevator extends SubsystemBase {
     protected static final String LogKey = "Elevator";
-    private static final double PositionToleranceRots = 0.05;
+    private static final double PositionToleranceRots = 0.065;
     private static final double VelocityToleranceRotsPerSec = 0.05;
 
     private final HardwareConstants.ElevatorConstants constants;
