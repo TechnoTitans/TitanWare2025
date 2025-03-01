@@ -15,13 +15,13 @@ public class SwerveConstants {
             0.0508,
             6.75,
             150.0 / 7.0,
-            50.0 / 16.0,
+            50.0 / 17.0,
             Units.inchesToMeters(22.75),
             Units.inchesToMeters(22.75),
             Units.feetToMeters(15.0),
             12,
             6,
-            new Translation2d(0, 0)
+            Translation2d.kZero
     );
 
     public static final SwerveModuleConstants FrontLeftModule = new SwerveModuleConstants(
