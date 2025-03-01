@@ -101,13 +101,10 @@ public class Autos {
     }
 
     private Command intakeCoralFromHP() {
-        return Commands.deadline(
-                Commands.parallel(
+        return Commands.parallel(
                         superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
                         intake.intakeCoralHP().asProxy()
-                ).until(gamepieceState.hasCoral),
-                driveToCenterHP()
-        );
+                ).until(gamepieceState.hasCoral);
     }
 
     private Command driveToCenterHP() {
