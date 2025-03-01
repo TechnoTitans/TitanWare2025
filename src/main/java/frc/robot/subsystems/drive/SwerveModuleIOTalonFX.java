@@ -112,8 +112,8 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
                 .withKV(0)
                 .withKA(3.1912)
                 .withKP(42);
-        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
-        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
+        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 65;
+        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -65;
         driveTalonFXConfiguration.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.2;
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
