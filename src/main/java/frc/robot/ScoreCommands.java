@@ -202,7 +202,7 @@ public class ScoreCommands {
                                     return Commands.sequence(
                                             superstructure.runSuperstructureGoal(Superstructure.Goal.SAFE)
                                                     .until(superstructure.atSuperstructureSetpoint
-                                                            .and(superstructure.unsafeToDrive))
+                                                            .and(superstructure.unsafeToDrive.negate()))
                                                     .onlyIf(superstructure.unsafeToDrive),
                                             Commands.runOnce(() -> setDriveToScorePosition.accept(scorePosition)),
                                             Commands.waitUntil(swerve.atHolonomicDrivePose),
