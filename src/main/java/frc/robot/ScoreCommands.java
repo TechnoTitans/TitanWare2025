@@ -13,9 +13,11 @@ import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.utils.teleop.SwerveSpeed;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -161,10 +163,17 @@ public class ScoreCommands {
                     }
 
                     final Map<Reef.Side, Map<Reef.Level, Pose2d>> finalScoringPoseMap = scoringPoseMap;
+                    final AtomicReference<Reef.Side> reefSide = new AtomicReference<>(scorePositionSupplier.get().side());
+
                     return swerve.runToPose(() -> {
                         final ScorePosition scorePosition = scorePositionSupplier.get();
+
+                        if (superstructure.getDesiredSuperstructureGoal().elevatorGoal != Elevator.Goal.L4) {
+                            reefSide.set(scorePositionSupplier.get().side());
+                        }
+
                         final Pose2d scoringPose = finalScoringPoseMap
-                                .get(scorePosition.side)
+                                .get(reefSide.get())
                                 .get(scorePosition.level.level);
                         final Transform2d coralDistanceOffset = new Transform2d(
                                 0,
