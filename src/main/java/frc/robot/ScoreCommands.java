@@ -13,11 +13,11 @@ import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.superstructure.elevator.Elevator;
+import frc.robot.utils.Container;
 import frc.robot.utils.teleop.SwerveSpeed;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -53,6 +53,7 @@ public class ScoreCommands {
             Level level
     ) {}
 
+    @SuppressWarnings("unused")
     private static final Set<Superstructure.Goal> ScoreGoals = Set.of(
             Superstructure.Goal.DYNAMIC,
             Superstructure.Goal.L1,
@@ -135,80 +136,93 @@ public class ScoreCommands {
         );
     }
 
-    private Command readyDriveScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
-        return Commands.defer(
-                () -> {
-                    final Pose2d currentPose = swerve.getPose();
-                    final Translation2d currentTranslation = currentPose.getTranslation();
-                    final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
-                    final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
-                            FieldConstants.getBranchScoringPositions();
+    public Command readyScoreAtPosition(final Supplier<ScorePosition> wantScorePosition) {
+        final Container<ScorePosition> driveToScorePosition = Container.of(wantScorePosition.get());
+        final Supplier<ScorePosition> driveToScorePositionSupplier = () -> driveToScorePosition.value;
+        final Runnable updateDriveToScorePosition = () -> driveToScorePosition.value = wantScorePosition.get();
 
-                    Map<Reef.Side, Map<Reef.Level, Pose2d>> scoringPoseMap = null;
-                    double closestDistanceMeters = Double.MAX_VALUE;
-                    for (final Reef.Face face : Reef.Face.values()) {
-                        final Pose2d centerFace = reefCenterPoses.get(face);
-
-                        final double distanceMeters = centerFace.getTranslation()
-                                .getDistance(currentTranslation);
-
-                        if (distanceMeters < closestDistanceMeters) {
-                            scoringPoseMap = branchScoringPositions.get(face);
-                            closestDistanceMeters = distanceMeters;
-                        }
-                    }
-
-                    if (scoringPoseMap == null) {
-                        return Commands.none();
-                    }
-
-                    final Map<Reef.Side, Map<Reef.Level, Pose2d>> finalScoringPoseMap = scoringPoseMap;
-                    final AtomicReference<Reef.Side> reefSide = new AtomicReference<>(scorePositionSupplier.get().side());
-
-                    return swerve.runToPose(() -> {
-                        final ScorePosition scorePosition = scorePositionSupplier.get();
-
-                        if (superstructure.getDesiredSuperstructureGoal().elevatorGoal != Elevator.Goal.L4) {
-                            reefSide.set(scorePositionSupplier.get().side());
-                        }
-
-                        final Pose2d scoringPose = finalScoringPoseMap
-                                .get(reefSide.get())
-                                .get(scorePosition.level.level);
-                        final Transform2d coralDistanceOffset = new Transform2d(
-                                0,
-                                gamepieceState.hasCoral.getAsBoolean()
-                                        ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
-                                        : 0,
-                                Rotation2d.kZero
-                        );
-
-                        return scoringPose.transformBy(coralDistanceOffset);
-                    });
-                },
-                Set.of(swerve)
-        ).withName("ReadyDriveScoreAtPositionTeleop");
-    }
-
-    private Command readySuperstructureScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
-        return superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level().goal);
-    }
-
-    public Command readyScoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         return Commands.parallel(
-                readyDriveScoreAtPosition(scorePositionSupplier),
+                Commands.defer(
+                        () -> {
+                            final Pose2d currentPose = swerve.getPose();
+                            final Translation2d currentTranslation = currentPose.getTranslation();
+                            final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
+                            final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
+                                    FieldConstants.getBranchScoringPositions();
+
+                            Map<Reef.Side, Map<Reef.Level, Pose2d>> scoringPoseMap = null;
+                            double closestDistanceMeters = Double.MAX_VALUE;
+                            for (final Reef.Face face : Reef.Face.values()) {
+                                final Pose2d centerFace = reefCenterPoses.get(face);
+
+                                final double distanceMeters = centerFace.getTranslation()
+                                        .getDistance(currentTranslation);
+
+                                if (distanceMeters < closestDistanceMeters) {
+                                    scoringPoseMap = branchScoringPositions.get(face);
+                                    closestDistanceMeters = distanceMeters;
+                                }
+                            }
+
+                            if (scoringPoseMap == null) {
+                                return Commands.none();
+                            }
+
+                            final Map<Reef.Side, Map<Reef.Level, Pose2d>> finalScoringPoseMap = scoringPoseMap;
+
+                            return swerve.runToPose(() -> {
+                                final ScorePosition scorePosition = driveToScorePositionSupplier.get();
+
+                                final Pose2d scoringPose = finalScoringPoseMap
+                                        .get(scorePosition.side)
+                                        .get(scorePosition.level.level);
+                                final Transform2d coralDistanceOffset = new Transform2d(
+                                        0,
+                                        gamepieceState.hasCoral.getAsBoolean()
+                                                ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
+                                                : 0,
+                                        Rotation2d.kZero
+                                );
+
+                                return scoringPose.transformBy(coralDistanceOffset);
+                            });
+                        },
+                        Set.of(swerve)
+                ).withName("ReadyDriveScoreAtPositionTeleop"),
                 Commands.sequence(
                         Commands.waitUntil(swerve.atHolonomicDrivePose),
-                        readySuperstructureScoreAtPosition(scorePositionSupplier)
+                        Commands.repeatingSequence(
+                                Commands.defer(() -> {
+                                    final ScorePosition scorePosition = wantScorePosition.get();
+                                    final BooleanSupplier desiredScorePositionNotEqualLast =
+                                            () -> !scorePosition.equals(wantScorePosition.get());
+
+                                    return Commands.either(
+                                            Commands.sequence(
+                                                    superstructure.runSuperstructureGoal(Superstructure.Goal.SAFE)
+                                                            .until(superstructure.atSuperstructureSetpoint
+                                                                    .and(superstructure.unsafeToDrive)),
+                                                    Commands.runOnce(updateDriveToScorePosition),
+                                                    Commands.waitUntil(swerve.atHolonomicDrivePose),
+                                                    superstructure.runSuperstructureGoal(scorePosition.level.goal)
+                                            ).until(desiredScorePositionNotEqualLast),
+                                            Commands.sequence(
+                                                    Commands.runOnce(updateDriveToScorePosition),
+                                                    superstructure.runSuperstructureGoal(scorePosition.level.goal)
+                                            ).until(desiredScorePositionNotEqualLast),
+                                            superstructure.unsafeToDrive
+                                    );
+                                }, superstructure.getRequirements())
+                        )
                 )
         );
     }
 
     public Command readyScoreAtPositionNoLineup(final Supplier<ScorePosition> scorePositionSupplier) {
-        return readySuperstructureScoreAtPosition(scorePositionSupplier);
+        return superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level().goal);
     }
 
-    public Command scoreAtPosition(final Supplier<ScorePosition> scorePosition) {
+    public Command scoreAtPosition() {
         return Commands.sequence(
                 Commands.deadline(
                         Commands.sequence(
@@ -220,8 +234,7 @@ public class ScoreCommands {
                                 superstructure.getRequirements()
                         ),
                         swerve.runWheelXCommand()
-                ),
-                Commands.waitSeconds(1)
+                )
         ).withName("ScoreAtPositionTeleop");
     }
 
@@ -238,21 +251,6 @@ public class ScoreCommands {
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.PROCESSOR),
                 swerve.runWheelXCommand()
-        );
-    }
-
-    private Command driveToClosestReefScoringFace() {
-        final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
-        final List<Pose2d> reefCenterPosesList = new ArrayList<>(reefCenterPoses.values());
-
-        return Commands.defer(
-                () -> {
-                    final Pose2d currentPose = swerve.getPose();
-                    final Pose2d nearestCoralSide = currentPose.nearest(reefCenterPosesList);
-
-                    return swerve.driveToPose(() -> nearestCoralSide);
-                },
-                Set.of(swerve)
         );
     }
 
@@ -277,6 +275,7 @@ public class ScoreCommands {
         );
     }
 
+    @SuppressWarnings("unused")
     public Command readyScoreNet(final DoubleSupplier leftStickXInput) {
         return Commands.parallel(
                 swerve.teleopHoldAxisFacingAngleCommand(
@@ -289,6 +288,7 @@ public class ScoreCommands {
         );
     }
 
+    @SuppressWarnings("unused")
     public Command scoreNet() {
         return Commands.deadline(
                 Commands.sequence(

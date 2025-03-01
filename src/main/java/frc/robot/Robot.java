@@ -415,7 +415,7 @@ public class Robot extends LoggedRobot {
 
         this.driverController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition(driverScorePositionSupplier));
+                .onFalse(scoreCommands.scoreAtPosition());
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB))
@@ -431,7 +431,7 @@ public class Robot extends LoggedRobot {
 
         this.coController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(coDriverScorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition(coDriverScorePositionSupplier));
+                .onFalse(scoreCommands.scoreAtPosition());
 
         this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
 
