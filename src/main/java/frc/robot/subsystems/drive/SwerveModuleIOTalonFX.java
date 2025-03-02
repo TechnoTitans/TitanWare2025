@@ -159,7 +159,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
                 driveDeviceTemp,
                 turnDeviceTemp
         );
-        ParentDevice.optimizeBusUtilizationForAll(driveMotor, turnMotor, turnEncoder);
+        ParentDevice.optimizeBusUtilizationForAll(4, driveMotor, turnMotor, turnEncoder);
     }
 
     @SuppressWarnings("DuplicatedCode")

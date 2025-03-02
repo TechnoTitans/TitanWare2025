@@ -112,6 +112,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
         );
 
         ParentDevice.optimizeBusUtilizationForAll(
+                4,
                 pivotMotor,
                 pivotEncoder
         );

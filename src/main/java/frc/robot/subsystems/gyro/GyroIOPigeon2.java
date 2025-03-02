@@ -98,7 +98,7 @@ public class GyroIOPigeon2 implements GyroIO {
                 4,
                 this.faultHardware
         );
-        ParentDevice.optimizeBusUtilizationForAll(pigeon);
+        ParentDevice.optimizeBusUtilizationForAll(4, pigeon);
     }
 
     public double getYaw() {

@@ -34,7 +34,7 @@ public interface Constants {
     interface Vision {
         Transform3d ROBOT_TO_FR_APRILTAG = new Transform3d(
                 new Translation3d(Units.inchesToMeters(11.552), Units.inchesToMeters(-11.224), Units.inchesToMeters(8.617)),
-                new Rotation3d(0, Units.degreesToRadians(-40), Units.rotationsToDegrees(30))
+                new Rotation3d(0, Units.degreesToRadians(-40), Units.degreesToRadians(-30))
         );
         Transform3d ROBOT_TO_FL_TOP_APRILTAG = new Transform3d(
                 new Translation3d(Units.inchesToMeters(2.331), Units.inchesToMeters(11.694), Units.inchesToMeters(13.717)),
