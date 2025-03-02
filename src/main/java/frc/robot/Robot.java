@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -429,9 +430,8 @@ public class Robot extends LoggedRobot {
 
         this.coController.leftBumper(teleopEventLoop).whileTrue(intake.scoreAlgae());
 
-//        this.coController.pov(0, 0, teleopEventLoop)
-//                .whileTrue(scoreCommands.readyScoreNet(driverController::getLeftX))
-//                .onFalse(scoreCommands.scoreNet());
+        this.coController.start(teleopEventLoop)
+                .whileTrue(superstructure.toSuperstructureGoal(Superstructure.Goal.CLIMB));
 
         this.coController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())

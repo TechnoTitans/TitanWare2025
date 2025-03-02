@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
@@ -27,6 +28,20 @@ import java.util.function.DoubleSupplier;
 import static edu.wpi.first.units.Units.*;
 
 public class Intake extends SubsystemBase {
+    private static final InterpolatingDoubleTreeMap coralTreeMap = new InterpolatingDoubleTreeMap();
+
+    static {
+        //measure, actual
+        coralTreeMap.put(0.0, 0.0);
+        coralTreeMap.put(0.044, Units.inchesToMeters(1.1875));
+        coralTreeMap.put(0.92, Units.inchesToMeters(2.5625));
+        coralTreeMap.put(0.125, Units.inchesToMeters(3.5625));
+        coralTreeMap.put(0.152, Units.inchesToMeters(4.5625));
+        coralTreeMap.put(0.170, Units.inchesToMeters(5.1875));
+        coralTreeMap.put(0.189, Units.inchesToMeters(6.125));
+        coralTreeMap.put(0.218, Units.inchesToMeters(7));
+    }
+
     protected static final String LogKey = "Intake";
 
     private final HardwareConstants.IntakeConstants constants;
@@ -63,7 +78,7 @@ public class Intake extends SubsystemBase {
     public final Trigger isAlgaePresent;
 
     public final DoubleSupplier coralDistanceMeters = this::getCoralDistanceMeters;
-    public final LinearFilter coralDistanceFilter = LinearFilter.movingAverage(16);
+    public final LinearFilter coralDistanceFilter = LinearFilter.movingAverage(25);
     public final DoubleSupplier coralDistanceIntakeCenterMeters = this::getCoralDistanceFromCenterIntakeMeters;
     public final LinearFilter algaeDetectionCurrentFilter = LinearFilter.movingAverage(16);
 
@@ -77,6 +92,7 @@ public class Intake extends SubsystemBase {
         };
 
         this.inputs = new IntakeIOInputsAutoLogged();
+
         this.eventLoop = new EventLoop();
 
         this.isCoralIntaking = new Trigger(eventLoop, () -> coralIntaking);
@@ -143,6 +159,7 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/Trigger/IsAlgaeIntakeStopped", isAlgaeIntakeStopped);
         Logger.recordOutput(LogKey + "/FilteredAlgae", getFilteredAlgaeCurrent());
 
+        Logger.recordOutput(LogKey + "/FilteredCoralDistanceMeters", getFilteredCoralDistanceMeters());
         Logger.recordOutput(LogKey + "/OffsetCoralDistanceMeters", getCoralDistanceMeters());
         Logger.recordOutput(LogKey + "/CoralDistanceFromCenterIntakeMeters", getCoralDistanceFromCenterIntakeMeters());
 
@@ -157,7 +174,7 @@ public class Intake extends SubsystemBase {
     }
 
     private double getCoralDistanceMeters() {
-        return getFilteredCoralDistanceMeters() - constants.coralCANRangeOffsetMeters();
+        return coralTreeMap.get(getFilteredCoralDistanceMeters());
     }
 
     private double getCoralDistanceFromCenterIntakeMeters() {
@@ -165,7 +182,7 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isCoralPresent() {
-        return getCoralDistanceMeters() < 0.285;
+        return getCoralDistanceMeters() < 0.34;
     }
 
     private double getFilteredAlgaeCurrent() {
