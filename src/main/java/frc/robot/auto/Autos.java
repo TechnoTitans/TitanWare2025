@@ -4,6 +4,8 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -28,8 +30,9 @@ public class Autos {
     private final Superstructure superstructure;
     private final Intake intake;
 
-    private final ReefState reefState;
+    private final ScoreCommands scoreCommands;
     private final GamepieceState gamepieceState;
+    private final ReefState reefState;
 
     private final AutoFactory autoFactory;
 
@@ -38,6 +41,7 @@ public class Autos {
             final Superstructure superstructure,
             final Intake intake,
             final PhotonVision photonVision,
+            final ScoreCommands scoreCommands,
             final GamepieceState gamepieceState,
             final ReefState reefState
     ) {
@@ -45,6 +49,7 @@ public class Autos {
         this.superstructure = superstructure;
         this.intake = intake;
 
+        this.scoreCommands = scoreCommands;
         this.gamepieceState = gamepieceState;
         this.reefState = reefState;
 
@@ -76,10 +81,14 @@ public class Autos {
     private Command scoreAtLevel(final ReefState.Branch branch) {
         return Commands.parallel(
                 Commands.sequence(
-                        swerve.driveToPose(() -> FieldConstants.getBranchScoringPositions()
-                                .get(branch.face())
-                                .get(branch.side())
-                                .get(branch.level())),
+                        swerve.driveToPose(() -> {
+                            final Pose2d scoringPose = FieldConstants.getBranchScoringPositions()
+                                    .get(branch.face())
+                                    .get(branch.side())
+                                    .get(branch.level());
+
+                            return scoreCommands.offsetScoringPoseWithCANRange(scoringPose);
+                        }),
                         swerve.wheelXCommand()
                 ),
                 Commands.sequence(

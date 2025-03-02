@@ -105,6 +105,18 @@ public class ScoreCommands {
         };
     }
 
+    public Pose2d offsetScoringPoseWithCANRange(final Pose2d targetPose) {
+        final Transform2d coralDistanceOffset = new Transform2d(
+                0,
+                gamepieceState.hasCoral.getAsBoolean()
+                        ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
+                        : 0,
+                Rotation2d.kZero
+        );
+
+        return targetPose.transformBy(coralDistanceOffset);
+    }
+
     public Command intakeFacingClosestCoralStation(
             final DoubleSupplier leftStickYInput,
             final DoubleSupplier leftStickXInput
@@ -174,15 +186,8 @@ public class ScoreCommands {
                         final Pose2d scoringPose = finalScoringPoseMap
                                 .get(reefSide.value)
                                 .get(scorePosition.level.level);
-                        final Transform2d coralDistanceOffset = new Transform2d(
-                                0,
-                                gamepieceState.hasCoral.getAsBoolean()
-                                        ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
-                                        : 0,
-                                Rotation2d.kZero
-                        );
 
-                        return scoringPose.transformBy(coralDistanceOffset);
+                        return offsetScoringPoseWithCANRange(scoringPose);
                     });
                 },
                 Set.of(swerve)

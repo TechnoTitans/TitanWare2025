@@ -104,6 +104,7 @@ public class Robot extends LoggedRobot {
             superstructure,
             intake,
             photonVision,
+            scoreCommands,
             gamePieceState,
             reefState
     );
