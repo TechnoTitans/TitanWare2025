@@ -33,8 +33,10 @@ public class Intake extends SubsystemBase {
     static {
         //measure, actual
         coralTreeMap.put(0.0, 0.0);
+//        coralTreeMap.put(0.033, Units.inchesToMeters(1.12));
         coralTreeMap.put(0.044, Units.inchesToMeters(1.1875));
-        coralTreeMap.put(0.92, Units.inchesToMeters(2.5625));
+        coralTreeMap.put(0.07, Units.inchesToMeters(1.6));
+        coralTreeMap.put(0.092, Units.inchesToMeters(2.5625));
         coralTreeMap.put(0.125, Units.inchesToMeters(3.5625));
         coralTreeMap.put(0.152, Units.inchesToMeters(4.5625));
         coralTreeMap.put(0.170, Units.inchesToMeters(5.1875));

@@ -104,7 +104,7 @@ public class Autos {
                                 )
                         ),
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint)
-                                .withTimeout(1)
+                                .withTimeout(2)
                 )
         );
     }
