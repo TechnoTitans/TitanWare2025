@@ -43,7 +43,7 @@ public interface SimConstants {
     interface ElevatorArm {
         double RETRACTED_MOI_KG_M_SQUARED = 5.07674197;
         double EXTENDED_MOI_KG_M_SQUARED = 18.505581775;
-        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(15.5);
+        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(-15.5);
         Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(49.284);
         double LENGTH_METERS = Units.inchesToMeters(31.876);
     }

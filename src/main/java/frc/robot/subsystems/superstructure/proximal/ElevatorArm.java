@@ -1,4 +1,4 @@
-package frc.robot.subsystems.superstructure.arm.elevator;
+package frc.robot.subsystems.superstructure.proximal;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
+import frc.robot.constants.SimConstants;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
@@ -179,6 +180,10 @@ public class ElevatorArm extends SubsystemBase {
 
     public Rotation2d getPivotPosition() {
         return Rotation2d.fromRotations(inputs.pivotPositionRots);
+    }
+
+    public Rotation2d getPivotPositionRadsFromHorizontal() {
+        return getPivotPosition().plus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL);
     }
 
     public void setGoal(final Goal goal) {
