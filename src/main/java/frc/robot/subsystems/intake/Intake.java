@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.hardware.CANrange;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
@@ -153,7 +154,7 @@ public class Intake extends SubsystemBase {
     }
 
     private double getFilteredCoralDistanceMeters() {
-        return coralDistanceFilter.calculate(inputs.coralCANRangeDistanceMeters);
+        return coralDistanceFilter.calculate(inputs.coralTOFDistanceMeters);
     }
 
     private double getCoralDistanceMeters() {
