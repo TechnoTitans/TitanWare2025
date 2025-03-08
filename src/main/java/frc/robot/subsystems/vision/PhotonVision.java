@@ -78,7 +78,7 @@ public class PhotonVision extends VirtualSubsystem {
                     PhotonVision.apriltagFieldLayout,
                     PhotonVision.makeVisionIOInputsMap(
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FR_APRILTAG),
-                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_TOP_APRILTAG),
+                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_BL_APRILTAG),
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
                     )
             );
@@ -99,7 +99,7 @@ public class PhotonVision extends VirtualSubsystem {
                                         TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
                                 ),
                                 new SimVisionRunner.VisionIOApriltagsSim(
-                                        TitanCamera.PHOTON_FL_TOP_APRILTAG, visionSystemSim
+                                        TitanCamera.PHOTON_BL_APRILTAG, visionSystemSim
                                 ),
                                 new SimVisionRunner.VisionIOApriltagsSim(
                                         TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
@@ -111,7 +111,7 @@ public class PhotonVision extends VirtualSubsystem {
                     PhotonVision.apriltagFieldLayout,
                     PhotonVision.makeVisionIOInputsMap(
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FR_APRILTAG),
-                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_TOP_APRILTAG),
+                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_BL_APRILTAG),
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
                     )
             );
