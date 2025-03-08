@@ -14,27 +14,31 @@ import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.gyro.GyroUtils;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 public class SimVisionRunner implements PhotonVisionRunner {
     public static class VisionIOApriltagsSim implements VisionIO {
         public final PhotonCamera photonCamera;
         public final String cameraName;
 
+        public final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
+
         public final double stdDevFactor;
         public final Transform3d robotToCamera;
 
-        public VisionIOApriltagsSim(
-                final TitanCamera titanCamera,
-                final VisionSystemSim visionSystemSim
-        ) {
+        public VisionIOApriltagsSim(final TitanCamera titanCamera, final VisionSystemSim visionSystemSim) {
             this.photonCamera = titanCamera.getPhotonCamera();
             this.cameraName = photonCamera.getName();
+
+            this.constrainedPnpParams = titanCamera.getConstrainedPnpParams();
 
             this.stdDevFactor = titanCamera.getStdDevFactor();
             this.robotToCamera = titanCamera.getRobotToCameraTransform();
@@ -54,7 +58,10 @@ public class SimVisionRunner implements PhotonVisionRunner {
         public void updateInputs(final VisionIOInputs inputs) {
             inputs.name = cameraName;
             inputs.stdDevFactor = stdDevFactor;
+            inputs.constrainedPnpParams = constrainedPnpParams;
             inputs.robotToCamera = robotToCamera;
+            inputs.cameraMatrix = photonCamera.getCameraMatrix().orElse(EmptyCameraMatrix);
+            inputs.distortionCoeffs = photonCamera.getDistCoeffs().orElse(EmptyDistortionCoeffs);
             inputs.pipelineResults = photonCamera.getAllUnreadResults().toArray(new PhotonPipelineResult[0]);
         }
     }
@@ -64,7 +71,6 @@ public class SimVisionRunner implements PhotonVisionRunner {
     private final VisionSystemSim visionSystemSim;
 
     private final AprilTagFieldLayout aprilTagFieldLayout;
-
     private final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
 
     private final Map<VisionIO, VisionUpdate> visionUpdates;
@@ -82,7 +88,6 @@ public class SimVisionRunner implements PhotonVisionRunner {
         this.visionSystemSim.addAprilTags(aprilTagFieldLayout);
 
         this.aprilTagFieldLayout = aprilTagFieldLayout;
-
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
 
         this.visionUpdates = new HashMap<>();
@@ -90,7 +95,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
 
     @SuppressWarnings("DuplicatedCode")
     @Override
-    public void periodic(final Pose2d currentRobotPose) {
+    public void periodic(final Function<Double, Optional<Pose2d>> poseAtTimestamp) {
         if (ToClose.hasClosed()) {
             return;
         }
@@ -129,9 +134,12 @@ public class SimVisionRunner implements PhotonVisionRunner {
                 VisionPoseEstimator.update(
                         inputs.name,
                         aprilTagFieldLayout,
-                        currentRobotPose,
+                        poseAtTimestamp,
                         visionIO.robotToCamera,
-                        result
+                        result,
+                        inputs.cameraMatrix,
+                        inputs.distortionCoeffs,
+                        inputs.constrainedPnpParams
                 ).ifPresent(
                         visionUpdate -> visionUpdates.put(visionIO, visionUpdate)
                 );

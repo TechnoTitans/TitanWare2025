@@ -95,9 +95,15 @@ public class PhotonVision extends VirtualSubsystem {
                         PhotonVision.apriltagFieldLayout,
                         visionSystemSim,
                         PhotonVision.makeVisionIOInputsMap(
-                                new SimVisionRunner.VisionIOApriltagsSim(TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim),
-                                new SimVisionRunner.VisionIOApriltagsSim(TitanCamera.PHOTON_FL_TOP_APRILTAG, visionSystemSim),
-                                new SimVisionRunner.VisionIOApriltagsSim(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim)
+                                new SimVisionRunner.VisionIOApriltagsSim(
+                                        TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
+                                ),
+                                new SimVisionRunner.VisionIOApriltagsSim(
+                                        TitanCamera.PHOTON_FL_TOP_APRILTAG, visionSystemSim
+                                ),
+                                new SimVisionRunner.VisionIOApriltagsSim(
+                                        TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
+                                )
                         )
                 );
             }
@@ -320,7 +326,7 @@ public class PhotonVision extends VirtualSubsystem {
     @Override
     public void periodic() {
         final double visionIOPeriodicStart = RobotController.getFPGATime();
-        runner.periodic(swerve.getPose());
+        runner.periodic(swerve::getPose);
 
         // Update and log PhotonVision results
         update();
