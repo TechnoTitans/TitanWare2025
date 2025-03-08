@@ -436,6 +436,23 @@ public class Swerve extends SubsystemBase {
         drive(speeds);
     }
 
+    public Command drive(
+            final DoubleSupplier xSpeedMeterPerSec,
+            final DoubleSupplier ySpeedMetersPerSec,
+            final DoubleSupplier omegaRadsPerSec,
+            final boolean fieldRelative,
+            final boolean invertYaw
+    ) {
+        return run(() -> drive(
+                xSpeedMeterPerSec.getAsDouble(),
+                ySpeedMetersPerSec.getAsDouble(),
+                omegaRadsPerSec.getAsDouble(),
+                fieldRelative,
+                invertYaw
+        ));
+    }
+
+
     public void drive(final ChassisSpeeds speeds) {
         drive(speeds, Swerve.NoTorqueFeedforwards);
     }
@@ -767,13 +784,12 @@ public class Swerve extends SubsystemBase {
         final double[] moduleForcesX = swerveSample.moduleForcesX();
         final double[] moduleForcesY = swerveSample.moduleForcesY();
 
-//        for (int i = 0; i < swerveModules.length; i++) {
-//            final Vector<N2> forceVec = new Translation2d(moduleForcesX[i], moduleForcesY[i])
-//                    .rotateBy(Rotation2d.fromRadians(swerveSample.heading).unaryMinus())
-//                    .toVector();
-
-//            moduleForceVectors.add(forceVec);
-//        }
+        for (int i = 0; i < swerveModules.length; i++) {
+            final Vector<N2> forceVec = new Translation2d(moduleForcesX[i], moduleForcesY[i])
+                    .rotateBy(Rotation2d.fromRadians(swerveSample.heading).unaryMinus())
+                    .toVector();
+            moduleForceVectors.add(forceVec);
+        }
 
         Logger.recordOutput(Autos.LogKey + "/Timestamp", swerveSample.getTimestamp());
         Logger.recordOutput(Autos.LogKey + "/CurrentPose", currentPose);
@@ -790,7 +806,7 @@ public class Swerve extends SubsystemBase {
                 MathUtil.angleModulus(currentPose.getRotation().getRadians())
         );
 
-        drive(speeds);
+        drive(speeds, moduleForceVectors);
     }
 
     private SysIdRoutine makeLinearVoltageSysIdRoutine() {

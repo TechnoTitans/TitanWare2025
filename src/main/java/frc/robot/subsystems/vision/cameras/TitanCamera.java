@@ -6,16 +6,14 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.constants.Constants;
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.simulation.SimCameraProperties;
 
 public enum TitanCamera {
     PHOTON_FR_APRILTAG(
             "FR_Apriltag",
             Constants.Vision.ROBOT_TO_FR_APRILTAG,
-            new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.SEE3CAM_24CUG,
-            1.0,
+            2,
             true,
             new TitanCameraCalibration()
                     .withCalibration(
@@ -65,9 +63,8 @@ public enum TitanCamera {
     PHOTON_BL_APRILTAG(
             "BL_Apriltag",
             Constants.Vision.ROBOT_TO_BL_APRILTAG,
-            new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.SEE3CAM_24CUG,
-            1.0,
+            2.0,
             true,
             new TitanCameraCalibration()
                     .withCalibration(
@@ -117,9 +114,8 @@ public enum TitanCamera {
     PHOTON_FL_BOTTOM_APRILTAG(
             "FL_BOTTOM_Apriltag",
             Constants.Vision.ROBOT_TO_FL_BOTTOM_APRILTAG,
-            new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.ARDUCAM_OV9281,
-            2.5,
+            1,
             true,
             new TitanCameraCalibration()
                     .withCalibration(
@@ -159,7 +155,6 @@ public enum TitanCamera {
 
     private final PhotonCamera photonCamera;
     private final Transform3d robotToCameraTransform;
-    private final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
     private final CameraProperties cameraProperties;
     private final double stdDevFactor;
     private final TitanCameraCalibration cameraCalibration;
@@ -168,7 +163,6 @@ public enum TitanCamera {
     TitanCamera(
             final String photonCameraName,
             final Transform3d robotToCameraTransform,
-            final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams,
             final CameraProperties cameraProperties,
             final double stdDevFactor,
             final boolean requiresCalibration,
@@ -177,7 +171,6 @@ public enum TitanCamera {
     ) {
         this.photonCamera = new PhotonCamera(photonCameraName);
         this.robotToCameraTransform = robotToCameraTransform;
-        this.constrainedPnpParams = constrainedPnpParams;
         this.cameraProperties = cameraProperties;
         this.stdDevFactor = stdDevFactor;
         this.cameraCalibration = titanCameraCalibration;
@@ -203,14 +196,12 @@ public enum TitanCamera {
     TitanCamera(
             final String photonCameraName,
             final Transform3d robotToCameraTransform,
-            final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams,
             final CameraProperties cameraProperties,
             final boolean driverCam
     ) {
         this(
                 photonCameraName,
                 robotToCameraTransform,
-                constrainedPnpParams,
                 cameraProperties,
                 1.0,
                 false,
@@ -225,10 +216,6 @@ public enum TitanCamera {
 
     public Transform3d getRobotToCameraTransform() {
         return robotToCameraTransform;
-    }
-
-    public PhotonPoseEstimator.ConstrainedSolvepnpParams getConstrainedPnpParams() {
-        return constrainedPnpParams;
     }
 
     public CameraProperties getCameraProperties() {

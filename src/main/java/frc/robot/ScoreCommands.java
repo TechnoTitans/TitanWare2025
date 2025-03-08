@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -111,7 +112,7 @@ public class ScoreCommands {
         final Transform2d coralDistanceOffset = new Transform2d(
                 0,
                 gamepieceState.hasCoral.getAsBoolean()
-                        ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
+                        ? intake.coralDistanceIntakeCenterMeters.getAsDouble() - Units.inchesToMeters(1)
                         : 0,
                 Rotation2d.kZero
         );

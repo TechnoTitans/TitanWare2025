@@ -308,9 +308,6 @@ public class Robot extends LoggedRobot {
         );
 
         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW);
-        elevatorArm.setGoal(ElevatorArm.Goal.STOW);
-        elevator.setGoal(Elevator.Goal.STOW);
-        intakeArm.setGoal(IntakeArm.Goal.STOW);
     }
 
     @Override
@@ -389,20 +386,20 @@ public class Robot extends LoggedRobot {
         autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
-                "Cage0ToReef4",
-                autos::cage0ToReef4,
+                "TwoPieceCage4ToReef2And1",
+                autos::twoPieceCage4ToReef2And1,
                 Constants.CompetitionType.TESTING
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage0ToReef5",
-                autos::twoPieceCage0ToReef5,
+                "TwoPieceCage3ToReef2And1",
+                autos::twoPieceCage3ToReef2And1,
                 Constants.CompetitionType.COMPETITION
         ));
 
-            autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage5ToReef1",
-                autos::twoPieceCage5ToReef1,
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage2ToReef4And5",
+                autos::twoPieceCage2ToReef4And5,
                 Constants.CompetitionType.COMPETITION
         ));
     }
@@ -436,6 +433,7 @@ public class Robot extends LoggedRobot {
 
         this.coController.start(teleopEventLoop)
                 .whileTrue(superstructure.toSuperstructureGoal(Superstructure.Goal.CLIMB));
+
 
         this.coController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())

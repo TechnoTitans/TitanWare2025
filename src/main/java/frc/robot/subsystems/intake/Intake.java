@@ -33,15 +33,18 @@ public class Intake extends SubsystemBase {
     static {
         //measure, actual
         coralTreeMap.put(0.0, 0.0);
-//        coralTreeMap.put(0.033, Units.inchesToMeters(1.12));
-        coralTreeMap.put(0.044, Units.inchesToMeters(1.1875));
-        coralTreeMap.put(0.07, Units.inchesToMeters(1.6));
-        coralTreeMap.put(0.092, Units.inchesToMeters(2.5625));
-        coralTreeMap.put(0.125, Units.inchesToMeters(3.5625));
-        coralTreeMap.put(0.152, Units.inchesToMeters(4.5625));
-        coralTreeMap.put(0.170, Units.inchesToMeters(5.1875));
-        coralTreeMap.put(0.189, Units.inchesToMeters(6.125));
-        coralTreeMap.put(0.218, Units.inchesToMeters(7));
+        coralTreeMap.put(0.0315, Units.inchesToMeters(0.9));
+        coralTreeMap.put(0.05, Units.inchesToMeters(1.35));
+        coralTreeMap.put(0.084, Units.inchesToMeters(2.1));
+        coralTreeMap.put(0.093, Units.inchesToMeters(2.6));
+        coralTreeMap.put(0.12, Units.inchesToMeters(3.1));
+        coralTreeMap.put(0.146, Units.inchesToMeters(4.3));
+        coralTreeMap.put(0.161, Units.inchesToMeters(4.75));
+        coralTreeMap.put(0.171, Units.inchesToMeters(5.2));
+        coralTreeMap.put(0.189, Units.inchesToMeters(6));
+        coralTreeMap.put(0.198, Units.inchesToMeters(6.3));
+        coralTreeMap.put(0.215, Units.inchesToMeters(7));
+        coralTreeMap.put(0.325, Units.inchesToMeters(11.5));
     }
 
     protected static final String LogKey = "Intake";
