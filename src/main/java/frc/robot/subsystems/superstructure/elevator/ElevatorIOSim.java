@@ -17,21 +17,23 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
+import frc.robot.utils.sim.PivotingElevatorSim;
 import frc.robot.utils.sim.feedback.SimCANRange;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ElevatorIOSim implements ElevatorIO {
     private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
@@ -40,7 +42,7 @@ public class ElevatorIOSim implements ElevatorIO {
     private final HardwareConstants.ElevatorConstants constants;
     private final double drumCircumferenceMeters;
 
-    private final ElevatorSim elevatorSim;
+    private final PivotingElevatorSim elevatorSim;
 
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
@@ -65,7 +67,10 @@ public class ElevatorIOSim implements ElevatorIO {
     private final StatusSignal<Distance> canRangeDistance;
     private final StatusSignal<Boolean> canRangeIsDetected;
 
-    public ElevatorIOSim(final HardwareConstants.ElevatorConstants constants) {
+    public ElevatorIOSim(
+            final HardwareConstants.ElevatorConstants constants,
+            final Supplier<Rotation2d> pivotAngle
+    ) {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
         this.drumCircumferenceMeters = constants.spoolDiameterMeters() * Math.PI;
@@ -74,7 +79,7 @@ public class ElevatorIOSim implements ElevatorIO {
 
         final double lowerLimitMeters = constants.lowerLimitRots() * drumCircumferenceMeters;
         final double upperLimitMeters = constants.upperLimitRots() * drumCircumferenceMeters;
-        this.elevatorSim = new ElevatorSim(
+        this.elevatorSim = new PivotingElevatorSim(
                 LinearSystemId.createElevatorSystem(
                         dcMotors,
                         SimConstants.Elevator.MASS_KG,
@@ -85,7 +90,8 @@ public class ElevatorIOSim implements ElevatorIO {
                 lowerLimitMeters,
                 upperLimitMeters,
                 true,
-                lowerLimitMeters
+                lowerLimitMeters,
+                () -> pivotAngle.get().getRadians()
         );
 
         this.masterMotor = new TalonFX(constants.rightMotorId(), constants.CANBus());

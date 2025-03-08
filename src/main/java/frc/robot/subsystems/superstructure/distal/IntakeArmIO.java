@@ -1,4 +1,4 @@
-package frc.robot.subsystems.superstructure.arm.intake;
+package frc.robot.subsystems.superstructure.distal;
 
 import org.littletonrobotics.junction.AutoLog;
 

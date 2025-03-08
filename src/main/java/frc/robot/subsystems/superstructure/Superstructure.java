@@ -7,9 +7,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
-import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
+import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
+import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.utils.solver.SuperstructureSolver;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
@@ -90,12 +90,12 @@ public class Superstructure extends VirtualSubsystem {
     public final Trigger atSuperstructureSetpoint;
 
     public Superstructure(
-            final Elevator elevator,
             final ElevatorArm elevatorArm,
+            final Elevator elevator,
             final IntakeArm intakeArm
     ) {
-        this.elevator = elevator;
         this.elevatorArm = elevatorArm;
+        this.elevator = elevator;
         this.intakeArm = intakeArm;
 
         this.eventLoop = new EventLoop();

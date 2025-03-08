@@ -23,7 +23,7 @@ public class SuperstructureSolver {
                                 .unaryMinus()
                                 .plus(
                                         Rotation2d.kCCW_Pi_2
-                                                .minus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                                .plus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
                                 ).getRadians(),
                         0
                 )

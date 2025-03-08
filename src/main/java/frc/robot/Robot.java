@@ -24,9 +24,9 @@ import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
-import frc.robot.subsystems.superstructure.arm.elevator.ElevatorArm;
-import frc.robot.subsystems.superstructure.arm.intake.IntakeArm;
+import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
+import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.logging.LogUtils;
@@ -76,19 +76,23 @@ public class Robot extends LoggedRobot {
             swerve.getPoseEstimator()
     );
 
-    public final Elevator elevator = new Elevator(
-            Constants.CURRENT_MODE,
-            HardwareConstants.ELEVATOR
-    );
     public final ElevatorArm elevatorArm = new ElevatorArm(
             Constants.CURRENT_MODE,
             HardwareConstants.ELEVATOR_ARM
     );
+
+    public final Elevator elevator = new Elevator(
+            Constants.CURRENT_MODE,
+            HardwareConstants.ELEVATOR,
+            elevatorArm::getPivotPositionRadsFromHorizontal
+    );
+
     public final IntakeArm intakeArm = new IntakeArm(
             Constants.CURRENT_MODE,
             HardwareConstants.INTAKE_ARM
     );
-    public final Superstructure superstructure = new Superstructure(elevator, elevatorArm, intakeArm);
+
+    public final Superstructure superstructure = new Superstructure(elevatorArm, elevator, intakeArm);
 
     public final Intake intake = new Intake(
             Constants.CURRENT_MODE,

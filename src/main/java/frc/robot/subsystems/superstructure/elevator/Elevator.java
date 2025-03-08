@@ -2,6 +2,7 @@ package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Current;
@@ -20,6 +21,7 @@ import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -103,13 +105,17 @@ public class Elevator extends SubsystemBase {
         }
     }
 
-    public Elevator(final Constants.RobotMode mode, final HardwareConstants.ElevatorConstants constants) {
+    public Elevator(
+            final Constants.RobotMode mode,
+            final HardwareConstants.ElevatorConstants constants,
+            final Supplier<Rotation2d> pivotAngle
+    ) {
         this.constants = constants;
         this.drumCircumferenceMeters = constants.spoolDiameterMeters() * Math.PI;
 
         this.elevatorIO = switch (mode) {
             case REAL -> new ElevatorIOReal(constants);
-            case SIM -> new ElevatorIOSim(constants);
+            case SIM -> new ElevatorIOSim(constants, pivotAngle);
             case REPLAY, DISABLED -> new ElevatorIO() {};
         };
 

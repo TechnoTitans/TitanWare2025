@@ -1,4 +1,4 @@
-package frc.robot.subsystems.superstructure.arm.elevator;
+package frc.robot.subsystems.superstructure.proximal;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -71,8 +71,8 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
                 dcMotor,
                 constants.gearing(),
                 SimConstants.ElevatorArm.LENGTH_METERS,
-                Units.rotationsToRadians(constants.lowerLimitRots()) + zeroedPositionToHorizontalRads,
-                Units.rotationsToRadians(constants.upperLimitRots()) + zeroedPositionToHorizontalRads,
+                Units.rotationsToRadians(constants.lowerLimitRots()) - zeroedPositionToHorizontalRads,
+                Units.rotationsToRadians(constants.upperLimitRots()) - zeroedPositionToHorizontalRads,
                 false,
                 SimConstants.ElevatorArm.STARTING_ANGLE.getRadians()
         );

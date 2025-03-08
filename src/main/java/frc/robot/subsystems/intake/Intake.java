@@ -172,7 +172,7 @@ public class Intake extends SubsystemBase {
     }
 
     private double getFilteredCoralDistanceMeters() {
-        return coralDistanceFilter.calculate(inputs.coralCANRangeDistanceMeters);
+        return coralDistanceFilter.calculate(inputs.coralTOFDistanceMeters);
     }
 
     private double getCoralDistanceMeters() {
