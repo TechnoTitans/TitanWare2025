@@ -16,9 +16,6 @@ public interface ElevatorIO {
         public double followerVoltage = 0.0;
         public double followerTorqueCurrentAmps = 0.0;
         public double followerTempCelsius = 0.0;
-
-        public double canRangeDistanceMeters = 0.0;
-        public boolean canRangeIsDetected = false;
     }
 
     /**

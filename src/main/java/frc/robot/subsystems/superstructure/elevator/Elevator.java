@@ -49,7 +49,6 @@ public class Elevator extends SubsystemBase {
     public final Trigger atSetpoint = new Trigger(this::atPositionSetpoint);
     public final Trigger atLowerLimit = new Trigger(this::atLowerLimit);
     public final Trigger atUpperLimit = new Trigger(this::atUpperLimit);
-    public final Trigger isRetracted = new Trigger(this::isRetracted);
 
     public static class PositionSetpoint {
         public double elevatorPositionRots = 0.0;
@@ -191,10 +190,6 @@ public class Elevator extends SubsystemBase {
 
     private boolean atUpperLimit() {
         return inputs.masterPositionRots >= elevatorUpperLimit.elevatorPositionRots;
-    }
-
-    private boolean isRetracted() {
-        return inputs.canRangeIsDetected;
     }
 
     public double getExtensionMeters() {

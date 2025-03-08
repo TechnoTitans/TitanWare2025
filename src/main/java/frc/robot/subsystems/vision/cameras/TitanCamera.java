@@ -11,8 +11,8 @@ import org.photonvision.simulation.SimCameraProperties;
 
 public enum TitanCamera {
     PHOTON_FR_APRILTAG(
-            "FR_Apriltag",
-            Constants.Vision.ROBOT_TO_FR_APRILTAG,
+            "BL_Apriltag",
+            Constants.Vision.ROBOT_TO_BL_APRILTAG,
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.SEE3CAM_24CUG,
             1.0,
