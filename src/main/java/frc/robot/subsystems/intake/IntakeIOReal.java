@@ -2,26 +2,28 @@ package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.UpdateModeValue;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
-import frc.robot.utils.sim.sensors.TimeOfFlight;
 
 public class IntakeIOReal implements IntakeIO {
     private final HardwareConstants.IntakeConstants constants;
 
     private final TalonFX coralRollerMotor;
     private final TalonFX algaeRollerMotor;
-    private final TimeOfFlight coralTOF;
+    private final CANrange coralCANRange;
 
     private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC;
     private final TorqueCurrentFOC torqueCurrentFOC;
@@ -37,13 +39,14 @@ public class IntakeIOReal implements IntakeIO {
     private final StatusSignal<Voltage> algaeVoltage;
     private final StatusSignal<Current> algaeTorqueCurrent;
     private final StatusSignal<Temperature> algaeDeviceTemp;
+    private final StatusSignal<Distance> coralCANRangeDistance;
 
     public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
         this.constants = constants;
 
         this.coralRollerMotor = new TalonFX(constants.coralRollerMotorID(), constants.CANBus());
         this.algaeRollerMotor = new TalonFX(constants.algaeRollerMotorID(), constants.CANBus());
-        this.coralTOF = new TimeOfFlight(constants.coralCANRangeId());
+        this.coralCANRange = new CANrange(constants.coralCANRangeId(), constants.CANBus());
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -59,12 +62,17 @@ public class IntakeIOReal implements IntakeIO {
         this.algaeVoltage = algaeRollerMotor.getMotorVoltage();
         this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
         this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
+        this.coralCANRangeDistance = coralCANRange.getDistance();
     }
 
     @Override
     public void config() {
-        coralTOF.setRangingMode(TimeOfFlight.RangingMode.Short, 25);
-        coralTOF.setRangeOfInterest(8, 8, 12, 12);
+        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
+        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
+        CANRangeConfiguration.ToFParams.UpdateFrequency = 50;
+        CANRangeConfiguration.FovParams.FOVRangeX = 7;
+        CANRangeConfiguration.FovParams.FOVRangeY = 7;
+        coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         final TalonFXConfiguration coralConfiguration = new TalonFXConfiguration();
         coralConfiguration.Slot0 = new Slot0Configs()
@@ -113,7 +121,8 @@ public class IntakeIOReal implements IntakeIO {
                 algaePosition,
                 algaeVelocity,
                 algaeVoltage,
-                algaeTorqueCurrent
+                algaeTorqueCurrent,
+                coralCANRangeDistance
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -125,7 +134,8 @@ public class IntakeIOReal implements IntakeIO {
         ParentDevice.optimizeBusUtilizationForAll(
                 4,
                 coralRollerMotor,
-                algaeRollerMotor
+                algaeRollerMotor,
+                coralCANRange
         );
     }
 
@@ -141,7 +151,8 @@ public class IntakeIOReal implements IntakeIO {
                 algaeVelocity,
                 algaeVoltage,
                 algaeTorqueCurrent,
-                algaeDeviceTemp
+                algaeDeviceTemp,
+                coralCANRangeDistance
         );
 
         inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();
@@ -154,7 +165,7 @@ public class IntakeIOReal implements IntakeIO {
         inputs.algaeRollerVoltage = algaeVoltage.getValueAsDouble();
         inputs.algaeRollerTorqueCurrentAmps = algaeTorqueCurrent.getValueAsDouble();
         inputs.algaeRollerTempCelsius = algaeDeviceTemp.getValueAsDouble();
-        inputs.coralTOFDistanceMeters = coralTOF.getRangeMeters();
+        inputs.coralCANRangeDistanceMeters = coralCANRangeDistance.getValueAsDouble();
     }
 
     @Override
