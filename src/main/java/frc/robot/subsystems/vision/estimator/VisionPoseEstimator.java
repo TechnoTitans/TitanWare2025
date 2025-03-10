@@ -10,6 +10,7 @@ import frc.robot.constants.Constants;
 import frc.robot.subsystems.vision.PhotonVision;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.estimation.OpenCVHelp;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.estimation.VisionEstimation;
 import org.photonvision.targeting.MultiTargetPNPResult;
@@ -21,6 +22,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class VisionPoseEstimator {
+    static {
+        OpenCVHelp.forceLoadOpenCV();
+    }
+
     private VisionPoseEstimator() {}
 
     private static Optional<VisionUpdate> constrainedPnpStrategy(
