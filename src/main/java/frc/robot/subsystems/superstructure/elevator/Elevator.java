@@ -2,6 +2,7 @@ package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Current;
@@ -20,12 +21,13 @@ import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
 public class Elevator extends SubsystemBase {
     protected static final String LogKey = "Elevator";
-    private static final double PositionToleranceRots = 0.05;
+    private static final double PositionToleranceRots = 0.065;
     private static final double VelocityToleranceRotsPerSec = 0.05;
 
     private final HardwareConstants.ElevatorConstants constants;
@@ -37,7 +39,7 @@ public class Elevator extends SubsystemBase {
     private final SysIdRoutine voltageSysIdRoutine;
     private final SysIdRoutine torqueCurrentSysIdRoutine;
 
-    private Goal desiredGoal = Goal.IDLE;
+    private Goal desiredGoal = Goal.STOW;
     private Goal currentGoal = desiredGoal;
 
     private final PositionSetpoint setpoint;
@@ -47,7 +49,6 @@ public class Elevator extends SubsystemBase {
     public final Trigger atSetpoint = new Trigger(this::atPositionSetpoint);
     public final Trigger atLowerLimit = new Trigger(this::atLowerLimit);
     public final Trigger atUpperLimit = new Trigger(this::atUpperLimit);
-    public final Trigger isRetracted = new Trigger(this::isRetracted);
 
     public static class PositionSetpoint {
         public double elevatorPositionRots = 0.0;
@@ -77,13 +78,14 @@ public class Elevator extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        IDLE(0),
-        HP(0.07),
+        STOW(0),
+        HP(0.065),
         ALGAE_GROUND(0),
+        PROCESSOR(0),
         LOWER_ALGAE(0.16),
-        UPPER_ALGAE(0.5),
+        UPPER_ALGAE(0.45),
         L1(0),
-        L2(0.01),
+        L2(0.03),
         L3(0.394),
         L4(0.967),
         NET(1);
@@ -102,13 +104,17 @@ public class Elevator extends SubsystemBase {
         }
     }
 
-    public Elevator(final Constants.RobotMode mode, final HardwareConstants.ElevatorConstants constants) {
+    public Elevator(
+            final Constants.RobotMode mode,
+            final HardwareConstants.ElevatorConstants constants,
+            final Supplier<Rotation2d> pivotAngle
+    ) {
         this.constants = constants;
         this.drumCircumferenceMeters = constants.spoolDiameterMeters() * Math.PI;
 
         this.elevatorIO = switch (mode) {
             case REAL -> new ElevatorIOReal(constants);
-            case SIM -> new ElevatorIOSim(constants);
+            case SIM -> new ElevatorIOSim(constants, pivotAngle);
             case REPLAY, DISABLED -> new ElevatorIO() {};
         };
 
@@ -153,7 +159,6 @@ public class Elevator extends SubsystemBase {
 
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
-        Logger.recordOutput(LogKey + "/ElevatorMetersFromDrumRots", drumRotsToElevatorMeters(inputs.masterPositionRots));
         Logger.recordOutput(LogKey + "/PositionSetpoint/PositionRots", setpoint.elevatorPositionRots);
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atLowerLimit());
@@ -164,10 +169,6 @@ public class Elevator extends SubsystemBase {
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - elevatorPeriodicUpdateStart)
         );
-    }
-
-    private double drumRotsToElevatorMeters(final double rots) {
-        return rots * (constants.spoolDiameterMeters() * Math.PI);
     }
 
     public boolean atGoal(final Goal goal) {
@@ -189,10 +190,6 @@ public class Elevator extends SubsystemBase {
 
     private boolean atUpperLimit() {
         return inputs.masterPositionRots >= elevatorUpperLimit.elevatorPositionRots;
-    }
-
-    private boolean isRetracted() {
-        return inputs.canRangeIsDetected;
     }
 
     public double getExtensionMeters() {

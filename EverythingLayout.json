@@ -1,10 +1,10 @@
 {
   "hubs": [
     {
-      "x": 85,
-      "y": 117,
-      "width": 1109,
-      "height": 659,
+      "x": 1432,
+      "y": -8,
+      "width": 1456,
+      "height": 876,
       "state": {
         "sidebar": {
           "width": 341,
@@ -22,7 +22,7 @@
           ]
         },
         "tabs": {
-          "selected": 6,
+          "selected": 1,
           "tabs": [
             {
               "type": 0,
@@ -43,7 +43,7 @@
                     "logType": "Pose3d",
                     "visible": true,
                     "options": {
-                      "model": "Robot2025"
+                      "model": "Kaito"
                     }
                   },
                   {
@@ -64,7 +64,7 @@
                     }
                   }
                 ],
-                "game": "2025 Field",
+                "game": "2025 Field (Welded)",
                 "origin": "blue"
               },
               "controllerUUID": "8cqd62mbuvunrvst8a82f01aq9hf9n4z",
@@ -703,5 +703,5 @@
     }
   ],
   "satellites": [],
-  "version": "4.1.2"
+  "version": "4.1.1"
 }

@@ -7,22 +7,23 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public record AutoOption(
         String name,
-        AutoRoutine autoRoutine,
+        Supplier<AutoRoutine> autoRoutine,
         Set<Constants.CompetitionType> competitionTypes
 ) {
     public static final List<Constants.CompetitionType> defaultCompetitionTypes =
             List.of(Constants.CompetitionType.TESTING);
 
-    public AutoOption(final String name, final AutoRoutine autoRoutine) {
+    public AutoOption(final String name, final Supplier<AutoRoutine> autoRoutine) {
         this(name, autoRoutine, new HashSet<>(defaultCompetitionTypes));
     }
 
     public AutoOption(
             final String name,
-            final AutoRoutine autoRoutine,
+            final Supplier<AutoRoutine> autoRoutine,
             final Constants.CompetitionType... competitionTypes
     ) {
         this(

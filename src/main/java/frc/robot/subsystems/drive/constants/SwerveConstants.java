@@ -15,13 +15,13 @@ public class SwerveConstants {
             0.0508,
             6.75,
             150.0 / 7.0,
-            50.0 / 16.0,
+            50.0 / 17.0,
             Units.inchesToMeters(22.75),
             Units.inchesToMeters(22.75),
             Units.feetToMeters(15.0),
-            12,
-            6,
-            new Translation2d(0, 0)
+            4 * Math.PI,
+            2 * Math.PI,
+            Translation2d.kZero
     );
 
     public static final SwerveModuleConstants FrontLeftModule = new SwerveModuleConstants(
@@ -31,7 +31,7 @@ public class SwerveConstants {
             1,
             2,
             3,
-            -0.13623046875,
+            0.36376953125,
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 
@@ -42,7 +42,7 @@ public class SwerveConstants {
             4,
             5,
             6,
-            0.77294921875,
+            -0.361328125,
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 
@@ -53,7 +53,7 @@ public class SwerveConstants {
             7,
             8,
             9,
-            0.09619140624999999,
+            -0.41259765625,
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 
@@ -64,7 +64,7 @@ public class SwerveConstants {
             10,
             11,
             12,
-            -0.08349609375,
+            0.4130859375,
             SwerveConstants.KrakenX60Foc.KtNMPerAmp
     );
 

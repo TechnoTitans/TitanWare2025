@@ -2,36 +2,34 @@ package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.UpdateModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
-import frc.robot.utils.sim.feedback.SimCANRange;
+import frc.robot.utils.sim.PivotingElevatorSim;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ElevatorIOSim implements ElevatorIO {
     private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
@@ -40,11 +38,10 @@ public class ElevatorIOSim implements ElevatorIO {
     private final HardwareConstants.ElevatorConstants constants;
     private final double drumCircumferenceMeters;
 
-    private final ElevatorSim elevatorSim;
+    private final PivotingElevatorSim elevatorSim;
 
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
-    private final CANrange canRange;
     private final TalonFXSim motorsSim;
 
     private final MotionMagicExpoVoltage motionMagicExpoVoltage;
@@ -54,20 +51,19 @@ public class ElevatorIOSim implements ElevatorIO {
 
     private final StatusSignal<Angle> masterPosition;
     private final StatusSignal<AngularVelocity> masterVelocity;
-    private final StatusSignal<AngularAcceleration> masterAcceleration;
     private final StatusSignal<Voltage> masterVoltage;
     private final StatusSignal<Current> masterTorqueCurrent;
     private final StatusSignal<Temperature> masterDeviceTemp;
     private final StatusSignal<Angle> followerPosition;
     private final StatusSignal<AngularVelocity> followerVelocity;
-    private final StatusSignal<AngularAcceleration> followerAcceleration;
     private final StatusSignal<Voltage> followerVoltage;
     private final StatusSignal<Current> followerTorqueCurrent;
     private final StatusSignal<Temperature> followerDeviceTemp;
-    private final StatusSignal<Distance> canRangeDistance;
-    private final StatusSignal<Boolean> canRangeIsDetected;
 
-    public ElevatorIOSim(final HardwareConstants.ElevatorConstants constants) {
+    public ElevatorIOSim(
+            final HardwareConstants.ElevatorConstants constants,
+            final Supplier<Rotation2d> pivotAngle
+    ) {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
         this.drumCircumferenceMeters = constants.spoolDiameterMeters() * Math.PI;
@@ -76,7 +72,7 @@ public class ElevatorIOSim implements ElevatorIO {
 
         final double lowerLimitMeters = constants.lowerLimitRots() * drumCircumferenceMeters;
         final double upperLimitMeters = constants.upperLimitRots() * drumCircumferenceMeters;
-        this.elevatorSim = new ElevatorSim(
+        this.elevatorSim = new PivotingElevatorSim(
                 LinearSystemId.createElevatorSystem(
                         dcMotors,
                         SimConstants.Elevator.MASS_KG,
@@ -87,12 +83,12 @@ public class ElevatorIOSim implements ElevatorIO {
                 lowerLimitMeters,
                 upperLimitMeters,
                 true,
-                lowerLimitMeters
+                lowerLimitMeters,
+                () -> pivotAngle.get().getRadians()
         );
 
         this.masterMotor = new TalonFX(constants.rightMotorId(), constants.CANBus());
         this.followerMotor = new TalonFX(constants.leftMotorId(), constants.CANBus());
-        this.canRange = new CANrange(constants.CANrangeId(), constants.CANBus());
 
         this.motorsSim = new TalonFXSim(
                 List.of(masterMotor, followerMotor),
@@ -102,9 +98,6 @@ public class ElevatorIOSim implements ElevatorIO {
                 () -> Units.rotationsToRadians(elevatorSim.getPositionMeters() / drumCircumferenceMeters),
                 () -> Units.rotationsToRadians(elevatorSim.getVelocityMetersPerSecond() / drumCircumferenceMeters)
         );
-        this.motorsSim.attachFeedbackSensor(
-                new SimCANRange(canRange, drumCircumferenceMeters)
-        );
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -113,18 +106,14 @@ public class ElevatorIOSim implements ElevatorIO {
 
         this.masterPosition = masterMotor.getPosition();
         this.masterVelocity = masterMotor.getVelocity();
-        this.masterAcceleration = masterMotor.getAcceleration();
         this.masterVoltage = masterMotor.getMotorVoltage();
         this.masterTorqueCurrent = masterMotor.getTorqueCurrent();
         this.masterDeviceTemp = masterMotor.getDeviceTemp();
         this.followerPosition = followerMotor.getPosition();
         this.followerVelocity = followerMotor.getVelocity();
-        this.followerAcceleration = followerMotor.getAcceleration();
         this.followerVoltage = followerMotor.getMotorVoltage();
         this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
         this.followerDeviceTemp = followerMotor.getDeviceTemp();
-        this.canRangeDistance = canRange.getDistance();
-        this.canRangeIsDetected = canRange.getIsDetected();
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
             final double dt = deltaTime.get();
@@ -141,12 +130,6 @@ public class ElevatorIOSim implements ElevatorIO {
 
     @Override
     public void config() {
-        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
-        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
-        CANRangeConfiguration.ProximityParams.ProximityThreshold = 0.01;
-        CANRangeConfiguration.ProximityParams.ProximityHysteresis = 0.03;
-        canRange.getConfigurator().apply(CANRangeConfiguration);
-
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
                 .withKP(11);
@@ -171,16 +154,12 @@ public class ElevatorIOSim implements ElevatorIO {
                 100,
                 masterPosition,
                 masterVelocity,
-                masterAcceleration,
                 masterVoltage,
                 masterTorqueCurrent,
                 followerPosition,
                 followerVelocity,
-                followerAcceleration,
                 followerVoltage,
-                followerTorqueCurrent,
-                canRangeDistance,
-                canRangeIsDetected
+                followerTorqueCurrent
         );
         BaseStatusSignal.setUpdateFrequencyForAll(
                 4,
@@ -189,8 +168,7 @@ public class ElevatorIOSim implements ElevatorIO {
         );
         ParentDevice.optimizeBusUtilizationForAll(
                 masterMotor,
-                followerMotor,
-                canRange
+                followerMotor
         );
 
         masterMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
@@ -202,34 +180,26 @@ public class ElevatorIOSim implements ElevatorIO {
         BaseStatusSignal.refreshAll(
                 masterPosition,
                 masterVelocity,
-                masterAcceleration,
                 masterVoltage,
                 masterTorqueCurrent,
                 masterDeviceTemp,
                 followerPosition,
                 followerVelocity,
-                followerAcceleration,
                 followerVoltage,
                 followerTorqueCurrent,
-                followerDeviceTemp,
-                canRangeDistance,
-                canRangeIsDetected
+                followerDeviceTemp
         );
 
         inputs.masterPositionRots = masterPosition.getValueAsDouble();
         inputs.masterVelocityRotsPerSec = masterVelocity.getValueAsDouble();
-        inputs.masterAccelerationRotsPerSec2 = masterAcceleration.getValueAsDouble();
         inputs.masterVoltage = masterVoltage.getValueAsDouble();
         inputs.masterTorqueCurrentAmps = masterTorqueCurrent.getValueAsDouble();
         inputs.masterTempCelsius = masterDeviceTemp.getValueAsDouble();
         inputs.followerPositionRots = followerPosition.getValueAsDouble();
         inputs.followerVelocityRotsPerSec = followerVelocity.getValueAsDouble();
-        inputs.followerAccelerationRotsPerSec2 = followerAcceleration.getValueAsDouble();
         inputs.followerVoltage = followerVoltage.getValueAsDouble();
         inputs.followerTorqueCurrentAmps = followerTorqueCurrent.getValueAsDouble();
         inputs.followerTempCelsius = followerDeviceTemp.getValueAsDouble();
-        inputs.canRangeDistanceMeters = canRangeDistance.getValueAsDouble();
-        inputs.canRangeIsDetected = canRangeIsDetected.getValue();
     }
 
     @Override

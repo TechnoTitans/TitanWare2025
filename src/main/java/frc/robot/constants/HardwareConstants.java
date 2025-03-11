@@ -17,7 +17,6 @@ public class HardwareConstants {
             String CANBus,
             int rightMotorId,
             int leftMotorId,
-            int CANrangeId,
             double gearing,
             double lowerLimitRots,
             double upperLimitRots,
@@ -28,7 +27,6 @@ public class HardwareConstants {
             RobotMap.CanivoreCANBus,
             14,
             15,
-            16,
             4,
             0,
             6.18,
@@ -49,7 +47,7 @@ public class HardwareConstants {
             RobotMap.RioCANBus,
             17,
             18,
-            243,
+            324,
             -0.244384765625,
             0,
             0.19775390625
@@ -80,6 +78,7 @@ public class HardwareConstants {
             int algaeRollerMotorID,
             int coralRollerMotorID,
             int coralCANRangeId,
+            double coralCANRangeOffsetMeters,
             double algaeGearing,
             double coralGearing
     ) {}
@@ -89,7 +88,8 @@ public class HardwareConstants {
             21,
             22,
             23,
-            2.5,
+            0.0254 + Units.inchesToMeters(0.3),
+            10.0,
             2.5
     );
 }

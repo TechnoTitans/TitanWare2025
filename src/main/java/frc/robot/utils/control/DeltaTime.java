@@ -70,4 +70,10 @@ public class DeltaTime {
     public double get() {
         return getOrElse(Constants.LOOP_PERIOD_SECONDS);
     }
+
+    public void reset() {
+        this.isFirstCall = true;
+        timer.stop();
+        timer.reset();
+    }
 }

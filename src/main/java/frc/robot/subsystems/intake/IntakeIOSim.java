@@ -17,7 +17,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -46,18 +45,15 @@ public class IntakeIOSim implements IntakeIO {
 
     private final StatusSignal<Angle> coralPosition;
     private final StatusSignal<AngularVelocity> coralVelocity;
-    private final StatusSignal<AngularAcceleration> coralAcceleration;
     private final StatusSignal<Voltage> coralVoltage;
     private final StatusSignal<Current> coralTorqueCurrent;
     private final StatusSignal<Temperature> coralDeviceTemp;
     private final StatusSignal<Angle> algaePosition;
     private final StatusSignal<AngularVelocity> algaeVelocity;
-    private final StatusSignal<AngularAcceleration> algaeAcceleration;
     private final StatusSignal<Voltage> algaeVoltage;
     private final StatusSignal<Current> algaeTorqueCurrent;
     private final StatusSignal<Temperature> algaeDeviceTemp;
     private final StatusSignal<Distance> coralCANRangeDistance;
-    private final StatusSignal<Boolean> coralCANRangeIsDetected;
 
     public IntakeIOSim(final HardwareConstants.IntakeConstants constants) {
         this.deltaTime = new DeltaTime(true);
@@ -105,18 +101,15 @@ public class IntakeIOSim implements IntakeIO {
 
         this.coralPosition = coralRollerMotor.getPosition();
         this.coralVelocity = coralRollerMotor.getVelocity();
-        this.coralAcceleration = coralRollerMotor.getAcceleration();
         this.coralVoltage = coralRollerMotor.getMotorVoltage();
         this.coralTorqueCurrent = coralRollerMotor.getTorqueCurrent();
         this.coralDeviceTemp = coralRollerMotor.getDeviceTemp();
         this.algaePosition = algaeRollerMotor.getPosition();
         this.algaeVelocity = algaeRollerMotor.getVelocity();
-        this.algaeAcceleration = algaeRollerMotor.getAcceleration();
         this.algaeVoltage = algaeRollerMotor.getMotorVoltage();
         this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
         this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
         this.coralCANRangeDistance = coralCANRange.getDistance();
-        this.coralCANRangeIsDetected = coralCANRange.getIsDetected();
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
         final double dt = deltaTime.get();
@@ -134,6 +127,13 @@ public class IntakeIOSim implements IntakeIO {
 
     @Override
     public void config() {
+        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
+        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
+        CANRangeConfiguration.ToFParams.UpdateFrequency = 50;
+        CANRangeConfiguration.FovParams.FOVRangeX = 7;
+        CANRangeConfiguration.FovParams.FOVRangeY = 7;
+        coralCANRange.getConfigurator().apply(CANRangeConfiguration);
+
         final InvertedValue coralRollerInvertedValue = InvertedValue.CounterClockwise_Positive;
         final TalonFXConfiguration coralConfiguration = new TalonFXConfiguration();
         coralConfiguration.Slot0 = new Slot0Configs()
@@ -168,26 +168,17 @@ public class IntakeIOSim implements IntakeIO {
         algaeConfiguration.Feedback.SensorToMechanismRatio = constants.algaeGearing();
         algaeRollerMotor.getConfigurator().apply(algaeConfiguration);
 
-        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
-        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
-        CANRangeConfiguration.ProximityParams.ProximityThreshold = Units.inchesToMeters(11);
-        CANRangeConfiguration.ProximityParams.ProximityHysteresis = Units.inchesToMeters(1);
-        coralCANRange.getConfigurator().apply(CANRangeConfiguration);
-
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
                 coralPosition,
                 coralVelocity,
-                coralAcceleration,
                 coralVoltage,
                 coralTorqueCurrent,
                 algaePosition,
                 algaeVelocity,
-                algaeAcceleration,
                 algaeVoltage,
                 algaeTorqueCurrent,
-                coralCANRangeDistance,
-                coralCANRangeIsDetected
+                coralCANRangeDistance
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -212,29 +203,24 @@ public class IntakeIOSim implements IntakeIO {
         BaseStatusSignal.refreshAll(
                 coralPosition,
                 coralVelocity,
-                coralAcceleration,
                 coralVoltage,
                 coralTorqueCurrent,
                 coralDeviceTemp,
                 algaePosition,
                 algaeVelocity,
-                algaeAcceleration,
                 algaeVoltage,
                 algaeTorqueCurrent,
                 algaeDeviceTemp,
-                coralCANRangeDistance,
-                coralCANRangeIsDetected
+                coralCANRangeDistance
         );
 
         inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();
         inputs.coralRollerVelocityRotsPerSec = coralVelocity.getValueAsDouble();
-        inputs.coralRollerAccelerationRotsPerSec2 = coralAcceleration.getValueAsDouble();
         inputs.coralRollerVoltage = coralVoltage.getValueAsDouble();
         inputs.coralRollerTorqueCurrentAmps = coralTorqueCurrent.getValueAsDouble();
         inputs.coralRollerTempCelsius = coralDeviceTemp.getValueAsDouble();
         inputs.algaeRollerPositionRots = algaePosition.getValueAsDouble();
         inputs.algaeRollerVelocityRotsPerSec = algaeVelocity.getValueAsDouble();
-        inputs.algaeRollerAccelerationRotsPerSec2 = algaeAcceleration.getValueAsDouble();
         inputs.algaeRollerVoltage = algaeVoltage.getValueAsDouble();
         inputs.algaeRollerTorqueCurrentAmps = algaeTorqueCurrent.getValueAsDouble();
         inputs.algaeRollerTempCelsius = algaeDeviceTemp.getValueAsDouble();

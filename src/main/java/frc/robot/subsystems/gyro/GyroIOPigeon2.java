@@ -82,9 +82,9 @@ public class GyroIOPigeon2 implements GyroIO {
     public void config() {
         //TODO fill in correct mount pose
         final Pigeon2Configuration pigeon2Configuration = new Pigeon2Configuration();
-        pigeon2Configuration.MountPose.MountPoseRoll = -0.8288710713386536;
-        pigeon2Configuration.MountPose.MountPosePitch = 1.461501121520996;
-        pigeon2Configuration.MountPose.MountPoseYaw = 0.48657548427581787;
+        pigeon2Configuration.MountPose.MountPoseRoll = -0.2720952332019806;
+        pigeon2Configuration.MountPose.MountPosePitch = 0.06304807960987091;
+        pigeon2Configuration.MountPose.MountPoseYaw = -1.072310447692871;
         pigeon.getConfigurator().apply(pigeon2Configuration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -98,7 +98,7 @@ public class GyroIOPigeon2 implements GyroIO {
                 4,
                 this.faultHardware
         );
-        ParentDevice.optimizeBusUtilizationForAll(pigeon);
+        ParentDevice.optimizeBusUtilizationForAll(4, pigeon);
     }
 
     public double getYaw() {

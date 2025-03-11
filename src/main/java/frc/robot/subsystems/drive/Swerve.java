@@ -17,6 +17,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.Measure;
@@ -134,7 +135,7 @@ public class Swerve extends SubsystemBase {
 
         this.headingController = new PIDController(4, 0, 0);
         this.headingController.enableContinuousInput(-Math.PI, Math.PI);
-        this.headingController.setTolerance(Units.degreesToRadians(3), Units.degreesToRadians(6));
+        this.headingController.setTolerance(Units.degreesToRadians(4), Units.degreesToRadians(6));
         this.atHeadingSetpoint = new Trigger(
                 () -> headingControllerActive &&
                         MathUtil.isNear(
@@ -150,10 +151,17 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
+                new PIDController(5, 0, 0.18),
                 new PIDController(4, 0, 0),
-                new PIDController(4, 0, 0),
-                headingController,
-                new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6))
+                new TrapezoidProfile.Constraints(
+                        Config.maxLinearVelocityMeterPerSec(),
+                        Config.maxLinearVelocityMeterPerSec() * 1.5
+                ),
+                new TrapezoidProfile.Constraints(
+                        Config.maxAngularVelocityRadsPerSec(),
+                        Config.maxAngularAccelerationRadsPerSecSquared()
+                ),
+                new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(4))
         );
         this.atHolonomicDrivePose = new Trigger(holonomicDriveWithPIDController::atReference);
 
@@ -265,7 +273,7 @@ public class Swerve extends SubsystemBase {
 
         Logger.recordOutput(LogKey + "/HolonomicController/Active", holonomicControllerActive);
         Logger.recordOutput(LogKey + "/HolonomicController/TargetPose", holonomicPoseTarget);
-        Logger.recordOutput(LogKey + "/HolonomicController/AtPoseSetpoint", atHolonomicDrivePose.getAsBoolean());
+        Logger.recordOutput(LogKey + "/HolonomicController/AtHolonomicSetpoint", atHolonomicDrivePose.getAsBoolean());
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
@@ -431,6 +439,23 @@ public class Swerve extends SubsystemBase {
         drive(speeds);
     }
 
+    public Command drive(
+            final DoubleSupplier xSpeedMeterPerSec,
+            final DoubleSupplier ySpeedMetersPerSec,
+            final DoubleSupplier omegaRadsPerSec,
+            final boolean fieldRelative,
+            final boolean invertYaw
+    ) {
+        return run(() -> drive(
+                xSpeedMeterPerSec.getAsDouble(),
+                ySpeedMetersPerSec.getAsDouble(),
+                omegaRadsPerSec.getAsDouble(),
+                fieldRelative,
+                invertYaw
+        ));
+    }
+
+
     public void drive(final ChassisSpeeds speeds) {
         drive(speeds, Swerve.NoTorqueFeedforwards);
     }
@@ -539,7 +564,7 @@ public class Swerve extends SubsystemBase {
         return Commands.sequence(
                 runOnce(() -> {
                     holonomicControllerActive = true;
-                    holonomicDriveWithPIDController.reset(getPose(), getRobotRelativeSpeeds());
+                    holonomicDriveWithPIDController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
                 }),
                 run(() -> {
                     this.holonomicPoseTarget = poseSupplier.get();
@@ -553,7 +578,7 @@ public class Swerve extends SubsystemBase {
         return Commands.sequence(
                 runOnce(() -> {
                     holonomicControllerActive = true;
-                    holonomicDriveWithPIDController.reset(getPose(), getRobotRelativeSpeeds());
+                    holonomicDriveWithPIDController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
                 }),
                 run(() -> {
                     this.holonomicPoseTarget = poseSupplier.get();
@@ -642,7 +667,7 @@ public class Swerve extends SubsystemBase {
                 runOnce(() -> {
                     holonomicControllerActive = true;
                     holonomicDriveWithPIDController.setTolerance(poseTolerance);
-                    holonomicDriveWithPIDController.reset(getPose(), getRobotRelativeSpeeds());
+                    holonomicDriveWithPIDController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
                 }),
                 run(() -> {
                     this.holonomicPoseTarget = poseSupplier.get();
@@ -653,25 +678,6 @@ public class Swerve extends SubsystemBase {
             holonomicControllerActive = false;
             holonomicDriveWithPIDController.setTolerance(holonomicPoseTolerance);
         });
-    }
-
-    public Command driveToOptionalPose(final Supplier<Optional<Pose2d>> poseSupplier) {
-        return Commands.sequence(
-                runOnce(() -> {
-                    holonomicControllerActive = true;
-                    holonomicDriveWithPIDController.reset(getPose(), getRobotRelativeSpeeds());
-                }),
-                run(() -> {
-                    final Optional<Pose2d> pose = poseSupplier.get();
-                    if (pose.isPresent()) {
-                        this.holonomicPoseTarget = pose.get();
-                        drive(holonomicDriveWithPIDController.calculate(getPose(), holonomicPoseTarget));
-                    } else {
-                        stop();
-                    }
-                }).until(holonomicDriveWithPIDController::atReference),
-                runOnce(this::stop)
-        ).finallyDo(() -> holonomicControllerActive = false);
     }
 
     public void stop() {
@@ -766,7 +772,6 @@ public class Swerve extends SubsystemBase {
             final Vector<N2> forceVec = new Translation2d(moduleForcesX[i], moduleForcesY[i])
                     .rotateBy(Rotation2d.fromRadians(swerveSample.heading).unaryMinus())
                     .toVector();
-
             moduleForceVectors.add(forceVec);
         }
 
@@ -868,7 +873,7 @@ public class Swerve extends SubsystemBase {
                 new SysIdRoutine.Mechanism(
                         voltageMeasure -> {
                             // convert the voltage measure to an amperage measure by tricking it
-                            final double volts = voltageMeasure.in(Volts);
+                            final double volts = -voltageMeasure.in(Volts);
                             frontLeft.driveVoltageCharacterization(volts, -0.125);
                             frontRight.driveVoltageCharacterization(volts, 0.625);
                             backLeft.driveVoltageCharacterization(volts, 0.125);

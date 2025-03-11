@@ -14,7 +14,9 @@ public class FieldConstants {
     public static final double FIELD_WIDTH_Y_METERS = Units.inchesToMeters(317);
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
-    private static final double SCORING_DISTANCE_OFFSET_METERS = Units.inchesToMeters(19);
+    private static final double SCORING_DISTANCE_OFFSET_METERS = Units.inchesToMeters(19.5);
+    public static final Transform2d ALIGN_DISTANCE_OFFSET_METERS =
+            new Transform2d(Units.inchesToMeters(48), 0, Rotation2d.kZero);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =
@@ -57,12 +59,28 @@ public class FieldConstants {
                 BLUE_LEFT_CENTER_FACE,
                 BLUE_RIGHT_CENTER_FACE
         );
+        public static final List<Pose2d> BLUE_PICKUP_CORAL_STATIONS_POSES = List.of(
+                BLUE_LEFT_CENTER_FACE.transformBy(
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
+                ),
+                BLUE_RIGHT_CENTER_FACE.transformBy(
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
+                )
+        );
 
         public static final Pose2d RED_LEFT_CENTER_FACE = BLUE_LEFT_CENTER_FACE.relativeTo(RED_ORIGIN);
         public static final Pose2d RED_RIGHT_CENTER_FACE = BLUE_RIGHT_CENTER_FACE.relativeTo(RED_ORIGIN);
         public static final List<Pose2d> RED_CORAL_STATIONS = List.of(
                 RED_LEFT_CENTER_FACE,
                 RED_RIGHT_CENTER_FACE
+        );
+        public static final List<Pose2d> RED_PICKUP_CORAL_STATIONS_POSES = List.of(
+                RED_LEFT_CENTER_FACE.transformBy(
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
+                ),
+                RED_RIGHT_CENTER_FACE.transformBy(
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
+                )
         );
     }
 
@@ -82,16 +100,19 @@ public class FieldConstants {
         }
 
         public enum Level {
-            L4(Units.inchesToMeters(72), -90),
-            L3(Units.inchesToMeters(47.625), -35),
-            L2(Units.inchesToMeters(31.875), -35),
-            L1(Units.inchesToMeters(18), 0);
+            L4(Units.inchesToMeters(72), -90, Transform2d.kZero),
+            L3(Units.inchesToMeters(47.625), -35, Transform2d.kZero),
+            L2(Units.inchesToMeters(31.875), -35, Transform2d.kZero),
+            L1(Units.inchesToMeters(18), 0, new Transform2d(Units.inchesToMeters(-8), 0, Rotation2d.kZero));
 
             public final double heightMeters;
             public final double pitchDegrees;
-            Level(final double heightMeters, double pitchDegrees) {
+            public final Transform2d scoringOffset;
+
+            Level(final double heightMeters, final double pitchDegrees, final Transform2d scoringOffset) {
                 this.heightMeters = heightMeters;
                 this.pitchDegrees = pitchDegrees;
+                this.scoringOffset = scoringOffset;
             }
         }
 
@@ -184,6 +205,9 @@ public class FieldConstants {
                 final Map<Level, Pose2d> fillBlueScoringLeft = new HashMap<>();
                 final Map<Level, Pose2d> fillRedScoringLeft = new HashMap<>();
 
+                final Transform2d scoringTransform =
+                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg);
+
                 for (final Level level : Level.values()) {
                     final Pose2d poseDirection = new Pose2d(
                             BLUE_CENTER,
@@ -206,13 +230,10 @@ public class FieldConstants {
                                             Units.degreesToRadians(level.pitchDegrees),
                                             poseDirection.getRotation().getRadians())
                     );
-                    final Pose2d rightScoringPose = rightPose.toPose2d().transformBy(
-                            new Transform2d(
-                                    SCORING_DISTANCE_OFFSET_METERS,
-                                    0,
-                                    Rotation2d.k180deg
-                            )
-                    );
+                    final Pose2d rightScoringPose = rightPose.toPose2d()
+                            .transformBy(scoringTransform)
+                            .transformBy(level.scoringOffset);
+
                     fillBlueRight.put(level, rightPose);
                     fillRedRight.put(level, rightPose.relativeTo(RED_ORIGIN_POSE3D));
                     fillBlueScoringRight.put(level, rightScoringPose);
@@ -232,13 +253,10 @@ public class FieldConstants {
                                             Units.degreesToRadians(level.pitchDegrees),
                                             poseDirection.getRotation().getRadians())
                     );
-                    final Pose2d leftScoringPose = leftPose.toPose2d().transformBy(
-                            new Transform2d(
-                                    SCORING_DISTANCE_OFFSET_METERS,
-                                    0,
-                                    Rotation2d.k180deg
-                            )
-                    );
+                    final Pose2d leftScoringPose = leftPose.toPose2d()
+                            .transformBy(scoringTransform)
+                            .transformBy(level.scoringOffset);
+
                     fillBlueLeft.put(level, leftPose);
                     fillRedLeft.put(level, leftPose.relativeTo(RED_ORIGIN_POSE3D));
                     fillBlueScoringLeft.put(level, leftScoringPose);
@@ -276,6 +294,12 @@ public class FieldConstants {
 
     public static Pose2d getProcessorScoringPose() {
         return getAllianceFlipped(Processor.BLUE_SCORING_POSE, Processor.RED_SCORING_POSE);
+    }
+
+    public static List<Pose2d> getHPPickupPoses() {
+        return getAllianceFlipped(
+                CoralStation.BLUE_PICKUP_CORAL_STATIONS_POSES, CoralStation.RED_PICKUP_CORAL_STATIONS_POSES
+        );
     }
 
     public static Map<Reef.Face, Pose2d> getReefCenterPoses() {

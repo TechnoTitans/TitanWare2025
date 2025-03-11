@@ -112,12 +112,12 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
                 .withKV(0)
                 .withKA(3.1912)
                 .withKP(42);
-        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
-        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
+        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 65;
+        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -65;
         driveTalonFXConfiguration.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.2;
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         driveTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         driveMotor.getConfigurator().apply(driveTalonFXConfiguration);
 
@@ -159,7 +159,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
                 driveDeviceTemp,
                 turnDeviceTemp
         );
-        ParentDevice.optimizeBusUtilizationForAll(driveMotor, turnMotor, turnEncoder);
+        ParentDevice.optimizeBusUtilizationForAll(4, driveMotor, turnMotor, turnEncoder);
     }
 
     @SuppressWarnings("DuplicatedCode")
