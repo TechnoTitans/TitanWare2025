@@ -175,8 +175,8 @@ public class ScoreCommands {
                                 return Commands.none();
                             }
 
+                            //noinspection ExtractMethodRecommender
                             final Map<Reef.Side, Map<Reef.Level, Pose2d>> finalScoringPoseMap = scoringPoseMap;
-
                             final Supplier<Pose2d> scoringPoseSupplier = () -> {
                                 final ScorePosition scorePosition = driveToScorePositionSupplier.get();
 
