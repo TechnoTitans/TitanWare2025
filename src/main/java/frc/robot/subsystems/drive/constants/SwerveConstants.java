@@ -19,8 +19,8 @@ public class SwerveConstants {
             Units.inchesToMeters(22.75),
             Units.inchesToMeters(22.75),
             Units.feetToMeters(15.0),
-            12,
-            6,
+            4 * Math.PI,
+            2 * Math.PI,
             Translation2d.kZero
     );
 

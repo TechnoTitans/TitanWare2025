@@ -10,19 +10,25 @@ import frc.robot.subsystems.vision.estimator.VisionUpdate;
 import frc.robot.utils.closeables.ToClose;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 public class ReplayVisionRunner implements PhotonVisionRunner {
     public static class VisionIOReplay implements VisionIO {
         private final PhotonCamera photonCamera;
         private final Transform3d robotToCamera;
+        private final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
+
 
         public VisionIOReplay(final TitanCamera titanCamera) {
             this.photonCamera = titanCamera.getPhotonCamera();
             this.robotToCamera = titanCamera.getRobotToCameraTransform();
+            this.constrainedPnpParams = titanCamera.getConstrainedPnpParams();
         }
     }
 
@@ -38,7 +44,6 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
             final Map<VisionIOReplay, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap
     ) {
         this.aprilTagFieldLayout = aprilTagFieldLayout;
-
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
 
         final Map<VisionIOReplay, String> visionIONames = new HashMap<>();
@@ -52,7 +57,7 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
 
     @SuppressWarnings("DuplicatedCode")
     @Override
-    public void periodic(final Pose2d currentRobotPose) {
+    public void periodic(final Function<Double, Optional<Pose2d>> poseAtTimestamp) {
         if (ToClose.hasClosed()) {
             return;
         }
@@ -77,9 +82,12 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
                 VisionPoseEstimator.update(
                         inputs.name,
                         aprilTagFieldLayout,
-                        currentRobotPose,
+                        poseAtTimestamp,
                         visionIO.robotToCamera,
-                        result
+                        result,
+                        inputs.cameraMatrix,
+                        inputs.distortionCoeffs,
+                        visionIO.constrainedPnpParams
                 ).ifPresent(
                         visionUpdate -> visionUpdates.put(visionIO, visionUpdate)
                 );

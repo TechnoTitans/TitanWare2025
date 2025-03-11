@@ -152,12 +152,15 @@ public class Swerve extends SubsystemBase {
 
         this.holonomicDriveWithPIDController = new HolonomicDriveWithPIDController(
                 new PIDController(5, 0, 0.18),
-                new PIDController(5, 0, 0.18),
+                new PIDController(4, 0, 0),
                 new TrapezoidProfile.Constraints(
                         Config.maxLinearVelocityMeterPerSec(),
                         Config.maxLinearVelocityMeterPerSec() * 1.5
                 ),
-                new PIDController(4, 0, 0),
+                new TrapezoidProfile.Constraints(
+                        Config.maxAngularVelocityRadsPerSec(),
+                        Config.maxAngularAccelerationRadsPerSecSquared()
+                ),
                 new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(4))
         );
         this.atHolonomicDrivePose = new Trigger(holonomicDriveWithPIDController::atReference);
@@ -561,7 +564,7 @@ public class Swerve extends SubsystemBase {
         return Commands.sequence(
                 runOnce(() -> {
                     holonomicControllerActive = true;
-                    holonomicDriveWithPIDController.reset(getPose(), getFieldRelativeSpeeds());
+                    holonomicDriveWithPIDController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
                 }),
                 run(() -> {
                     this.holonomicPoseTarget = poseSupplier.get();
@@ -575,7 +578,7 @@ public class Swerve extends SubsystemBase {
         return Commands.sequence(
                 runOnce(() -> {
                     holonomicControllerActive = true;
-                    holonomicDriveWithPIDController.reset(getPose(), getFieldRelativeSpeeds());
+                    holonomicDriveWithPIDController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
                 }),
                 run(() -> {
                     this.holonomicPoseTarget = poseSupplier.get();
@@ -664,7 +667,7 @@ public class Swerve extends SubsystemBase {
                 runOnce(() -> {
                     holonomicControllerActive = true;
                     holonomicDriveWithPIDController.setTolerance(poseTolerance);
-                    holonomicDriveWithPIDController.reset(getPose(), getFieldRelativeSpeeds());
+                    holonomicDriveWithPIDController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
                 }),
                 run(() -> {
                     this.holonomicPoseTarget = poseSupplier.get();
@@ -675,25 +678,6 @@ public class Swerve extends SubsystemBase {
             holonomicControllerActive = false;
             holonomicDriveWithPIDController.setTolerance(holonomicPoseTolerance);
         });
-    }
-
-    public Command driveToOptionalPose(final Supplier<Optional<Pose2d>> poseSupplier) {
-        return Commands.sequence(
-                runOnce(() -> {
-                    holonomicControllerActive = true;
-                    holonomicDriveWithPIDController.reset(getPose(), getFieldRelativeSpeeds());
-                }),
-                run(() -> {
-                    final Optional<Pose2d> pose = poseSupplier.get();
-                    if (pose.isPresent()) {
-                        this.holonomicPoseTarget = pose.get();
-                        drive(holonomicDriveWithPIDController.calculate(getPose(), holonomicPoseTarget));
-                    } else {
-                        stop();
-                    }
-                }).until(holonomicDriveWithPIDController::atReference),
-                runOnce(this::stop)
-        ).finallyDo(() -> holonomicControllerActive = false);
     }
 
     public void stop() {
