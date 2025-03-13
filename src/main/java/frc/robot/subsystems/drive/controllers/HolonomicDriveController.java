@@ -1,15 +1,18 @@
 package frc.robot.subsystems.drive.controllers;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.utils.control.DeltaTime;
 
-public class HolonomicDriveWithPIDController {
+import java.util.function.Supplier;
+
+public class HolonomicDriveController {
     private final DeltaTime deltaTime;
 
     private final PIDController translationController;
@@ -24,45 +27,54 @@ public class HolonomicDriveWithPIDController {
     private TrapezoidProfile.State translationPreviousProfiledReference;
     private TrapezoidProfile.State rotationPreviousProfiledReference;
 
+    public record Tolerance(double translationToleranceMeters, Rotation2d rotationTolerance) {}
+    private final Tolerance tolerance;
+
     /**
-     * Constructs a {@link HolonomicDriveWithPIDController}
+     * Constructs a {@link HolonomicDriveController}
      *
      * @param translationController        A {@link PIDController} to respond to error in the field-relative X direction
      * @param rotationController A {@link PIDController} controller to respond to error in rotation
      */
-    public HolonomicDriveWithPIDController(
+    public HolonomicDriveController(
             final PIDController translationController,
             final PIDController rotationController,
             final TrapezoidProfile.Constraints translationConstraints,
             final TrapezoidProfile.Constraints rotationConstraints,
-            final Pose2d poseTolerance
+            final Tolerance tolerance
     ) {
         this.deltaTime = new DeltaTime();
 
         this.translationController = translationController;
-        this.translationController.setTolerance(poseTolerance.getX(), poseTolerance.getX() * 1.5);
+        this.rotationController = rotationController;
+        this.rotationController.enableContinuousInput(-Math.PI, Math.PI);
 
         this.translationProfile = new TrapezoidProfile(translationConstraints);
         this.translationPreviousProfiledReference = new TrapezoidProfile.State();
         this.translationUnprofiledReference = new TrapezoidProfile.State(0, 0);
 
-        this.rotationController = rotationController;
-        this.rotationController.enableContinuousInput(-Math.PI, Math.PI);
-        this.rotationController.setTolerance(
-                poseTolerance.getRotation().getRadians(),
-                poseTolerance.getRotation().getRadians() * 1.5
-        );
-
         this.rotationProfile = new TrapezoidProfile(rotationConstraints);
         this.rotationPreviousProfiledReference = new TrapezoidProfile.State();
         this.rotationUnprofiledReference = new TrapezoidProfile.State(0, 0);
+
+        this.tolerance = tolerance;
+    }
+
+    public Trigger atPose(
+            final Supplier<Pose2d> currentPoseSupplier,
+            final Supplier<Pose2d> targetPoseSupplier
+    ) {
+        return new Trigger(() -> {
+            final Transform2d delta = currentPoseSupplier.get().minus(targetPoseSupplier.get());
+            return delta.getTranslation().getNorm() < tolerance.translationToleranceMeters
+                    && delta.getRotation().getRadians() < tolerance.rotationTolerance.getRadians();
+        });
     }
 
     /**
      * Resets the state of the DriveController by resetting accumulated error on all PID controllers
      *
      * @see PIDController#reset()
-     * @see ProfiledPIDController#reset(double, double)
      */
     public void reset(
             final Pose2d currentPose,
@@ -92,24 +104,6 @@ public class HolonomicDriveWithPIDController {
 
         this.rotationPreviousProfiledReference = new TrapezoidProfile.State(
                 currentPose.getRotation().getRadians(), fieldRelativeSpeeds.omegaRadiansPerSecond
-        );
-    }
-
-    /**
-     * Returns true if the pose error is within tolerance of the reference.
-     *
-     * @return True if the pose error is within tolerance of the reference.
-     */
-    public boolean atReference() {
-        return translationController.atSetpoint()
-                && rotationController.atSetpoint();
-    }
-
-    public void setTolerance(final Pose2d poseTolerance) {
-        this.translationController.setTolerance(poseTolerance.getX(), poseTolerance.getX() * 1.5);
-        this.rotationController.setTolerance(
-                poseTolerance.getRotation().getRadians(),
-                poseTolerance.getRotation().getRadians() * 1.5
         );
     }
 
