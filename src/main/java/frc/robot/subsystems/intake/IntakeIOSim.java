@@ -32,95 +32,64 @@ public class IntakeIOSim implements IntakeIO {
     private final DeltaTime deltaTime;
     private final HardwareConstants.IntakeConstants constants;
 
-    private final TalonFX coralRollerMotor;
-    private final TalonFX algaeRollerMotor;
+    private final TalonFX rollerMotor;
     private final CANrange coralCANRange;
 
-    private final TalonFXSim coralRollerTalonFXSim;
-    private final TalonFXSim algaeRollerTalonFXSim;
+    private final TalonFXSim rollerTalonFXSim;
 
     private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
 
-    private final StatusSignal<Angle> coralPosition;
-    private final StatusSignal<AngularVelocity> coralVelocity;
-    private final StatusSignal<Voltage> coralVoltage;
-    private final StatusSignal<Current> coralTorqueCurrent;
-    private final StatusSignal<Temperature> coralDeviceTemp;
-    private final StatusSignal<Angle> algaePosition;
-    private final StatusSignal<AngularVelocity> algaeVelocity;
-    private final StatusSignal<Voltage> algaeVoltage;
-    private final StatusSignal<Current> algaeTorqueCurrent;
-    private final StatusSignal<Temperature> algaeDeviceTemp;
-    private final StatusSignal<Distance> coralCANRangeDistance;
+    private final StatusSignal<Angle> rollerPosition;
+    private final StatusSignal<AngularVelocity> rollerVelocity;
+    private final StatusSignal<Voltage> rollerVoltage;
+    private final StatusSignal<Current> rollerTorqueCurrent;
+    private final StatusSignal<Temperature> rollerDeviceTemp;
+    private final StatusSignal<Distance> rollerCANRangeDistance;
 
     public IntakeIOSim(final HardwareConstants.IntakeConstants constants) {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
 
-        this.coralRollerMotor = new TalonFX(constants.coralRollerMotorID(), constants.CANBus());
-        this.algaeRollerMotor = new TalonFX(constants.algaeRollerMotorID(), constants.CANBus());
-        this.coralCANRange = new CANrange(constants.coralCANRangeId(), constants.CANBus());
+        this.rollerMotor = new TalonFX(constants.rollerRollerMotorID(), constants.CANBus());
+        this.coralCANRange = new CANrange(constants.coralTOFID(), constants.CANBus());
 
-        final DCMotorSim coralRollerMotorSim = new DCMotorSim(
+        final DCMotorSim rollerMotorSim = new DCMotorSim(
             LinearSystemId.createDCMotorSystem(
                     0.19557 / (2 * Math.PI),
                     2.9856 / (2 * Math.PI)
             ),
             MoreDCMotor.getKrakenX44(1)
         );
-        this.coralRollerTalonFXSim = new TalonFXSim(
-                coralRollerMotor,
-                constants.coralGearing(),
-                coralRollerMotorSim::update,
-                coralRollerMotorSim::setInputVoltage,
-                coralRollerMotorSim::getAngularPositionRad,
-                coralRollerMotorSim::getAngularVelocityRadPerSec
-        );
-
-        final DCMotorSim algaeRollerMotorSim = new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(
-                    0.19557 / (2 * Math.PI),
-                    2.9856 / (2 * Math.PI)
-            ),
-            MoreDCMotor.getKrakenX44(1)
-        );
-        this.algaeRollerTalonFXSim = new TalonFXSim(
-                algaeRollerMotor,
-                constants.algaeGearing(),
-                algaeRollerMotorSim::update,
-                algaeRollerMotorSim::setInputVoltage,
-                algaeRollerMotorSim::getAngularPositionRad,
-                algaeRollerMotorSim::getAngularVelocityRadPerSec
+        this.rollerTalonFXSim = new TalonFXSim(
+                rollerMotor,
+                constants.rollerGearing(),
+                rollerMotorSim::update,
+                rollerMotorSim::setInputVoltage,
+                rollerMotorSim::getAngularPositionRad,
+                rollerMotorSim::getAngularVelocityRadPerSec
         );
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
 
-        this.coralPosition = coralRollerMotor.getPosition();
-        this.coralVelocity = coralRollerMotor.getVelocity();
-        this.coralVoltage = coralRollerMotor.getMotorVoltage();
-        this.coralTorqueCurrent = coralRollerMotor.getTorqueCurrent();
-        this.coralDeviceTemp = coralRollerMotor.getDeviceTemp();
-        this.algaePosition = algaeRollerMotor.getPosition();
-        this.algaeVelocity = algaeRollerMotor.getVelocity();
-        this.algaeVoltage = algaeRollerMotor.getMotorVoltage();
-        this.algaeTorqueCurrent = algaeRollerMotor.getTorqueCurrent();
-        this.algaeDeviceTemp = algaeRollerMotor.getDeviceTemp();
-        this.coralCANRangeDistance = coralCANRange.getDistance();
+        this.rollerPosition = rollerMotor.getPosition();
+        this.rollerVelocity = rollerMotor.getVelocity();
+        this.rollerVoltage = rollerMotor.getMotorVoltage();
+        this.rollerTorqueCurrent = rollerMotor.getTorqueCurrent();
+        this.rollerDeviceTemp = rollerMotor.getDeviceTemp();
+        this.rollerCANRangeDistance = coralCANRange.getDistance();
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
         final double dt = deltaTime.get();
-            coralRollerTalonFXSim.update(dt);
-            algaeRollerTalonFXSim.update(dt);
+            rollerTalonFXSim.update(dt);
         });
         ToClose.add(simUpdateNotifier);
         simUpdateNotifier.setName(String.format(
-                "SimUpdate(%d, %d)",
-                coralRollerMotor.getDeviceID(),
-                algaeRollerMotor.getDeviceID()
+                "SimUpdate(%d)",
+                rollerMotor.getDeviceID()
         ));
         simUpdateNotifier.startPeriodic(SIM_UPDATE_PERIOD_SEC);
     }
@@ -148,117 +117,69 @@ public class IntakeIOSim implements IntakeIO {
         coralConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         coralConfiguration.MotorOutput.Inverted = coralRollerInvertedValue;
         coralConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
-        coralConfiguration.Feedback.SensorToMechanismRatio = constants.coralGearing();
-        coralRollerMotor.getConfigurator().apply(coralConfiguration);
-
-        final InvertedValue algaeRollerInvertedValue = InvertedValue.CounterClockwise_Positive;
-        final TalonFXConfiguration algaeConfiguration = new TalonFXConfiguration();
-        algaeConfiguration.Slot0 = new Slot0Configs()
-                .withKS(3.3326)
-                .withKV(0.15104)
-                .withKA(0.2004)
-                .withKP(10.746);
-        algaeConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 60;
-        algaeConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -60;
-        algaeConfiguration.CurrentLimits.StatorCurrentLimit = 60;
-        algaeConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        algaeConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        algaeConfiguration.MotorOutput.Inverted = algaeRollerInvertedValue;
-        algaeConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
-        algaeConfiguration.Feedback.SensorToMechanismRatio = constants.algaeGearing();
-        algaeRollerMotor.getConfigurator().apply(algaeConfiguration);
+        coralConfiguration.Feedback.SensorToMechanismRatio = constants.rollerGearing();
+        rollerMotor.getConfigurator().apply(coralConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
-                coralPosition,
-                coralVelocity,
-                coralVoltage,
-                coralTorqueCurrent,
-                algaePosition,
-                algaeVelocity,
-                algaeVoltage,
-                algaeTorqueCurrent,
-                coralCANRangeDistance
+                rollerPosition,
+                rollerVelocity,
+                rollerVoltage,
+                rollerTorqueCurrent,
+                rollerCANRangeDistance
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 4,
-                coralDeviceTemp,
-                algaeDeviceTemp
+                rollerDeviceTemp
         );
 
         ParentDevice.optimizeBusUtilizationForAll(
-                coralRollerMotor,
-                algaeRollerMotor,
+                4,
+                rollerMotor,
                 coralCANRange
         );
 
-        coralRollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-        algaeRollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+        rollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
         coralCANRange.getSimState().setDistance(10);
     }
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
         BaseStatusSignal.refreshAll(
-                coralPosition,
-                coralVelocity,
-                coralVoltage,
-                coralTorqueCurrent,
-                coralDeviceTemp,
-                algaePosition,
-                algaeVelocity,
-                algaeVoltage,
-                algaeTorqueCurrent,
-                algaeDeviceTemp,
-                coralCANRangeDistance
+                rollerPosition,
+                rollerVelocity,
+                rollerVoltage,
+                rollerTorqueCurrent,
+                rollerDeviceTemp,
+                rollerCANRangeDistance
         );
 
-        inputs.coralRollerPositionRots = coralPosition.getValueAsDouble();
-        inputs.coralRollerVelocityRotsPerSec = coralVelocity.getValueAsDouble();
-        inputs.coralRollerVoltage = coralVoltage.getValueAsDouble();
-        inputs.coralRollerTorqueCurrentAmps = coralTorqueCurrent.getValueAsDouble();
-        inputs.coralRollerTempCelsius = coralDeviceTemp.getValueAsDouble();
-        inputs.algaeRollerPositionRots = algaePosition.getValueAsDouble();
-        inputs.algaeRollerVelocityRotsPerSec = algaeVelocity.getValueAsDouble();
-        inputs.algaeRollerVoltage = algaeVoltage.getValueAsDouble();
-        inputs.algaeRollerTorqueCurrentAmps = algaeTorqueCurrent.getValueAsDouble();
-        inputs.algaeRollerTempCelsius = algaeDeviceTemp.getValueAsDouble();
-        inputs.coralCANRangeDistanceMeters = coralCANRangeDistance.getValueAsDouble();
+        inputs.rollerPositionRots = rollerPosition.getValueAsDouble();
+        inputs.rollerVelocityRotsPerSec = rollerVelocity.getValueAsDouble();
+        inputs.rollerVoltage = rollerVoltage.getValueAsDouble();
+        inputs.rollerTorqueCurrentAmps = rollerTorqueCurrent.getValueAsDouble();
+        inputs.rollerTempCelsius = rollerDeviceTemp.getValueAsDouble();
+        inputs.coralTOFDistanceMeters = rollerCANRangeDistance.getValueAsDouble();
     }
 
     @Override
-    public void toCoralRollerVelocity(final double coralRollerVelocityRotsPerSec) {
-        coralRollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(coralRollerVelocityRotsPerSec));
+    public void toRollerVelocity(final double velocityRotsPerSec) {
+        rollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(velocityRotsPerSec));
     }
 
     @Override
-    public void toCoralRollerVoltage(final double volts) {
-        coralRollerMotor.setControl(voltageOut.withOutput(volts));
+    public void toRollerVoltage(final double volts) {
+        rollerMotor.setControl(voltageOut.withOutput(volts));
     }
 
     @Override
-    public void toCoralRollerTorqueCurrent(final double torqueCurrentAmps) {
-        coralRollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
+    public void toRollerTorqueCurrent(final double torqueCurrentAmps) {
+        rollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
     }
 
     @Override
-    public void toAlgaeRollerVelocity(final double algaeRollerVelocityRotsPerSec) {
-        algaeRollerMotor.setControl(velocityTorqueCurrentFOC.withVelocity(algaeRollerVelocityRotsPerSec));
-    }
-
-    @Override
-    public void toAlgaeRollerVoltage(final double volts) {
-        algaeRollerMotor.setControl(voltageOut.withOutput(volts));
-    }
-
-    @Override
-    public void toAlgaeRollerTorqueCurrent(final double torqueCurrentAmps) {
-        algaeRollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
-    }
-
-    @Override
-    public void setCANRangeDistance(final double gamepieceDistanceMeters) {
-        coralCANRange.getSimState().setDistance(gamepieceDistanceMeters);
+    public void setTOFDistance(final double distanceMeters) {
+        coralCANRange.getSimState().setDistance(distanceMeters);
     }
 }

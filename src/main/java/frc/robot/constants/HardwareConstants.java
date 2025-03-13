@@ -75,21 +75,15 @@ public class HardwareConstants {
 
     public record IntakeConstants(
             String CANBus,
-            int algaeRollerMotorID,
-            int coralRollerMotorID,
-            int coralCANRangeId,
-            double coralCANRangeOffsetMeters,
-            double algaeGearing,
-            double coralGearing
+            int rollerRollerMotorID,
+            int coralTOFID,
+            double rollerGearing
     ) {}
 
     public static final IntakeConstants INTAKE = new IntakeConstants(
             RobotMap.RioCANBus,
             21,
-            22,
             23,
-            0.0254 + Units.inchesToMeters(0.3),
-            10.0,
-            2.5
+            10.0
     );
 }

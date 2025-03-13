@@ -5,19 +5,13 @@ import org.littletonrobotics.junction.AutoLog;
 public interface IntakeIO {
     @AutoLog
     class IntakeIOInputs {
-        public double coralRollerPositionRots = 0.0;
-        public double coralRollerVelocityRotsPerSec = 0.0;
-        public double coralRollerVoltage = 0.0;
-        public double coralRollerTorqueCurrentAmps = 0.0;
-        public double coralRollerTempCelsius = 0.0;
+        public double rollerPositionRots = 0.0;
+        public double rollerVelocityRotsPerSec = 0.0;
+        public double rollerVoltage = 0.0;
+        public double rollerTorqueCurrentAmps = 0.0;
+        public double rollerTempCelsius = 0.0;
 
-        public double algaeRollerPositionRots = 0.0;
-        public double algaeRollerVelocityRotsPerSec = 0.0;
-        public double algaeRollerVoltage = 0.0;
-        public double algaeRollerTorqueCurrentAmps = 0.0;
-        public double algaeRollerTempCelsius = 0.0;
-
-        public double coralCANRangeDistanceMeters = 0.0;
+        public double coralTOFDistanceMeters = 0.0;
     }
 
     /**
@@ -31,17 +25,11 @@ public interface IntakeIO {
 
     default void config() {}
 
-    default void toCoralRollerVelocity(final double coralRollerVelocityRotsPerSec) {}
+    default void toRollerVelocity(final double velocityRotsPerSec) {}
 
-    default void toCoralRollerVoltage(final double volts) {}
+    default void toRollerVoltage(final double volts) {}
 
-    default void toCoralRollerTorqueCurrent(final double torqueCurrentAmps) {}
+    default void toRollerTorqueCurrent(final double torqueCurrentAmps) {}
 
-    default void toAlgaeRollerVelocity(final double algaeRollerVelocityRotsPerSec) {}
-
-    default void toAlgaeRollerVoltage(final double volts) {}
-
-    default void toAlgaeRollerTorqueCurrent(final double torqueCurrentAmps) {}
-
-    default void setCANRangeDistance(final double gamepieceDistanceMeters) {}
+    default void setTOFDistance(final double distanceMeters) {}
 }

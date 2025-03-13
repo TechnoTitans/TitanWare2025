@@ -48,16 +48,16 @@ public class Intake extends SubsystemBase {
     }
 
     protected static final String LogKey = "Intake";
-
-    private final HardwareConstants.IntakeConstants constants;
+    private static final double CoralRadiusFromODMeters = Units.inchesToMeters(4.5 / 2);
+    private static final double CoralIntakeCenterDistanceMeters = Units.inchesToMeters(15.5 / 2);
+    private static final double NoCoralTOFReading = 0.25;
+    private static final double AlgaeDetectedCurrent = 25;
 
     private final IntakeIO intakeIO;
     private final IntakeIOInputsAutoLogged inputs;
 
-    private final SysIdRoutine coralRollerVoltageSysIdRoutine;
-    private final SysIdRoutine coralRollerTorqueCurrentSysIdRoutine;
-    private final SysIdRoutine algaeRollerVoltageSysIdRoutine;
-    private final SysIdRoutine algaeRollerTorqueCurrentSysIdRoutine;
+    private final SysIdRoutine rollerVoltageSysIdRoutine;
+    private final SysIdRoutine rollerTorqueCurrentSysIdRoutine;
 
     private boolean coralIntaking = false;
     private boolean coralOuttaking = false;
@@ -88,12 +88,11 @@ public class Intake extends SubsystemBase {
     public final LinearFilter algaeDetectionCurrentFilter = LinearFilter.movingAverage(16);
 
     public Intake(final Constants.RobotMode mode, final HardwareConstants.IntakeConstants constants) {
-        this.constants = constants;
-
         this.intakeIO = switch (mode) {
             case REAL -> new IntakeIOReal(constants);
             case SIM -> new IntakeIOSim(constants);
-            case REPLAY, DISABLED -> new IntakeIO() {};
+            case REPLAY, DISABLED -> new IntakeIO() {
+            };
         };
 
         this.inputs = new IntakeIOInputsAutoLogged();
@@ -111,30 +110,17 @@ public class Intake extends SubsystemBase {
         this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent).debounce(0.5);
         this.isAlgaePresent = new Trigger(eventLoop, this::isAlgaePresent);
 
-        this.coralRollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
+        this.rollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
                 Volts.of(10),
                 Seconds.of(10),
-                intakeIO::toCoralRollerVoltage
+                intakeIO::toRollerVoltage
         );
-        this.coralRollerTorqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
+        this.rollerTorqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
                 Amps.of(4).per(Second),
                 Amp.of(40),
                 Seconds.of(10),
-                intakeIO::toCoralRollerTorqueCurrent
-        );
-
-        this.algaeRollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(2).per(Second),
-                Volts.of(10),
-                Seconds.of(10),
-                intakeIO::toAlgaeRollerVoltage
-        );
-        this.algaeRollerTorqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
-                Amps.of(4).per(Second),
-                Amp.of(40),
-                Seconds.of(10),
-                intakeIO::toAlgaeRollerTorqueCurrent
+                intakeIO::toRollerTorqueCurrent
         );
 
         this.intakeIO.config();
@@ -175,7 +161,7 @@ public class Intake extends SubsystemBase {
     }
 
     private double getFilteredCoralDistanceMeters() {
-        return coralDistanceFilter.calculate(inputs.coralCANRangeDistanceMeters);
+        return coralDistanceFilter.calculate(inputs.coralTOFDistanceMeters);
     }
 
     private double getCoralDistanceMeters() {
@@ -183,19 +169,19 @@ public class Intake extends SubsystemBase {
     }
 
     private double getCoralDistanceFromCenterIntakeMeters() {
-        return getCoralDistanceMeters() + Units.inchesToMeters(4.5/2) - Units.inchesToMeters(11.5/2);
+        return getCoralDistanceMeters() + CoralRadiusFromODMeters - CoralIntakeCenterDistanceMeters;
     }
 
     private boolean isCoralPresent() {
-        return getFilteredCoralDistanceMeters() < 0.25;
+        return getFilteredCoralDistanceMeters() < NoCoralTOFReading;
     }
 
     private double getFilteredAlgaeCurrent() {
-        return algaeDetectionCurrentFilter.calculate(inputs.algaeRollerTorqueCurrentAmps);
+        return algaeDetectionCurrentFilter.calculate(inputs.rollerTorqueCurrentAmps);
     }
 
     private boolean isAlgaePresent() {
-        return getFilteredAlgaeCurrent() >= 25;
+        return getFilteredAlgaeCurrent() >= AlgaeDetectedCurrent;
     }
 
     public Command intakeCoralHP() {
@@ -245,17 +231,16 @@ public class Intake extends SubsystemBase {
         return runOnce(
                 () -> {
                     coralRollerVoltageSetpoint = volts;
-                    intakeIO.toCoralRollerVoltage(volts);
+                    intakeIO.toRollerVoltage(volts);
                 }
         ).withName("ToInstantCoralRollerVoltage");
     }
 
-    @SuppressWarnings("SameParameterValue")
     private Command toInstantAlgaeRollerVoltage(final double volts) {
         return runOnce(
                 () -> {
                     algaeRollerVoltageSetpoint = volts;
-                    intakeIO.toAlgaeRollerVoltage(volts);
+                    intakeIO.toRollerVoltage(volts);
                 }
         ).withName("ToInstantCoralRollerVoltage");
     }
@@ -265,11 +250,11 @@ public class Intake extends SubsystemBase {
         return runEnd(
                 () -> {
                     coralRollerVelocitySetpoint = velocityRotsPerSec;
-                    intakeIO.toCoralRollerVelocity(coralRollerVelocitySetpoint);
+                    intakeIO.toRollerVelocity(coralRollerVelocitySetpoint);
                 },
                 () -> {
                     coralRollerVelocitySetpoint = 0.0;
-                    intakeIO.toCoralRollerVelocity(coralRollerVelocitySetpoint);
+                    intakeIO.toRollerVelocity(coralRollerVelocitySetpoint);
                 }
         ).withName("ToCoralRollerVelocity");
     }
@@ -279,11 +264,11 @@ public class Intake extends SubsystemBase {
         return runEnd(
                 () -> {
                     algaeRollerVelocitySetpoint = velocityRotsPerSec;
-                    intakeIO.toAlgaeRollerVelocity(velocityRotsPerSec);
+                    intakeIO.toRollerVelocity(velocityRotsPerSec);
                 },
                 () -> {
                     algaeRollerVelocitySetpoint = 0.0;
-                    intakeIO.toAlgaeRollerVelocity(0.0);
+                    intakeIO.toRollerVelocity(0.0);
                 }
         ).withName("ToAlgaeRollerVelocity");
     }
@@ -294,7 +279,7 @@ public class Intake extends SubsystemBase {
                     this.coralOuttaking = false;
                     this.coralRollerVelocitySetpoint = 0.0;
                     this.coralRollerVoltageSetpoint = 0.0;
-                    intakeIO.toCoralRollerVoltage(0);
+                    intakeIO.toRollerVoltage(0);
                 }
         ).withName("CoralInstantStop");
     }
@@ -305,13 +290,13 @@ public class Intake extends SubsystemBase {
                     this.algaeOuttaking = false;
                     this.algaeRollerVelocitySetpoint = 0.0;
                     this.algaeRollerVoltageSetpoint = 0.0;
-                    intakeIO.toAlgaeRollerVoltage(0);
+                    intakeIO.toRollerVoltage(0);
                 }
         ).withName("AlgaeInstantStop");
     }
 
-    public void setCANRangeDistance(final double gamepieceDistanceMeters) {
-        intakeIO.setCANRangeDistance(gamepieceDistanceMeters);
+    public void setTOFDistance(final double distanceMeters) {
+        intakeIO.setTOFDistance(distanceMeters);
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(
@@ -369,18 +354,10 @@ public class Intake extends SubsystemBase {
     }
 
     public Command coralVoltageSysIdCommand() {
-        return makeRollerSysIdCommand(coralRollerVoltageSysIdRoutine);
+        return makeRollerSysIdCommand(rollerVoltageSysIdRoutine);
     }
 
     public Command coralTorqueCurrentSysIdCommand() {
-        return makeRollerSysIdCommand(coralRollerTorqueCurrentSysIdRoutine);
-    }
-
-    public Command algaeVoltageSysIdCommand() {
-        return makeRollerSysIdCommand(algaeRollerVoltageSysIdRoutine);
-    }
-
-    public Command algaeTorqueCurrentSysIdCommand() {
-        return makeRollerSysIdCommand(algaeRollerTorqueCurrentSysIdRoutine);
+        return makeRollerSysIdCommand(rollerTorqueCurrentSysIdRoutine);
     }
 }

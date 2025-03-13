@@ -122,7 +122,7 @@ public class GamepieceState extends VirtualSubsystem {
     }
 
     private Command setCANRangeDistanceCommand(final double gamepieceDistanceMeters) {
-        return Commands.runOnce(() -> intake.setCANRangeDistance(gamepieceDistanceMeters));
+        return Commands.runOnce(() -> intake.setTOFDistance(gamepieceDistanceMeters));
     }
 
     public void configureSimStateTriggers() {

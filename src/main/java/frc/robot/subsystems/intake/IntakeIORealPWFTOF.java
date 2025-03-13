@@ -2,27 +2,25 @@ package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.UpdateModeValue;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
+import frc.robot.utils.sim.sensors.TimeOfFlight;
 
-public class IntakeIOReal implements IntakeIO {
+public class IntakeIORealPWFTOF implements IntakeIO {
     private final HardwareConstants.IntakeConstants constants;
 
     private final TalonFX rollerMotor;
-    private final CANrange coralCANRange;
+    private final TimeOfFlight coralTOF;
 
     private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC;
     private final TorqueCurrentFOC torqueCurrentFOC;
@@ -33,13 +31,12 @@ public class IntakeIOReal implements IntakeIO {
     private final StatusSignal<Voltage> rollerVoltage;
     private final StatusSignal<Current> rollerTorqueCurrent;
     private final StatusSignal<Temperature> rollerDeviceTemp;
-    private final StatusSignal<Distance> rollerCANRangeDistance;
 
-    public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
+    public IntakeIORealPWFTOF(final HardwareConstants.IntakeConstants constants) {
         this.constants = constants;
 
         this.rollerMotor = new TalonFX(constants.rollerRollerMotorID(), constants.CANBus());
-        this.coralCANRange = new CANrange(constants.coralTOFID(), constants.CANBus());
+        this.coralTOF = new TimeOfFlight(constants.coralTOFID());
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -50,17 +47,12 @@ public class IntakeIOReal implements IntakeIO {
         this.rollerVoltage = rollerMotor.getMotorVoltage();
         this.rollerTorqueCurrent = rollerMotor.getTorqueCurrent();
         this.rollerDeviceTemp = rollerMotor.getDeviceTemp();
-        this.rollerCANRangeDistance = coralCANRange.getDistance();
     }
 
     @Override
     public void config() {
-        final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
-        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
-        CANRangeConfiguration.ToFParams.UpdateFrequency = 50;
-        CANRangeConfiguration.FovParams.FOVRangeX = 7;
-        CANRangeConfiguration.FovParams.FOVRangeY = 7;
-        coralCANRange.getConfigurator().apply(CANRangeConfiguration);
+        coralTOF.setRangingMode(TimeOfFlight.RangingMode.Short, 25);
+        coralTOF.setRangeOfInterest(8, 8, 12, 12);
 
         final TalonFXConfiguration rollerConfiguration = new TalonFXConfiguration();
         rollerConfiguration.Slot0 = new Slot0Configs()
@@ -85,8 +77,7 @@ public class IntakeIOReal implements IntakeIO {
                 rollerPosition,
                 rollerVelocity,
                 rollerVoltage,
-                rollerTorqueCurrent,
-                rollerCANRangeDistance
+                rollerTorqueCurrent
         );
 
         BaseStatusSignal.setUpdateFrequencyForAll(
@@ -96,8 +87,7 @@ public class IntakeIOReal implements IntakeIO {
 
         ParentDevice.optimizeBusUtilizationForAll(
                 4,
-                rollerMotor,
-                coralCANRange
+                rollerMotor
         );
     }
 
@@ -108,8 +98,7 @@ public class IntakeIOReal implements IntakeIO {
                 rollerVelocity,
                 rollerVoltage,
                 rollerTorqueCurrent,
-                rollerDeviceTemp,
-                rollerCANRangeDistance
+                rollerDeviceTemp
         );
 
         inputs.rollerPositionRots = rollerPosition.getValueAsDouble();
@@ -117,7 +106,7 @@ public class IntakeIOReal implements IntakeIO {
         inputs.rollerVoltage = rollerVoltage.getValueAsDouble();
         inputs.rollerTorqueCurrentAmps = rollerTorqueCurrent.getValueAsDouble();
         inputs.rollerTempCelsius = rollerDeviceTemp.getValueAsDouble();
-        inputs.coralTOFDistanceMeters = rollerCANRangeDistance.getValueAsDouble();
+        inputs.coralTOFDistanceMeters = coralTOF.getRangeMeters();
     }
 
     @Override
