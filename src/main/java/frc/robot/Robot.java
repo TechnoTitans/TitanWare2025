@@ -421,7 +421,7 @@ public class Robot extends LoggedRobot {
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
 
-        this.driverController.rightTrigger(0.5, teleopEventLoop)
+        this.driverController.a(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition());
 

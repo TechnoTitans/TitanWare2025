@@ -15,8 +15,8 @@ public class FieldConstants {
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
     private static final double SCORING_DISTANCE_OFFSET_METERS = Units.inchesToMeters(19.5);
-    public static final Transform2d ALIGN_DISTANCE_OFFSET_METERS =
-            new Transform2d(Units.inchesToMeters(48), 0, Rotation2d.kZero);
+    public static final Transform2d ALIGN_DISTANCE_OFFSET =
+            new Transform2d(-Units.inchesToMeters(24), 0, Rotation2d.kZero);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =

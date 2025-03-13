@@ -8,6 +8,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
@@ -148,6 +149,12 @@ public class ScoreCommands {
         final Consumer<ScorePosition> setDriveToScorePosition =
                 (scorePosition) -> driveToScorePosition.value = scorePosition;
 
+        final Trigger shouldUseEarlyAlign = new Trigger(() ->
+                switch (wantScorePosition.get().level) {
+                    case L1, L2 -> false;
+                    case L3, L4 -> true;
+                });
+
         return Commands.parallel(
                 Commands.defer(
                         () -> {
@@ -194,34 +201,61 @@ public class ScoreCommands {
                                 return scoringPose.transformBy(coralDistanceOffset);
                             };
 
-                            return Commands.sequence(
-                                    swerve.driveToPose(() -> scoringPoseSupplier
-                                            .get()
-                                            .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET_METERS)
-                                    ),
-                                    swerve.runToPose(scoringPoseSupplier)
+                            return Commands.repeatingSequence(
+                                    Commands.either(
+                                            Commands.sequence(
+                                                    swerve.driveToPose(
+                                                            () -> scoringPoseSupplier
+                                                                    .get()
+                                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
+                                                            .onlyWhile(shouldUseEarlyAlign),
+                                                    swerve.runToPose(scoringPoseSupplier)
+                                            ),
+                                            swerve.runToPose(scoringPoseSupplier)
+                                                    .onlyWhile(shouldUseEarlyAlign.negate()),
+                                            shouldUseEarlyAlign
+                                    )
                             );
+
+//                            return Commands.sequence(
+//                                    swerve.driveToPose(
+//                                            () -> scoringPoseSupplier
+//                                                    .get()
+//                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
+//                                            .onlyIf(shouldUseEarlyAlign),
+//                                    swerve.runToPose(scoringPoseSupplier)
+//                            );
                         },
                         Set.of(swerve)
                 ),
                 Commands.sequence(
-                        Commands.runOnce(() -> setDriveToScorePosition.accept(wantScorePosition.get())),
-                        Commands.waitUntil(swerve.atHolonomicDrivePose),
+                        Commands.deadline(
+                                Commands.waitUntil(swerve.atHolonomicDrivePose),
+                                Commands.run(() -> setDriveToScorePosition.accept(wantScorePosition.get()))
+                        ),
+                        superstructure.runSuperstructureGoal(() ->
+                                        Superstructure.Goal.getAlignGoal(wantScorePosition.get().level.goal))
+                                .until(swerve.atHolonomicDrivePose)
+                                .onlyIf(shouldUseEarlyAlign),
                         Commands.repeatingSequence(
                                 Commands.defer(() -> {
                                     final ScorePosition scorePosition = wantScorePosition.get();
-                                    final BooleanSupplier desiredScorePositionNotEqualLast =
-                                            () -> !scorePosition.equals(wantScorePosition.get());
+                                    final BooleanSupplier desiredScorePositionHasNotChanged =
+                                            () -> scorePosition.equals(wantScorePosition.get());
 
                                     return Commands.sequence(
                                             superstructure.runSuperstructureGoal(Superstructure.Goal.SAFE)
                                                     .until(superstructure.atSuperstructureSetpoint
                                                             .and(superstructure.unsafeToDrive.negate()))
-                                                    .onlyIf(superstructure.unsafeToDrive),
+                                                    .onlyIf(superstructure.unsafeToDrive.and(
+                                                            // unsafe to drive AND needs to drive
+                                                            () -> driveToScorePositionSupplier.get().side
+                                                                    != scorePosition.side
+                                                    )),
                                             Commands.runOnce(() -> setDriveToScorePosition.accept(scorePosition)),
                                             Commands.waitUntil(swerve.atHolonomicDrivePose),
                                             superstructure.runSuperstructureGoal(scorePosition.level.goal)
-                                    ).until(desiredScorePositionNotEqualLast);
+                                    ).onlyWhile(desiredScorePositionHasNotChanged);
                                 }, superstructure.getRequirements())
                         )
                 )

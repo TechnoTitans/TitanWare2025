@@ -68,6 +68,16 @@ public class Superstructure extends VirtualSubsystem {
             this.elevatorArmGoal = elevatorArmGoal;
             this.intakeArmGoal = intakeArmGoal;
         }
+
+        public static Goal getAlignGoal(final Goal goal) {
+            return switch (goal) {
+                case L1 -> ALIGN_L1;
+                case L2 -> ALIGN_L2;
+                case L3 -> ALIGN_L3;
+                case L4 -> ALIGN_L4;
+                default -> STOW;
+            };
+        }
     }
 
     protected static final String LogKey = "Superstructure";
