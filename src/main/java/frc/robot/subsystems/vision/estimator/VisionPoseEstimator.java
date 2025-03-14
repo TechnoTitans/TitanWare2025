@@ -252,27 +252,23 @@ public class VisionPoseEstimator {
             return Optional.empty();
         }
 
-        if (pipelineResult.multitagResult.isPresent()) {
-            return multitag(
-                    name,
-                    fieldLayout,
-                    robotToCamera,
-                    pipelineResult.getTimestampSeconds(),
-                    pipelineResult,
-                    pipelineResult.multitagResult.get()
-            );
-        }
-
-        return singleTag(
+        return pipelineResult.multitagResult.map(multiTargetPNPResult -> multitag(
+                name,
+                fieldLayout,
+                robotToCamera,
+                pipelineResult.getTimestampSeconds(),
+                pipelineResult,
+                multiTargetPNPResult
+        )).orElseGet(() -> singleTag(
                 name,
                 fieldLayout,
                 robotToCamera,
                 pipelineResult.getTimestampSeconds(),
                 poseAtTimestamp,
                 pipelineResult
-        );
+        ));
 
-//        return constrainedPnpStrategy(
+        //        return constrainedPnpStrategy(
 //                name,
 //                fieldLayout,
 //                pipelineResult,
