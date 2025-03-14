@@ -72,8 +72,8 @@ public class IntakeArm extends SubsystemBase {
     public enum Goal {
         STOW(0),
         HP(0),
-        ALGAE_GROUND(-0.363),
-        UPPER_ALGAE(-0.376),
+        ALGAE_GROUND(-0.349),
+        UPPER_ALGAE(-0.35),
         LOWER_ALGAE(-0.319),
         PROCESSOR(-0.24),
         CLIMB(-0.36),
