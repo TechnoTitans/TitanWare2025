@@ -204,7 +204,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command holdAlgae() {
-        return toInstantAlgaeRollerVoltage(3).withName("HoldAlgae");
+        return toInstantAlgaeRollerVoltage(-3).withName("HoldAlgae");
     }
 
     public Command scoreCoral() {
