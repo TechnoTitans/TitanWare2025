@@ -64,10 +64,10 @@ public class IntakeIOReal implements IntakeIO {
 
         final TalonFXConfiguration rollerConfiguration = new TalonFXConfiguration();
         rollerConfiguration.Slot0 = new Slot0Configs()
-                .withKS(5.3249)
-                .withKV(0.13893)
-                .withKA(0.094582)
-                .withKP(10);
+                .withKS(4.0212)
+                .withKV(0.40767)
+                .withKA(0.22711)
+                .withKP(30);
         rollerConfiguration.CurrentLimits.StatorCurrentLimit = 30;
         rollerConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         rollerConfiguration.CurrentLimits.SupplyCurrentLimit = 40;

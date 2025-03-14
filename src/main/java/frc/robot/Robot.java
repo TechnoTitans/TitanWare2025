@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -321,22 +322,23 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-//        driverController.y(testEventLoop).whileTrue(
-//                intake.algaeTorqueCurrentSysIdCommand()
-//        );
-
         driverController.y(testEventLoop).whileTrue(
-                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+                intake.coralTorqueCurrentSysIdCommand()
+                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
         );
-        driverController.a(testEventLoop).whileTrue(
-                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
-        );
-        driverController.b(testEventLoop).whileTrue(
-                swerve.angularVoltageSysIdDynamicCommand(SysIdRoutine.Direction.kForward)
-        );
-        driverController.x(testEventLoop).whileTrue(
-                swerve.angularVoltageSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
-        );
+
+//        driverController.y(testEventLoop).whileTrue(
+//                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
+//        );
+//        driverController.a(testEventLoop).whileTrue(
+//                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kReverse)
+//        );
+//        driverController.b(testEventLoop).whileTrue(
+//                swerve.angularVoltageSysIdDynamicCommand(SysIdRoutine.Direction.kForward)
+//        );
+//        driverController.x(testEventLoop).whileTrue(
+//                swerve.angularVoltageSysIdDynamicCommand(SysIdRoutine.Direction.kReverse)
+//        );
 
         driverController.povDown().onTrue(
                 Commands.sequence(
@@ -421,7 +423,7 @@ public class Robot extends LoggedRobot {
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
 
-        this.driverController.a(teleopEventLoop)
+        this.driverController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition());
 

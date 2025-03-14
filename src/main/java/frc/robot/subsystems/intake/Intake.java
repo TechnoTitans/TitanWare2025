@@ -33,24 +33,32 @@ public class Intake extends SubsystemBase {
     static {
         //measure, actual
         coralTreeMap.put(0.0, 0.0);
-        coralTreeMap.put(0.0315, Units.inchesToMeters(0.9));
-        coralTreeMap.put(0.05, Units.inchesToMeters(1.35));
-        coralTreeMap.put(0.084, Units.inchesToMeters(2.1));
-        coralTreeMap.put(0.093, Units.inchesToMeters(2.6));
-        coralTreeMap.put(0.12, Units.inchesToMeters(3.1));
-        coralTreeMap.put(0.146, Units.inchesToMeters(4.3));
-        coralTreeMap.put(0.161, Units.inchesToMeters(4.75));
-        coralTreeMap.put(0.171, Units.inchesToMeters(5.2));
-        coralTreeMap.put(0.189, Units.inchesToMeters(6));
-        coralTreeMap.put(0.198, Units.inchesToMeters(6.3));
-        coralTreeMap.put(0.215, Units.inchesToMeters(7));
-        coralTreeMap.put(0.325, Units.inchesToMeters(11.5));
+        coralTreeMap.put(0.021, Units.inchesToMeters(0.6));
+        coralTreeMap.put(0.055, Units.inchesToMeters(1.3));
+        coralTreeMap.put(0.075, Units.inchesToMeters(1.75));
+        coralTreeMap.put(0.094, Units.inchesToMeters(2.45));
+        coralTreeMap.put(0.1, Units.inchesToMeters(2.75));
+        coralTreeMap.put(0.11, Units.inchesToMeters(3.0));
+        coralTreeMap.put(0.133, Units.inchesToMeters(3.7));
+        coralTreeMap.put(0.155, Units.inchesToMeters(4.6));
+        coralTreeMap.put(0.165, Units.inchesToMeters(5.0));
+        coralTreeMap.put(0.18, Units.inchesToMeters(5.75));
+        coralTreeMap.put(0.197, Units.inchesToMeters(6.25));
+        coralTreeMap.put(0.207, Units.inchesToMeters(6.6));
+        coralTreeMap.put(0.23, Units.inchesToMeters(7.5));
+        coralTreeMap.put(0.237, Units.inchesToMeters(7.75));
+        coralTreeMap.put(0.246, Units.inchesToMeters(8.1));
+        coralTreeMap.put(0.272, Units.inchesToMeters(9.0));
+        coralTreeMap.put(0.28, Units.inchesToMeters(9.25));
+        coralTreeMap.put(0.301, Units.inchesToMeters(10.2));
+        coralTreeMap.put(0.321, Units.inchesToMeters(11.0));
+        coralTreeMap.put(0.42, Units.inchesToMeters(15.5));
     }
 
     protected static final String LogKey = "Intake";
     private static final double CoralRadiusFromODMeters = Units.inchesToMeters(4.5 / 2);
     private static final double CoralIntakeCenterDistanceMeters = Units.inchesToMeters(15.5 / 2);
-    private static final double NoCoralTOFReading = 0.25;
+    private static final double NoCoralTOFReading = 0.4;
     private static final double AlgaeDetectedCurrent = 25;
 
     private final IntakeIO intakeIO;
@@ -181,22 +189,22 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isAlgaePresent() {
-        return getFilteredAlgaeCurrent() >= AlgaeDetectedCurrent;
+        return Math.abs(getFilteredAlgaeCurrent()) >= AlgaeDetectedCurrent;
     }
 
     public Command intakeCoralHP() {
         return Commands.sequence(
                 runOnce(() -> this.coralIntaking = true),
-                toCoralRollerVelocity(12)
+                toCoralRollerVelocity(9)
         ).finallyDo(() -> this.coralIntaking = false).withName("IntakeCoralHP");
     }
 
     public Command holdCoral() {
-        return toInstantCoralRollerVoltage(3).withName("HoldCoral");
+        return toInstantCoralRollerVoltage(0.8).withName("HoldCoral");
     }
 
     public Command holdAlgae() {
-        return toInstantAlgaeRollerVoltage(6).withName("HoldAlgae");
+        return toInstantAlgaeRollerVoltage(3).withName("HoldAlgae");
     }
 
     public Command scoreCoral() {
@@ -213,7 +221,7 @@ public class Intake extends SubsystemBase {
     public Command intakeAlgae() {
         return Commands.sequence(
                 runOnce(() -> this.algaeIntaking = true),
-                toAlgaeRollerVelocity(5)
+                toAlgaeRollerVelocity(-10)
         ).finallyDo(() -> this.algaeIntaking = false).withName("IntakeAlgae");
     }
 
