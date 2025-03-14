@@ -76,7 +76,7 @@ public class IntakeArm extends SubsystemBase {
         UPPER_ALGAE(-0.348),
         LOWER_ALGAE(-0.324),
         PROCESSOR(-0.24),
-        CLIMB(-0.36),
+        CLIMB(-0.348),
         NET(-0.15),
         L4(-0.1985),
         L3(-0.1943),
