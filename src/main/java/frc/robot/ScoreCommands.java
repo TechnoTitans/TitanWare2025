@@ -267,20 +267,23 @@ public class ScoreCommands {
     }
 
     public Command scoreAtPosition() {
-        return Commands.sequence(
-                Commands.deadline(
-                        Commands.sequence(
+        return Commands.deadline(
+                Commands.sequence(
+                        Commands.deadline(
                                 Commands.waitUntil(superstructure.atSuperstructureSetpoint)
-                                        .withTimeout(3),
-                                intake.scoreCoral()
+                                        .withTimeout(3)
+                                        .andThen(intake.scoreCoral()),
+                                Commands.defer(() -> superstructure
+                                                .toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
+                                        superstructure.getRequirements()
+                                )
                         ),
-                        Commands.defer(
-                                () -> superstructure.toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
-                                superstructure.getRequirements()
-                        ),
-                        swerve.runWheelXCommand()
+                        // TODO: doesn't seem to wait for safe on the first time its ran?
+                        Commands.waitUntil(superstructure.unsafeToDrive.negate()
+                                .or(superstructure.atSuperstructureSetpoint
+                                        .and(superstructure.desiredGoalNotStow.negate())))
                 ),
-                Commands.waitSeconds(1)
+                swerve.runWheelXCommand()
         ).withName("ScoreAtPositionTeleop");
     }
 

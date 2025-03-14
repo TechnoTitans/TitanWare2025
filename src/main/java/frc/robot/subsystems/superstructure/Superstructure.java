@@ -41,7 +41,7 @@ public class Superstructure extends VirtualSubsystem {
         ALIGN_L4(Elevator.Goal.STOW, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
 
-        SAFE(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.Goal.STOW);
+        SAFE(Elevator.Goal.L3, ElevatorArm.Goal.L4, IntakeArm.Goal.STOW);
 
         private static final Map<Goal, Translation2d> GoalTranslations = new HashMap<>();
 
