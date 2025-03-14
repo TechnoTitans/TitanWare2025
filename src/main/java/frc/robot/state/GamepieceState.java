@@ -103,7 +103,7 @@ public class GamepieceState extends VirtualSubsystem {
 
         intake.isAlgaeIntaking.and(intake.isAlgaePresent.negate()).onTrue(setAlgaeState(State.INTAKING));
         intake.isAlgaeIntaking.negate().and(isAlgaeIntaking).onTrue(setAlgaeState(State.NONE));
-        intake.isAlgaePresent.and(isAlgaeIntaking).onTrue(setAlgaeState(State.HOLDING));
+        intake.isAlgaePresent.onTrue(setAlgaeState(State.HOLDING));
 
         isAlgaeHolding.onTrue(intake.holdAlgae());
 
