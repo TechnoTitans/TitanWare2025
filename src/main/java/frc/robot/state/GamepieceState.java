@@ -92,7 +92,7 @@ public class GamepieceState extends VirtualSubsystem {
     public void configureStateTriggers() {
         intake.isCoralIntaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.INTAKING));
         intake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setCoralState(State.NONE));
-        intake.isCoralPresent.and(isCoralIntaking).onTrue(setCoralState(State.HOLDING));
+        intake.isCoralPresent.onTrue(setCoralState(State.HOLDING));
 
         isCoralHolding.onTrue(intake.holdCoral());
 
