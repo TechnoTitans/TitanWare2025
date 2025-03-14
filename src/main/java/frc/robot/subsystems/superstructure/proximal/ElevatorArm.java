@@ -74,7 +74,7 @@ public class ElevatorArm extends SubsystemBase {
         DYNAMIC(0),
         STOW(Units.degreesToRotations(37)),
         UPRIGHT(Units.degreesToRotations(45)),
-        HP(Units.degreesToRotations(33)),
+        HP(Units.degreesToRotations(35)),
         ALGAE_GROUND(0),
         PROCESSOR(0),
         UPPER_ALGAE(0.1186),
