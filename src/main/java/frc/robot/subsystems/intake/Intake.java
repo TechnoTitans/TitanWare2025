@@ -197,7 +197,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command holdCoral() {
-        return toInstantRollerTorqueCurrent(2).withName("HoldCoral");
+        return toInstantRollerTorqueCurrent(3).withName("HoldCoral");
     }
 
     public Command holdAlgae() {
