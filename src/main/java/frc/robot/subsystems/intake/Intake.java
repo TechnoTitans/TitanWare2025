@@ -152,11 +152,12 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/Trigger/IsAlgaePresent", isAlgaePresent);
         Logger.recordOutput(LogKey + "/Trigger/IsAlgaeOuttaking", isAlgaeOuttaking);
         Logger.recordOutput(LogKey + "/Trigger/IsAlgaeIntakeStopped", isAlgaeIntakeStopped);
-        Logger.recordOutput(LogKey + "/FilteredAlgae", getFilteredAlgaeCurrent());
 
         Logger.recordOutput(LogKey + "/FilteredCoralDistanceMeters", getFilteredCoralDistanceMeters());
         Logger.recordOutput(LogKey + "/OffsetCoralDistanceMeters", getCoralDistanceMeters());
         Logger.recordOutput(LogKey + "/CoralDistanceFromCenterIntakeMeters", getCoralDistanceFromCenterIntakeMeters());
+
+        Logger.recordOutput(LogKey + "/FilteredAlgaeCurrentAmps", getFilteredAlgaeCurrent());
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",

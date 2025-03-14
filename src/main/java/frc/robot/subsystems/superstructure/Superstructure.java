@@ -196,7 +196,11 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/RunningGoal", runningGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
         Logger.recordOutput(LogKey + "/AtGoal", atGoal.toString());
-        Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint.getAsBoolean());
+
+        Logger.recordOutput(LogKey + "/DesiredGoalNotStow", desiredGoalNotStow);
+        Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint);
+        Logger.recordOutput(LogKey + "/UnsafeToDrive", unsafeToDrive);
+
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsRunningGoal", desiredGoalIsRunningGoal);
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsAtGoal", desiredGoalIsAtGoal);
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsDynamic", desiredGoalIsDynamic);

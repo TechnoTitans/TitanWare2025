@@ -278,7 +278,6 @@ public class ScoreCommands {
                                         superstructure.getRequirements()
                                 )
                         ),
-                        // TODO: doesn't seem to wait for safe on the first time its ran?
                         Commands.waitUntil(superstructure.unsafeToDrive.negate()
                                 .or(superstructure.atSuperstructureSetpoint
                                         .and(superstructure.desiredGoalNotStow.negate())))
