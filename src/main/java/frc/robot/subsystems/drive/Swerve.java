@@ -81,7 +81,6 @@ public class Swerve extends SubsystemBase {
     private boolean headingControllerActive = false;
     private Rotation2d headingTarget = new Rotation2d();
     private final PIDController headingController;
-    private final Pose2d holonomicPoseTolerance = new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6));
 
     public final Trigger atHolonomicDrivePose;
     private boolean holonomicControllerActive = false;
@@ -154,8 +153,8 @@ public class Swerve extends SubsystemBase {
                 new PIDController(6, 0, 0.18),
                 new PIDController(6, 0, 0),
                 new TrapezoidProfile.Constraints(
-                        Units.feetToMeters(8),
-                        Units.feetToMeters(8)
+                        Units.feetToMeters(12),
+                        Units.feetToMeters(12)
                 ),
                 new TrapezoidProfile.Constraints(
                         Config.maxAngularVelocityRadsPerSec(),

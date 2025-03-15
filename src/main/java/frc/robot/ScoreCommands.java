@@ -216,15 +216,6 @@ public class ScoreCommands {
                                             shouldUseEarlyAlign
                                     )
                             );
-
-//                            return Commands.sequence(
-//                                    swerve.driveToPose(
-//                                            () -> scoringPoseSupplier
-//                                                    .get()
-//                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
-//                                            .onlyIf(shouldUseEarlyAlign),
-//                                    swerve.runToPose(scoringPoseSupplier)
-//                            );
                         },
                         Set.of(swerve)
                 ),
