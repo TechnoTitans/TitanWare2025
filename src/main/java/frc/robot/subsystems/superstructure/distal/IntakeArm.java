@@ -132,7 +132,7 @@ public class IntakeArm extends SubsystemBase {
                     || currentGoal == Goal.UPPER_ALGAE
                     || desiredGoal == Goal.PROCESSOR
             ) {
-                intakeArmIO.setMotionMagicCruiseVelocity(0.7);
+                intakeArmIO.setMotionMagicCruiseVelocity(0.65);
             } else {
                 intakeArmIO.setMotionMagicCruiseVelocity(0);
             }
