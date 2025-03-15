@@ -144,10 +144,6 @@ public class ScoreCommands {
     }
 
     public Command readyScoreAtPosition(final Supplier<ScorePosition> wantScorePosition) {
-        final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
-        final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
-                FieldConstants.getBranchScoringPositions();
-
         final Container<ScorePosition> driveToScorePosition = Container.of(wantScorePosition.get());
         final Supplier<ScorePosition> driveToScorePositionSupplier = () -> driveToScorePosition.value;
         final Consumer<ScorePosition> setDriveToScorePosition =
@@ -162,6 +158,10 @@ public class ScoreCommands {
         return Commands.parallel(
                 Commands.defer(
                         () -> {
+                            final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
+                            final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
+                                    FieldConstants.getBranchScoringPositions();
+
                             final Pose2d currentPose = swerve.getPose();
                             final Translation2d currentTranslation = currentPose.getTranslation();
 
