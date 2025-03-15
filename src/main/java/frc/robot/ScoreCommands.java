@@ -201,25 +201,30 @@ public class ScoreCommands {
                                 return scoringPose.transformBy(coralDistanceOffset);
                             };
 
-                            return Commands.repeatingSequence(
-                                    Commands.either(
-                                            Commands.sequence(
-                                                    swerve.driveToPose(
-                                                            () -> scoringPoseSupplier
-                                                                    .get()
-                                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
-                                                            .onlyWhile(shouldUseEarlyAlign),
+                            return Commands.sequence(
+                                    Commands.waitUntil(superstructure.unsafeToDrive.negate()),
+                                    Commands.repeatingSequence(
+                                            Commands.either(
+                                                    Commands.sequence(
+                                                            swerve.driveToPose(
+                                                                            () -> scoringPoseSupplier
+                                                                                    .get()
+                                                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
+                                                                    .onlyWhile(shouldUseEarlyAlign),
+                                                            swerve.runToPose(scoringPoseSupplier)
+                                                    ),
                                                     swerve.runToPose(scoringPoseSupplier)
-                                            ),
-                                            swerve.runToPose(scoringPoseSupplier)
-                                                    .onlyWhile(shouldUseEarlyAlign.negate()),
-                                            shouldUseEarlyAlign
+                                                            .onlyWhile(shouldUseEarlyAlign.negate()),
+                                                    shouldUseEarlyAlign
+                                            )
                                     )
                             );
                         },
                         Set.of(swerve)
                 ),
                 Commands.sequence(
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                                .onlyIf(superstructure.unsafeToDrive),
                         Commands.deadline(
                                 Commands.waitUntil(swerve.atHolonomicDrivePose),
                                 Commands.run(() -> setDriveToScorePosition.accept(wantScorePosition.get()))

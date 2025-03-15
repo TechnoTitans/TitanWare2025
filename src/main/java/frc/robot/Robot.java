@@ -306,8 +306,6 @@ public class Robot extends LoggedRobot {
                         IsRedAlliance
                 )
         );
-
-        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW);
     }
 
     @Override
@@ -381,6 +379,8 @@ public class Robot extends LoggedRobot {
         intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
+
+        RobotModeTriggers.teleop().onTrue(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW));
     }
 
     public void configureAutos() {

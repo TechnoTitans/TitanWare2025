@@ -96,7 +96,7 @@ public class Autos {
                                         Commands.waitUntil(superstructure.atSuperstructureSetpoint
                                                 .and(superstructure.desiredGoalNotStow)),
                                         intake.scoreCoral()
-                                ),
+                                ).withTimeout(5),
                                 superstructure.toSuperstructureGoal(
                                         ScoreCommands.Level.LevelMap.get(branch.level())
                                 )
