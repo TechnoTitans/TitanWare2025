@@ -729,6 +729,10 @@ public class Swerve extends SubsystemBase {
         return run(this::wheelX);
     }
 
+    public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
+        return holonomicDriveController.atPose(this::getPose, targetPoseSupplier);
+    }
+
     /**
      * Set the desired {@link NeutralModeValue} of all module drive motors
      * @param neutralMode the desired {@link NeutralModeValue}

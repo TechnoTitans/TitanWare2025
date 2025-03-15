@@ -144,6 +144,10 @@ public class ScoreCommands {
     }
 
     public Command readyScoreAtPosition(final Supplier<ScorePosition> wantScorePosition) {
+        final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
+        final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
+                FieldConstants.getBranchScoringPositions();
+
         final Container<ScorePosition> driveToScorePosition = Container.of(wantScorePosition.get());
         final Supplier<ScorePosition> driveToScorePositionSupplier = () -> driveToScorePosition.value;
         final Consumer<ScorePosition> setDriveToScorePosition =
@@ -160,9 +164,6 @@ public class ScoreCommands {
                         () -> {
                             final Pose2d currentPose = swerve.getPose();
                             final Translation2d currentTranslation = currentPose.getTranslation();
-                            final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
-                            final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
-                                    FieldConstants.getBranchScoringPositions();
 
                             Map<Reef.Side, Map<Reef.Level, Pose2d>> scoringPoseMap = null;
                             double closestDistanceMeters = Double.MAX_VALUE;
@@ -201,6 +202,8 @@ public class ScoreCommands {
                                 return scoringPose.transformBy(coralDistanceOffset);
                             };
 
+                            final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
+
                             return Commands.sequence(
                                     Commands.waitUntil(superstructure.unsafeToDrive.negate()),
                                     Commands.repeatingSequence(
@@ -210,6 +213,7 @@ public class ScoreCommands {
                                                                             () -> scoringPoseSupplier
                                                                                     .get()
                                                                                     .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
+                                                                    .onlyIf(atReef.negate())
                                                                     .onlyWhile(shouldUseEarlyAlign),
                                                             swerve.runToPose(scoringPoseSupplier)
                                                     ),
