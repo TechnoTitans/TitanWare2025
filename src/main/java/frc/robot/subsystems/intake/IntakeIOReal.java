@@ -68,7 +68,7 @@ public class IntakeIOReal implements IntakeIO {
                 .withKV(0.40767)
                 .withKA(0.22711)
                 .withKP(30);
-        rollerConfiguration.CurrentLimits.StatorCurrentLimit = 30;
+        rollerConfiguration.CurrentLimits.StatorCurrentLimit = 40;
         rollerConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         rollerConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
         rollerConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
