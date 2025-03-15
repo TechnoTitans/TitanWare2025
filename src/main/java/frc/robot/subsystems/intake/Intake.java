@@ -113,8 +113,8 @@ public class Intake extends SubsystemBase {
         this.isAlgaeOuttaking = new Trigger(eventLoop, () -> algaeOuttaking);
         this.isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
 
-        this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent).debounce(0.5);
-        this.isAlgaePresent = new Trigger(eventLoop, this::isAlgaePresent);
+        this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent).debounce(0.25);
+        this.isAlgaePresent = new Trigger(eventLoop, this::isAlgaePresent).debounce(0.25);
 
         this.rollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
