@@ -144,6 +144,8 @@ public class HolonomicDriveController {
         final double ySpeed = translationSpeed * Math.sin(rotationDifference.getRadians());
 
         final double currentRotationRadians = currentPose.getRotation().getRadians();
+        rotationUnprofiledReference.position = targetPose.getRotation().getRadians();
+
         double errorBound = (MaxRotationInput - MinimumRotationInput) / 2.0;
         double goalMinDistance =
                 MathUtil.inputModulus(
