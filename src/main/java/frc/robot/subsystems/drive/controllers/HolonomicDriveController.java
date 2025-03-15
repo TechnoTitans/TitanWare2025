@@ -1,5 +1,6 @@
 package frc.robot.subsystems.drive.controllers;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -13,6 +14,9 @@ import frc.robot.utils.control.DeltaTime;
 import java.util.function.Supplier;
 
 public class HolonomicDriveController {
+    private final static double MinimumRotationInput = -Math.PI;
+    private final static double MaxRotationInput = Math.PI;
+
     private final DeltaTime deltaTime;
 
     private final PIDController translationController;
@@ -47,7 +51,7 @@ public class HolonomicDriveController {
 
         this.translationController = translationController;
         this.rotationController = rotationController;
-        this.rotationController.enableContinuousInput(-Math.PI, Math.PI);
+        this.rotationController.enableContinuousInput(MinimumRotationInput, MaxRotationInput);
 
         this.translationProfile = new TrapezoidProfile(translationConstraints);
         this.translationPreviousProfiledReference = new TrapezoidProfile.State();
@@ -139,15 +143,37 @@ public class HolonomicDriveController {
         final double xSpeed = translationSpeed * Math.cos(rotationDifference.getRadians());
         final double ySpeed = translationSpeed * Math.sin(rotationDifference.getRadians());
 
-        this.rotationUnprofiledReference.position = targetPose.getRotation().getRadians();
+        final double currentRotationRadians = currentPose.getRotation().getRadians();
+        double errorBound = (MaxRotationInput - MinimumRotationInput) / 2.0;
+        double goalMinDistance =
+                MathUtil.inputModulus(
+                        rotationUnprofiledReference.position - currentRotationRadians,
+                        -errorBound,
+                        errorBound
+                );
+        double setpointMinDistance =
+                MathUtil.inputModulus(
+                        rotationPreviousProfiledReference.position - currentRotationRadians,
+                        -errorBound,
+                        errorBound
+                );
+
+        // Recompute the profile goal with the smallest error, thus giving the shortest path. The goal
+        // may be outside the input range after this operation, but that's OK because the controller
+        // will still go there and report an error of zero. In other words, the setpoint only needs to
+        // be offset from the measurement by the input range modulus; they don't need to be equal.
+        rotationUnprofiledReference.position = goalMinDistance + currentRotationRadians;
+        rotationPreviousProfiledReference.position = setpointMinDistance + currentRotationRadians;
+
         this.rotationPreviousProfiledReference = rotationProfile.calculate(
                 time,
                 rotationPreviousProfiledReference,
                 rotationUnprofiledReference
         );
+
         final double rotationFF = rotationPreviousProfiledReference.velocity;
         final double rotationFeedback = rotationController.calculate(
-                currentPose.getRotation().getRadians(),
+                currentRotationRadians,
                 rotationPreviousProfiledReference.position
         );
         final double rotationSpeed = rotationFeedback + rotationFF;
