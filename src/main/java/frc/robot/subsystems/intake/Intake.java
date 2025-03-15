@@ -225,7 +225,7 @@ public class Intake extends SubsystemBase {
     public Command scoreAlgae() {
         return Commands.sequence(
                 runOnce(() -> this.algaeOuttaking = true),
-                toInstantRollerVoltage(-9),
+                toInstantRollerVoltage(9),
                 Commands.waitUntil(isAlgaePresent.negate()).withTimeout(1),
                 Commands.waitSeconds(0.1),
                 instantStopCommand()
