@@ -426,6 +426,10 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition());
 
+        this.driverController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
+                .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
+
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));

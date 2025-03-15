@@ -322,4 +322,18 @@ public class ScoreCommands {
                 intake.intakeAlgae()
         );
     }
+
+    public Command readyClimb(
+            final DoubleSupplier leftStickYInput,
+            final DoubleSupplier leftStickXInput
+    ) {
+        return Commands.parallel(
+                superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB),
+                swerve.teleopFacingAngleCommand(
+                        leftStickYInput,
+                        leftStickXInput,
+                        () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.k180deg
+                )
+        );
+    }
 }
