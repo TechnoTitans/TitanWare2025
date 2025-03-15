@@ -7,8 +7,6 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N8;
 import frc.robot.constants.Constants;
-import frc.robot.subsystems.vision.PhotonVision;
-import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.estimation.OpenCVHelp;
 import org.photonvision.estimation.TargetModel;
@@ -28,8 +26,7 @@ public class VisionPoseEstimator {
 
     private VisionPoseEstimator() {}
 
-    private static Optional<VisionUpdate> constrainedPnpStrategy(
-            final String name,
+    private static VisionResult constrainedPnpStrategy(
             final AprilTagFieldLayout fieldLayout,
             final PhotonPipelineResult result,
             final Function<Double, Optional<Pose2d>> poseAtTimestamp,
@@ -45,7 +42,6 @@ public class VisionPoseEstimator {
             //noinspection OptionalIsPresent
             if (maybeMultiTargetResult.isPresent()) {
                 return multitag(
-                        name,
                         fieldLayout,
                         robotToCamera,
                         timestamp,
@@ -54,7 +50,6 @@ public class VisionPoseEstimator {
                 );
             } else {
                 return singleTag(
-                        name,
                         fieldLayout,
                         robotToCamera,
                         timestamp,
@@ -74,13 +69,14 @@ public class VisionPoseEstimator {
         } else {
             // HACK - use fallback strategy to gimme a seed pose
             // TODO - make sure nested update doesn't break state
-            final Optional<VisionUpdate> maybeSingleTag =
-                    singleTag(name, fieldLayout, robotToCamera, timestamp, poseAtTimestamp, result);
-            if (maybeSingleTag.isEmpty()) {
-                return Optional.empty();
+            final VisionResult maybeSingleTag =
+                    singleTag(fieldLayout, robotToCamera, timestamp, poseAtTimestamp, result);
+            final Optional<VisionResult.VisionUpdate> visionUpdate = maybeSingleTag.visionUpdate();
+            if (visionUpdate.isEmpty()) {
+                return VisionResult.invalid(VisionResult.Result.CONSTRAINED_PNP_NO_SEED_POSE);
             }
 
-            fieldToRobotSeed = maybeSingleTag.get().estimatedPose();
+            fieldToRobotSeed = visionUpdate.get().estimatedPose();
         }
 
         final Rotation2d heading = maybeRobotPose.orElseThrow().getRotation();
@@ -109,13 +105,14 @@ public class VisionPoseEstimator {
 
         // try fallback strategy if solvePNP fails for some reason
         if (pnpResult.isEmpty()) {
-            return singleTag(name, fieldLayout, robotToCamera, timestamp, poseAtTimestamp, result);
+            return singleTag(fieldLayout, robotToCamera, timestamp, poseAtTimestamp, result);
         }
 
         final Pose3d best = Pose3d.kZero.plus(pnpResult.get().best); // field-to-robot
 
-        return Optional.of(
-                new VisionUpdate(
+        return VisionResult.valid(
+                VisionResult.Result.CONSTRAINED_PNP_RESULT,
+                new VisionResult.VisionUpdate(
                         best,
                         timestamp,
                         result.getTargets()
@@ -123,26 +120,22 @@ public class VisionPoseEstimator {
         );
     }
 
-    private static Optional<VisionUpdate> multitag(
-            final String name,
+    private static VisionResult multitag(
             final AprilTagFieldLayout fieldLayout,
             final Transform3d robotToCamera,
             final double poseTimestamp,
             final PhotonPipelineResult pipelineResult,
             final MultiTargetPNPResult result
     ) {
-        Logger.recordOutput(
-                PhotonVision.PhotonLogKey + "/" + name + "/EstimatorResult",
-                "Multi-target result"
-        );
         final Transform3d best = result.estimatedPose.best;
         final Pose3d bestPose =
-                new Pose3d()
+                Pose3d.kZero
                         .plus(best) // field-to-camera
                         .relativeTo(fieldLayout.getOrigin())
                         .plus(robotToCamera.inverse()); // field-to-robot
-        return Optional.of(
-                new VisionUpdate(
+        return VisionResult.valid(
+                VisionResult.Result.MULTI_TARGET_RESULT,
+                new VisionResult.VisionUpdate(
                         bestPose,
                         poseTimestamp,
                         pipelineResult.getTargets()
@@ -150,8 +143,7 @@ public class VisionPoseEstimator {
         );
     }
 
-    private static Optional<VisionUpdate> singleTag(
-            final String name,
+    private static VisionResult singleTag(
             final AprilTagFieldLayout fieldLayout,
             final Transform3d robotToCamera,
             final double poseTimestamp,
@@ -162,17 +154,8 @@ public class VisionPoseEstimator {
 
         final Optional<Pose3d> maybeTagPose = fieldLayout.getTagPose(target.getFiducialId());
         if (maybeTagPose.isEmpty()) {
-            Logger.recordOutput(
-                    PhotonVision.PhotonLogKey + "/" + name + "/EstimatorResult",
-                    "Single-target Empty"
-            );
-            return Optional.empty();
+            return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_INVALID_TAG);
         }
-
-        Logger.recordOutput(
-                PhotonVision.PhotonLogKey + "/" + name + "/EstimatorResult",
-                "Single-target result"
-        );
 
         final Pose3d tagPose = maybeTagPose.get();
         final Pose3d cameraPose0 = tagPose.transformBy(target.getBestCameraToTarget().inverse());
@@ -182,8 +165,9 @@ public class VisionPoseEstimator {
         final Pose3d robotPose1 = cameraPose1.transformBy(robotToCamera.inverse());
 
         if (target.getPoseAmbiguity() < Constants.Vision.MAX_ACCEPT_BEST_POSE_AMBIGUITY) {
-            return Optional.of(
-                    new VisionUpdate(
+            return VisionResult.valid(
+                    VisionResult.Result.SINGLE_TARGET_RESULT,
+                    new VisionResult.VisionUpdate(
                             robotPose0,
                             poseTimestamp,
                             pipelineResult.getTargets()
@@ -193,27 +177,28 @@ public class VisionPoseEstimator {
 
         final Optional<Pose2d> maybePose = poseAtTimestamp.apply(poseTimestamp);
         if (maybePose.isEmpty()) {
-            return Optional.empty();
+            return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_AMBIGUOUS_NO_POSE);
         }
 
         final Pose2d robotPose = maybePose.get();
-
         final Rotation2d yawDifference0 = robotPose0.getRotation().toRotation2d()
                 .minus(robotPose.getRotation());
         final Rotation2d yawDifference1 = robotPose1.getRotation().toRotation2d()
                 .minus(robotPose.getRotation());
 
         if (yawDifference0.getRadians() < yawDifference1.getRadians()) {
-            return Optional.of(
-                    new VisionUpdate(
+            return VisionResult.valid(
+                    VisionResult.Result.SINGLE_TARGET_DISAMBIGUATE_POSE0_RESULT,
+                    new VisionResult.VisionUpdate(
                             robotPose0,
                             poseTimestamp,
                             pipelineResult.getTargets()
                     )
             );
         } else {
-            return Optional.of(
-                    new VisionUpdate(
+            return VisionResult.valid(
+                    VisionResult.Result.SINGLE_TARGET_DISAMBIGUATE_POSE1_RESULT,
+                    new VisionResult.VisionUpdate(
                             robotPose1,
                             poseTimestamp,
                             pipelineResult.getTargets()
@@ -222,8 +207,7 @@ public class VisionPoseEstimator {
         }
     }
 
-    public static Optional<VisionUpdate> update(
-            final String name,
+    public static VisionResult update(
             final AprilTagFieldLayout fieldLayout,
             final Function<Double, Optional<Pose2d>> poseAtTimestamp,
             final Transform3d robotToCamera,
@@ -232,35 +216,25 @@ public class VisionPoseEstimator {
             final Matrix<N8, N1> distCoeffs,
             final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams
     ) {
-        final double poseTimestamp = pipelineResult.getTimestampSeconds();
+        final double resultTimestampSeconds = pipelineResult.getTimestampSeconds();
 
         // Time in the past -- give up, since the following if expects times > 0
-        if (poseTimestamp < 0) {
-            Logger.recordOutput(
-                    PhotonVision.PhotonLogKey + "/" + name + "/EstimatorResult",
-                    "Timestamp is negative"
-            );
-            return Optional.empty();
+        if (resultTimestampSeconds < 0) {
+            return VisionResult.invalid(VisionResult.Result.NEGATIVE_TIMESTAMP);
         }
 
         // If no targets seen, trivial case -- return empty result
         if (!pipelineResult.hasTargets()) {
-            Logger.recordOutput(
-                    PhotonVision.PhotonLogKey + "/" + name + "/EstimatorResult",
-                    "No targets seen"
-            );
-            return Optional.empty();
+            return VisionResult.invalid(VisionResult.Result.NO_TARGETS);
         }
 
         return pipelineResult.multitagResult.map(multiTargetPNPResult -> multitag(
-                name,
                 fieldLayout,
                 robotToCamera,
-                pipelineResult.getTimestampSeconds(),
+                resultTimestampSeconds,
                 pipelineResult,
                 multiTargetPNPResult
         )).orElseGet(() -> singleTag(
-                name,
                 fieldLayout,
                 robotToCamera,
                 pipelineResult.getTimestampSeconds(),
@@ -268,8 +242,7 @@ public class VisionPoseEstimator {
                 pipelineResult
         ));
 
-        //        return constrainedPnpStrategy(
-//                name,
+//        return constrainedPnpStrategy(
 //                fieldLayout,
 //                pipelineResult,
 //                poseAtTimestamp,

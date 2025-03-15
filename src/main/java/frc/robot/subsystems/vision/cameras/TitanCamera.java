@@ -34,8 +34,8 @@ public enum TitanCamera {
                                     0.0,
                                     1.0
                             ),
-                            //TODO: We had 5 before, now it wants 8. I just put 0s for them for now
-                            VecBuilder.fill( // distort
+                            VecBuilder.fill(
+                                    // distort
                                     -0.35148800442491696,
                                     0.16199158054202314,
                                     0.0003847806133909519,
@@ -86,8 +86,8 @@ public enum TitanCamera {
                                     0.0,
                                     1.0
                             ),
-                            //TODO: We had 5 before, now it wants 8. I just put 0s for them for now
-                            VecBuilder.fill( // distort
+                            VecBuilder.fill(
+                                    // distortion
                                     -0.35148800442491696,
                                     0.16199158054202314,
                                     0.0003847806133909519,
@@ -124,20 +124,8 @@ public enum TitanCamera {
             new TitanCameraCalibration()
                     .withCalibration(
                             CameraProperties.Resolution.R640x480,
-                            MatBuilder.fill(
-                                    Nat.N3(),
-                                    Nat.N3(),
-                                    // intrinsic
-                                    1040.7268360455328,
-                                    0.0,
-                                    988.2378226542257,
-                                    0.0,
-                                    1040.4068711002674,
-                                    544.230023439286,
-                                    0.0,
-                                    0.0,
-                                    1.0
-                            ),
+                            // TODO: calibrations from real
+                            SimCameraProperties.PERFECT_90DEG().getIntrinsics(),
                             SimCameraProperties.PERFECT_90DEG().getDistCoeffs()
                     )
                     .withCalibrationError(

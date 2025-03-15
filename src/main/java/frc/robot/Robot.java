@@ -272,7 +272,7 @@ public class Robot extends LoggedRobot {
 
         Logger.start();
 
-        Logger.recordOutput("EmptyPose", new Pose3d());
+        Logger.recordOutput("EmptyPose", Pose3d.kZero);
     }
 
     @Override

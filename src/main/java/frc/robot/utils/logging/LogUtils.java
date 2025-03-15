@@ -34,13 +34,6 @@ public class LogUtils {
             final String prefix,
             final PhotonPipelineResult[] photonPipelineResults
     ) {
-        if (photonPipelineResults == null || photonPipelineResults.length == 0) {
-            logTable.put(prefix + "/IsPresent", false);
-            return;
-        } else {
-            logTable.put(prefix + "/IsPresent", true);
-        }
-
         final int nResults = photonPipelineResults.length;
         logTable.put(prefix + "/Size", nResults);
         for (int i = 0; i < nResults; i++) {
@@ -52,10 +45,6 @@ public class LogUtils {
     }
 
     public static PhotonPipelineResult[] deserializePhotonPipelineResults(final LogTable logTable, final String prefix) {
-        if (!logTable.get(prefix + "/IsPresent", false)) {
-            return null;
-        }
-
         final int nResults = logTable.get(prefix + "/Size", 0);
         final PhotonPipelineResult[] photonPipelineResults = new PhotonPipelineResult[nResults];
         for (int i = 0; i < nResults; i++) {
