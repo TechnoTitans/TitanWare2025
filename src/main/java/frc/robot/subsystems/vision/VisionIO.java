@@ -47,11 +47,24 @@ public interface VisionIO {
         public void fromLog(final LogTable table) {
             this.name = table.get("Name", "unknown");
             this.isConnected = table.get("IsConnected", false);
-            this.stdDevFactor = table.get("StdDevFactor", Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR);
+            if (name.equals("BL_Apriltag")) {
+                this.stdDevFactor = 10;
+            } else {
+                this.stdDevFactor = table.get("StdDevFactor", Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR);
+            }
             this.constrainedPnpParams = table.get("ConstrainedPnpParams", DefaultConstrainedPnpParams);
             this.robotToCamera = table.get("RobotToCamera", Transform3d.kZero);
-            this.cameraMatrix = table.get("CameraMatrix", EmptyCameraMatrix);
-            this.distortionCoeffs = table.get("DistortionCoeffs", EmptyDistortionCoeffs);
+
+            final double[] cameraMatrix = table.get("CameraMatrix", (double[]) null);
+            this.cameraMatrix = cameraMatrix == null
+                    ? EmptyCameraMatrix
+                    : MatBuilder.fill(Nat.N3(), Nat.N3(), cameraMatrix);
+
+            final double[] distortionCoeffs = table.get("DistortionCoeffs", (double[]) null);
+            this.distortionCoeffs = distortionCoeffs == null
+                    ? EmptyDistortionCoeffs
+                    : MatBuilder.fill(Nat.N8(), Nat.N1(), distortionCoeffs);
+
             this.pipelineResults = LogUtils.deserializePhotonPipelineResults(table, "LatestResult");
         }
     }
