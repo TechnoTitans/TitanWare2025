@@ -442,9 +442,8 @@ public class Robot extends LoggedRobot {
         this.coController.rightTrigger(0.5, teleopEventLoop)
                 .negate()
                 .and(coController.povDown())
-                .whileTrue(
-                        intake.ejectCoral()
-                );
+                .whileTrue(intake.ejectCoral())
+                .onFalse(intake.instantStopCommand());
 
         this.coController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())
