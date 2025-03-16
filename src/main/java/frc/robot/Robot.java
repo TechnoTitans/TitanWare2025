@@ -139,7 +139,7 @@ public class Robot extends LoggedRobot {
             .and(RobotModeTriggers.teleop());
 
     final Supplier<ScoreCommands.ScorePosition> driverScorePositionSupplier =
-                scoreCommands.getScorePositionSupplier(driverController);
+            scoreCommands.getScorePositionSupplier(driverController);
 
     final Supplier<ScoreCommands.ScorePosition> coDriverScorePositionSupplier =
             scoreCommands.getScorePositionSupplier(coController);
@@ -439,6 +439,12 @@ public class Robot extends LoggedRobot {
         this.coController.start(teleopEventLoop)
                 .whileTrue(superstructure.toSuperstructureGoal(Superstructure.Goal.CLIMB));
 
+        this.coController.rightTrigger(0.5, teleopEventLoop)
+                .negate()
+                .and(coController.povDown())
+                .whileTrue(
+                        intake.ejectCoral()
+                );
 
         this.coController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())

@@ -215,6 +215,14 @@ public class Intake extends SubsystemBase {
         ).finallyDo(() -> this.coralOuttaking = false).withName("ScoreCoral");
     }
 
+    public Command ejectCoral() {
+        return Commands.sequence(
+                runOnce(() -> this.coralOuttaking = true),
+                toInstantRollerVoltage(-9).withTimeout(0.5),
+                instantStopCommand()
+        ).finallyDo(() -> this.coralOuttaking = false).withName("ScoreCoral");
+    }
+
     public Command intakeAlgae() {
         return Commands.sequence(
                 runOnce(() -> this.algaeIntaking = true),
