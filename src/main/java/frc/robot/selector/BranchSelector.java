@@ -26,8 +26,8 @@ public class BranchSelector extends LoggedNetworkInput implements AutoCloseable 
 
     private final String ntTableName;
 
-    private final StringArrayPublisher branchPublisher;
-    private final StringSubscriber selectedBranchSubscriber;
+    private final StringPublisher robotBranchPublisher;
+    private final StringSubscriber dashSelectedBranchSubscriber;
     private final LoggableInputs inputs = new LoggableInputs() {
         @Override
         public void toLog(LogTable table) {
@@ -45,12 +45,12 @@ public class BranchSelector extends LoggedNetworkInput implements AutoCloseable 
 
     public BranchSelector() {
         this.ntTableName = Constants.NetworkTables.BRANCH_TABLE;
-        this.defaultBranch = BRANCH_TO_SCORE_POSITION.get("LEFT_L2");
-        this.selectedBranch = defaultBranch.toString();
+        this.selectedBranch = "LEFT_L2";
+        this.defaultBranch = BRANCH_TO_SCORE_POSITION.get(selectedBranch);
 
         final NetworkTable ntTable = NetworkTableInstance.getDefault().getTable(ntTableName);
-        this.branchPublisher = ntTable.getStringArrayTopic(Constants.NetworkTables.SELECTED_BRANCH).publish();
-        this.selectedBranchSubscriber = ntTable.getStringTopic(Constants.NetworkTables.DASH_SELECTED_BRANCH)
+        this.robotBranchPublisher = ntTable.getStringTopic(Constants.NetworkTables.SELECTED_BRANCH).publish();
+        this.dashSelectedBranchSubscriber = ntTable.getStringTopic(Constants.NetworkTables.DASH_SELECTED_BRANCH)
                 .subscribe(selectedBranch);
 
         Logger.registerDashboardInput(this);
@@ -64,14 +64,15 @@ public class BranchSelector extends LoggedNetworkInput implements AutoCloseable 
 
     @Override
     public void close() {
-        selectedBranchSubscriber.close();
-        branchPublisher.close();
+        dashSelectedBranchSubscriber.close();
+        robotBranchPublisher.close();
     }
 
     @Override
     public void periodic() {
         if (!Logger.hasReplaySource()) {
-            selectedBranch = selectedBranchSubscriber.get();
+            selectedBranch = dashSelectedBranchSubscriber.get();
+            robotBranchPublisher.set(selectedBranch);
         }
         Logger.processInputs(prefix, inputs);
     }
