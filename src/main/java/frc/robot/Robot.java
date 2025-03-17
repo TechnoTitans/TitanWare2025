@@ -17,6 +17,7 @@ import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
+import frc.robot.selector.BranchSelector;
 import frc.robot.state.GamepieceState;
 import frc.robot.state.ReefState;
 import frc.robot.subsystems.drive.Swerve;
@@ -119,6 +120,8 @@ public class Robot extends LoggedRobot {
             )
     );
 
+    public final BranchSelector branchSelector = new BranchSelector();
+
     public final CommandXboxController driverController = new CommandXboxController(RobotMap.MainController);
     public final CommandXboxController coController = new CommandXboxController(RobotMap.CoController);
     public final Alert driverControllerDisconnected = new Alert(
@@ -138,11 +141,7 @@ public class Robot extends LoggedRobot {
             .and(DriverStation::isFMSAttached)
             .and(RobotModeTriggers.teleop());
 
-    final Supplier<ScoreCommands.ScorePosition> driverScorePositionSupplier =
-            scoreCommands.getScorePositionSupplier(driverController);
-
-    final Supplier<ScoreCommands.ScorePosition> coDriverScorePositionSupplier =
-            scoreCommands.getScorePositionSupplier(coController);
+    final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier = branchSelector::getSelected;
 
 
     @Override
@@ -284,8 +283,7 @@ public class Robot extends LoggedRobot {
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
 
-        Logger.recordOutput("ScorePosition/Driver", driverScorePositionSupplier.get());
-        Logger.recordOutput("ScorePosition/CoDriver", coDriverScorePositionSupplier.get());
+        Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
         Threads.setCurrentThreadPriority(false, 10);
     }
 
@@ -423,7 +421,7 @@ public class Robot extends LoggedRobot {
         );
 
         this.driverController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
+                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition());
 
         this.driverController.a(teleopEventLoop)
@@ -455,7 +453,7 @@ public class Robot extends LoggedRobot {
                 );
 
         this.coController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(coDriverScorePositionSupplier))
+                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(scorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition());
 
         this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());

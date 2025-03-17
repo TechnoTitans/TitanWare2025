@@ -9,7 +9,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 
 public interface Constants {
-    RobotMode CURRENT_MODE = RobotMode.REAL;
+    RobotMode CURRENT_MODE = RobotMode.SIM;
     CompetitionType CURRENT_COMPETITION_TYPE = CompetitionType.COMPETITION;
     double LOOP_PERIOD_SECONDS = 0.02;
 
@@ -29,6 +29,10 @@ public interface Constants {
         String AUTO_TABLE = "AutoSelector";
         String AUTO_PUBLISHER = "AutoOptions";
         String AUTO_SELECTED_SUBSCRIBER = "SelectedAuto";
+
+        String BRANCH_TABLE = "BranchSelector";
+        String SELECTED_BRANCH = "BranchPublisher";
+        String DASH_SELECTED_BRANCH = "SelectedBranch";
     }
 
     interface Vision {
