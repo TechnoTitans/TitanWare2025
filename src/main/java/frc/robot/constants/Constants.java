@@ -29,6 +29,10 @@ public interface Constants {
         String AUTO_TABLE = "AutoSelector";
         String AUTO_PUBLISHER = "AutoOptions";
         String AUTO_SELECTED_SUBSCRIBER = "SelectedAuto";
+
+        String BRANCH_TABLE = "BranchSelector";
+        String SELECTED_BRANCH = "BranchPublisher";
+        String DASH_SELECTED_BRANCH = "SelectedBranch";
     }
 
     interface Vision {
