@@ -2,7 +2,7 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import frc.robot.subsystems.vision.estimator.VisionUpdate;
+import frc.robot.subsystems.vision.estimator.VisionResult;
 
 import java.util.Map;
 import java.util.Optional;
@@ -16,7 +16,7 @@ public interface PhotonVisionRunner {
         return Map.of();
     }
 
-    default VisionUpdate getVisionUpdate(final VisionIO visionIO) {
+    default VisionResult getVisionResult(final VisionIO visionIO) {
         return null;
     }
 }

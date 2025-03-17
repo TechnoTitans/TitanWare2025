@@ -79,7 +79,7 @@ public class ElevatorIOReal implements ElevatorIO {
         motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.25;
         motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
-        motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;
+        motorConfiguration.CurrentLimits.StatorCurrentLimit = 70;
         motorConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         motorConfiguration.Feedback.SensorToMechanismRatio = constants.gearing();
         motorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;

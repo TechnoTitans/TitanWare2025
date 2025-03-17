@@ -81,11 +81,10 @@ public class Swerve extends SubsystemBase {
     private boolean headingControllerActive = false;
     private Rotation2d headingTarget = new Rotation2d();
     private final PIDController headingController;
-    private final Pose2d holonomicPoseTolerance = new Pose2d(0.05, 0.05, Rotation2d.fromDegrees(6));
 
     public final Trigger atHolonomicDrivePose;
     private boolean holonomicControllerActive = false;
-    private Pose2d holonomicPoseTarget = new Pose2d();
+    private Pose2d holonomicPoseTarget = Pose2d.kZero;
     private final HolonomicDriveController holonomicDriveController;
     private final PIDController holdAxisPID = new PIDController(5, 0, 0);
 
@@ -128,7 +127,7 @@ public class Swerve extends SubsystemBase {
                 kinematics,
                 getGyro().getYawRotation2d(),
                 getModulePositions(),
-                new Pose2d(),
+                Pose2d.kZero,
                 Constants.Vision.STATE_STD_DEVS,
                 VecBuilder.fill(0.6, 0.6, Units.degreesToRadians(80))
         );
@@ -728,6 +727,10 @@ public class Swerve extends SubsystemBase {
 
     public Command runWheelXCommand() {
         return run(this::wheelX);
+    }
+
+    public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
+        return holonomicDriveController.atPose(this::getPose, targetPoseSupplier);
     }
 
     /**

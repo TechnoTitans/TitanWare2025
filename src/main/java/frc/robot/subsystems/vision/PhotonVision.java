@@ -15,7 +15,7 @@ import frc.robot.constants.Constants;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
-import frc.robot.subsystems.vision.estimator.VisionUpdate;
+import frc.robot.subsystems.vision.estimator.VisionResult;
 import frc.robot.utils.PoseUtils;
 import frc.robot.utils.gyro.GyroUtils;
 import frc.robot.utils.logging.LogUtils;
@@ -24,10 +24,7 @@ import org.littletonrobotics.junction.Logger;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
@@ -64,9 +61,9 @@ public class PhotonVision extends VirtualSubsystem {
 
     private final Swerve swerve;
     private final SwerveDrivePoseEstimator poseEstimator;
-    private final Map<VisionIO, VisionUpdate> lastVisionUpdateMap;
+    private final Map<VisionIO, VisionResult> lastVisionUpdateMap;
 
-    private double lastOdomReset = -1;
+    private double lastPoseResetTimestampSeconds = 0;
 
     public PhotonVision(
             final Constants.RobotMode robotMode,
@@ -127,26 +124,16 @@ public class PhotonVision extends VirtualSubsystem {
         resetPose(estimatedPose);
     }
 
-    public enum EstimationRejectionReason {
-        DID_NOT_REJECT(0),
-        ESTIMATED_POSE_OBJECT_NULL(1),
-        ESTIMATED_POSE_OR_TIMESTAMP_OR_TARGETS_INVALID(2),
-        POSE_NOT_IN_FIELD(3),
-        LAST_ESTIMATED_POSE_TIMESTAMP_INVALID_OR_TOO_CLOSE(4),
-        POSE_IMPOSSIBLE_VELOCITY(5),
-        FUTURE_TIMESTAMP(6),
-        TIMESTAMP_OLDER_THEN_POSE_RESET(7);
+    public enum RejectionReason {
+        DID_NOT_REJECT,
+        ALREADY_REJECTED,
+        ESTIMATED_POSE_OR_TIMESTAMP_OR_TARGETS_INVALID,
+        POSE_NOT_IN_FIELD,
+        POSE_IMPOSSIBLE_VELOCITY,
+        FUTURE_TIMESTAMP,
+        TIMESTAMP_OLDER_THEN_POSE_RESET;
 
-        private final int id;
-        EstimationRejectionReason(final int id) {
-            this.id = id;
-        }
-
-        public int getId() {
-            return id;
-        }
-
-        public static boolean wasRejected(final EstimationRejectionReason rejectionReason) {
+        public static boolean wasRejected(final RejectionReason rejectionReason) {
             return rejectionReason != DID_NOT_REJECT;
         }
 
@@ -155,79 +142,74 @@ public class PhotonVision extends VirtualSubsystem {
         }
     }
 
-    public EstimationRejectionReason shouldRejectEstimation(
-            final VisionUpdate lastVisionUpdate,
-            final VisionUpdate visionUpdate
+    public RejectionReason shouldReject(
+            final VisionResult visionResult,
+            final VisionResult lastVisionResult
     ) {
-        if (visionUpdate == null) {
-            // reject immediately if the estimated pose itself is null
-            return EstimationRejectionReason.ESTIMATED_POSE_OBJECT_NULL;
+        final Optional<VisionResult.VisionUpdate> maybeVisionUpdate = visionResult.visionUpdate();
+        if (maybeVisionUpdate.isEmpty()) {
+            return RejectionReason.ALREADY_REJECTED;
         }
 
+        final VisionResult.VisionUpdate visionUpdate = maybeVisionUpdate.get();
+        final double visionTimestamp = visionUpdate.timestamp();
         if (visionUpdate.estimatedPose() == null
-                || visionUpdate.timestamp() == -1
+                || visionTimestamp == -1
                 || visionUpdate.targetsUsed().isEmpty()) {
             // reject immediately if null estimatedPose, timestamp is invalid, or no targets used
-            return EstimationRejectionReason.ESTIMATED_POSE_OR_TIMESTAMP_OR_TARGETS_INVALID;
+            return RejectionReason.ESTIMATED_POSE_OR_TIMESTAMP_OR_TARGETS_INVALID;
         }
 
-        if (lastVisionUpdate == null) {
-            // do not reject if there was no last estimation at all (this is different from an invalid last estimation)
-            // likely, this is the first time we have an estimation, make sure we accept this estimation
-            return EstimationRejectionReason.DID_NOT_REJECT;
+        final Pose3d estimatedPose = visionUpdate.estimatedPose();
+        if (!PoseUtils.isInField(estimatedPose)) {
+            // reject if pose not within the field
+            return RejectionReason.POSE_NOT_IN_FIELD;
         }
 
-        final Pose3d nextEstimatedPosition = visionUpdate.estimatedPose();
-
-        if (!PoseUtils.isInField(nextEstimatedPosition)) {
-//             reject if pose not within the field
-            return EstimationRejectionReason.POSE_NOT_IN_FIELD;
+        if (visionTimestamp > Timer.getTimestamp()) {
+            return RejectionReason.FUTURE_TIMESTAMP;
         }
 
-        final double secondsSinceLastUpdate =
-                visionUpdate.timestamp() - lastVisionUpdate.timestamp();
-
-        // TODO: this rejection showed up very often at event-cmp and didn't seem to help much,
-        //  maybe re-evaluate why we added this rejection in the first place? (removed for now)
-//        if (lastVisionUpdate.timestampSeconds == -1 || secondsSinceLastUpdate <= 0) {
-        // TODO: do we always need to reject immediately here? maybe we can still use the next estimation even
-        //  if the last estimation had no timestamp or was very close
-//            return EstimationRejectionReason.LAST_ESTIMATED_POSE_TIMESTAMP_INVALID_OR_TOO_CLOSE;
-//        }
-
-        if (visionUpdate.timestamp() > Timer.getFPGATimestamp()) {
-            return EstimationRejectionReason.FUTURE_TIMESTAMP;
+        if (visionTimestamp <= lastPoseResetTimestampSeconds) {
+            return RejectionReason.TIMESTAMP_OLDER_THEN_POSE_RESET;
         }
 
-        if (visionUpdate.timestamp() <= lastOdomReset) {
-            return EstimationRejectionReason.TIMESTAMP_OLDER_THEN_POSE_RESET;
-        }
+        // do not try to reject if there was no last result at all (this is different from an invalid last result)
+        // likely, this is the first time we have a result, make sure we accept this update
+        if (lastVisionResult != null) {
+            // there's a lot of nesting here, but it's probably a good idea to keep it this way instead of
+            // moving out to guard-clauses because the only DID_NOT_REJECT return point should be at the end
 
-        // Only try calculating this rejection strategy if time > 0
-        if (secondsSinceLastUpdate > 0) {
-            final Pose2d nextEstimatedPosition2d = nextEstimatedPosition.toPose2d();
-            final Pose2d lastEstimatedPosition2d = lastVisionUpdate.estimatedPose().toPose2d();
-            final Twist2d twist2dToNewEstimation = lastEstimatedPosition2d.log(nextEstimatedPosition2d);
+            final Optional<VisionResult.VisionUpdate> maybeLastVisionUpdate = lastVisionResult.visionUpdate();
+            if (maybeLastVisionUpdate.isPresent()) {
+                final VisionResult.VisionUpdate lastVisionUpdate = maybeLastVisionUpdate.get();
+                // Only try calculating this rejection strategy if delta-time > 0
+                final double deltaTimeSinceLastUpdate = visionTimestamp - lastVisionUpdate.timestamp();
+                if (deltaTimeSinceLastUpdate > 0) {
+                    final Pose2d nextPose = estimatedPose.toPose2d();
+                    final Pose2d lastPose = lastVisionUpdate.estimatedPose().toPose2d();
+                    final Twist2d twist = lastPose.log(nextPose);
 
-            final double xVel = twist2dToNewEstimation.dx / secondsSinceLastUpdate;
-            final double yVel = twist2dToNewEstimation.dy / secondsSinceLastUpdate;
-            final double thetaVel = twist2dToNewEstimation.dtheta / secondsSinceLastUpdate;
-            final double translationVel = Math.hypot(xVel, yVel);
+                    final double translationVelocity = Math.hypot(twist.dx, twist.dy) / deltaTimeSinceLastUpdate;
+                    final double thetaVelocity = twist.dtheta / deltaTimeSinceLastUpdate;
 
-            Logger.recordOutput(PhotonLogKey + "/Rejection/TranslationVel", translationVel);
-            Logger.recordOutput(PhotonLogKey + "/Rejection/ThetaVel", thetaVel);
+                    // TODO: make better
+                    Logger.recordOutput(PhotonLogKey + "/Rejection/TranslationVel", translationVelocity);
+                    Logger.recordOutput(PhotonLogKey + "/Rejection/ThetaVel", thetaVelocity);
 
-            if ((Math.abs(translationVel) >= maxLinearVelocity + PhotonVision.TranslationalVelocityTolerance)
-                    || (Math.abs(thetaVel) >= maxAngularVelocity + PhotonVision.AngularVelocityTolerance)) {
-                // reject sudden pose changes resulting in an impossible velocity (cannot reach)
-                return EstimationRejectionReason.POSE_IMPOSSIBLE_VELOCITY;
+                    if ((Math.abs(translationVelocity) >= maxLinearVelocity + PhotonVision.TranslationalVelocityTolerance)
+                            || (Math.abs(thetaVelocity) >= maxAngularVelocity + PhotonVision.AngularVelocityTolerance)) {
+                        // reject sudden pose changes resulting in an impossible velocity (cannot reach)
+                        return RejectionReason.POSE_IMPOSSIBLE_VELOCITY;
+                    }
+                }
             }
         }
 
-        return EstimationRejectionReason.DID_NOT_REJECT;
+        return RejectionReason.DID_NOT_REJECT;
     }
 
-    public Vector<N3> calculateStdDevs(final VisionUpdate visionUpdate, final double stdDevFactor) {
+    public Vector<N3> calculateStdDevs(final VisionResult.VisionUpdate visionUpdate, final double stdDevFactor) {
         if (visionUpdate.targetsUsed().isEmpty()) {
             return VecBuilder.fill(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
         }
@@ -259,25 +241,37 @@ public class PhotonVision extends VirtualSubsystem {
                     new Pose3d(swerve.getPose()).transformBy(inputs.robotToCamera)
             );
 
-            final VisionUpdate visionUpdate = runner.getVisionUpdate(visionIO);
-            if (visionUpdate != null) {
-                final VisionUpdate lastVisionUpdate = lastVisionUpdateMap.get(visionIO);
-                final EstimationRejectionReason rejectionReason =
-                        shouldRejectEstimation(lastVisionUpdate, visionUpdate);
+            final VisionResult visionResult = runner.getVisionResult(visionIO);
+            if (visionResult != null) {
+                final VisionResult lastVisionResult = lastVisionUpdateMap.get(visionIO);
+                final RejectionReason rejectionReason =
+                        shouldReject(visionResult, lastVisionResult);
+                final boolean rejected = rejectionReason.wasRejected();
 
-                Logger.recordOutput(logKey + "/RejectionReason", rejectionReason.getId());
-                if (rejectionReason.wasRejected()) {
+                Logger.recordOutput(logKey + "/Rejected", rejected);
+                Logger.recordOutput(logKey + "/RejectionReason", rejectionReason);
+                Logger.recordOutput(logKey + "/VisionResult", visionResult.result());
+
+                final Optional<VisionResult.VisionUpdate> maybeVisionUpdate = visionResult.visionUpdate();
+                if (maybeVisionUpdate.isEmpty()) {
+                    continue;
+                }
+
+                final VisionResult.VisionUpdate visionUpdate = maybeVisionUpdate.get();
+                final double visionUpdateTimestamp = visionUpdate.timestamp();
+                Logger.recordOutput(logKey + "/VisionUpdateTimestamp", visionUpdateTimestamp);
+
+                if (rejected) {
                     continue;
                 }
 
                 final Vector<N3> stdDevs = calculateStdDevs(visionUpdate, inputs.stdDevFactor);
                 Logger.recordOutput(logKey + "/StdDevs", stdDevs.getData());
 
-                lastVisionUpdateMap.put(visionIO, visionUpdate);
-                Logger.recordOutput(logKey + "/LastVisionTimeStamp", visionUpdate.timestamp());
+                lastVisionUpdateMap.put(visionIO, visionResult);
                 poseEstimator.addVisionMeasurement(
                         visionUpdate.estimatedPose().toPose2d(),
-                        visionUpdate.timestamp(),
+                        visionUpdateTimestamp,
                         stdDevs
                 );
             }
@@ -285,41 +279,49 @@ public class PhotonVision extends VirtualSubsystem {
     }
 
     public void updateOutputs() {
+        Logger.recordOutput("LastPoseResetTimestampSeconds", this.lastPoseResetTimestampSeconds);
+
         for (
-                final Map.Entry<VisionIO, VisionUpdate>
+                final Map.Entry<VisionIO, VisionResult>
                         visionUpdateEntry : lastVisionUpdateMap.entrySet()
         ) {
             final VisionIO.VisionIOInputs inputs = aprilTagVisionIOInputsMap.get(visionUpdateEntry.getKey());
-            final VisionUpdate visionUpdate = visionUpdateEntry.getValue();
+            final VisionResult visionResult = visionUpdateEntry.getValue();
+            final Optional<VisionResult.VisionUpdate> maybeVisionUpdate = visionResult.visionUpdate();
 
             final String logKey = PhotonVision.PhotonLogKey + "/" + inputs.name;
-            if (visionUpdate == null) {
-                continue;
-            }
 
-            final List<PhotonTrackedTarget> targetsUsed = visionUpdate.targetsUsed();
-            final int nTargetsUsed = targetsUsed.size();
+            final int nTargetsUsed = maybeVisionUpdate
+                    .map(update -> update.targetsUsed().size())
+                    .orElse(0);
 
             final int[] apriltagIds = new int[nTargetsUsed];
             final Pose3d[] apriltagPose3ds = new Pose3d[nTargetsUsed];
             final Pose2d[] apriltagPose2ds = new Pose2d[nTargetsUsed];
 
-            for (int i = 0; i < apriltagIds.length; i++) {
-                final int fiducialId = targetsUsed.get(i).getFiducialId();
-                final Pose3d tagPose3d = apriltagFieldLayout.getTagPose(fiducialId).orElseGet(Pose3d::new);
-                final Pose2d tagPose2d = tagPose3d.toPose2d();
+            if (maybeVisionUpdate.isPresent()) {
+                final VisionResult.VisionUpdate visionUpdate = maybeVisionUpdate.get();
+                final Pose3d estimatedPose = visionUpdate.estimatedPose();
 
-                apriltagIds[i] = fiducialId;
-                apriltagPose3ds[i] = tagPose3d;
-                apriltagPose2ds[i] = tagPose2d;
+                final List<PhotonTrackedTarget> targetsUsed = visionUpdate.targetsUsed();
+                for (int i = 0; i < apriltagIds.length; i++) {
+                    final int fiducialId = targetsUsed.get(i).getFiducialId();
+                    final Pose3d tagPose3d = apriltagFieldLayout.getTagPose(fiducialId).orElseGet(Pose3d::new);
+                    final Pose2d tagPose2d = tagPose3d.toPose2d();
+
+                    apriltagIds[i] = fiducialId;
+                    apriltagPose3ds[i] = tagPose3d;
+                    apriltagPose2ds[i] = tagPose2d;
+                }
+
+                Logger.recordOutput(logKey + "/EstimatedPose3d", estimatedPose);
+                Logger.recordOutput(logKey + "/EstimatedPose2d", estimatedPose.toPose2d());
             }
 
-            Logger.recordOutput(logKey + "/EstimatedPose3d", visionUpdate.estimatedPose());
-            Logger.recordOutput(logKey + "/EstimatedPose2d", visionUpdate.estimatedPose().toPose2d());
-            Logger.recordOutput(logKey + "/ApriltagIds", apriltagIds);
+            Logger.recordOutput(logKey + "/TagIds", apriltagIds);
 
-            Logger.recordOutput(logKey + "/ApriltagPose3ds", apriltagPose3ds);
-            Logger.recordOutput(logKey + "/ApriltagPose2ds", apriltagPose2ds);
+            Logger.recordOutput(logKey + "/TagPose3ds", apriltagPose3ds);
+            Logger.recordOutput(logKey + "/TagPose2ds", apriltagPose2ds);
         }
     }
 
@@ -338,24 +340,25 @@ public class PhotonVision extends VirtualSubsystem {
         );
     }
 
-    public void resetPose(final Pose2d robotPose, final Rotation2d robotYaw) {
-        this.lastOdomReset = Timer.getFPGATimestamp();
-        Logger.recordOutput("LastOdomResetTime", this.lastOdomReset);
-        poseEstimator.resetPosition(robotYaw, swerve.getModulePositions(), robotPose);
+    public void resetPose(final Pose2d robotPose, final Rotation2d gyroYaw) {
+        poseEstimator.resetPosition(gyroYaw, swerve.getModulePositions(), robotPose);
         runner.resetRobotPose(GyroUtils.robotPose2dToPose3dWithGyro(
-                new Pose2d(robotPose.getTranslation(), robotYaw),
+                new Pose2d(robotPose.getTranslation(), gyroYaw),
                 new Rotation3d(
                         swerve.getRoll().getRadians(),
                         swerve.getPitch().getRadians(),
                         swerve.getYaw().getRadians()
                 )
         ));
+
+        this.lastPoseResetTimestampSeconds = Timer.getTimestamp();
     }
 
     public void resetPose(final Pose2d robotPose) {
-        resetPose(robotPose, swerve.getYaw());
+        resetPose(robotPose, swerve.getGyro().getYawRotation2d());
     }
 
+    @SuppressWarnings("unused")
     public Command resetPoseCommand(final Pose2d robotPose) {
         return runOnce(() -> resetPose(robotPose));
     }

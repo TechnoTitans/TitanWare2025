@@ -158,11 +158,12 @@ public class ScoreCommands {
         return Commands.parallel(
                 Commands.defer(
                         () -> {
-                            final Pose2d currentPose = swerve.getPose();
-                            final Translation2d currentTranslation = currentPose.getTranslation();
                             final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
                             final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
                                     FieldConstants.getBranchScoringPositions();
+
+                            final Pose2d currentPose = swerve.getPose();
+                            final Translation2d currentTranslation = currentPose.getTranslation();
 
                             Map<Reef.Side, Map<Reef.Level, Pose2d>> scoringPoseMap = null;
                             double closestDistanceMeters = Double.MAX_VALUE;
@@ -201,34 +202,33 @@ public class ScoreCommands {
                                 return scoringPose.transformBy(coralDistanceOffset);
                             };
 
-                            return Commands.repeatingSequence(
-                                    Commands.either(
-                                            Commands.sequence(
-                                                    swerve.driveToPose(
-                                                            () -> scoringPoseSupplier
-                                                                    .get()
-                                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
-                                                            .onlyWhile(shouldUseEarlyAlign),
+                            final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
+
+                            return Commands.sequence(
+                                    Commands.waitUntil(superstructure.unsafeToDrive.negate()),
+                                    Commands.repeatingSequence(
+                                            Commands.either(
+                                                    Commands.sequence(
+                                                            swerve.driveToPose(
+                                                                            () -> scoringPoseSupplier
+                                                                                    .get()
+                                                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
+                                                                    .onlyIf(atReef.negate())
+                                                                    .onlyWhile(shouldUseEarlyAlign),
+                                                            swerve.runToPose(scoringPoseSupplier)
+                                                    ),
                                                     swerve.runToPose(scoringPoseSupplier)
-                                            ),
-                                            swerve.runToPose(scoringPoseSupplier)
-                                                    .onlyWhile(shouldUseEarlyAlign.negate()),
-                                            shouldUseEarlyAlign
+                                                            .onlyWhile(shouldUseEarlyAlign.negate()),
+                                                    shouldUseEarlyAlign
+                                            )
                                     )
                             );
-
-//                            return Commands.sequence(
-//                                    swerve.driveToPose(
-//                                            () -> scoringPoseSupplier
-//                                                    .get()
-//                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
-//                                            .onlyIf(shouldUseEarlyAlign),
-//                                    swerve.runToPose(scoringPoseSupplier)
-//                            );
                         },
                         Set.of(swerve)
                 ),
                 Commands.sequence(
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                                .onlyIf(superstructure.unsafeToDrive),
                         Commands.deadline(
                                 Commands.waitUntil(swerve.atHolonomicDrivePose),
                                 Commands.run(() -> setDriveToScorePosition.accept(wantScorePosition.get()))
@@ -320,6 +320,20 @@ public class ScoreCommands {
         return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.ALGAE_GROUND),
                 intake.intakeAlgae()
+        );
+    }
+
+    public Command readyClimb(
+            final DoubleSupplier leftStickYInput,
+            final DoubleSupplier leftStickXInput
+    ) {
+        return Commands.parallel(
+                superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB),
+                swerve.teleopFacingAngleCommand(
+                        leftStickYInput,
+                        leftStickXInput,
+                        () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.k180deg
+                )
         );
     }
 }

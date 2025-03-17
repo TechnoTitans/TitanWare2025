@@ -66,6 +66,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
         final TalonFXSConfiguration pivotConfiguration = new TalonFXSConfiguration();
         pivotConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
+        //TODO: this pid sucks
         pivotConfiguration.Slot0 = new Slot0Configs()
                 .withKS(0.3415)
                 .withKG(0.1083)

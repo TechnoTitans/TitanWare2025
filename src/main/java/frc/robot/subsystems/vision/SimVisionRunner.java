@@ -9,7 +9,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
-import frc.robot.subsystems.vision.estimator.VisionUpdate;
+import frc.robot.subsystems.vision.estimator.VisionResult;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.gyro.GyroUtils;
 import org.littletonrobotics.junction.Logger;
@@ -29,19 +29,17 @@ public class SimVisionRunner implements PhotonVisionRunner {
         public final PhotonCamera photonCamera;
         public final String cameraName;
 
-        public final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
-
         public final double stdDevFactor;
         public final Transform3d robotToCamera;
+        public final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
 
         public VisionIOApriltagsSim(final TitanCamera titanCamera, final VisionSystemSim visionSystemSim) {
             this.photonCamera = titanCamera.getPhotonCamera();
             this.cameraName = photonCamera.getName();
 
-            this.constrainedPnpParams = titanCamera.getConstrainedPnpParams();
-
             this.stdDevFactor = titanCamera.getStdDevFactor();
             this.robotToCamera = titanCamera.getRobotToCameraTransform();
+            this.constrainedPnpParams = titanCamera.getConstrainedPnpParams();
 
             final PhotonCameraSim photonCameraSim =
                     new PhotonCameraSim(titanCamera.getPhotonCamera(), titanCamera.toSimCameraProperties());
@@ -57,6 +55,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
         @Override
         public void updateInputs(final VisionIOInputs inputs) {
             inputs.name = cameraName;
+            inputs.isConnected = photonCamera.isConnected();
             inputs.stdDevFactor = stdDevFactor;
             inputs.constrainedPnpParams = constrainedPnpParams;
             inputs.robotToCamera = robotToCamera;
@@ -73,7 +72,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
     private final AprilTagFieldLayout aprilTagFieldLayout;
     private final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
 
-    private final Map<VisionIO, VisionUpdate> visionUpdates;
+    private final Map<VisionIO, VisionResult> visionResults;
 
     public SimVisionRunner(
             final Swerve swerve,
@@ -90,7 +89,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
 
-        this.visionUpdates = new HashMap<>();
+        this.visionResults = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -130,18 +129,20 @@ public class SimVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            for (final PhotonPipelineResult result : pipelineResults) {
-                VisionPoseEstimator.update(
-                        inputs.name,
+            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
+                final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
                         visionIO.robotToCamera,
-                        result,
+                        pipelineResult,
                         inputs.cameraMatrix,
                         inputs.distortionCoeffs,
-                        inputs.constrainedPnpParams
-                ).ifPresent(
-                        visionUpdate -> visionUpdates.put(visionIO, visionUpdate)
+                        visionIO.constrainedPnpParams
+                );
+
+                visionResults.put(
+                        visionIO,
+                        visionResult
                 );
             }
         }
@@ -167,7 +168,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public VisionUpdate getVisionUpdate(final VisionIO visionIO) {
-        return visionUpdates.get(visionIO);
+    public VisionResult getVisionResult(final VisionIO visionIO) {
+        return visionResults.get(visionIO);
     }
 }

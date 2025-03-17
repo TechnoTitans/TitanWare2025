@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
     public enum Goal {
+        NONE(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW),
         DYNAMIC(Elevator.Goal.DYNAMIC, ElevatorArm.Goal.DYNAMIC, IntakeArm.Goal.STOW),
         STOW(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW),
         CLIMB(Elevator.Goal.STOW, ElevatorArm.Goal.CLIMB, IntakeArm.Goal.CLIMB),
@@ -145,7 +146,10 @@ public class Superstructure extends VirtualSubsystem {
 
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresUpwardsMotion).onTrue(
                 Commands.sequence(
-                        Commands.runOnce(() -> this.runningGoal = desiredGoal),
+                        Commands.runOnce(() -> {
+                            this.atGoal = Goal.NONE;
+                            this.runningGoal = desiredGoal;
+                        }),
                         Commands.sequence(
                                 Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
                                 Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
@@ -165,7 +169,10 @@ public class Superstructure extends VirtualSubsystem {
 
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresDownwardsMotion).onTrue(
                 Commands.sequence(
-                        Commands.runOnce(() -> this.runningGoal = desiredGoal),
+                        Commands.runOnce(() -> {
+                            this.atGoal = Goal.NONE;
+                            this.runningGoal = desiredGoal;
+                        }),
                         Commands.sequence(
                                 Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
                                 Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
@@ -200,6 +207,9 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/DesiredGoalNotStow", desiredGoalNotStow);
         Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint);
         Logger.recordOutput(LogKey + "/UnsafeToDrive", unsafeToDrive);
+
+        Logger.recordOutput(LogKey + "/ExtensionDistanceMeters", getCurrentTranslation().getNorm());
+        Logger.recordOutput(LogKey + "/ExtensionDistanceMeters", AllowableExtensionForDrivingMeters);
 
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsRunningGoal", desiredGoalIsRunningGoal);
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsAtGoal", desiredGoalIsAtGoal);

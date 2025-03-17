@@ -15,12 +15,15 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 public interface VisionIO {
+    PhotonPoseEstimator.ConstrainedSolvepnpParams DefaultConstrainedPnpParams =
+            new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1);
     Matrix<N3, N3> EmptyCameraMatrix = MatBuilder.fill(Nat.N3(), Nat.N3(), 0, 0, 0, 0, 0, 0, 0, 0, 0);
     Matrix<N8, N1> EmptyDistortionCoeffs = MatBuilder.fill(Nat.N8(), Nat.N1(), 0, 0, 0, 0, 0, 0, 0, 0);
 
     class VisionIOInputs implements LoggableInputs {
 
         public String name = "";
+        public boolean isConnected = false;
         public double stdDevFactor = 1.0;
         public PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
         public Transform3d robotToCamera;
@@ -31,6 +34,7 @@ public interface VisionIO {
         @Override
         public void toLog(final LogTable table) {
             table.put("Name", name);
+            table.put("IsConnected", isConnected);
             table.put("StdDevFactor", stdDevFactor);
             table.put("ConstrainedPnpParams", constrainedPnpParams);
             table.put("RobotToCamera", robotToCamera);
@@ -42,14 +46,25 @@ public interface VisionIO {
         @Override
         public void fromLog(final LogTable table) {
             this.name = table.get("Name", "unknown");
-            this.stdDevFactor = table.get("StdDevFactor", Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR);
-            this.constrainedPnpParams = table.get(
-                    "ConstrainedPnpParams",
-                    new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1)
-            );
-            this.robotToCamera = table.get("RobotToCamera", new Transform3d());
-            this.cameraMatrix = table.get("CameraMatrix", MatBuilder.fill(Nat.N3(), Nat.N3()));
-            this.distortionCoeffs = table.get("DistortionCoeffs", MatBuilder.fill(Nat.N8(), Nat.N1()));
+            this.isConnected = table.get("IsConnected", false);
+            if (name.equals("BL_Apriltag")) {
+                this.stdDevFactor = 10;
+            } else {
+                this.stdDevFactor = table.get("StdDevFactor", Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR);
+            }
+            this.constrainedPnpParams = table.get("ConstrainedPnpParams", DefaultConstrainedPnpParams);
+            this.robotToCamera = table.get("RobotToCamera", Transform3d.kZero);
+
+            final double[] cameraMatrix = table.get("CameraMatrix", (double[]) null);
+            this.cameraMatrix = cameraMatrix == null
+                    ? EmptyCameraMatrix
+                    : MatBuilder.fill(Nat.N3(), Nat.N3(), cameraMatrix);
+
+            final double[] distortionCoeffs = table.get("DistortionCoeffs", (double[]) null);
+            this.distortionCoeffs = distortionCoeffs == null
+                    ? EmptyDistortionCoeffs
+                    : MatBuilder.fill(Nat.N8(), Nat.N1(), distortionCoeffs);
+
             this.pipelineResults = LogUtils.deserializePhotonPipelineResults(table, "LatestResult");
         }
     }

@@ -92,7 +92,7 @@ public class GamepieceState extends VirtualSubsystem {
     public void configureStateTriggers() {
         intake.isCoralIntaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.INTAKING));
         intake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setCoralState(State.NONE));
-        intake.isCoralPresent.and(isCoralIntaking).onTrue(setCoralState(State.HOLDING));
+        intake.isCoralPresent.onTrue(setCoralState(State.HOLDING));
 
         isCoralHolding.onTrue(intake.holdCoral());
 
@@ -101,15 +101,17 @@ public class GamepieceState extends VirtualSubsystem {
         intake.isCoralOuttaking.negate().and(isCoralScoring).and(intake.isCoralPresent)
                 .onTrue(setCoralState(State.HOLDING));
 
-        intake.isAlgaeIntaking.and(intake.isAlgaePresent.negate()).onTrue(setAlgaeState(State.INTAKING));
-        intake.isAlgaeIntaking.negate().and(isAlgaeIntaking).onTrue(setAlgaeState(State.NONE));
-        intake.isAlgaePresent.and(isAlgaeIntaking).onTrue(setAlgaeState(State.HOLDING));
+        isCoralNone.and(intake.isAlgaeIntaking).and(intake.isAlgaePresent.negate()).onTrue(setAlgaeState(State.INTAKING));
+        isCoralNone.and(intake.isAlgaeIntaking.negate()).and(isAlgaeIntaking).onTrue(setAlgaeState(State.NONE));
+        isCoralNone.and(intake.isAlgaePresent)
+                .and(intake.isAlgaeIntaking)
+                .onTrue(setAlgaeState(State.HOLDING));
 
         isAlgaeHolding.onTrue(intake.holdAlgae());
 
-        intake.isAlgaeOuttaking.and(isAlgaeHolding).onTrue(setAlgaeState(State.SCORING));
-        intake.isAlgaeOuttaking.and(intake.isAlgaePresent.negate()).onTrue(setAlgaeState(State.NONE));
-        intake.isAlgaeOuttaking.negate().and(isAlgaeScoring).and(intake.isAlgaePresent)
+        isCoralNone.and(intake.isAlgaeOuttaking).and(isAlgaeHolding).onTrue(setAlgaeState(State.SCORING));
+        isCoralNone.and(intake.isAlgaeOuttaking).and(intake.isAlgaePresent.negate()).onTrue(setAlgaeState(State.NONE));
+        isCoralNone.and(intake.isAlgaeOuttaking.negate()).and(isAlgaeScoring).and(intake.isAlgaePresent)
                 .onTrue(setAlgaeState(State.HOLDING));
     }
 

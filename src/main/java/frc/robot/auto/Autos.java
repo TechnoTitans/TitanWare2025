@@ -96,7 +96,7 @@ public class Autos {
                                         Commands.waitUntil(superstructure.atSuperstructureSetpoint
                                                 .and(superstructure.desiredGoalNotStow)),
                                         intake.scoreCoral()
-                                ),
+                                ).withTimeout(5),
                                 superstructure.toSuperstructureGoal(
                                         ScoreCommands.Level.LevelMap.get(branch.level())
                                 )
@@ -328,6 +328,7 @@ public class Autos {
         final AutoTrajectory cage4Reef2 = routine.trajectory("Cage3Reef2");
         final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
         final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef2ToLeftHP");
 
         routine.active().onTrue(runStartingTrajectory(cage4Reef2));
 
@@ -350,8 +351,12 @@ public class Autos {
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
-                        swerve.runWheelXCommand()
+                        moveEndOfAuto.cmd()
                 )
+        );
+        
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
         );
 
         return routine;
@@ -362,6 +367,7 @@ public class Autos {
         final AutoTrajectory cage2Reef4 = routine.trajectory("Cage2Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
         final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef4ToRightHP");
 
         routine.active().onTrue(runStartingTrajectory(cage2Reef4));
 
@@ -384,8 +390,12 @@ public class Autos {
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
-                        swerve.runWheelXCommand()
+                        moveEndOfAuto.cmd()
                 )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
         );
 
         return routine;

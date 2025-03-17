@@ -113,8 +113,8 @@ public class Intake extends SubsystemBase {
         this.isAlgaeOuttaking = new Trigger(eventLoop, () -> algaeOuttaking);
         this.isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
 
-        this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent).debounce(0.5);
-        this.isAlgaePresent = new Trigger(eventLoop, this::isAlgaePresent);
+        this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent).debounce(0.25);
+        this.isAlgaePresent = new Trigger(eventLoop, this::isAlgaePresent).debounce(0.25);
 
         this.rollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
@@ -197,11 +197,11 @@ public class Intake extends SubsystemBase {
     }
 
     public Command holdCoral() {
-        return toInstantRollerTorqueCurrent(2).withName("HoldCoral");
+        return toInstantRollerTorqueCurrent(12).withName("HoldCoral");
     }
 
     public Command holdAlgae() {
-        return toInstantRollerTorqueCurrent(-3).withName("HoldAlgae");
+        return toInstantRollerTorqueCurrent(-40).withName("HoldAlgae");
     }
 
     public Command scoreCoral() {
@@ -215,6 +215,13 @@ public class Intake extends SubsystemBase {
         ).finallyDo(() -> this.coralOuttaking = false).withName("ScoreCoral");
     }
 
+    public Command ejectCoral() {
+        return Commands.sequence(
+                runOnce(() -> this.coralOuttaking = true),
+                toInstantRollerVoltage(-9)
+        ).finallyDo(() -> this.coralOuttaking = false).withName("ScoreCoral");
+    }
+
     public Command intakeAlgae() {
         return Commands.sequence(
                 runOnce(() -> this.algaeIntaking = true),
@@ -225,7 +232,7 @@ public class Intake extends SubsystemBase {
     public Command scoreAlgae() {
         return Commands.sequence(
                 runOnce(() -> this.algaeOuttaking = true),
-                toInstantRollerVoltage(-9),
+                toInstantRollerVoltage(9),
                 Commands.waitUntil(isAlgaePresent.negate()).withTimeout(1),
                 Commands.waitSeconds(0.1),
                 instantStopCommand()

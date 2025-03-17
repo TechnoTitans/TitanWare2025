@@ -139,7 +139,7 @@ public class Robot extends LoggedRobot {
             .and(RobotModeTriggers.teleop());
 
     final Supplier<ScoreCommands.ScorePosition> driverScorePositionSupplier =
-                scoreCommands.getScorePositionSupplier(driverController);
+            scoreCommands.getScorePositionSupplier(driverController);
 
     final Supplier<ScoreCommands.ScorePosition> coDriverScorePositionSupplier =
             scoreCommands.getScorePositionSupplier(coController);
@@ -272,7 +272,7 @@ public class Robot extends LoggedRobot {
 
         Logger.start();
 
-        Logger.recordOutput("EmptyPose", new Pose3d());
+        Logger.recordOutput("EmptyPose", Pose3d.kZero);
     }
 
     @Override
@@ -306,8 +306,6 @@ public class Robot extends LoggedRobot {
                         IsRedAlliance
                 )
         );
-
-        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW);
     }
 
     @Override
@@ -381,6 +379,8 @@ public class Robot extends LoggedRobot {
         intake.isCoralPresent.onTrue(ControllerUtils.rumbleForDurationCommand(
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
+
+        RobotModeTriggers.teleop().onTrue(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW));
     }
 
     public void configureAutos() {
@@ -426,6 +426,10 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreAtPosition(driverScorePositionSupplier))
                 .onFalse(scoreCommands.scoreAtPosition());
 
+        this.driverController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
+                .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
+
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
@@ -435,6 +439,11 @@ public class Robot extends LoggedRobot {
         this.coController.start(teleopEventLoop)
                 .whileTrue(superstructure.toSuperstructureGoal(Superstructure.Goal.CLIMB));
 
+        this.coController.rightTrigger(0.5, teleopEventLoop)
+                .negate()
+                .and(coController.povDown())
+                .whileTrue(intake.ejectCoral())
+                .onFalse(intake.instantStopCommand());
 
         this.coController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreProcessor())

@@ -3,7 +3,6 @@ package frc.robot.utils.control;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.constants.Constants;
-import org.littletonrobotics.junction.Logger;
 
 public class DeltaTime {
     private static final double MICRO_TO_SEC = 1e-6;
@@ -14,11 +13,7 @@ public class DeltaTime {
     private double lastRealFPGASeconds;
 
     /**
-     * Creates a new DeltaTime instance, with an option to disableDeterministicTimestamps
-     *
-     * @param disableDeterministicTimestamps should be true if {@link Logger#disableDeterministicTimestamps()} is called,
-     *                                       false if not
-     * @see Logger#disableDeterministicTimestamps()
+     * Creates a new DeltaTime instance, with an option to disable deterministic timestamps
      */
     public DeltaTime(final boolean disableDeterministicTimestamps) {
         this.timer = new Timer();

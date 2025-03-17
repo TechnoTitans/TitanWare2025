@@ -6,7 +6,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
-import frc.robot.subsystems.vision.estimator.VisionUpdate;
+import frc.robot.subsystems.vision.estimator.VisionResult;
 import frc.robot.utils.closeables.ToClose;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
@@ -24,7 +24,6 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
         private final Transform3d robotToCamera;
         private final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
 
-
         public VisionIOReplay(final TitanCamera titanCamera) {
             this.photonCamera = titanCamera.getPhotonCamera();
             this.robotToCamera = titanCamera.getRobotToCameraTransform();
@@ -37,7 +36,7 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
     private final Map<VisionIOReplay, String> visionIONames;
     private final Map<VisionIOReplay, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
 
-    private final Map<VisionIO, VisionUpdate> visionUpdates;
+    private final Map<VisionIO, VisionResult> visionResults;
 
     public ReplayVisionRunner(
             final AprilTagFieldLayout aprilTagFieldLayout,
@@ -52,7 +51,7 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
         }
 
         this.visionIONames = visionIONames;
-        this.visionUpdates = new HashMap<>();
+        this.visionResults = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -78,18 +77,20 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            for (final PhotonPipelineResult result : pipelineResults) {
-                VisionPoseEstimator.update(
-                        inputs.name,
+            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
+                final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
                         visionIO.robotToCamera,
-                        result,
+                        pipelineResult,
                         inputs.cameraMatrix,
                         inputs.distortionCoeffs,
                         visionIO.constrainedPnpParams
-                ).ifPresent(
-                        visionUpdate -> visionUpdates.put(visionIO, visionUpdate)
+                );
+
+                visionResults.put(
+                        visionIO,
+                        visionResult
                 );
             }
         }
@@ -108,7 +109,7 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public VisionUpdate getVisionUpdate(final VisionIO visionIO) {
-        return visionUpdates.get(visionIO);
+    public VisionResult getVisionResult(final VisionIO visionIO) {
+        return visionResults.get(visionIO);
     }
 }
