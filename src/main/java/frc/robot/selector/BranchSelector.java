@@ -50,6 +50,13 @@ public class BranchSelector extends LoggedNetworkInput implements AutoCloseable 
 
         final NetworkTable ntTable = NetworkTableInstance.getDefault().getTable(ntTableName);
         this.robotBranchPublisher = ntTable.getStringTopic(Constants.NetworkTables.SELECTED_BRANCH).publish();
+        robotBranchPublisher.set(selectedBranch);
+
+        final StringPublisher clearPreviousSelection =
+                ntTable.getStringTopic(Constants.NetworkTables.DASH_SELECTED_BRANCH).publish();
+        clearPreviousSelection.set(selectedBranch);
+        clearPreviousSelection.close();
+
         this.dashSelectedBranchSubscriber = ntTable.getStringTopic(Constants.NetworkTables.DASH_SELECTED_BRANCH)
                 .subscribe(selectedBranch);
 

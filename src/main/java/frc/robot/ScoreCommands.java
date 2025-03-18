@@ -185,6 +185,7 @@ public class ScoreCommands {
             final Pose2d scoringPose = scoringPoseMapContainer.value
                     .get(scorePositionContainer.value.side)
                     .get(scorePositionContainer.value.level.level);
+
             final Transform2d coralDistanceOffset = new Transform2d(
                     0,
                     gamepieceState.hasCoral.getAsBoolean()
@@ -210,7 +211,7 @@ public class ScoreCommands {
                         Commands.sequence(
                                 superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
                                         .onlyIf(superstructure.unsafeToDrive),
-                                Commands.waitUntil(atAlignReef),
+                                Commands.waitUntil(atAlignReef).onlyIf(shouldUseEarlyAlign),
                                 superstructure.runSuperstructureGoal(() ->
                                                 Superstructure.Goal.getAlignGoal(scorePositionContainer.value.level.goal))
                                         .until(atReef)
