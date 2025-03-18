@@ -19,7 +19,6 @@ import frc.robot.utils.Container;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
@@ -74,6 +73,7 @@ public class ScoreCommands {
         this.gamepieceState = gamepieceState;
     }
 
+    @SuppressWarnings("unused")
     public Supplier<ScorePosition> getScorePositionSupplier(final CommandXboxController controller) {
         return () -> {
             final Reef.Side side;
@@ -137,9 +137,105 @@ public class ScoreCommands {
                             }
                             return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
                         }
-                ),
+                ).onlyIf(superstructure.unsafeToDrive.negate()),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
                 intake.intakeCoralHP()
+        );
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
+        final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
+        final Runnable updateScorePosition = () -> scorePositionContainer.value = scorePositionSupplier.get();
+
+        final Trigger shouldUseEarlyAlign = new Trigger(() ->
+                switch (scorePositionContainer.value.level) {
+                    case L1, L2 -> false;
+                    case L3, L4 -> true;
+                }
+        );
+
+        final Supplier<Map<Reef.Side, Map<Reef.Level, Pose2d>>> scoringPoseMap = () -> {
+            final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
+                    FieldConstants.getBranchScoringPositions();
+            final Map<Reef.Face, Pose2d> reefCenterFacePoses = FieldConstants.getReefScoringCenterPoses();
+            final Translation2d currentTranslation = swerve.getPose().getTranslation();
+
+            double closestDistanceMeters = Double.MAX_VALUE;
+            Map<Reef.Side, Map<Reef.Level, Pose2d>> poseMap = null;
+            for (final Reef.Face face : Reef.Face.values()) {
+                final Pose2d centerFace = reefCenterFacePoses.get(face);
+
+                final double distanceMeters = centerFace.getTranslation()
+                        .getDistance(currentTranslation);
+
+                if (distanceMeters < closestDistanceMeters) {
+                    poseMap = branchScoringPositions.get(face);
+                    closestDistanceMeters = distanceMeters;
+                }
+            }
+            return poseMap;
+        };
+
+
+        final Container<Map<Reef.Side, Map<Reef.Level, Pose2d>>> scoringPoseMapContainer = Container.empty();
+        final Runnable updateScoringPoseMap = () -> scoringPoseMapContainer.value = scoringPoseMap.get();
+
+        final Supplier<Pose2d> scoringPoseSupplier = () -> {
+            final Pose2d scoringPose = scoringPoseMapContainer.value
+                    .get(scorePositionContainer.value.side)
+                    .get(scorePositionContainer.value.level.level);
+            final Transform2d coralDistanceOffset = new Transform2d(
+                    0,
+                    gamepieceState.hasCoral.getAsBoolean()
+                            ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
+                            : 0,
+                    Rotation2d.kZero
+            );
+
+            return scoringPose.transformBy(coralDistanceOffset);
+        };
+
+        final Supplier<Pose2d> reefAlignmentPoseSupplier = () -> scoringPoseSupplier
+                .get()
+                .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET);
+
+        final Trigger atAlignReef = swerve.atPoseTrigger(reefAlignmentPoseSupplier);
+        final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
+
+        return Commands.sequence(
+                Commands.runOnce(updateScorePosition),
+                Commands.runOnce(updateScoringPoseMap),
+                Commands.deadline(
+                        Commands.sequence(
+                                superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                                        .onlyIf(superstructure.unsafeToDrive),
+                                Commands.waitUntil(atAlignReef),
+                                superstructure.runSuperstructureGoal(() ->
+                                                Superstructure.Goal.getAlignGoal(scorePositionContainer.value.level.goal))
+                                        .until(atReef)
+                                        .onlyIf(shouldUseEarlyAlign),
+                                Commands.waitUntil(atReef),
+                                Commands.deadline(
+                                        Commands.sequence(
+                                                Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                                                intake.scoreCoral()
+                                        ),
+                                        superstructure.toSuperstructureGoal(() -> scorePositionContainer.value.level.goal)
+                                )
+                        ),
+                        Commands.either(
+                                Commands.sequence(
+                                        swerve.driveToPose(reefAlignmentPoseSupplier)
+                                                .onlyIf(atReef.negate())
+                                                .onlyWhile(shouldUseEarlyAlign),
+                                        swerve.runToPose(scoringPoseSupplier)
+                                ),
+                                swerve.runToPose(scoringPoseSupplier)
+                                        .onlyWhile(shouldUseEarlyAlign.negate()),
+                                shouldUseEarlyAlign
+                        )
+                )
         );
     }
 
@@ -153,78 +249,72 @@ public class ScoreCommands {
                 switch (wantScorePosition.get().level) {
                     case L1, L2 -> false;
                     case L3, L4 -> true;
-                });
+                }
+        );
 
-        return Commands.parallel(
-                Commands.defer(
-                        () -> {
-                            final Map<Reef.Face, Pose2d> reefCenterPoses = FieldConstants.getReefScoringCenterPoses();
-                            final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
-                                    FieldConstants.getBranchScoringPositions();
+        final Supplier<Map<Reef.Side, Map<Reef.Level, Pose2d>>> scoringPoseMap = () -> {
+            final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
+                    FieldConstants.getBranchScoringPositions();
+            final Map<Reef.Face, Pose2d> reefCenterFacePoses = FieldConstants.getReefScoringCenterPoses();
+            final Translation2d currentTranslation = swerve.getPose().getTranslation();
 
-                            final Pose2d currentPose = swerve.getPose();
-                            final Translation2d currentTranslation = currentPose.getTranslation();
+            double closestDistanceMeters = Double.MAX_VALUE;
+            Map<Reef.Side, Map<Reef.Level, Pose2d>> poseMap = null;
+            for (final Reef.Face face : Reef.Face.values()) {
+                final Pose2d centerFace = reefCenterFacePoses.get(face);
 
-                            Map<Reef.Side, Map<Reef.Level, Pose2d>> scoringPoseMap = null;
-                            double closestDistanceMeters = Double.MAX_VALUE;
-                            for (final Reef.Face face : Reef.Face.values()) {
-                                final Pose2d centerFace = reefCenterPoses.get(face);
+                final double distanceMeters = centerFace.getTranslation()
+                        .getDistance(currentTranslation);
 
-                                final double distanceMeters = centerFace.getTranslation()
-                                        .getDistance(currentTranslation);
+                if (distanceMeters < closestDistanceMeters) {
+                    poseMap = branchScoringPositions.get(face);
+                    closestDistanceMeters = distanceMeters;
+                }
+            }
+            return poseMap;
+        };
 
-                                if (distanceMeters < closestDistanceMeters) {
-                                    scoringPoseMap = branchScoringPositions.get(face);
-                                    closestDistanceMeters = distanceMeters;
-                                }
-                            }
+        final Container<Map<Reef.Side, Map<Reef.Level, Pose2d>>> scoringPoseMapContainer = Container.empty();
+        final Runnable updateScoringPoseMap = () -> scoringPoseMapContainer.value = scoringPoseMap.get();
 
-                            if (scoringPoseMap == null) {
-                                return Commands.none();
-                            }
+        final Supplier<Pose2d> scoringPoseSupplier = () -> {
+            final ScorePosition scorePosition = driveToScorePositionSupplier.get();
 
-                            //noinspection ExtractMethodRecommender
-                            final Map<Reef.Side, Map<Reef.Level, Pose2d>> finalScoringPoseMap = scoringPoseMap;
-                            final Supplier<Pose2d> scoringPoseSupplier = () -> {
-                                final ScorePosition scorePosition = driveToScorePositionSupplier.get();
+            final Pose2d scoringPose = scoringPoseMapContainer.value
+                    .get(scorePosition.side)
+                    .get(scorePosition.level.level);
+            final Transform2d coralDistanceOffset = new Transform2d(
+                    0,
+                    gamepieceState.hasCoral.getAsBoolean()
+                            ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
+                            : 0,
+                    Rotation2d.kZero
+            );
 
-                                final Pose2d scoringPose = finalScoringPoseMap
-                                        .get(scorePosition.side)
-                                        .get(scorePosition.level.level);
-                                final Transform2d coralDistanceOffset = new Transform2d(
-                                        0,
-                                        gamepieceState.hasCoral.getAsBoolean()
-                                                ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
-                                                : 0,
-                                        Rotation2d.kZero
-                                );
+            return scoringPose.transformBy(coralDistanceOffset);
+        };
 
-                                return scoringPose.transformBy(coralDistanceOffset);
-                            };
+        final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
 
-                            final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
-
-                            return Commands.sequence(
-                                    Commands.waitUntil(superstructure.unsafeToDrive.negate()),
-                                    Commands.repeatingSequence(
-                                            Commands.either(
-                                                    Commands.sequence(
-                                                            swerve.driveToPose(
-                                                                            () -> scoringPoseSupplier
-                                                                                    .get()
-                                                                                    .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
-                                                                    .onlyIf(atReef.negate())
-                                                                    .onlyWhile(shouldUseEarlyAlign),
-                                                            swerve.runToPose(scoringPoseSupplier)
-                                                    ),
-                                                    swerve.runToPose(scoringPoseSupplier)
-                                                            .onlyWhile(shouldUseEarlyAlign.negate()),
-                                                    shouldUseEarlyAlign
-                                            )
-                                    )
-                            );
-                        },
-                        Set.of(swerve)
+        return Commands.runOnce(updateScoringPoseMap).andThen(Commands.parallel(
+                Commands.sequence(
+                        Commands.waitUntil(superstructure.unsafeToDrive.negate()),
+                        Commands.repeatingSequence(
+                                Commands.either(
+                                        Commands.sequence(
+                                                swerve.driveToPose(
+                                                                () -> scoringPoseSupplier
+                                                                        .get()
+                                                                        .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET))
+                                                        .onlyIf(atReef.negate())
+                                                        .onlyWhile(shouldUseEarlyAlign),
+                                                swerve.runToPose(scoringPoseSupplier)
+                                        ),
+                                        swerve.runToPose(scoringPoseSupplier)
+                                                .onlyWhile(shouldUseEarlyAlign.negate()),
+                                        shouldUseEarlyAlign
+                                )
+                        )
                 ),
                 Commands.sequence(
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
@@ -259,7 +349,7 @@ public class ScoreCommands {
                                 }, superstructure.getRequirements())
                         )
                 )
-        ).withName("ReadyScoreAtPosition");
+        )).withName("ReadyScoreAtPosition");
     }
 
     public Command readyScoreAtPositionNoLineup(final Supplier<ScorePosition> scorePositionSupplier) {
@@ -323,6 +413,7 @@ public class ScoreCommands {
         );
     }
 
+    @SuppressWarnings("SuspiciousNameCombination")
     public Command readyClimb(
             final DoubleSupplier leftStickYInput,
             final DoubleSupplier leftStickXInput

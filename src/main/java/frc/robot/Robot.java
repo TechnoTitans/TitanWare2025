@@ -143,7 +143,6 @@ public class Robot extends LoggedRobot {
 
     final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier = branchSelector::getSelected;
 
-
     @Override
     public void robotInit() {
         if ((RobotBase.isReal() && Constants.CURRENT_MODE != Constants.RobotMode.REAL) ||
@@ -421,8 +420,7 @@ public class Robot extends LoggedRobot {
         );
 
         this.driverController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPosition(scorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition());
+                .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
 
         this.driverController.a(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))

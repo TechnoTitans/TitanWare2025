@@ -248,6 +248,14 @@ public class Superstructure extends VirtualSubsystem {
         );
     }
 
+    public Command toSuperstructureGoal(final Supplier<Goal> goal) {
+        return Commands.runEnd(
+                () -> this.desiredGoal = goal.get(),
+                () -> this.desiredGoal = Superstructure.Goal.STOW,
+                elevator, elevatorArm, intakeArm
+        );
+    }
+
     public Command runSuperstructureGoal(final Goal goal) {
         return Commands.run(
                 () -> this.desiredGoal = goal,

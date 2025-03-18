@@ -13,4 +13,8 @@ public class Container<T> {
     public static <T> Container<T> of(final T value) {
         return new Container<>(value);
     }
+
+    public static <T> Container<T> empty() {
+        return new Container<>();
+    }
 }
