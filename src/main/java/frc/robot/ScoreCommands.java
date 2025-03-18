@@ -219,10 +219,14 @@ public class ScoreCommands {
                                 Commands.waitUntil(atReef),
                                 Commands.deadline(
                                         Commands.sequence(
-                                                Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                                                Commands.waitUntil(superstructure.atSuperstructureSetpoint
+                                                        .and(() -> superstructure.getDesiredSuperstructureGoal()
+                                                                == scorePositionContainer.value.level.goal
+                                                        )),
                                                 intake.scoreCoral()
                                         ),
-                                        superstructure.toSuperstructureGoal(() -> scorePositionContainer.value.level.goal)
+                                        superstructure.toSuperstructureGoal(() -> scorePositionContainer.value.level.goal),
+                                        swerve.runWheelXCommand().asProxy()
                                 )
                         ),
                         Commands.either(
@@ -235,7 +239,7 @@ public class ScoreCommands {
                                 swerve.runToPose(scoringPoseSupplier)
                                         .onlyWhile(shouldUseEarlyAlign.negate()),
                                 shouldUseEarlyAlign
-                        )
+                        ).asProxy()
                 )
         );
     }
