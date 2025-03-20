@@ -1,6 +1,9 @@
 package frc.robot.selector;
 
-import edu.wpi.first.networktables.*;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.networktables.StringSubscriber;
 import frc.robot.ScoreCommands;
 import frc.robot.constants.Constants;
 import frc.robot.constants.FieldConstants;

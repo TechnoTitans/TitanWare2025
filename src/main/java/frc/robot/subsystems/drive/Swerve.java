@@ -151,6 +151,7 @@ public class Swerve extends SubsystemBase {
 
         this.holonomicDriveController = new HolonomicDriveController(
                 new PIDController(6, 0, 0.18),
+                new PIDController(6, 0, 0.18),
                 new PIDController(6, 0, 0),
                 new TrapezoidProfile.Constraints(
                         Units.feetToMeters(9),

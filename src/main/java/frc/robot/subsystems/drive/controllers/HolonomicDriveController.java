@@ -19,7 +19,8 @@ public class HolonomicDriveController {
 
     private final DeltaTime deltaTime;
 
-    private final PIDController translationController;
+    private final PIDController xController;
+    private final PIDController yController;
     private final PIDController rotationController;
 
     private final TrapezoidProfile translationProfile;
@@ -37,11 +38,13 @@ public class HolonomicDriveController {
     /**
      * Constructs a {@link HolonomicDriveController}
      *
-     * @param translationController        A {@link PIDController} to respond to error in the field-relative X direction
+     * @param xController        A {@link PIDController} to respond to error in the field-relative X direction
+     * @param yController        A {@link PIDController} to respond to error in the field-relative Y direction
      * @param rotationController A {@link PIDController} controller to respond to error in rotation
      */
     public HolonomicDriveController(
-            final PIDController translationController,
+            final PIDController xController,
+            final PIDController yController,
             final PIDController rotationController,
             final TrapezoidProfile.Constraints translationConstraints,
             final TrapezoidProfile.Constraints rotationConstraints,
@@ -49,7 +52,8 @@ public class HolonomicDriveController {
     ) {
         this.deltaTime = new DeltaTime();
 
-        this.translationController = translationController;
+        this.xController = xController;
+        this.yController = yController;
         this.rotationController = rotationController;
         this.rotationController.enableContinuousInput(MinimumRotationInput, MaxRotationInput);
 
@@ -86,7 +90,8 @@ public class HolonomicDriveController {
             final ChassisSpeeds fieldRelativeSpeeds
     ) {
         deltaTime.reset();
-        translationController.reset();
+        xController.reset();
+        yController.reset();
         rotationController.reset();
 
         final Translation2d fieldSpeeds = new Translation2d(
@@ -133,15 +138,29 @@ public class HolonomicDriveController {
                 translationUnprofiledReference
         );
 
-        final double translationFF = translationPreviousProfiledReference.velocity;
-        final double translationFeedback = translationController.calculate(
-                targetPose.getTranslation().getDistance(currentPose.getTranslation()),
-                translationPreviousProfiledReference.position
+        final Translation2d distanceFromProfiledToTarget = currentPose
+                .getTranslation()
+                .plus(
+                        new Translation2d(
+                                translationPreviousProfiledReference.position,
+                                rotationDifference
+                        )
+                ).minus(targetPose.getTranslation());
+
+        final double xFF = translationPreviousProfiledReference.velocity * rotationDifference.getCos();
+        final double xFeedback = xController.calculate(
+                distanceFromProfiledToTarget.getX(),
+                translationPreviousProfiledReference.position * rotationDifference.getCos()
         );
 
-        final double translationSpeed = translationFeedback + translationFF;
-        final double xSpeed = translationSpeed * Math.cos(rotationDifference.getRadians());
-        final double ySpeed = translationSpeed * Math.sin(rotationDifference.getRadians());
+        final double yFF = translationPreviousProfiledReference.velocity * rotationDifference.getSin();
+        final double yFeedback = yController.calculate(
+                distanceFromProfiledToTarget.getY(),
+                translationPreviousProfiledReference.position * rotationDifference.getSin()
+        );
+
+        final double xSpeed = xFeedback + xFF;
+        final double ySpeed = yFeedback + yFF;
 
         final double currentRotationRadians = currentPose.getRotation().getRadians();
         rotationUnprofiledReference.position = targetPose.getRotation().getRadians();
