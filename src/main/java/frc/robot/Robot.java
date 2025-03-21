@@ -136,6 +136,7 @@ public class Robot extends LoggedRobot {
     private final EventLoop teleopEventLoop = new EventLoop();
     private final EventLoop testEventLoop = new EventLoop();
 
+    private final Trigger teleopEnabled = RobotModeTriggers.teleop();
     private final Trigger autonomousEnabled = RobotModeTriggers.autonomous();
     private final Trigger endgameTrigger = new Trigger(() -> DriverStation.getMatchTime() <= 20)
             .and(DriverStation::isFMSAttached)
@@ -317,7 +318,7 @@ public class Robot extends LoggedRobot {
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
         driverController.y(testEventLoop).whileTrue(
-                intake.coralTorqueCurrentSysIdCommand()
+                elevator.voltageSysIdCommand()
                         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
         );
 
@@ -377,7 +378,7 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
-        RobotModeTriggers.teleop().onTrue(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW));
+        teleopEnabled.onTrue(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW));
     }
 
     public void configureAutos() {
@@ -459,5 +460,9 @@ public class Robot extends LoggedRobot {
                 .onFalse(scoreCommands.scoreAtPosition());
 
         this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
+
+        this.coController.y(teleopEventLoop).whileTrue(scoreCommands.intakeUpperAlgae());
+
+        this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
     }
 }

@@ -16,10 +16,12 @@ public class FieldConstants {
 
     public static final Transform2d SCORING_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(10.5), 0, Rotation2d.kPi);
+    public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
+            new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(2.5), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_DISTANCE_OFFSET =
             new Transform2d(-Units.inchesToMeters(24), 0, Rotation2d.kZero);
-    public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
-            new Transform2d(-Units.inchesToMeters(6), 0, Rotation2d.kZero);
+    public static final Transform2d ALGAE_ALIGN_DISTANCE_OFFSET =
+            new Transform2d(-Units.inchesToMeters(16), 0, Rotation2d.kZero);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =

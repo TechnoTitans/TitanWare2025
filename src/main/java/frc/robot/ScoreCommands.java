@@ -374,11 +374,11 @@ public class ScoreCommands {
                     closestPose = reefPose;
                 }
             }
-            return closestPose.plus(FieldConstants.SCORING_DISTANCE_OFFSET);
+            return closestPose.plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
         };
 
         final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
-                .transformBy(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
+                .transformBy(FieldConstants.ALGAE_ALIGN_DISTANCE_OFFSET);
 
         final Trigger atAlignReef = swerve.atPoseTrigger(alignPoseSupplier);
         final Trigger atReef = swerve.atPoseTrigger(descorePoseSupplier);
@@ -421,11 +421,11 @@ public class ScoreCommands {
                     closestPose = reefPose;
                 }
             }
-            return closestPose.plus(FieldConstants.SCORING_DISTANCE_OFFSET);
+            return closestPose.plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
         };
 
         final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
-                .transformBy(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
+                .transformBy(FieldConstants.ALGAE_ALIGN_DISTANCE_OFFSET);
 
         final Trigger atAlignReef = swerve.atPoseTrigger(alignPoseSupplier);
         final Trigger atReef = swerve.atPoseTrigger(descorePoseSupplier);

@@ -67,18 +67,18 @@ public class ElevatorIOReal implements ElevatorIO {
     public void config() {
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.10757)
-                .withKG(0.53544)
+                .withKS(0.084543)
+                .withKG(0.53767)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(0.51808)
-                .withKA(0.012291)
-                .withKP(40)
-                .withKD(0.5);
+                .withKV(0.53016)
+                .withKA(0.014936)
+                .withKP(39.547)
+                .withKD(1);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.51808;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.25;
-        motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
-        motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.53016;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.15;
+        motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
+        motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 70;
         motorConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         motorConfiguration.Feedback.SensorToMechanismRatio = constants.gearing();
