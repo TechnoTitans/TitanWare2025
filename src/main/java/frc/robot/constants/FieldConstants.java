@@ -15,9 +15,11 @@ public class FieldConstants {
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
     public static final Transform2d SCORING_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(19.5), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(10.5), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_DISTANCE_OFFSET =
             new Transform2d(-Units.inchesToMeters(24), 0, Rotation2d.kZero);
+    public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
+            new Transform2d(-Units.inchesToMeters(6), 0, Rotation2d.kZero);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =
@@ -92,7 +94,7 @@ public class FieldConstants {
             L4(Units.inchesToMeters(72), -90, Transform2d.kZero),
             L3(Units.inchesToMeters(47.625), -35, Transform2d.kZero),
             L2(Units.inchesToMeters(31.875), -35, Transform2d.kZero),
-            L1(Units.inchesToMeters(18), 0, new Transform2d(Units.inchesToMeters(-8), 0, Rotation2d.kZero));
+            L1(Units.inchesToMeters(18), 0, new Transform2d(-Units.inchesToMeters(2), 0, Rotation2d.kZero));
 
             public final double heightMeters;
             public final double pitchDegrees;

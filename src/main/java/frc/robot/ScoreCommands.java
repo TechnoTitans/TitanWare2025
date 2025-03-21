@@ -378,7 +378,7 @@ public class ScoreCommands {
         };
 
         final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
-                .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET);
+                .transformBy(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
         final Trigger atAlignReef = swerve.atPoseTrigger(alignPoseSupplier);
         final Trigger atReef = swerve.atPoseTrigger(descorePoseSupplier);
@@ -387,20 +387,21 @@ public class ScoreCommands {
                 Commands.sequence(
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
-                        Commands.waitUntil(atAlignReef),
+                        Commands.waitUntil(atAlignReef).withTimeout(2),
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
-                        Commands.waitUntil(atReef),
+                        Commands.waitUntil(atReef).withTimeout(2),
                         Commands.deadline(
                                 Commands.waitUntil(superstructure.atSuperstructureSetpoint
                                         .and(gamepieceState.hasAlgae)
-                                        .and(atAlignReef)),
+                                        .and(atAlignReef)).withTimeout(3),
                                 superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE)
                         )
                 ),
                 Commands.sequence(
                         swerve.driveToPose(alignPoseSupplier),
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(2),
                         swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
+                        Commands.waitSeconds(0.1),
                         swerve.driveToPose(alignPoseSupplier)
                 ),
                 intake.intakeAlgae().asProxy()
@@ -424,7 +425,7 @@ public class ScoreCommands {
         };
 
         final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
-                .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET);
+                .transformBy(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
         final Trigger atAlignReef = swerve.atPoseTrigger(alignPoseSupplier);
         final Trigger atReef = swerve.atPoseTrigger(descorePoseSupplier);
@@ -433,20 +434,21 @@ public class ScoreCommands {
                 Commands.sequence(
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
-                        Commands.waitUntil(atAlignReef),
+                        Commands.waitUntil(atAlignReef).withTimeout(2),
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
-                        Commands.waitUntil(atReef),
+                        Commands.waitUntil(atReef).withTimeout(2),
                         Commands.deadline(
                                 Commands.waitUntil(superstructure.atSuperstructureSetpoint
                                         .and(gamepieceState.hasAlgae)
-                                        .and(atAlignReef)),
+                                        .and(atAlignReef)).withTimeout(3),
                                 superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE)
                         )
                 ),
                 Commands.sequence(
                         swerve.driveToPose(alignPoseSupplier),
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(2),
                         swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
+                        Commands.waitSeconds(0.1),
                         swerve.driveToPose(alignPoseSupplier)
                 ),
                 intake.intakeAlgae().asProxy()

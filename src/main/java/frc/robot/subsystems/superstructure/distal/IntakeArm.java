@@ -73,15 +73,15 @@ public class IntakeArm extends SubsystemBase {
         STOW(0),
         HP(0),
         ALGAE_GROUND(-0.349),
-        UPPER_ALGAE(-0.348),
+        UPPER_ALGAE(-0.35),
         LOWER_ALGAE(-0.324),
         PROCESSOR(-0.24),
         CLIMB(-0.348),
         NET(-0.15),
-        L4(-0.1985),
-        L3(-0.1943),
-        L2(-0.159),
-        L1(-0.0732);
+        L4(-0.17),
+        L3(-0.174),
+        L2(-0.127),
+        L1(-0.052);
 
         private final double pivotPositionGoalRots;
 
@@ -132,7 +132,7 @@ public class IntakeArm extends SubsystemBase {
                     || currentGoal == Goal.UPPER_ALGAE
                     || desiredGoal == Goal.PROCESSOR
             ) {
-                intakeArmIO.setMotionMagicCruiseVelocity(0.4);
+                intakeArmIO.setMotionMagicCruiseVelocity(0.45);
             } else {
                 intakeArmIO.setMotionMagicCruiseVelocity(0);
             }
