@@ -403,12 +403,12 @@ public class Robot extends LoggedRobot {
     }
 
     public void configureButtonBindings(final EventLoop teleopEventLoop) {
-        this.driverController.y(teleopEventLoop).onTrue(swerve.zeroRotationCommand());
         this.driverController.rightBumper(teleopEventLoop)
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST),
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ));
+
         this.driverController.leftBumper(teleopEventLoop)
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW),
@@ -422,7 +422,11 @@ public class Robot extends LoggedRobot {
         this.driverController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
 
-        this.driverController.a(teleopEventLoop)
+        this.driverController.y(teleopEventLoop).whileTrue(scoreCommands.descoreUpperAlgae());
+
+        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
+
+        this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
                 .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
 
@@ -455,9 +459,5 @@ public class Robot extends LoggedRobot {
                 .onFalse(scoreCommands.scoreAtPosition());
 
         this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
-
-        this.coController.y(teleopEventLoop).whileTrue(scoreCommands.intakeUpperAlgae());
-
-        this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
     }
 }

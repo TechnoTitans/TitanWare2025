@@ -14,7 +14,8 @@ public class FieldConstants {
     public static final double FIELD_WIDTH_Y_METERS = Units.inchesToMeters(317);
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
-    private static final double SCORING_DISTANCE_OFFSET_METERS = Units.inchesToMeters(19.5);
+    public static final Transform2d SCORING_DISTANCE_OFFSET =
+            new Transform2d(Units.inchesToMeters(19.5), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_DISTANCE_OFFSET =
             new Transform2d(-Units.inchesToMeters(24), 0, Rotation2d.kZero);
 
@@ -23,12 +24,8 @@ public class FieldConstants {
                 new Pose2d(Units.inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90));
         public static final Pose2d RED_CENTER_FACE = BLUE_CENTER_FACE.relativeTo(RED_ORIGIN);
 
-        public static final Pose2d BLUE_SCORING_POSE = BLUE_CENTER_FACE.transformBy(
-                new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
-        );
-        public static final Pose2d RED_SCORING_POSE = RED_CENTER_FACE.transformBy(
-                new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
-        );
+        public static final Pose2d BLUE_SCORING_POSE = BLUE_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET);
+        public static final Pose2d RED_SCORING_POSE = RED_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET);
     }
 
     public static class Barge {
@@ -60,12 +57,8 @@ public class FieldConstants {
                 BLUE_RIGHT_CENTER_FACE
         );
         public static final List<Pose2d> BLUE_PICKUP_CORAL_STATIONS_POSES = List.of(
-                BLUE_LEFT_CENTER_FACE.transformBy(
-                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
-                ),
-                BLUE_RIGHT_CENTER_FACE.transformBy(
-                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
-                )
+                BLUE_LEFT_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET),
+                BLUE_RIGHT_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET)
         );
 
         public static final Pose2d RED_LEFT_CENTER_FACE = BLUE_LEFT_CENTER_FACE.relativeTo(RED_ORIGIN);
@@ -75,12 +68,8 @@ public class FieldConstants {
                 RED_RIGHT_CENTER_FACE
         );
         public static final List<Pose2d> RED_PICKUP_CORAL_STATIONS_POSES = List.of(
-                RED_LEFT_CENTER_FACE.transformBy(
-                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
-                ),
-                RED_RIGHT_CENTER_FACE.transformBy(
-                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg)
-                )
+                RED_LEFT_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET),
+                RED_RIGHT_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET)
         );
     }
 
@@ -185,14 +174,13 @@ public class FieldConstants {
                             Rotation2d.fromDegrees(-120))
             );
 
-            final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);
-            final Transform2d reefFaceScoringTransform = new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.kPi);
+            final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);;
             for (final Map.Entry<Face, Pose2d> entry : BLUE_CENTER_FACES.entrySet()) {
                 RED_CENTER_FACES.put(entry.getKey(), entry.getValue().relativeTo(RED_ORIGIN));
-                BLUE_CENTER_SCORING_FACES.put(entry.getKey(), entry.getValue().transformBy(reefFaceScoringTransform));
+                BLUE_CENTER_SCORING_FACES.put(entry.getKey(), entry.getValue().transformBy(SCORING_DISTANCE_OFFSET));
                 RED_CENTER_SCORING_FACES.put(
                         entry.getKey(),
-                        RED_CENTER_FACES.get(entry.getKey()).transformBy(reefFaceScoringTransform)
+                        RED_CENTER_FACES.get(entry.getKey()).transformBy(SCORING_DISTANCE_OFFSET)
                 );
 
                 final Map<Level, Pose3d> fillBlueRight = new HashMap<>();
@@ -204,9 +192,6 @@ public class FieldConstants {
                 final Map<Level, Pose2d> fillRedScoringRight = new HashMap<>();
                 final Map<Level, Pose2d> fillBlueScoringLeft = new HashMap<>();
                 final Map<Level, Pose2d> fillRedScoringLeft = new HashMap<>();
-
-                final Transform2d scoringTransform =
-                        new Transform2d(SCORING_DISTANCE_OFFSET_METERS, 0, Rotation2d.k180deg);
 
                 for (final Level level : Level.values()) {
                     final Pose2d poseDirection = new Pose2d(
@@ -231,7 +216,7 @@ public class FieldConstants {
                                             poseDirection.getRotation().getRadians())
                     );
                     final Pose2d rightScoringPose = rightPose.toPose2d()
-                            .transformBy(scoringTransform)
+                            .transformBy(SCORING_DISTANCE_OFFSET)
                             .transformBy(level.scoringOffset);
 
                     fillBlueRight.put(level, rightPose);
@@ -254,7 +239,7 @@ public class FieldConstants {
                                             poseDirection.getRotation().getRadians())
                     );
                     final Pose2d leftScoringPose = leftPose.toPose2d()
-                            .transformBy(scoringTransform)
+                            .transformBy(SCORING_DISTANCE_OFFSET)
                             .transformBy(level.scoringOffset);
 
                     fillBlueLeft.put(level, leftPose);

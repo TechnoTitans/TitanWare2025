@@ -361,6 +361,98 @@ public class ScoreCommands {
         return superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level().goal);
     }
 
+    public Command descoreUpperAlgae() {
+        final Supplier<Pose2d> descorePoseSupplier = () -> {
+            final Pose2d currentPose = swerve.getPose();
+
+            double closestDistance = Double.MAX_VALUE;
+            Pose2d closestPose = new Pose2d();
+            for (final Pose2d reefPose : FieldConstants.getReefCenterPoses().values()) {
+                final double distance = currentPose.getTranslation().getDistance(reefPose.getTranslation());
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestPose = reefPose;
+                }
+            }
+            return closestPose.plus(FieldConstants.SCORING_DISTANCE_OFFSET);
+        };
+
+        final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
+                .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET);
+
+        final Trigger atAlignReef = swerve.atPoseTrigger(alignPoseSupplier);
+        final Trigger atReef = swerve.atPoseTrigger(descorePoseSupplier);
+
+        return Commands.deadline(
+                Commands.sequence(
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                                .onlyIf(superstructure.unsafeToDrive),
+                        Commands.waitUntil(atAlignReef),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
+                        Commands.waitUntil(atReef),
+                        Commands.deadline(
+                                Commands.sequence(
+                                        Commands.waitUntil(superstructure.atSuperstructureSetpoint
+                                                .and(gamepieceState.hasAlgae)),
+                                        Commands.waitUntil(atAlignReef)
+                                ),
+                                superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE)
+                        )
+                ),
+                Commands.sequence(
+                        swerve.driveToPose(alignPoseSupplier),
+                        swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
+                        swerve.driveToPose(alignPoseSupplier)
+                )
+        );
+    }
+
+    public Command descoreLowerAlgae() {
+        final Supplier<Pose2d> descorePoseSupplier = () -> {
+            final Pose2d currentPose = swerve.getPose();
+
+            double closestDistance = Double.MAX_VALUE;
+            Pose2d closestPose = new Pose2d();
+            for (final Pose2d reefPose : FieldConstants.getReefCenterPoses().values()) {
+                final double distance = currentPose.getTranslation().getDistance(reefPose.getTranslation());
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestPose = reefPose;
+                }
+            }
+            return closestPose.transformBy(FieldConstants.SCORING_DISTANCE_OFFSET);
+        };
+
+        final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
+                .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET);
+
+        final Trigger atAlignReef = swerve.atPoseTrigger(alignPoseSupplier);
+        final Trigger atReef = swerve.atPoseTrigger(descorePoseSupplier);
+
+        return Commands.deadline(
+                Commands.sequence(
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                                .onlyIf(superstructure.unsafeToDrive),
+                        Commands.waitUntil(atAlignReef),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
+                        Commands.waitUntil(atReef),
+                        Commands.deadline(
+                                Commands.sequence(
+                                        Commands.waitUntil(superstructure.atSuperstructureSetpoint
+                                                .and(gamepieceState.hasAlgae)),
+                                        Commands.waitUntil(atAlignReef)
+                                ),
+                                superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE)
+                        )
+                ),
+                Commands.sequence(
+                        swerve.driveToPose(alignPoseSupplier),
+                        swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
+                        swerve.driveToPose(alignPoseSupplier)
+                )
+        );
+    }
+
     public Command scoreAtPosition() {
         return Commands.deadline(
                 Commands.sequence(
