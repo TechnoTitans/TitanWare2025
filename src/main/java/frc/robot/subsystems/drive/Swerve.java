@@ -150,12 +150,12 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveController = new HolonomicDriveController(
-                new PIDController(6, 0, 0.18),
-                new PIDController(6, 0, 0.18),
+                new PIDController(5, 0, 0),
+                new PIDController(5, 0, 0),
                 new PIDController(6, 0, 0),
                 new TrapezoidProfile.Constraints(
-                        Units.feetToMeters(9),
-                        Units.feetToMeters(9)
+                        Units.feetToMeters(10),
+                        Units.feetToMeters(7)
                 ),
                 new TrapezoidProfile.Constraints(
                         Config.maxAngularVelocityRadsPerSec(),
@@ -568,7 +568,7 @@ public class Swerve extends SubsystemBase {
                 }),
                 run(() -> {
                     this.holonomicPoseTarget = poseSupplier.get();
-                    drive(holonomicDriveController.calculate(getPose(), holonomicPoseTarget));
+                    drive(holonomicDriveController.calculate(getPose()));
                 }).until(atHolonomicDrivePose),
                 runOnce(this::stop)
         ).finallyDo(() -> holonomicControllerActive = false);
@@ -582,7 +582,7 @@ public class Swerve extends SubsystemBase {
                 }),
                 run(() -> {
                     this.holonomicPoseTarget = poseSupplier.get();
-                    drive(holonomicDriveController.calculate(getPose(), holonomicPoseTarget));
+                    drive(holonomicDriveController.calculate(getPose()));
                 })
         ).finallyDo(() -> holonomicControllerActive = false);
     }

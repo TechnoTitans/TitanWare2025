@@ -388,22 +388,22 @@ public class ScoreCommands {
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
                         Commands.waitUntil(atAlignReef),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
                         Commands.waitUntil(atReef),
                         Commands.deadline(
-                                Commands.sequence(
-                                        Commands.waitUntil(superstructure.atSuperstructureSetpoint
-                                                .and(gamepieceState.hasAlgae)),
-                                        Commands.waitUntil(atAlignReef)
-                                ),
+                                Commands.waitUntil(superstructure.atSuperstructureSetpoint
+                                        .and(gamepieceState.hasAlgae)
+                                        .and(atAlignReef)),
                                 superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE)
                         )
                 ),
                 Commands.sequence(
                         swerve.driveToPose(alignPoseSupplier),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
                         swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
                         swerve.driveToPose(alignPoseSupplier)
-                )
+                ),
+                intake.intakeAlgae().asProxy()
         );
     }
 
@@ -420,7 +420,7 @@ public class ScoreCommands {
                     closestPose = reefPose;
                 }
             }
-            return closestPose.transformBy(FieldConstants.SCORING_DISTANCE_OFFSET);
+            return closestPose.plus(FieldConstants.SCORING_DISTANCE_OFFSET);
         };
 
         final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
@@ -434,22 +434,22 @@ public class ScoreCommands {
                         superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
                         Commands.waitUntil(atAlignReef),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
+                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
                         Commands.waitUntil(atReef),
                         Commands.deadline(
-                                Commands.sequence(
-                                        Commands.waitUntil(superstructure.atSuperstructureSetpoint
-                                                .and(gamepieceState.hasAlgae)),
-                                        Commands.waitUntil(atAlignReef)
-                                ),
+                                Commands.waitUntil(superstructure.atSuperstructureSetpoint
+                                        .and(gamepieceState.hasAlgae)
+                                        .and(atAlignReef)),
                                 superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE)
                         )
                 ),
                 Commands.sequence(
                         swerve.driveToPose(alignPoseSupplier),
+                        Commands.waitUntil(superstructure.atSuperstructureSetpoint),
                         swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
                         swerve.driveToPose(alignPoseSupplier)
-                )
+                ),
+                intake.intakeAlgae().asProxy()
         );
     }
 
