@@ -47,11 +47,7 @@ public interface VisionIO {
         public void fromLog(final LogTable table) {
             this.name = table.get("Name", "unknown");
             this.isConnected = table.get("IsConnected", false);
-            if (name.equals("BL_Apriltag")) {
-                this.stdDevFactor = 10;
-            } else {
-                this.stdDevFactor = table.get("StdDevFactor", Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR);
-            }
+            this.stdDevFactor = table.get("StdDevFactor", Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR);
             this.constrainedPnpParams = table.get("ConstrainedPnpParams", DefaultConstrainedPnpParams);
             this.robotToCamera = table.get("RobotToCamera", Transform3d.kZero);
 

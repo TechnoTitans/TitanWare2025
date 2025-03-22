@@ -58,7 +58,7 @@ public class Intake extends SubsystemBase {
     protected static final String LogKey = "Intake";
     private static final double CoralRadiusFromODMeters = Units.inchesToMeters(4.5 / 2);
     private static final double CoralIntakeCenterDistanceMeters = Units.inchesToMeters(15.5 / 2);
-    private static final double NoCoralTOFReading = 0.4;
+    private static final double NoCoralTOFReading = 0.216;
     private static final double AlgaeDetectedCurrent = 25;
 
     private final IntakeIO intakeIO;
@@ -86,12 +86,12 @@ public class Intake extends SubsystemBase {
     public final Trigger isAlgaeIntakeStopped;
 
     public final Trigger isCoralPresent;
-    public final Trigger isAlgaePresent;
+    public final Trigger isCurrentAboveAlgaeThreshold;
 
     public final DoubleSupplier coralDistanceMeters = this::getCoralDistanceMeters;
     public final LinearFilter coralDistanceFilter = LinearFilter.movingAverage(25);
     public final DoubleSupplier coralDistanceIntakeCenterMeters = this::getCoralDistanceFromCenterIntakeMeters;
-    public final LinearFilter algaeDetectionCurrentFilter = LinearFilter.movingAverage(16);
+    public final LinearFilter currentFilter = LinearFilter.movingAverage(16);
 
     public Intake(final Constants.RobotMode mode, final HardwareConstants.IntakeConstants constants) {
         this.intakeIO = switch (mode) {
@@ -114,7 +114,7 @@ public class Intake extends SubsystemBase {
         this.isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
 
         this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent).debounce(0.25);
-        this.isAlgaePresent = new Trigger(eventLoop, this::isAlgaePresent).debounce(0.25);
+        this.isCurrentAboveAlgaeThreshold = new Trigger(eventLoop, this::isCurrentAboveAboveAlgaeThreshold).debounce(0.25);
 
         this.rollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
@@ -149,15 +149,15 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/Trigger/IsCoralOuttaking", isCoralOuttaking);
         Logger.recordOutput(LogKey + "/Trigger/IsCoralIntakeStopped", isCoralIntakeStopped);
 
-        Logger.recordOutput(LogKey + "/Trigger/IsAlgaePresent", isAlgaePresent);
+        Logger.recordOutput(LogKey + "/Trigger/IsCurrentAboveAlgaeThreshold", isCurrentAboveAlgaeThreshold);
         Logger.recordOutput(LogKey + "/Trigger/IsAlgaeOuttaking", isAlgaeOuttaking);
         Logger.recordOutput(LogKey + "/Trigger/IsAlgaeIntakeStopped", isAlgaeIntakeStopped);
 
         Logger.recordOutput(LogKey + "/FilteredCoralDistanceMeters", getFilteredCoralDistanceMeters());
-        Logger.recordOutput(LogKey + "/OffsetCoralDistanceMeters", getCoralDistanceMeters());
-        Logger.recordOutput(LogKey + "/CoralDistanceFromCenterIntakeMeters", getCoralDistanceFromCenterIntakeMeters());
+        Logger.recordOutput(LogKey + "/TreemapCoralDistanceMeters", getCoralDistanceMeters());
+        Logger.recordOutput(LogKey + "/CoralDistanceFromCenterMeters", getCoralDistanceFromCenterIntakeMeters());
 
-        Logger.recordOutput(LogKey + "/FilteredAlgaeCurrentAmps", getFilteredAlgaeCurrent());
+        Logger.recordOutput(LogKey + "/FilteredCurrentAmps", getFilteredCurrent());
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
@@ -178,15 +178,15 @@ public class Intake extends SubsystemBase {
     }
 
     private boolean isCoralPresent() {
-        return getFilteredCoralDistanceMeters() < NoCoralTOFReading;
+        return getCoralDistanceMeters() < NoCoralTOFReading;
     }
 
-    private double getFilteredAlgaeCurrent() {
-        return algaeDetectionCurrentFilter.calculate(inputs.rollerTorqueCurrentAmps);
+    private double getFilteredCurrent() {
+        return currentFilter.calculate(inputs.rollerTorqueCurrentAmps);
     }
 
-    private boolean isAlgaePresent() {
-        return Math.abs(getFilteredAlgaeCurrent()) >= AlgaeDetectedCurrent;
+    private boolean isCurrentAboveAboveAlgaeThreshold() {
+        return Math.abs(getFilteredCurrent()) >= AlgaeDetectedCurrent;
     }
 
     public Command intakeCoralHP() {
@@ -233,7 +233,7 @@ public class Intake extends SubsystemBase {
         return Commands.sequence(
                 runOnce(() -> this.algaeOuttaking = true),
                 toInstantRollerVoltage(9),
-                Commands.waitUntil(isAlgaePresent.negate()).withTimeout(1),
+                Commands.waitUntil(isCurrentAboveAlgaeThreshold.negate()).withTimeout(1),
                 Commands.waitSeconds(0.1),
                 instantStopCommand()
         ).finallyDo(() -> this.algaeOuttaking = false).withName("ScoreAlgae");

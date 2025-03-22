@@ -171,9 +171,6 @@ public class HolonomicDriveController {
         final double xSpeed = xFeedback + xFF;
         final double ySpeed = yFeedback + yFF;
 
-        Logger.recordOutput("xCurrent", currentPose.getX());
-        Logger.recordOutput("xSetpoint", xController.getSetpoint());
-
         final double currentRotationRadians = currentPose.getRotation().getRadians();
         rotationUnprofiledReference.position = desiredPose.getRotation().getRadians();
 

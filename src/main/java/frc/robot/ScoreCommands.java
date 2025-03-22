@@ -484,7 +484,7 @@ public class ScoreCommands {
                 Commands.sequence(
                         Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(2),
                         intake.scoreAlgae(),
-                        Commands.waitUntil(intake.isAlgaePresent.negate()).withTimeout(2)
+                        Commands.waitUntil(intake.isCurrentAboveAlgaeThreshold.negate()).withTimeout(2)
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.PROCESSOR),
                 swerve.runWheelXCommand()
