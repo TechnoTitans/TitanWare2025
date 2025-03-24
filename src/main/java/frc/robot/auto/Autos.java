@@ -166,11 +166,8 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(),
                         leftHPToReef1Left.cmd()
+                                .alongWith(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.ALIGN_L4))
                 )
-        );
-
-        leftHPToReef1Left.active().whileTrue(
-                superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_L4)
         );
 
         leftHPToReef1Left.done().onTrue(
@@ -213,11 +210,8 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(),
                         rightHPToReef5.cmd()
+                                .alongWith(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.ALIGN_L4))
                 )
-        );
-
-        rightHPToReef5.active().whileTrue(
-                superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_L4)
         );
 
         rightHPToReef5.done().onTrue(
@@ -262,11 +256,8 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(),
                         firstRightHPToReef5.cmd()
+                                .alongWith(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.ALIGN_L4))
                 )
-        );
-
-        firstRightHPToReef5.active().whileTrue(
-                superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_L4)
         );
 
         firstRightHPToReef5.done().onTrue(
@@ -281,11 +272,8 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(),
                         secondRightHPToReef5.cmd()
+                                .alongWith(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.ALIGN_L4))
                 )
-        );
-
-        secondRightHPToReef5.active().whileTrue(
-                superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_L4)
         );
 
         secondRightHPToReef5.done().onTrue(
