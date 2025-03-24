@@ -115,7 +115,7 @@ public class Robot extends LoggedRobot {
     public final AutoChooser autoChooser = new AutoChooser(
             new AutoOption(
                     "DoNothing",
-                    autos::doNothing,
+                    autos::threePieceCage2ToReef4And5,
                     Constants.CompetitionType.COMPETITION
             )
     );
@@ -385,12 +385,6 @@ public class Robot extends LoggedRobot {
         autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage4ToReef2And1",
-                autos::twoPieceCage4ToReef2And1,
-                Constants.CompetitionType.TESTING
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
                 "TwoPieceCage3ToReef2And1",
                 autos::twoPieceCage3ToReef2And1,
                 Constants.CompetitionType.COMPETITION
@@ -400,6 +394,12 @@ public class Robot extends LoggedRobot {
                 "TwoPieceCage2ToReef4And5",
                 autos::twoPieceCage2ToReef4And5,
                 Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "ThreePieceCage2ToReef4And5",
+                autos::threePieceCage2ToReef4And5,
+                Constants.CompetitionType.TESTING
         ));
     }
 
@@ -426,6 +426,8 @@ public class Robot extends LoggedRobot {
         this.driverController.y(teleopEventLoop).whileTrue(scoreCommands.descoreUpperAlgae());
 
         this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
+
+        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreNet());
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))

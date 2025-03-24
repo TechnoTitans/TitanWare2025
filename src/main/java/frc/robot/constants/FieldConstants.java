@@ -18,6 +18,8 @@ public class FieldConstants {
             new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(10.5), 0, Rotation2d.kPi);
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(2.5), 0, Rotation2d.kPi);
+    public static final Transform2d SCORING_BARGE_OFFSET =
+            new Transform2d(Units.inchesToMeters(40), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_DISTANCE_OFFSET =
             new Transform2d(-Units.inchesToMeters(24), 0, Rotation2d.kZero);
     public static final Transform2d ALGAE_ALIGN_DISTANCE_OFFSET =
@@ -43,6 +45,14 @@ public class FieldConstants {
         public static final Pose2d RED_LEFT_CAGE = BLUE_LEFT_CAGE.relativeTo(RED_ORIGIN);
         public static final Pose2d RED_MIDDLE_CAGE = BLUE_MIDDLE_CAGE.relativeTo(RED_ORIGIN);
         public static final Pose2d RED_RIGHT_CAGE = BLUE_RIGHT_CAGE.relativeTo(RED_ORIGIN);
+
+        public static final Pose2d SCORING_BLUE_LEFT_CAGE = BLUE_LEFT_CAGE.transformBy(SCORING_BARGE_OFFSET);
+        public static final Pose2d SCORING_BLUE_MIDDLE_CAGE = BLUE_MIDDLE_CAGE.transformBy(SCORING_BARGE_OFFSET);
+        public static final Pose2d SCORING_BLUE_RIGHT_CAGE = BLUE_RIGHT_CAGE.transformBy(SCORING_BARGE_OFFSET);
+        public static final Pose2d SCORING_RED_LEFT_CAGE = RED_LEFT_CAGE.transformBy(SCORING_BARGE_OFFSET);
+        public static final Pose2d SCORING_RED_MIDDLE_CAGE = RED_MIDDLE_CAGE.transformBy(SCORING_BARGE_OFFSET);
+        public static final Pose2d SCORING_RED_RIGHT_CAGE = RED_RIGHT_CAGE.transformBy(SCORING_BARGE_OFFSET);
+
     }
 
     public static class CoralStation {
@@ -297,6 +307,10 @@ public class FieldConstants {
 
     public static Map<Reef.Face, Pose2d> getReefScoringCenterPoses() {
         return getAllianceFlipped(Reef.BLUE_CENTER_SCORING_FACES, Reef.RED_CENTER_SCORING_FACES);
+    }
+
+    public static Pose2d getScoringBargeCenterCage() {
+        return getAllianceFlipped(Barge.SCORING_BLUE_MIDDLE_CAGE, Barge.SCORING_RED_MIDDLE_CAGE);
     }
 
     public static Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose3d>>> getBranchPositions() {

@@ -475,6 +475,23 @@ public class ScoreCommands {
         ).withName("ScoreAtPositionTeleop");
     }
 
+    public Command scoreNet() {
+        return Commands.sequence(
+                Commands.deadline(
+                        swerve.driveToPose(FieldConstants::getScoringBargeCenterCage),
+                        superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_NET)
+                ),
+                Commands.deadline(
+                        Commands.sequence(
+                                Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
+                                intake.scoreAlgae()
+                        ),
+                        superstructure.toSuperstructureGoal(Superstructure.Goal.NET),
+                        swerve.runWheelXCommand()
+                )
+        ).withName("ScoreNet");
+    }
+
     public Command readyScoreProcessor() {
         return superstructure.runSuperstructureGoal(Superstructure.Goal.PROCESSOR);
     }
