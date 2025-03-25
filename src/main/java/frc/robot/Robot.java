@@ -383,13 +383,13 @@ public class Robot extends LoggedRobot {
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST),
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
-                ));
+                ).withName("SwerveSpeedFast"));
 
         this.driverController.leftBumper(teleopEventLoop)
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW),
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
-                ));
+                ).withName("SwerveSpeedSlow"));
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
