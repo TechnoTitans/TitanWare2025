@@ -29,7 +29,6 @@ import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
-import frc.robot.utils.logging.LogUtils;
 import frc.robot.utils.logging.LoggedCommandScheduler;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import frc.robot.utils.teleop.ControllerUtils;
@@ -45,7 +44,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
@@ -116,7 +114,7 @@ public class Robot extends LoggedRobot {
     public final AutoChooser autoChooser = new AutoChooser(
             new AutoOption(
                     "DoNothing",
-                    autos::threePieceCage2ToReef4And5,
+                    autos::doNothing,
                     Constants.CompetitionType.COMPETITION
             )
     );
@@ -238,13 +236,14 @@ public class Robot extends LoggedRobot {
         configureAutos();
         configureButtonBindings(teleopEventLoop);
 
+        LoggedCommandScheduler.init(CommandScheduler.getInstance());
+
         SignalLogger.enableAutoLogging(true);
         SignalLogger.start();
         ToClose.add(SignalLogger::stop);
 
         Logger.start();
 
-        LoggedCommandScheduler.init(CommandScheduler.getInstance());
         Logger.recordOutput("EmptyPose", Pose3d.kZero);
     }
 

@@ -85,7 +85,7 @@ public class Autos {
                                     .get(branch.side())
                                     .get(branch.level());
 
-                            return scoreCommands.offsetScoringPoseWithCANRange(scoringPose);
+                            return scoreCommands.offsetScoringPoseWithCoralPosition(scoringPose);
                         }),
                         swerve.wheelXCommand()
                 ),

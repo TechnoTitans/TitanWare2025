@@ -4,7 +4,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -102,11 +101,11 @@ public class ScoreCommands {
         };
     }
 
-    public Pose2d offsetScoringPoseWithCANRange(final Pose2d targetPose) {
+    public Pose2d offsetScoringPoseWithCoralPosition(final Pose2d targetPose) {
         final Transform2d coralDistanceOffset = new Transform2d(
                 0,
                 gamepieceState.hasCoral.getAsBoolean()
-                        ? intake.coralDistanceIntakeCenterMeters.getAsDouble() - Units.inchesToMeters(1)
+                        ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
                         : 0,
                 Rotation2d.kZero
         );
@@ -143,7 +142,6 @@ public class ScoreCommands {
         );
     }
 
-    @SuppressWarnings("DuplicatedCode")
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
         final Runnable updateScorePosition = () -> scorePositionContainer.value = scorePositionSupplier.get();
@@ -186,15 +184,7 @@ public class ScoreCommands {
                     .get(scorePositionContainer.value.side)
                     .get(scorePositionContainer.value.level.level);
 
-            final Transform2d coralDistanceOffset = new Transform2d(
-                    0,
-                    gamepieceState.hasCoral.getAsBoolean()
-                            ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
-                            : 0,
-                    Rotation2d.kZero
-            );
-
-            return scoringPose.transformBy(coralDistanceOffset);
+            return offsetScoringPoseWithCoralPosition(scoringPose);
         };
 
         final Supplier<Pose2d> reefAlignmentPoseSupplier = () -> scoringPoseSupplier
@@ -244,6 +234,7 @@ public class ScoreCommands {
         );
     }
 
+    @SuppressWarnings("unused")
     public Command readyScoreAtPosition(final Supplier<ScorePosition> wantScorePosition) {
         final Container<ScorePosition> driveToScorePosition = Container.of(wantScorePosition.get());
         final Supplier<ScorePosition> driveToScorePositionSupplier = () -> driveToScorePosition.value;
@@ -284,19 +275,11 @@ public class ScoreCommands {
 
         final Supplier<Pose2d> scoringPoseSupplier = () -> {
             final ScorePosition scorePosition = driveToScorePositionSupplier.get();
-
             final Pose2d scoringPose = scoringPoseMapContainer.value
                     .get(scorePosition.side)
                     .get(scorePosition.level.level);
-            final Transform2d coralDistanceOffset = new Transform2d(
-                    0,
-                    gamepieceState.hasCoral.getAsBoolean()
-                            ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
-                            : 0,
-                    Rotation2d.kZero
-            );
 
-            return scoringPose.transformBy(coralDistanceOffset);
+            return offsetScoringPoseWithCoralPosition(scoringPose);
         };
 
         final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);

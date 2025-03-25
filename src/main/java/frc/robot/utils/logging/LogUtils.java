@@ -1,32 +1,18 @@
 package frc.robot.utils.logging;
 
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import org.littletonrobotics.junction.LogTable;
 import org.photonvision.common.dataflow.structures.Packet;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class LogUtils {
     public static final double MICRO_TO_MILLI = 1d / 1000;
 
     public static double microsecondsToMilliseconds(final double microseconds) {
         return microseconds * MICRO_TO_MILLI;
-    }
-
-    public static String[] getRequirementsFromSubsystems(final Set<Subsystem> subsystems) {
-        if (subsystems.isEmpty()) {
-            return new String[0];
-        }
-        final ArrayList<String> interruptingRequirementsList = new ArrayList<>(subsystems.size());
-
-        subsystems.iterator().forEachRemaining(
-                subsystem -> interruptingRequirementsList.add(subsystem.getName())
-        );
-        return interruptingRequirementsList.toArray(new String[0]);
     }
 
     public static void serializePhotonPipelineResults(
