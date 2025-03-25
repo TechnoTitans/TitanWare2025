@@ -193,7 +193,9 @@ public class Intake extends SubsystemBase {
         return Commands.sequence(
                 runOnce(() -> this.coralIntaking = true),
                 toRollerVelocity(9)
-        ).finallyDo(() -> this.coralIntaking = false).withName("IntakeCoralHP");
+        )
+                .finallyDo(() -> this.coralIntaking = false)
+                .withName("IntakeCoralHP");
     }
 
     public Command holdCoral() {
@@ -212,21 +214,27 @@ public class Intake extends SubsystemBase {
                         .withTimeout(2),
                 Commands.waitSeconds(0.2),
                 instantStopCommand()
-        ).finallyDo(() -> this.coralOuttaking = false).withName("ScoreCoral");
+        )
+                .finallyDo(() -> this.coralOuttaking = false)
+                .withName("ScoreCoral");
     }
 
     public Command ejectCoral() {
         return Commands.sequence(
                 runOnce(() -> this.coralOuttaking = true),
                 toInstantRollerVoltage(-9)
-        ).finallyDo(() -> this.coralOuttaking = false).withName("ScoreCoral");
+        )
+                .finallyDo(() -> this.coralOuttaking = false)
+                .withName("ScoreCoral");
     }
 
     public Command intakeAlgae() {
         return Commands.sequence(
                 runOnce(() -> this.algaeIntaking = true),
                 toRollerVelocity(-10)
-        ).finallyDo(() -> this.algaeIntaking = false).withName("IntakeAlgae");
+        )
+                .finallyDo(() -> this.algaeIntaking = false)
+                .withName("IntakeAlgae");
     }
 
     public Command scoreAlgae() {
@@ -236,7 +244,9 @@ public class Intake extends SubsystemBase {
                 Commands.waitUntil(isCurrentAboveAlgaeThreshold.negate()).withTimeout(1),
                 Commands.waitSeconds(0.1),
                 instantStopCommand()
-        ).finallyDo(() -> this.algaeOuttaking = false).withName("ScoreAlgae");
+        )
+                .finallyDo(() -> this.algaeOuttaking = false)
+                .withName("ScoreAlgae");
     }
 
     private Command toInstantRollerVoltage(final double volts) {

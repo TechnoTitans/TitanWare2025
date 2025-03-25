@@ -238,7 +238,7 @@ public class Superstructure extends VirtualSubsystem {
         return Commands.runOnce(
                 () -> this.desiredGoal = goal,
                 elevator, elevatorArm, intakeArm
-        );
+        ).withName("ToInstantSuperstructureGoal: " + goal);
     }
 
     public Command toSuperstructureGoal(final Goal goal) {
@@ -246,7 +246,7 @@ public class Superstructure extends VirtualSubsystem {
                 () -> this.desiredGoal = goal,
                 () -> this.desiredGoal = Superstructure.Goal.STOW,
                 elevator, elevatorArm, intakeArm
-        );
+        ).withName("ToSuperstructureGoal: " + goal);
     }
 
     public Command toSuperstructureGoal(final Supplier<Goal> goal) {
@@ -254,21 +254,21 @@ public class Superstructure extends VirtualSubsystem {
                 () -> this.desiredGoal = goal.get(),
                 () -> this.desiredGoal = Superstructure.Goal.STOW,
                 elevator, elevatorArm, intakeArm
-        );
+        ).withName("ToSuperstructureGoal");
     }
 
     public Command runSuperstructureGoal(final Goal goal) {
         return Commands.run(
                 () -> this.desiredGoal = goal,
                 elevator, elevatorArm, intakeArm
-        );
+        ).withName("RunSuperstructureGoal: " + goal);
     }
 
     public Command runSuperstructureGoal(final Supplier<Goal> goalSupplier) {
         return Commands.run(
                 () -> this.desiredGoal = goalSupplier.get(),
                 elevator, elevatorArm, intakeArm
-        );
+        ).withName("RunSuperstructureGoal");
     }
 
     public Set<Subsystem> getRequirements() {

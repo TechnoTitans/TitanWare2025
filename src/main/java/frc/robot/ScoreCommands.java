@@ -229,9 +229,11 @@ public class ScoreCommands {
                                 swerve.runToPose(scoringPoseSupplier)
                                         .onlyWhile(shouldUseEarlyAlign.negate()),
                                 shouldUseEarlyAlign
-                        ).asProxy()
+                        )
+                                .withName("DriveScoreAtFixedPosition")
+                                .asProxy()
                 )
-        );
+        ).withName("ScoreAtFixedPosition");
     }
 
     @SuppressWarnings("unused")
@@ -341,7 +343,8 @@ public class ScoreCommands {
     }
 
     public Command readyScoreAtPositionNoLineup(final Supplier<ScorePosition> scorePositionSupplier) {
-        return superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level().goal);
+        return superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level().goal)
+                .withName("ReadyScoreAtPositionNoLineup");
     }
 
     public Command descoreUpperAlgae() {
@@ -388,7 +391,7 @@ public class ScoreCommands {
                         swerve.driveToPose(alignPoseSupplier)
                 ),
                 intake.intakeAlgae().asProxy()
-        );
+        ).withName("DescoreUpperAlgae");
     }
 
     public Command descoreLowerAlgae() {
@@ -435,7 +438,7 @@ public class ScoreCommands {
                         swerve.driveToPose(alignPoseSupplier)
                 ),
                 intake.intakeAlgae().asProxy()
-        );
+        ).withName("DescoreLowerAlgae");
     }
 
     public Command scoreAtPosition() {
@@ -476,7 +479,8 @@ public class ScoreCommands {
     }
 
     public Command readyScoreProcessor() {
-        return superstructure.runSuperstructureGoal(Superstructure.Goal.PROCESSOR);
+        return superstructure.runSuperstructureGoal(Superstructure.Goal.PROCESSOR)
+                .withName("ReadyScoreProcessor");
     }
 
     public Command scoreProcessor() {
@@ -488,28 +492,28 @@ public class ScoreCommands {
                 ),
                 superstructure.toSuperstructureGoal(Superstructure.Goal.PROCESSOR),
                 swerve.runWheelXCommand()
-        );
+        ).withName("ScoreProcessor");
     }
 
     public Command intakeLowerAlgae() {
         return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
                 intake.intakeAlgae().asProxy()
-        );
+        ).withName("IntakeLowerAlgae");
     }
 
     public Command intakeUpperAlgae() {
         return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
                 intake.intakeAlgae().asProxy()
-        );
+        ).withName("IntakeUpperAlgae");
     }
 
     public Command intakeAlgaeFromGround() {
         return Commands.parallel(
                 superstructure.toSuperstructureGoal(Superstructure.Goal.ALGAE_GROUND),
                 intake.intakeAlgae()
-        );
+        ).withName("IntakeAlgaeFromGround");
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
@@ -524,6 +528,6 @@ public class ScoreCommands {
                         leftStickXInput,
                         () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.k180deg
                 )
-        );
+        ).withName("ReadyClimb");
     }
 }

@@ -317,32 +317,6 @@ public class Swerve extends SubsystemBase {
         return getPose().getRotation();
     }
 
-    /**
-     * @see Gyro#setAngle(Rotation2d)
-     */
-    public void setAngle(final Rotation2d angle) {
-        gyro.setAngle(angle);
-    }
-
-    public void zeroRotation() {
-        resetPose(
-                new Pose2d(
-                        getPose().getTranslation(),
-                        Robot.IsRedAlliance.getAsBoolean()
-                                ? Rotation2d.fromDegrees(180)
-                                : Rotation2d.fromDegrees(0)
-                )
-        );
-    }
-
-    private void resetPose(final Pose2d robotPose) {
-        poseEstimator.resetPosition(gyro.getYawRotation2d(), getModulePositions(), robotPose);
-    }
-
-    public Command zeroRotationCommand() {
-        return runOnce(this::zeroRotation);
-    }
-
     public ChassisSpeeds getRobotRelativeSpeeds() {
         return kinematics.toChassisSpeeds(
                 frontLeft.getState(),
@@ -505,7 +479,7 @@ public class Swerve extends SubsystemBase {
                     true,
                     invertYaw.getAsBoolean()
             );
-        });
+        }).withName("TeleopDrive");
     }
 
     public Command teleopFacingAngleCommand(
@@ -538,7 +512,9 @@ public class Swerve extends SubsystemBase {
                             Robot.IsRedAlliance.getAsBoolean()
                     );
                 })
-        ).finallyDo(() -> headingControllerActive = false);
+        )
+                .finallyDo(() -> headingControllerActive = false)
+                .withName("TeleopFacingAngle");
     }
 
     public Command faceAngle(final Supplier<Rotation2d> rotationTargetSupplier) {
@@ -557,7 +533,9 @@ public class Swerve extends SubsystemBase {
                             false
                     );
                 })
-        ).finallyDo(() -> headingControllerActive = false);
+        )
+                .finallyDo(() -> headingControllerActive = false)
+                .withName("FaceAngle");
     }
 
     public Command driveToPose(final Supplier<Pose2d> poseSupplier) {
@@ -571,7 +549,9 @@ public class Swerve extends SubsystemBase {
                     drive(holonomicDriveController.calculate(getPose()));
                 }).until(atHolonomicDrivePose),
                 runOnce(this::stop)
-        ).finallyDo(() -> holonomicControllerActive = false);
+        )
+                .finallyDo(() -> holonomicControllerActive = false)
+                .withName("DriveToPose");
     }
 
     public Command runToPose(final Supplier<Pose2d> poseSupplier) {
@@ -584,7 +564,9 @@ public class Swerve extends SubsystemBase {
                     this.holonomicPoseTarget = poseSupplier.get();
                     drive(holonomicDriveController.calculate(getPose()));
                 })
-        ).finallyDo(() -> holonomicControllerActive = false);
+        )
+                .finallyDo(() -> holonomicControllerActive = false)
+                .withName("RunToPose");
     }
 
     public Command teleopHoldAxisFacingAngleCommand(
@@ -620,7 +602,9 @@ public class Swerve extends SubsystemBase {
                             false
                     );
                 })
-        ).finallyDo(() -> headingControllerActive = false);
+        )
+                .finallyDo(() -> headingControllerActive = false)
+                .withName("TeleopHoldAxisFacingAngle");
     }
 
     public Command holdAxisFacingAngleAndDrive(
@@ -659,7 +643,9 @@ public class Swerve extends SubsystemBase {
                             false
                     );
                 })
-        ).finallyDo(() -> headingControllerActive = false);
+        )
+                .finallyDo(() -> headingControllerActive = false)
+                .withName("HoldAxisFacingAngleAndDrive");
     }
 
     public void stop() {
@@ -667,7 +653,8 @@ public class Swerve extends SubsystemBase {
     }
 
     public Command stopCommand() {
-        return runOnce(this::stop);
+        return runOnce(this::stop)
+                .withName("Stop");
     }
 
     /**
@@ -721,13 +708,14 @@ public class Swerve extends SubsystemBase {
         rawSet(0, 0, 0, 0, 45, -45, -45, 45);
     }
 
-    @SuppressWarnings("unused")
     public Command wheelXCommand() {
-        return runOnce(this::wheelX);
+        return runOnce(this::wheelX)
+                .withName("WheelX");
     }
 
     public Command runWheelXCommand() {
-        return run(this::wheelX);
+        return run(this::wheelX)
+                .withName("RunWheelX");
     }
 
     public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
