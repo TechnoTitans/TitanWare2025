@@ -30,6 +30,7 @@ import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.logging.LogUtils;
+import frc.robot.utils.logging.LoggedCommandScheduler;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import frc.robot.utils.teleop.ControllerUtils;
 import frc.robot.utils.teleop.SwerveSpeed;
@@ -241,36 +242,9 @@ public class Robot extends LoggedRobot {
         SignalLogger.start();
         ToClose.add(SignalLogger::stop);
 
-        CommandScheduler.getInstance().onCommandInitialize(
-                command -> Logger.recordOutput("Commands/Initialized", command.getName())
-        );
-        CommandScheduler.getInstance().onCommandFinish(
-                command -> Logger.recordOutput("Commands/Finished", command.getName())
-        );
-
-        CommandScheduler.getInstance().onCommandInterrupt((interrupted, interrupting) -> {
-            Logger.recordOutput(
-                    "Commands/Interrupted",
-                    interrupted.getName()
-            );
-            Logger.recordOutput(
-                    "Commands/InterruptedRequirements",
-                    LogUtils.getRequirementsFromSubsystems(interrupted.getRequirements())
-            );
-            Logger.recordOutput(
-                    "Commands/Interrupter",
-                    interrupting.isPresent() ? interrupting.get().getName() : "None"
-            );
-            Logger.recordOutput(
-                    "Commands/InterrupterRequirements",
-                    LogUtils.getRequirementsFromSubsystems(
-                            interrupting.isPresent() ? interrupting.get().getRequirements() : Set.of()
-                    )
-            );
-        });
-
         Logger.start();
 
+        LoggedCommandScheduler.init(CommandScheduler.getInstance());
         Logger.recordOutput("EmptyPose", Pose3d.kZero);
     }
 
@@ -282,6 +256,8 @@ public class Robot extends LoggedRobot {
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
+
+        LoggedCommandScheduler.periodic();
 
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
         Threads.setCurrentThreadPriority(false, 10);
