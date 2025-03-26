@@ -11,6 +11,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -20,12 +21,12 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
-import frc.robot.utils.sim.PivotingElevatorSim;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import java.util.List;
@@ -38,7 +39,7 @@ public class ElevatorIOSim implements ElevatorIO {
     private final HardwareConstants.ElevatorConstants constants;
     private final double drumCircumferenceMeters;
 
-    private final PivotingElevatorSim elevatorSim;
+    private final ElevatorSim elevatorSim;
 
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
@@ -72,7 +73,7 @@ public class ElevatorIOSim implements ElevatorIO {
 
         final double lowerLimitMeters = constants.lowerLimitRots() * drumCircumferenceMeters;
         final double upperLimitMeters = constants.upperLimitRots() * drumCircumferenceMeters;
-        this.elevatorSim = new PivotingElevatorSim(
+        this.elevatorSim = new ElevatorSim(
                 LinearSystemId.createElevatorSystem(
                         dcMotors,
                         SimConstants.Elevator.MASS_KG,
@@ -83,8 +84,7 @@ public class ElevatorIOSim implements ElevatorIO {
                 lowerLimitMeters,
                 upperLimitMeters,
                 true,
-                lowerLimitMeters,
-                () -> pivotAngle.get().getRadians()
+                lowerLimitMeters
         );
 
         this.masterMotor = new TalonFX(constants.rightMotorId(), constants.CANBus());
@@ -132,10 +132,19 @@ public class ElevatorIOSim implements ElevatorIO {
     public void config() {
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
-                .withKP(11);
-        motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
-        motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
-        motorConfiguration.CurrentLimits.StatorCurrentLimit = 60;
+                .withKS(0.084543)
+                .withKG(0.53767)
+                .withGravityType(GravityTypeValue.Elevator_Static)
+                .withKV(0.53016)
+                .withKA(0.014936)
+                .withKP(39.547)
+                .withKD(1);
+        motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.53016;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.15;
+        motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
+        motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
+        motorConfiguration.CurrentLimits.StatorCurrentLimit = 70;
         motorConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         motorConfiguration.Feedback.SensorToMechanismRatio = constants.gearing();
         motorConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;

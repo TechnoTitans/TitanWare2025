@@ -10,6 +10,10 @@ public class Container<T> {
         value = initialValue;
     }
 
+    public T get() {
+        return value;
+    }
+
     public static <T> Container<T> of(final T value) {
         return new Container<>(value);
     }

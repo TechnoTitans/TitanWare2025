@@ -197,16 +197,8 @@ public class Elevator extends SubsystemBase {
     }
 
 
-    //TODO: get distance from canrange minus thickness of elevator bottom plates
     public void home() {
         this.elevatorIO.setPosition(0);
-//        this.elevatorIO.setPosition(
-//                (inputs.canRangeDistanceMeters - Units.inchesToMeters(0.50)) / drumCircumferenceMeters
-//        );
-    }
-
-    public Command homeCommand() {
-        return runOnce(this::home);
     }
 
     public void setGoal(final Goal goal) {
