@@ -292,10 +292,14 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-        driverController.y(testEventLoop).whileTrue(
-                elevator.voltageSysIdCommand()
-                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+        driverController.a(testEventLoop).whileTrue(
+                swerve.wheelRadiusCharacterization()
         );
+
+//        driverController.y(testEventLoop).whileTrue(
+//                elevator.voltageSysIdCommand()
+//                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+//        );
 
 //        driverController.y(testEventLoop).whileTrue(
 //                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
