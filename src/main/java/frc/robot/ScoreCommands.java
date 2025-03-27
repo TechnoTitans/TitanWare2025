@@ -472,18 +472,23 @@ public class ScoreCommands {
     }
 
     public Command scoreNet() {
+        final Container<Superstructure.Goal> superstructureGoalContainer = Container.empty();
+        final Consumer<Superstructure.Goal> setSuperstructureGoal = (goal) -> superstructureGoalContainer.value = goal;
+
         return Commands.sequence(
-                Commands.deadline(
-                        swerve.driveToPose(FieldConstants::getScoringBargeCenterCage),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_NET)
-                ),
+                Commands.runOnce(() -> setSuperstructureGoal.accept(Superstructure.Goal.ALIGN_NET)),
                 Commands.deadline(
                         Commands.sequence(
+                                swerve.driveToPose(FieldConstants::getScoringBargeCenterCage).asProxy(),
+                                Commands.runOnce(() -> setSuperstructureGoal.accept(Superstructure.Goal.NET)),
                                 Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
                                 intake.scoreAlgae()
                         ),
-                        superstructure.toSuperstructureGoal(Superstructure.Goal.NET),
-                        swerve.runWheelXCommand()
+                        superstructure.toSuperstructureGoal(superstructureGoalContainer::get),
+                        Commands.sequence(
+                                Commands.waitUntil(swerve.atHolonomicDrivePose),
+                                swerve.runWheelXCommand().asProxy()
+                        )
                 )
         ).withName("ScoreNet");
     }

@@ -37,11 +37,11 @@ public class Superstructure extends VirtualSubsystem {
         L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2),
         ALIGN_L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2),
         L3(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
-        ALIGN_L3(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
+        ALIGN_L3(Elevator.Goal.UPPER_ALIGN, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
         L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
-        ALIGN_L4(Elevator.Goal.STOW, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
+        ALIGN_L4(Elevator.Goal.UPPER_ALIGN, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
-        ALIGN_NET(Elevator.Goal.STOW, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
+        ALIGN_NET(Elevator.Goal.L2, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
 
         SAFE(Elevator.Goal.L3, ElevatorArm.Goal.L4, IntakeArm.Goal.STOW);
 
@@ -165,7 +165,7 @@ public class Superstructure extends VirtualSubsystem {
                                                 .and(intakeArm.atSetpoint)).withTimeout(4),
                                 Commands.runOnce(() -> this.atGoal = runningGoal)
                         ).onlyWhile(() -> desiredGoal == runningGoal)
-                ).withName("UpwardsGoalChange")
+                ).ignoringDisable(true).withName("UpwardsGoalChange")
         );
 
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresDownwardsMotion).onTrue(
@@ -189,7 +189,7 @@ public class Superstructure extends VirtualSubsystem {
                                                 .and(intakeArm.atSetpoint)).withTimeout(4),
                                 Commands.runOnce(() -> this.atGoal = runningGoal)
                         ).onlyWhile(() -> desiredGoal == runningGoal)
-                ).withName("DownwardsGoalChange")
+                ).ignoringDisable(true).withName("DownwardsGoalChange")
         );
 
         elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
