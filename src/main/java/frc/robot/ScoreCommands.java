@@ -137,7 +137,7 @@ public class ScoreCommands {
                             return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
                         }
                 ).onlyIf(superstructure.unsafeToDrive.negate()),
-                superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
+                superstructure.toGoal(Superstructure.Goal.HP),
                 intake.intakeCoralHP()
         );
     }
@@ -209,7 +209,7 @@ public class ScoreCommands {
                 ),
                 Commands.deadline(
                         Commands.sequence(
-                                superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                                superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                         .onlyIf(superstructure.unsafeToDrive),
                                 Commands.waitUntil(atAlignReef).onlyIf(shouldUseEarlyAlign),
                                 Commands.deadline(
@@ -220,7 +220,7 @@ public class ScoreCommands {
                                                         .withTimeout(2),
                                                 intake.scoreCoral()
                                         ),
-                                        superstructure.toSuperstructureGoal(superstructureGoalContainer::get),
+                                        superstructure.toGoal(superstructureGoalContainer::get),
                                         Commands.sequence(
                                                 Commands.waitUntil(atReef),
                                                 swerve.runWheelXCommand().asProxy()
@@ -315,13 +315,13 @@ public class ScoreCommands {
                         )
                 ),
                 Commands.sequence(
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                        superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
                         Commands.deadline(
                                 Commands.waitUntil(swerve.atHolonomicDrivePose),
                                 Commands.run(() -> setDriveToScorePosition.accept(wantScorePosition.get()))
                         ),
-                        superstructure.runSuperstructureGoal(() ->
+                        superstructure.runGoal(() ->
                                         Superstructure.Goal.getAlignGoal(wantScorePosition.get().level.goal))
                                 .until(swerve.atHolonomicDrivePose)
                                 .onlyIf(shouldUseEarlyAlign),
@@ -332,7 +332,7 @@ public class ScoreCommands {
                                             () -> scorePosition.equals(wantScorePosition.get());
 
                                     return Commands.sequence(
-                                            superstructure.runSuperstructureGoal(Superstructure.Goal.SAFE)
+                                            superstructure.runGoal(Superstructure.Goal.SAFE)
                                                     .until(superstructure.atSuperstructureSetpoint
                                                             .and(superstructure.unsafeToDrive.negate()))
                                                     .onlyIf(superstructure.unsafeToDrive.and(
@@ -342,7 +342,7 @@ public class ScoreCommands {
                                                     )),
                                             Commands.runOnce(() -> setDriveToScorePosition.accept(scorePosition)),
                                             Commands.waitUntil(swerve.atHolonomicDrivePose),
-                                            superstructure.runSuperstructureGoal(scorePosition.level.goal)
+                                            superstructure.runGoal(scorePosition.level.goal)
                                     ).onlyWhile(desiredScorePositionHasNotChanged);
                                 }, superstructure.getRequirements())
                         )
@@ -351,7 +351,7 @@ public class ScoreCommands {
     }
 
     public Command readyScoreAtPositionNoLineup(final Supplier<ScorePosition> scorePositionSupplier) {
-        return superstructure.runSuperstructureGoal(() -> scorePositionSupplier.get().level().goal)
+        return superstructure.runGoal(() -> scorePositionSupplier.get().level().goal)
                 .withName("ReadyScoreAtPositionNoLineup");
     }
 
@@ -379,7 +379,7 @@ public class ScoreCommands {
 
         return Commands.deadline(
                 Commands.sequence(
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                        superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
                         Commands.waitUntil(atAlignReef).withTimeout(4),
                         Commands.deadline(
@@ -389,7 +389,7 @@ public class ScoreCommands {
                                                 .and(gamepieceState.hasAlgae)
                                                 .and(atAlignReef)).withTimeout(3)
                                 ),
-                                superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE)
+                                superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE)
                         )
                 ),
                 Commands.sequence(
@@ -427,7 +427,7 @@ public class ScoreCommands {
 
         return Commands.deadline(
                 Commands.sequence(
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                        superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
                         Commands.waitUntil(atAlignReef).withTimeout(4),
                         Commands.deadline(
@@ -437,7 +437,7 @@ public class ScoreCommands {
                                                 .and(gamepieceState.hasAlgae)
                                                 .and(atAlignReef)).withTimeout(3)
                                 ),
-                                superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE)
+                                superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE)
                         )
                 ),
                 Commands.sequence(
@@ -459,7 +459,7 @@ public class ScoreCommands {
                                         .withTimeout(3)
                                         .andThen(intake.scoreCoral()),
                                 Commands.defer(() -> superstructure
-                                                .toSuperstructureGoal(superstructure.getDesiredSuperstructureGoal()),
+                                                .toGoal(superstructure.getDesiredSuperstructureGoal()),
                                         superstructure.getRequirements()
                                 )
                         ),
@@ -484,7 +484,7 @@ public class ScoreCommands {
                                 Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
                                 intake.scoreAlgae()
                         ),
-                        superstructure.toSuperstructureGoal(superstructureGoalContainer::get),
+                        superstructure.toGoal(superstructureGoalContainer::get),
                         Commands.sequence(
                                 Commands.waitUntil(swerve.atHolonomicDrivePose),
                                 swerve.runWheelXCommand().asProxy()
@@ -494,7 +494,7 @@ public class ScoreCommands {
     }
 
     public Command readyScoreProcessor() {
-        return superstructure.runSuperstructureGoal(Superstructure.Goal.PROCESSOR)
+        return superstructure.runGoal(Superstructure.Goal.PROCESSOR)
                 .withName("ReadyScoreProcessor");
     }
 
@@ -505,28 +505,28 @@ public class ScoreCommands {
                         intake.scoreAlgae(),
                         Commands.waitUntil(intake.isCurrentAboveAlgaeThreshold.negate()).withTimeout(2)
                 ),
-                superstructure.toSuperstructureGoal(Superstructure.Goal.PROCESSOR),
+                superstructure.toGoal(Superstructure.Goal.PROCESSOR),
                 swerve.runWheelXCommand()
         ).withName("ScoreProcessor");
     }
 
     public Command intakeLowerAlgae() {
         return Commands.parallel(
-                superstructure.toSuperstructureGoal(Superstructure.Goal.LOWER_ALGAE),
+                superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
                 intake.intakeAlgae().asProxy()
         ).withName("IntakeLowerAlgae");
     }
 
     public Command intakeUpperAlgae() {
         return Commands.parallel(
-                superstructure.toSuperstructureGoal(Superstructure.Goal.UPPER_ALGAE),
+                superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
                 intake.intakeAlgae().asProxy()
         ).withName("IntakeUpperAlgae");
     }
 
     public Command intakeAlgaeFromGround() {
         return Commands.parallel(
-                superstructure.toSuperstructureGoal(Superstructure.Goal.ALGAE_GROUND),
+                superstructure.toGoal(Superstructure.Goal.ALGAE_GROUND),
                 intake.intakeAlgae()
         ).withName("IntakeAlgaeFromGround");
     }
@@ -537,7 +537,7 @@ public class ScoreCommands {
             final DoubleSupplier leftStickXInput
     ) {
         return Commands.parallel(
-                superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB),
+                superstructure.runGoal(Superstructure.Goal.CLIMB),
                 swerve.teleopFacingAngleCommand(
                         leftStickYInput,
                         leftStickXInput,

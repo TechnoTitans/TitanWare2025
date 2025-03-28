@@ -103,7 +103,6 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger allowedToChangeGoal;
 
     private final Trigger desiresUpwardsMotion;
-    private final Trigger desiresDownwardsMotion;
     private final Trigger desiredGoalChanged;
 
     public final Trigger desiredGoalNotStow;
@@ -143,58 +142,67 @@ public class Superstructure extends VirtualSubsystem {
 
             return desiredTranslation.getY() >= currentTranslation.getY();
         });
-        this.desiresDownwardsMotion = desiresUpwardsMotion.negate();
 
-        desiredGoalChanged.and(allowedToChangeGoal).and(desiresUpwardsMotion).onTrue(
-                Commands.sequence(
-                        Commands.runOnce(() -> {
-                            this.atGoal = Goal.NONE;
-                            this.runningGoal = desiredGoal;
-                        }),
-                        Commands.sequence(
-                                Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
-                                Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
-
-                                Commands.waitUntil(elevatorArm.atSetpoint.and(intakeArm.atSetpoint))
-                                        .withTimeout(4),
-                                Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
-
-                                Commands.waitUntil(
-                                        elevatorArm.atSetpoint
-                                                .and(elevator.atSetpoint)
-                                                .and(intakeArm.atSetpoint)).withTimeout(4),
-                                Commands.runOnce(() -> this.atGoal = runningGoal)
-                        ).onlyWhile(() -> desiredGoal == runningGoal)
-                ).ignoringDisable(true).withName("UpwardsGoalChange")
-        );
-
-        desiredGoalChanged.and(allowedToChangeGoal).and(desiresDownwardsMotion).onTrue(
-                Commands.sequence(
-                        Commands.runOnce(() -> {
-                            this.atGoal = Goal.NONE;
-                            this.runningGoal = desiredGoal;
-                        }),
-                        Commands.sequence(
-                                Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
-                                Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
-
-                                Commands.waitUntil(
-                                        elevator.atSetpoint
-                                                .and(intakeArm.atSetpoint)).withTimeout(4),
-                                Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
-
-                                Commands.waitUntil(
-                                        elevatorArm.atSetpoint
-                                                .and(elevator.atSetpoint)
-                                                .and(intakeArm.atSetpoint)).withTimeout(4),
-                                Commands.runOnce(() -> this.atGoal = runningGoal)
-                        ).onlyWhile(() -> desiredGoal == runningGoal)
-                ).ignoringDisable(true).withName("DownwardsGoalChange")
-        );
+        desiredGoalChanged.and(allowedToChangeGoal).onTrue(goalChange());
 
         elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
         elevator.setGoal(desiredGoal.elevatorGoal);
         intakeArm.setGoal(desiredGoal.intakeArmGoal);
+    }
+
+    private Command upwardsGoalChange() {
+        return Commands.sequence(
+                Commands.runOnce(() -> {
+                    this.atGoal = Goal.NONE;
+                    this.runningGoal = desiredGoal;
+                }),
+                Commands.sequence(
+                        Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
+                        Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
+
+                        Commands.waitUntil(elevatorArm.atSetpoint.and(intakeArm.atSetpoint))
+                                .withTimeout(4),
+                        Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
+
+                        Commands.waitUntil(
+                                elevatorArm.atSetpoint
+                                        .and(elevator.atSetpoint)
+                                        .and(intakeArm.atSetpoint)).withTimeout(4),
+                        Commands.runOnce(() -> this.atGoal = runningGoal)
+                ).onlyWhile(() -> desiredGoal == runningGoal)
+        ).withName("UpwardsGoalChange");
+    }
+
+    private Command downwardsGoalChange() {
+        return Commands.sequence(
+                Commands.runOnce(() -> {
+                    this.atGoal = Goal.NONE;
+                    this.runningGoal = desiredGoal;
+                }),
+                Commands.sequence(
+                        Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
+                        Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
+
+                        Commands.waitUntil(
+                                elevator.atSetpoint
+                                        .and(intakeArm.atSetpoint)).withTimeout(4),
+                        Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
+
+                        Commands.waitUntil(
+                                elevatorArm.atSetpoint
+                                        .and(elevator.atSetpoint)
+                                        .and(intakeArm.atSetpoint)).withTimeout(4),
+                        Commands.runOnce(() -> this.atGoal = runningGoal)
+                ).onlyWhile(() -> desiredGoal == runningGoal)
+        ).withName("DownwardsGoalChange");
+    }
+
+    private Command goalChange() {
+        return Commands.either(
+                upwardsGoalChange(),
+                downwardsGoalChange(),
+                desiresUpwardsMotion
+        );
     }
 
     @Override
@@ -217,7 +225,6 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsDynamic", desiredGoalIsDynamic);
         Logger.recordOutput(LogKey + "/Triggers/AllowedToChangeGoal", allowedToChangeGoal);
         Logger.recordOutput(LogKey + "/Triggers/DesiresUpwardsMotion", desiresUpwardsMotion);
-        Logger.recordOutput(LogKey + "/Triggers/DesiresDownwardsMotion", desiresDownwardsMotion);
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalChanged", desiredGoalChanged);
 
         Logger.recordOutput(
@@ -234,41 +241,50 @@ public class Superstructure extends VirtualSubsystem {
         return desiredGoal;
     }
 
-    public Command toInstantSuperstructureGoal(final Goal goal) {
+    public Command forceGoal(final Goal goal) {
+        return Commands.runOnce(
+                        () -> this.desiredGoal = goal,
+                        elevator, elevatorArm, intakeArm
+                )
+                .andThen(goalChange())
+                .withName("ForceGoal: " + goal);
+    }
+
+    public Command toInstantGoal(final Goal goal) {
         return Commands.runOnce(
                 () -> this.desiredGoal = goal,
                 elevator, elevatorArm, intakeArm
-        ).withName("ToInstantSuperstructureGoal: " + goal);
+        ).withName("ToInstantGoal: " + goal);
     }
 
-    public Command toSuperstructureGoal(final Goal goal) {
+    public Command toGoal(final Goal goal) {
         return Commands.runEnd(
                 () -> this.desiredGoal = goal,
-                () -> this.desiredGoal = Superstructure.Goal.STOW,
+                () -> this.desiredGoal = Goal.STOW,
                 elevator, elevatorArm, intakeArm
-        ).withName("ToSuperstructureGoal: " + goal);
+        ).withName("ToGoal: " + goal);
     }
 
-    public Command toSuperstructureGoal(final Supplier<Goal> goal) {
+    public Command toGoal(final Supplier<Goal> goal) {
         return Commands.runEnd(
                 () -> this.desiredGoal = goal.get(),
-                () -> this.desiredGoal = Superstructure.Goal.STOW,
+                () -> this.desiredGoal = Goal.STOW,
                 elevator, elevatorArm, intakeArm
-        ).withName("ToSuperstructureGoal");
+        ).withName("ToGoal");
     }
 
-    public Command runSuperstructureGoal(final Goal goal) {
+    public Command runGoal(final Goal goal) {
         return Commands.run(
                 () -> this.desiredGoal = goal,
                 elevator, elevatorArm, intakeArm
-        ).withName("RunSuperstructureGoal: " + goal);
+        ).withName("RunGoal: " + goal);
     }
 
-    public Command runSuperstructureGoal(final Supplier<Goal> goalSupplier) {
+    public Command runGoal(final Supplier<Goal> goalSupplier) {
         return Commands.run(
                 () -> this.desiredGoal = goalSupplier.get(),
                 elevator, elevatorArm, intakeArm
-        ).withName("RunSuperstructureGoal");
+        ).withName("RunGoal");
     }
 
     public Set<Subsystem> getRequirements() {

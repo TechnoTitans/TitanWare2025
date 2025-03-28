@@ -97,7 +97,7 @@ public class Autos {
                                                 .and(superstructure.desiredGoalNotStow)),
                                         intake.scoreCoral()
                                 ).withTimeout(3),
-                                superstructure.toSuperstructureGoal(
+                                superstructure.toGoal(
                                         ScoreCommands.Level.LevelMap.get(branch.level())
                                 )
                         ),
@@ -109,7 +109,7 @@ public class Autos {
 
     private Command intakeCoralFromHP() {
         return Commands.parallel(
-                superstructure.toSuperstructureGoal(Superstructure.Goal.HP),
+                superstructure.toGoal(Superstructure.Goal.HP),
                 intake.intakeCoralHP().asProxy(),
                 swerve.drive(
                         () -> 0.5,
@@ -151,7 +151,7 @@ public class Autos {
         routine.active().onTrue(runStartingTrajectory(cage4Reef2));
 
         cage4Reef2.active().whileTrue(
-                superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_L4)
+                superstructure.runGoal(Superstructure.Goal.ALIGN_L4)
         );
 
         cage4Reef2.done().onTrue(
@@ -166,7 +166,7 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(),
                         leftHPToReef1Left.cmd()
-                                .alongWith(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.ALIGN_L4))
+                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
         );
 
@@ -195,7 +195,7 @@ public class Autos {
         routine.active().onTrue(runStartingTrajectory(cage2Reef4));
 
         cage2Reef4.active().whileTrue(
-                superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_L4)
+                superstructure.runGoal(Superstructure.Goal.ALIGN_L4)
         );
 
         cage2Reef4.done().onTrue(
@@ -210,7 +210,7 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(),
                         rightHPToReef5.cmd()
-                                .alongWith(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.ALIGN_L4))
+                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
         );
 
@@ -241,7 +241,7 @@ public class Autos {
         routine.active().onTrue(runStartingTrajectory(startToReef));
 
         startToReef.active().whileTrue(
-                superstructure.runSuperstructureGoal(Superstructure.Goal.ALIGN_L4)
+                superstructure.runGoal(Superstructure.Goal.ALIGN_L4)
         );
 
         startToReef.done().onTrue(
@@ -256,7 +256,7 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(),
                         firstRightHPToReef5.cmd()
-                                .alongWith(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.ALIGN_L4))
+                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
         );
 
@@ -272,7 +272,7 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(),
                         secondRightHPToReef5.cmd()
-                                .alongWith(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.ALIGN_L4))
+                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
         );
 

@@ -5,7 +5,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -316,26 +315,26 @@ public class Robot extends LoggedRobot {
 
         driverController.povDown().onTrue(
                 Commands.sequence(
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L2).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L3).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L4).withTimeout(2.5),
-                        superstructure.runSuperstructureGoal(Superstructure.Goal.L1).withTimeout(2.5),
-                        superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW)
+                        superstructure.runGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L2).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L3).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L4).withTimeout(2.5),
+                        superstructure.runGoal(Superstructure.Goal.L1).withTimeout(2.5),
+                        superstructure.toInstantGoal(Superstructure.Goal.STOW)
                 )
         );
     }
@@ -357,7 +356,7 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
-        teleopEnabled.onTrue(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.STOW));
+        teleopEnabled.onTrue(superstructure.forceGoal(Superstructure.Goal.STOW));
     }
 
     public void configureAutos() {
@@ -387,13 +386,13 @@ public class Robot extends LoggedRobot {
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.FAST),
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
-                ));
+                ).withName("SwerveSpeedFast"));
 
         this.driverController.leftBumper(teleopEventLoop)
                 .whileTrue(Commands.startEnd(
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.SLOW),
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
-                ));
+                ).withName("SwerveSpeedSlow"));
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
@@ -410,16 +409,16 @@ public class Robot extends LoggedRobot {
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
-                .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
+                .onFalse(superstructure.toInstantGoal(Superstructure.Goal.CLIMB_DOWN));
 
         this.coController.rightBumper(teleopEventLoop)
-                .whileTrue(superstructure.runSuperstructureGoal(Superstructure.Goal.CLIMB))
-                .onFalse(superstructure.toInstantSuperstructureGoal(Superstructure.Goal.CLIMB_DOWN));
+                .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))
+                .onFalse(superstructure.toInstantGoal(Superstructure.Goal.CLIMB_DOWN));
 
         this.coController.leftBumper(teleopEventLoop).whileTrue(intake.scoreAlgae());
 
         this.coController.start(teleopEventLoop)
-                .whileTrue(superstructure.toSuperstructureGoal(Superstructure.Goal.CLIMB));
+                .whileTrue(superstructure.toGoal(Superstructure.Goal.CLIMB));
 
         this.coController.rightTrigger(0.5, teleopEventLoop)
                 .negate()
@@ -432,7 +431,7 @@ public class Robot extends LoggedRobot {
                 .onFalse(scoreCommands.scoreProcessor());
 
         this.coController.leftTrigger(0.5, teleopEventLoop)
-                .whileTrue(superstructure.toSuperstructureGoal(Superstructure.Goal.HP)
+                .whileTrue(superstructure.toGoal(Superstructure.Goal.HP)
                         .alongWith(intake.intakeCoralHP())
                 );
 
