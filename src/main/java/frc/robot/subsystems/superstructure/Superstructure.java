@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
+import frc.robot.utils.logging.Tracer;
 import frc.robot.utils.solver.SuperstructureSolver;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
@@ -215,6 +216,8 @@ public class Superstructure extends VirtualSubsystem {
 
     @Override
     public void periodic() {
+        Tracer.trace("Superstructure");
+
         eventLoop.poll();
 
         Logger.recordOutput(LogKey + "/RunningGoal", runningGoal.toString());
@@ -244,6 +247,8 @@ public class Superstructure extends VirtualSubsystem {
                         intakeArm.getPivotPosition()
                 )
         );
+
+        Tracer.stop();
     }
 
     public Goal getDesiredSuperstructureGoal() {

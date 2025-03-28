@@ -29,6 +29,7 @@ import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.logging.LoggedCommandScheduler;
+import frc.robot.utils.logging.Tracer;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import frc.robot.utils.teleop.ControllerUtils;
 import frc.robot.utils.teleop.SwerveSpeed;
@@ -235,6 +236,7 @@ public class Robot extends LoggedRobot {
         configureAutos();
         configureButtonBindings(teleopEventLoop);
 
+        Tracer.init();
         LoggedCommandScheduler.init(CommandScheduler.getInstance());
 
         SignalLogger.enableAutoLogging(true);
@@ -248,9 +250,19 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotPeriodic() {
+        Tracer.trace("robotPeriodic");
+
+        Tracer.trace("setCurrentThreadPriority");
         Threads.setCurrentThreadPriority(true, 99);
+        Tracer.stop();
+
+        Tracer.trace("CommandScheduler.run");
         CommandScheduler.getInstance().run();
+        Tracer.stop();
+
+        Tracer.trace("VirtualSubsystem.run");
         VirtualSubsystem.run();
+        Tracer.stop();
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
@@ -259,6 +271,9 @@ public class Robot extends LoggedRobot {
 
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
         Threads.setCurrentThreadPriority(false, 10);
+
+        Tracer.stop();
+        Tracer.periodic();
     }
 
     @Override

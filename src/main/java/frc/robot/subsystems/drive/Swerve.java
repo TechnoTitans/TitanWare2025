@@ -38,6 +38,7 @@ import frc.robot.subsystems.drive.controllers.HolonomicDriveController;
 import frc.robot.subsystems.gyro.Gyro;
 import frc.robot.utils.gyro.GyroUtils;
 import frc.robot.utils.logging.LogUtils;
+import frc.robot.utils.logging.Tracer;
 import frc.robot.utils.teleop.ControllerUtils;
 import frc.robot.utils.teleop.SwerveSpeed;
 import org.littletonrobotics.junction.Logger;
@@ -189,6 +190,8 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic() {
+        Tracer.trace("Swerve");
+
         final double swervePeriodicUpdateStart = RobotController.getFPGATime();
         try {
             signalQueueReadWriteLock.writeLock().lock();
@@ -288,6 +291,8 @@ public class Swerve extends SubsystemBase {
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - swervePeriodicUpdateStart)
         );
+
+        Tracer.stop();
     }
 
     public SwerveDriveKinematics getKinematics() {

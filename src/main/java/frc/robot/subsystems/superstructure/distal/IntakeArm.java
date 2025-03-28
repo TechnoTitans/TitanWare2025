@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.logging.LogUtils;
+import frc.robot.utils.logging.Tracer;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Consumer;
@@ -121,6 +122,8 @@ public class IntakeArm extends SubsystemBase {
 
     @Override
     public void periodic() {
+        Tracer.trace("IntakeArm");
+
         final double intakePeriodicUpdateStart = RobotController.getFPGATime();
 
         intakeArmIO.updateInputs(inputs);
@@ -157,6 +160,8 @@ public class IntakeArm extends SubsystemBase {
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - intakePeriodicUpdateStart)
         );
+
+        Tracer.stop();
     }
 
     public boolean atGoal(final Goal goal) {

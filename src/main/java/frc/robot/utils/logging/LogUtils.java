@@ -14,6 +14,9 @@ public class LogUtils {
     public static double microsecondsToMilliseconds(final double microseconds) {
         return microseconds * MICRO_TO_MILLI;
     }
+    public static double millisecondsToMicroseconds(final double milliseconds) {
+        return milliseconds / MICRO_TO_MILLI;
+    }
 
     public static void serializePhotonPipelineResults(
             final LogTable logTable,

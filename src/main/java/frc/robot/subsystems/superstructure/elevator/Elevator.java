@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.logging.LogUtils;
+import frc.robot.utils.logging.Tracer;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
@@ -144,6 +145,8 @@ public class Elevator extends SubsystemBase {
 
     @Override
     public void periodic() {
+        Tracer.trace("Elevator");
+
         final double elevatorPeriodicUpdateStart = RobotController.getFPGATime();
 
         elevatorIO.updateInputs(inputs);
@@ -170,6 +173,8 @@ public class Elevator extends SubsystemBase {
                 LogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - elevatorPeriodicUpdateStart)
         );
+
+        Tracer.stop();
     }
 
     public boolean atGoal(final Goal goal) {
