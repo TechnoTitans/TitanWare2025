@@ -90,7 +90,7 @@ public class Superstructure extends VirtualSubsystem {
     private final ElevatorArm elevatorArm;
     private final IntakeArm intakeArm;
 
-    private Goal desiredGoal = Superstructure.Goal.STOW;
+    private Goal desiredGoal = Goal.STOW;
     private Goal runningGoal = desiredGoal;
     private Goal atGoal = desiredGoal;
 
@@ -103,6 +103,7 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger allowedToChangeGoal;
 
     private final Trigger desiresUpwardsMotion;
+    private final Trigger desiresDownwardsMotion;
     private final Trigger desiredGoalChanged;
 
     public final Trigger desiredGoalNotStow;
@@ -142,8 +143,12 @@ public class Superstructure extends VirtualSubsystem {
 
             return desiredTranslation.getY() >= currentTranslation.getY();
         });
+        this.desiresDownwardsMotion = desiresUpwardsMotion.negate();
 
-        desiredGoalChanged.and(allowedToChangeGoal).onTrue(goalChange());
+        desiredGoalChanged.and(allowedToChangeGoal).and(desiresUpwardsMotion)
+                .onTrue(upwardsGoalChange());
+        desiredGoalChanged.and(allowedToChangeGoal).and(desiresDownwardsMotion)
+                .onTrue(downwardsGoalChange());
 
         elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
         elevator.setGoal(desiredGoal.elevatorGoal);
@@ -198,11 +203,14 @@ public class Superstructure extends VirtualSubsystem {
     }
 
     private Command goalChange() {
-        return Commands.either(
-                upwardsGoalChange(),
-                downwardsGoalChange(),
-                desiresUpwardsMotion
-        );
+        return Commands.parallel(
+                upwardsGoalChange()
+                        .onlyIf(desiresUpwardsMotion)
+                        .onlyWhile(desiresUpwardsMotion),
+                downwardsGoalChange()
+                        .onlyIf(desiresDownwardsMotion)
+                        .onlyWhile(desiresDownwardsMotion)
+        ).withName("GoalChange");
     }
 
     @Override
@@ -225,6 +233,7 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsDynamic", desiredGoalIsDynamic);
         Logger.recordOutput(LogKey + "/Triggers/AllowedToChangeGoal", allowedToChangeGoal);
         Logger.recordOutput(LogKey + "/Triggers/DesiresUpwardsMotion", desiresUpwardsMotion);
+        Logger.recordOutput(LogKey + "/Triggers/DesiresDownwardsMotion", desiresDownwardsMotion);
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalChanged", desiredGoalChanged);
 
         Logger.recordOutput(

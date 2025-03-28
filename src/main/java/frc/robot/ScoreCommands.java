@@ -211,7 +211,8 @@ public class ScoreCommands {
                         Commands.sequence(
                                 superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                         .onlyIf(superstructure.unsafeToDrive),
-                                Commands.waitUntil(atAlignReef).onlyIf(shouldUseEarlyAlign),
+                                Commands.waitUntil(atAlignReef)
+                                        .onlyIf(shouldUseEarlyAlign.and(atReef.negate())),
                                 Commands.deadline(
                                         Commands.sequence(
                                                 Commands.waitUntil(atReef),
@@ -220,11 +221,7 @@ public class ScoreCommands {
                                                         .withTimeout(2),
                                                 intake.scoreCoral()
                                         ),
-                                        superstructure.toGoal(superstructureGoalContainer::get),
-                                        Commands.sequence(
-                                                Commands.waitUntil(atReef),
-                                                swerve.runWheelXCommand().asProxy()
-                                        )
+                                        superstructure.toGoal(superstructureGoalContainer::get)
                                 )
                         ),
                         Commands.either(
@@ -233,13 +230,14 @@ public class ScoreCommands {
                                                 .onlyIf(atReef.negate())
                                                 .onlyWhile(shouldUseEarlyAlign),
                                         swerve.runToPose(scoringPoseSupplier)
+                                                .until(atReef),
+                                        swerve.runWheelXCommand()
                                 ),
                                 swerve.runToPose(scoringPoseSupplier)
-                                        .onlyWhile(shouldUseEarlyAlign.negate()),
+                                        .onlyWhile(shouldUseEarlyAlign.negate())
+                                        .andThen(swerve.runWheelXCommand()),
                                 shouldUseEarlyAlign
                         )
-                                .withName("DriveScoreAtFixedPosition")
-                                .asProxy()
                 )
         ).withName("ScoreAtFixedPosition");
     }
