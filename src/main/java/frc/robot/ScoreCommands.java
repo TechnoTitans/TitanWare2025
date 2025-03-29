@@ -486,20 +486,27 @@ public class ScoreCommands {
 
     public Command scoreNet() {
         final Container<Superstructure.Goal> superstructureGoalContainer = Container.empty();
-        final Consumer<Superstructure.Goal> setSuperstructureGoal = (goal) -> superstructureGoalContainer.value = goal;
+        final Consumer<Superstructure.Goal> setSuperstructureGoal =
+                (goal) -> superstructureGoalContainer.value = goal;
 
         return Commands.sequence(
                 Commands.runOnce(() -> setSuperstructureGoal.accept(Superstructure.Goal.ALIGN_NET)),
                 Commands.deadline(
                         Commands.sequence(
-                                swerve.driveToPose(FieldConstants::getScoringBargeCenterCage).asProxy(),
+//                                swerve.driveToPose(FieldConstants::getScoringBargeCenterCage).asProxy(),
                                 Commands.runOnce(() -> setSuperstructureGoal.accept(Superstructure.Goal.NET)),
-                                Commands.waitUntil(superstructure.atSuperstructureSetpoint).withTimeout(3),
-                                intake.scoreAlgae()
+                                Commands.waitUntil(superstructure.atSuperstructureSetpoint
+                                                .and(() -> superstructure.getAtGoal() == Superstructure.Goal.NET))
+                                        .withTimeout(3),
+                                Commands.parallel(
+                                        intake.shootAlgae(),
+                                        Commands.runOnce(() -> setSuperstructureGoal.accept(Superstructure.Goal.SCORE_NET))
+                                ),
+                                Commands.waitSeconds(0.5)
                         ),
                         superstructure.toGoal(superstructureGoalContainer::get),
                         Commands.sequence(
-                                Commands.waitUntil(swerve.atHolonomicDrivePose),
+//                                Commands.waitUntil(swerve.atHolonomicDrivePose),
                                 swerve.runWheelXCommand().asProxy()
                         )
                 )

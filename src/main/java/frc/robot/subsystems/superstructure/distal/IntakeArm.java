@@ -24,7 +24,7 @@ import static edu.wpi.first.units.Units.*;
 
 public class IntakeArm extends SubsystemBase {
     protected static final String LogKey = "IntakeArm";
-    private static final double PositionToleranceRots = 0.015;
+    private static final double PositionToleranceRots = 0.03;
     private static final double VelocityToleranceRotsPerSec = 0.015;
 
     private final IntakeArmIO intakeArmIO;
@@ -80,7 +80,7 @@ public class IntakeArm extends SubsystemBase {
         NET(-0.15),
         L4(-0.1851),
         L3(-0.1812),
-        L2(-0.12354),
+        L2(-0.13),
         L1(-0.052);
 
         private final double pivotPositionGoalRots;
@@ -131,6 +131,7 @@ public class IntakeArm extends SubsystemBase {
                     || currentGoal == Goal.LOWER_ALGAE
                     || currentGoal == Goal.UPPER_ALGAE
                     || desiredGoal == Goal.PROCESSOR
+                    || desiredGoal == Goal.NET
             ) {
                 intakeArmIO.setMotionMagicCruiseVelocity(0.45);
             } else {

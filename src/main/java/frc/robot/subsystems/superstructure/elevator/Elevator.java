@@ -86,7 +86,7 @@ public class Elevator extends SubsystemBase {
         LOWER_ALGAE(0.183),
         L4(0.99177),
         L3(0.4387),
-        L2(0.031794),
+        L2(0.12),
         L1(0.01),
         NET(1);
 

@@ -47,7 +47,7 @@ public class PhotonVision extends VirtualSubsystem {
         //TODO: Change apriltag layout depending on the field setup
         try {
             apriltagFieldLayout = new AprilTagFieldLayout(
-                    Filesystem.getDeployDirectory().getPath() + "/2025-reefscape-walton.json");
+                    Filesystem.getDeployDirectory().getPath() + "/2025-reefscape-reef.json");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

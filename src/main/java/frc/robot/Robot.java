@@ -257,11 +257,6 @@ public class Robot extends LoggedRobot {
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
 
-        Logger.recordOutput("thing", FieldConstants.getReefCenterPoses()
-                .get(FieldConstants.Reef.Face.ONE)
-                .getTranslation()
-                .getDistance(swerve.getPose().getTranslation()));
-
         LoggedCommandScheduler.periodic();
 
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
@@ -298,14 +293,14 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-        driverController.a(testEventLoop).whileTrue(
-                swerve.wheelRadiusCharacterization()
-        );
-//
-//        driverController.y(testEventLoop).whileTrue(
-//                elevator.voltageSysIdCommand()
-//                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+//        driverController.a(testEventLoop).whileTrue(
+//                swerve.wheelRadiusCharacterization()
 //        );
+
+        driverController.y(testEventLoop).whileTrue(
+                intakeArm.pivotVoltageSysIdCommand()
+                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+        );
 
 //        driverController.y(testEventLoop).whileTrue(
 //                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)

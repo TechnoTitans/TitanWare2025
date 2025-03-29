@@ -65,16 +65,16 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         pivotConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.2154)
-                .withKG(0.21)
+                .withKS(0.28234)
+                .withKG(0.13263)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(5.2702)
-                .withKA(0.096685)
-                .withKP(25.606)
+                .withKV(5.2257)
+                .withKA(0.20274)
+                .withKP(19.476)
                 .withKD(5);
         motionMagicConfigs.MotionMagicCruiseVelocity = 0;
-        motionMagicConfigs.MotionMagicExpo_kV = 5.2702;
-        motionMagicConfigs.MotionMagicExpo_kA = 0.096685;
+        motionMagicConfigs.MotionMagicExpo_kV = 5.2257;
+        motionMagicConfigs.MotionMagicExpo_kA = 0.20274;
         pivotConfiguration.MotionMagic = motionMagicConfigs;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -95,7 +95,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotMotor.getConfigurator().apply(pivotConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
-                100,
+                250,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

@@ -80,8 +80,8 @@ public class ElevatorArm extends SubsystemBase {
         UPPER_ALGAE(0.1274),
         LOWER_ALGAE(0.0904),
         L4(0.15576),
-        L3(0.1264),
-        L2(0.10596),
+        L3(0.132),
+        L2(0.1),
         L1(0.0214),
         CLIMB(0.184),
         CLIMB_DOWN(-7.5);

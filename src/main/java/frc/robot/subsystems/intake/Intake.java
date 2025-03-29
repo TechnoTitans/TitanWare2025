@@ -252,6 +252,18 @@ public class Intake extends SubsystemBase {
                 .withName("ScoreAlgae");
     }
 
+    public Command shootAlgae() {
+        return Commands.sequence(
+                        runOnce(() -> this.algaeOuttaking = true),
+                        toInstantRollerVoltage(12),
+                        Commands.waitUntil(isCurrentAboveAlgaeThreshold.negate()).withTimeout(1.5),
+                        Commands.waitSeconds(0.1),
+                        instantStopCommand()
+                )
+                .finallyDo(() -> this.algaeOuttaking = false)
+                .withName("ShootAlgae");
+    }
+
     private Command toInstantRollerVoltage(final double volts) {
         return runOnce(
                 () -> {

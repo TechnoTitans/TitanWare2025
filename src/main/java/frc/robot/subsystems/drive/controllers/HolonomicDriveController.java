@@ -94,10 +94,10 @@ public class HolonomicDriveController {
             final ChassisSpeeds speeds = fieldRelativeSpeedsSupplier.get();
 
             return delta.getTranslation().getNorm() < tolerance.translationToleranceMeters
-                    && delta.getRotation().getRadians() < tolerance.rotationTolerance.getRadians()
-                    && Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond)
-                        < tolerance.translationVelocityToleranceMeterPerSec
-                    && Math.abs(speeds.omegaRadiansPerSecond) < tolerance.rotationVelocityToleranceRadsPerSec;
+                    && delta.getRotation().getRadians() < tolerance.rotationTolerance.getRadians();
+//                    && Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond)
+//                        < tolerance.translationVelocityToleranceMeterPerSec
+//                    && Math.abs(speeds.omegaRadiansPerSecond) < tolerance.rotationVelocityToleranceRadsPerSec;
         });
     }
 
