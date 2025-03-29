@@ -12,6 +12,7 @@ import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
 import frc.robot.subsystems.vision.estimator.VisionResult;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.gyro.GyroUtils;
+import frc.robot.utils.logging.Tracer;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -95,6 +96,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
     @SuppressWarnings("DuplicatedCode")
     @Override
     public void periodic(final Function<Double, Optional<Pose2d>> poseAtTimestamp) {
+        Tracer.trace("SimVisionRunner");
         if (ToClose.hasClosed()) {
             return;
         }
@@ -102,6 +104,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
         final Pose2d visionIndependentPose =
                 visionIndependentOdometry.update(swerve.getYaw(), swerve.getModulePositions());
 
+        Tracer.trace("VisionSystemSim");
         visionSystemSim.update(
                 GyroUtils.robotPose2dToPose3dWithGyro(
                         visionIndependentPose,
@@ -112,6 +115,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
                         )
                 )
         );
+        Tracer.stop();
 
         for (
                 final Map.Entry<VisionIOApriltagsSim, VisionIO.VisionIOInputs>
@@ -146,6 +150,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
                 );
             }
         }
+        Tracer.stop();
     }
 
     /**

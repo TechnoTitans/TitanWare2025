@@ -14,6 +14,7 @@ import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
@@ -250,9 +251,9 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotPeriodic() {
-        Tracer.trace("robotPeriodic");
+        Tracer.trace("robotPeriodic", 10);
 
-        Tracer.trace("setCurrentThreadPriority");
+        Tracer.trace("setCurrentThreadPriority(true, 99)");
         Threads.setCurrentThreadPriority(true, 99);
         Tracer.stop();
 
@@ -409,16 +410,16 @@ public class Robot extends LoggedRobot {
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ).withName("SwerveSpeedSlow"));
 
-        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
+        this.driverController.b(teleopEventLoop).whileTrue(
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
 
-        this.driverController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
+        this.driverController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.scoreAtFixedPosition(() -> new ScoreCommands.ScorePosition(FieldConstants.Reef.Side.LEFT, ScoreCommands.Level.L4)));
 
         this.driverController.y(teleopEventLoop).whileTrue(scoreCommands.descoreUpperAlgae());
 
-        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
+//        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
         this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreNet());
 

@@ -19,6 +19,7 @@ import frc.robot.subsystems.vision.estimator.VisionResult;
 import frc.robot.utils.PoseUtils;
 import frc.robot.utils.gyro.GyroUtils;
 import frc.robot.utils.logging.LogUtils;
+import frc.robot.utils.logging.Tracer;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.simulation.VisionSystemSim;
@@ -279,8 +280,6 @@ public class PhotonVision extends VirtualSubsystem {
     }
 
     public void updateOutputs() {
-        Logger.recordOutput("LastPoseResetTimestampSeconds", this.lastPoseResetTimestampSeconds);
-
         for (
                 final Map.Entry<VisionIO, VisionResult>
                         visionUpdateEntry : lastVisionUpdateMap.entrySet()
@@ -323,21 +322,34 @@ public class PhotonVision extends VirtualSubsystem {
             Logger.recordOutput(logKey + "/TagPose3ds", apriltagPose3ds);
             Logger.recordOutput(logKey + "/TagPose2ds", apriltagPose2ds);
         }
+
+        Logger.recordOutput(PhotonLogKey + "/LastPoseResetTimestampSeconds", this.lastPoseResetTimestampSeconds);
     }
 
     @Override
     public void periodic() {
+        Tracer.trace("PhotonVision");
+
         final double visionIOPeriodicStart = RobotController.getFPGATime();
+        Tracer.trace("PhotonVisionRunner");
         runner.periodic(swerve::getPose);
+        Tracer.stop();
 
         // Update and log PhotonVision results
+        Tracer.trace("PhotonVision.update");
         update();
+        Tracer.stop();
+
+        Tracer.trace("PhotonVision.updateOutputs");
         updateOutputs();
+        Tracer.stop();
 
         Logger.recordOutput(
                 PhotonLogKey + "/PeriodicIOPeriodMs",
                 LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - visionIOPeriodicStart)
         );
+
+        Tracer.stop();
     }
 
     public void resetPose(final Pose2d robotPose, final Rotation2d gyroYaw) {

@@ -145,7 +145,7 @@ public class Elevator extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Tracer.trace("Elevator");
+        Tracer.trace("Elevator", 2);
 
         final double elevatorPeriodicUpdateStart = RobotController.getFPGATime();
 

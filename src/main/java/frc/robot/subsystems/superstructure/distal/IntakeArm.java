@@ -122,7 +122,7 @@ public class IntakeArm extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Tracer.trace("IntakeArm");
+        Tracer.trace("IntakeArm", 2);
 
         final double intakePeriodicUpdateStart = RobotController.getFPGATime();
 

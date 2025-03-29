@@ -216,7 +216,7 @@ public class Superstructure extends VirtualSubsystem {
 
     @Override
     public void periodic() {
-        Tracer.trace("Superstructure");
+        Tracer.trace("Superstructure", 0.5);
 
         eventLoop.poll();
 

@@ -190,7 +190,7 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic() {
-        Tracer.trace("Swerve");
+        Tracer.trace("Swerve", 3);
 
         final double swervePeriodicUpdateStart = RobotController.getFPGATime();
         try {
