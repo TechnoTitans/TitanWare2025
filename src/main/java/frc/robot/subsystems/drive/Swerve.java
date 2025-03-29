@@ -170,14 +170,23 @@ public class Swerve extends SubsystemBase {
                         Config.maxAngularVelocityRadsPerSec(),
                         Config.maxAngularAccelerationRadsPerSecSquared()
                 ),
-                new HolonomicDriveController.Tolerance(0.05, Rotation2d.fromDegrees(4))
+                new HolonomicDriveController.Tolerance(
+                        0.05,
+                        0.1,
+                        Rotation2d.fromDegrees(4),
+                        Math.PI / 6
+                )
         );
-        this.atHolonomicDrivePose = holonomicDriveController.atPose(this::getPose, () -> holonomicPoseTarget);
+        this.atHolonomicDrivePose = holonomicDriveController.atPose(
+                this::getPose,
+                this::getFieldRelativeSpeeds,
+                () -> holonomicPoseTarget
+        );
 
         this.choreoController = new HolonomicChoreoController(
-                new PIDController(5, 0, 0),
-                new PIDController(5, 0, 0),
-                new PIDController(5, 0, 0)
+                new PIDController(4, 0, 0),
+                new PIDController(4, 0, 0),
+                new PIDController(4, 0, 0)
         );
 
         this.linearVoltageSysIdRoutine = makeLinearVoltageSysIdRoutine();
@@ -491,7 +500,7 @@ public class Swerve extends SubsystemBase {
         }).withName("TeleopDrive");
     }
 
-    public Command teleopFacingAngleCommand(
+    public Command teleopFacingAngle(
             final DoubleSupplier xSpeedSupplier,
             final DoubleSupplier ySpeedSupplier,
             final Supplier<Rotation2d> rotationTargetSupplier
@@ -728,7 +737,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
-        return holonomicDriveController.atPose(this::getPose, targetPoseSupplier);
+        return holonomicDriveController.atPose(this::getPose, this::getFieldRelativeSpeeds, targetPoseSupplier);
     }
 
     /**

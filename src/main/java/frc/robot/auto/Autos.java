@@ -4,10 +4,12 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.ScoreCommands;
 import frc.robot.constants.FieldConstants;
@@ -19,6 +21,8 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.PhotonVision;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.function.Supplier;
 
 // C:\Users\TechnoTitans\AppData\Local\Choreo\choreo-cli.exe --chor C:\Users\TechnoTitans\Documents\Repos\TitanWare2025\src\main\deploy\choreo\choreo.chor --all-trajectory --generate
 public class Autos {
@@ -77,47 +81,43 @@ public class Autos {
     }
 
     private Command scoreAtLevel(final ReefState.Branch branch) {
-        return Commands.parallel(
-                Commands.sequence(
-                        swerve.driveToPose(() -> {
-                            final Pose2d scoringPose = FieldConstants.getBranchScoringPositions()
-                                    .get(branch.face())
-                                    .get(branch.side())
-                                    .get(branch.level());
+        final Supplier<Pose2d> scoringPoseSupplier = () -> {
+            final Pose2d scoringPose = FieldConstants.getBranchScoringPositions()
+                    .get(branch.face())
+                    .get(branch.side())
+                    .get(branch.level());
 
-                            return scoreCommands.offsetScoringPoseWithCoralPosition(scoringPose);
-                        }),
-                        swerve.wheelXCommand()
-                ),
+            return scoreCommands.offsetScoringPoseWithCoralPosition(scoringPose);
+        };
+
+        final Superstructure.Goal goal = ScoreCommands.Level.LevelMap.get(branch.level());
+        final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
+
+        return Commands.deadline(
                 Commands.sequence(
-                        Commands.waitUntil(swerve.atHolonomicDrivePose).withTimeout(5),
+                        Commands.waitUntil(atReef),
                         Commands.deadline(
                                 Commands.sequence(
                                         Commands.waitUntil(superstructure.atSuperstructureSetpoint
-                                                .and(superstructure.desiredGoalNotStow)),
+                                                        .and(() -> superstructure.getAtGoal() == goal))
+                                                .withTimeout(2),
                                         intake.scoreCoral()
-                                ).withTimeout(3),
-                                superstructure.toGoal(
-                                        ScoreCommands.Level.LevelMap.get(branch.level())
-                                )
+                                ),
+                                superstructure.toGoal(goal)
                         ),
-                        Commands.waitUntil(superstructure.atSuperstructureSetpoint)
+                        Commands.waitUntil(superstructure.unsafeToDrive.negate())
                                 .withTimeout(0.8)
-                )
+                ),
+                swerve.driveToPose(scoringPoseSupplier)
+                        .andThen(swerve.runWheelXCommand())
         );
     }
 
-    private Command intakeCoralFromHP() {
+    private Command intakeCoralFromHP(final ScoreCommands.CoralStation coralStation) {
         return Commands.parallel(
                 superstructure.toGoal(Superstructure.Goal.HP),
                 intake.intakeCoralHP().asProxy(),
-                swerve.drive(
-                        () -> 0.5,
-                        () -> 0,
-                        () -> 0,
-                        false,
-                        false
-                )
+                swerve.runToPose(() -> ScoreCommands.CoralStation.getCoralStation(coralStation))
         ).until(gamepieceState.hasCoral);
     }
 
@@ -164,7 +164,7 @@ public class Autos {
 
         reef2ToLeftHP.done().onTrue(
                 Commands.sequence(
-                        intakeCoralFromHP(),
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
                         leftHPToReef1Left.cmd()
                                 .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
@@ -177,7 +177,7 @@ public class Autos {
                         moveEndOfAuto.cmd()
                 )
         );
-        
+
         moveEndOfAuto.done().onTrue(
                 swerve.runWheelXCommand()
         );
@@ -208,7 +208,7 @@ public class Autos {
 
         reef4ToRightHP.done().onTrue(
                 Commands.sequence(
-                        intakeCoralFromHP(),
+                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
                         rightHPToReef5.cmd()
                                 .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
@@ -254,7 +254,7 @@ public class Autos {
 
         reef4ToRightHP.done().onTrue(
                 Commands.sequence(
-                        intakeCoralFromHP(),
+                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
                         firstRightHPToReef5.cmd()
                                 .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
@@ -270,7 +270,7 @@ public class Autos {
 
         reef5ToRightHP.done().onTrue(
                 Commands.sequence(
-                        intakeCoralFromHP(),
+                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
                         secondRightHPToReef5.cmd()
                                 .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
@@ -279,6 +279,78 @@ public class Autos {
         secondRightHPToReef5.done().onTrue(
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine threePieceCage3ToReef2And1() {
+        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage3ToReef2And1");
+        final AutoTrajectory startToReef = routine.trajectory("Cage3Reef2");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory firstRightHPToReef5 = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef1ToLeftHP");
+        final AutoTrajectory secondRightHPToReef5 = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
+
+        routine.active().onTrue(runStartingTrajectory(startToReef));
+
+        startToReef.active().whileTrue(
+                superstructure.runGoal(Superstructure.Goal.ALIGN_L4)
+        );
+
+        startToReef.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHP.cmd()
+                )
+        );
+
+        reef4ToRightHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        Commands.parallel(
+                                firstRightHPToReef5.cmd(),
+                                Commands.sequence(
+                                        Commands.waitSeconds(0.75),
+                                        superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4)
+                                )
+                        )
+                )
+        );
+
+        firstRightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef5ToRightHP.cmd()
+                )
+        );
+
+        reef5ToRightHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        Commands.parallel(
+                                secondRightHPToReef5.cmd(),
+                                Commands.sequence(
+                                        Commands.waitSeconds(0.75),
+                                        superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4)
+                                )
+                        )
+                )
+        );
+
+        secondRightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.RIGHT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
                         moveEndOfAuto.cmd()
                 )

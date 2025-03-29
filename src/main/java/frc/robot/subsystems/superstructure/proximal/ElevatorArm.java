@@ -72,18 +72,18 @@ public class ElevatorArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        STOW(Units.degreesToRotations(37)),
-        UPRIGHT(0.19),
-        HP(Units.degreesToRotations(35)),
+        STOW(Units.degreesToRotations(35)),
+        UPRIGHT(0.1844),
+        HP(Units.degreesToRotations(33)),
         ALGAE_GROUND(0),
-        PROCESSOR(Units.degreesToRotations(3)),
-        UPPER_ALGAE(0.133),
-        LOWER_ALGAE(0.096),
-        L4(0.159),
-        L3(0.132),
-        L2(0.099),
-        L1(0.027),
-        CLIMB(0.19),
+        PROCESSOR(Units.degreesToRotations(1)),
+        UPPER_ALGAE(0.1274),
+        LOWER_ALGAE(0.0904),
+        L4(0.15576),
+        L3(0.1264),
+        L2(0.10596),
+        L1(0.0214),
+        CLIMB(0.184),
         CLIMB_DOWN(-7.5);
 
         private final double pivotPositionGoalRots;

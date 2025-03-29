@@ -174,6 +174,8 @@ public class VisionPoseEstimator {
                             pipelineResult.getTargets()
                     )
             );
+        } else {
+            if (true) return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_AMBIGUOUS_NO_POSE);
         }
 
         final Optional<Pose2d> maybePose = poseAtTimestamp.apply(poseTimestamp);

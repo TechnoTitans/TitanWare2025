@@ -29,7 +29,7 @@ public class HardwareConstants {
             15,
             4,
             0,
-            6.18,
+            6.23878,
             Units.inchesToMeters(2) //TODO: measure drum
     );
 

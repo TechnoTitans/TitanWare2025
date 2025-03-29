@@ -8,6 +8,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,6 +25,8 @@ import org.littletonrobotics.junction.Logger;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,7 +45,13 @@ public class PhotonVision extends VirtualSubsystem {
 
     static {
         //TODO: Change apriltag layout depending on the field setup
-        apriltagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
+        try {
+            apriltagFieldLayout = new AprilTagFieldLayout(
+                    Filesystem.getDeployDirectory().getPath() + "/2025-reefscape-walton.json");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+//        apriltagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
         apriltagFieldLayout.setOrigin(AprilTagFieldLayout.OriginPosition.kBlueAllianceWallRightSide);
     }
 

@@ -15,9 +15,11 @@ public class FieldConstants {
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
     public static final Transform2d SCORING_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(10.5), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(9), 0, Rotation2d.kPi);
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(2.5), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(1.5), 0, Rotation2d.kPi);
+    public static final Transform2d HP_DISTANCE_OFFSET =
+            new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
     public static final Transform2d SCORING_BARGE_OFFSET =
             new Transform2d(-Units.inchesToMeters(40), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_DISTANCE_OFFSET =
@@ -71,8 +73,8 @@ public class FieldConstants {
                 BLUE_RIGHT_CENTER_FACE
         );
         public static final List<Pose2d> BLUE_PICKUP_CORAL_STATIONS_POSES = List.of(
-                BLUE_LEFT_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET),
-                BLUE_RIGHT_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET)
+                BLUE_LEFT_CENTER_FACE.transformBy(HP_DISTANCE_OFFSET),
+                BLUE_RIGHT_CENTER_FACE.transformBy(HP_DISTANCE_OFFSET)
         );
 
         public static final Pose2d RED_LEFT_CENTER_FACE = BLUE_LEFT_CENTER_FACE.relativeTo(RED_ORIGIN);
@@ -82,8 +84,8 @@ public class FieldConstants {
                 RED_RIGHT_CENTER_FACE
         );
         public static final List<Pose2d> RED_PICKUP_CORAL_STATIONS_POSES = List.of(
-                RED_LEFT_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET),
-                RED_RIGHT_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET)
+                RED_LEFT_CENTER_FACE.transformBy(HP_DISTANCE_OFFSET),
+                RED_RIGHT_CENTER_FACE.transformBy(HP_DISTANCE_OFFSET)
         );
     }
 

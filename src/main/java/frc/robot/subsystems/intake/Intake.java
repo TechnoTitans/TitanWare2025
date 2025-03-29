@@ -31,25 +31,28 @@ public class Intake extends SubsystemBase {
     private static final InterpolatingDoubleTreeMap coralTreeMap = new InterpolatingDoubleTreeMap();
 
     static {
-        //measure, actual
+        //raw, actual
         coralTreeMap.put(0.0, 0.0);
         coralTreeMap.put(0.021, Units.inchesToMeters(0.6));
         coralTreeMap.put(0.055, Units.inchesToMeters(1.3));
         coralTreeMap.put(0.075, Units.inchesToMeters(1.75));
         coralTreeMap.put(0.094, Units.inchesToMeters(2.45));
-        coralTreeMap.put(0.1, Units.inchesToMeters(2.75));
+        coralTreeMap.put(0.1, Units.inchesToMeters(2.5));
         coralTreeMap.put(0.11, Units.inchesToMeters(3.0));
         coralTreeMap.put(0.133, Units.inchesToMeters(3.7));
         coralTreeMap.put(0.155, Units.inchesToMeters(4.6));
         coralTreeMap.put(0.165, Units.inchesToMeters(5.0));
+        coralTreeMap.put(0.178, Units.inchesToMeters(5.5));
         coralTreeMap.put(0.18, Units.inchesToMeters(5.75));
         coralTreeMap.put(0.197, Units.inchesToMeters(6.25));
         coralTreeMap.put(0.207, Units.inchesToMeters(6.6));
-        coralTreeMap.put(0.23, Units.inchesToMeters(7.5));
+        coralTreeMap.put(0.229, Units.inchesToMeters(7.25));
         coralTreeMap.put(0.237, Units.inchesToMeters(7.75));
         coralTreeMap.put(0.246, Units.inchesToMeters(8.1));
+        coralTreeMap.put(0.268, Units.inchesToMeters(8.75));
         coralTreeMap.put(0.272, Units.inchesToMeters(9.0));
         coralTreeMap.put(0.28, Units.inchesToMeters(9.25));
+        coralTreeMap.put(0.294, Units.inchesToMeters(9.75));
         coralTreeMap.put(0.301, Units.inchesToMeters(10.2));
         coralTreeMap.put(0.321, Units.inchesToMeters(11.0));
         coralTreeMap.put(0.42, Units.inchesToMeters(15.5));
@@ -58,7 +61,7 @@ public class Intake extends SubsystemBase {
     protected static final String LogKey = "Intake";
     private static final double CoralRadiusFromODMeters = Units.inchesToMeters(4.5 / 2);
     private static final double CoralIntakeCenterDistanceMeters = Units.inchesToMeters(15.5 / 2);
-    private static final double NoCoralTOFReading = 0.216;
+    private static final double NoCoralTOFReading = 0.36;
     private static final double AlgaeDetectedCurrent = 25;
 
     private final IntakeIO intakeIO;

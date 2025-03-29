@@ -24,8 +24,8 @@ import static edu.wpi.first.units.Units.*;
 
 public class IntakeArm extends SubsystemBase {
     protected static final String LogKey = "IntakeArm";
-    private static final double PositionToleranceRots = 0.0075;
-    private static final double VelocityToleranceRotsPerSec = 0.01;
+    private static final double PositionToleranceRots = 0.015;
+    private static final double VelocityToleranceRotsPerSec = 0.015;
 
     private final IntakeArmIO intakeArmIO;
     private final IntakeArmIOInputsAutoLogged inputs;
@@ -78,9 +78,9 @@ public class IntakeArm extends SubsystemBase {
         PROCESSOR(-0.24),
         CLIMB(-0.348),
         NET(-0.15),
-        L4(-0.17),
-        L3(-0.174),
-        L2(-0.127),
+        L4(-0.1851),
+        L3(-0.1812),
+        L2(-0.12354),
         L1(-0.052);
 
         private final double pivotPositionGoalRots;

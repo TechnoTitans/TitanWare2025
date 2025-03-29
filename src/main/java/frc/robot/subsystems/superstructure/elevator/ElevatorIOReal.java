@@ -95,7 +95,7 @@ public class ElevatorIOReal implements ElevatorIO {
         followerMotor.getConfigurator().apply(motorConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
-                250,
+                100,
                 masterPosition,
                 masterVelocity,
                 masterVoltage,

@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -17,6 +18,7 @@ import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -24,6 +26,19 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class ScoreCommands {
+    public enum CoralStation {
+        LEFT,
+        RIGHT;
+
+        public static Pose2d getCoralStation(final CoralStation station) {
+            final List<Pose2d> pickupPoses = FieldConstants.getHPPickupPoses();
+            return switch (station) {
+                case LEFT -> pickupPoses.get(0);
+                case RIGHT -> pickupPoses.get(1);
+            };
+        }
+    }
+
     public enum Level {
         L1(Reef.Level.L1, Superstructure.Goal.L1),
         L2(Reef.Level.L2, Superstructure.Goal.L2),
@@ -119,7 +134,7 @@ public class ScoreCommands {
     ) {
         //noinspection SuspiciousNameCombination
         return Commands.parallel(
-                swerve.teleopFacingAngleCommand(
+                swerve.teleopFacingAngle(
                         leftStickYInput,
                         leftStickXInput,
                         () -> {
@@ -457,7 +472,7 @@ public class ScoreCommands {
                                         .withTimeout(3)
                                         .andThen(intake.scoreCoral()),
                                 Commands.defer(() -> superstructure
-                                                .toGoal(superstructure.getDesiredSuperstructureGoal()),
+                                                .toGoal(superstructure.getDesiredGoal()),
                                         superstructure.getRequirements()
                                 )
                         ),
@@ -536,7 +551,7 @@ public class ScoreCommands {
     ) {
         return Commands.parallel(
                 superstructure.runGoal(Superstructure.Goal.CLIMB),
-                swerve.teleopFacingAngleCommand(
+                swerve.teleopFacingAngle(
                         leftStickYInput,
                         leftStickXInput,
                         () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.k180deg

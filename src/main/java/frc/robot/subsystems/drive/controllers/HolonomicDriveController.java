@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.utils.control.DeltaTime;
+import frc.robot.utils.teleop.SwerveSpeed;
 
 import java.util.function.Supplier;
 
@@ -32,7 +33,12 @@ public class HolonomicDriveController {
     private TrapezoidProfile.State translationPreviousProfiledReference;
     private TrapezoidProfile.State rotationPreviousProfiledReference;
 
-    public record Tolerance(double translationToleranceMeters, Rotation2d rotationTolerance) {}
+    public record Tolerance(
+            double translationToleranceMeters,
+            double translationVelocityToleranceMeterPerSec,
+            Rotation2d rotationTolerance,
+            double rotationVelocityToleranceRadsPerSec
+    ) {}
     private final Tolerance tolerance;
 
     private double distance;
@@ -80,12 +86,18 @@ public class HolonomicDriveController {
 
     public Trigger atPose(
             final Supplier<Pose2d> currentPoseSupplier,
+            final Supplier<ChassisSpeeds> fieldRelativeSpeedsSupplier,
             final Supplier<Pose2d> targetPoseSupplier
     ) {
         return new Trigger(() -> {
             final Transform2d delta = currentPoseSupplier.get().minus(targetPoseSupplier.get());
+            final ChassisSpeeds speeds = fieldRelativeSpeedsSupplier.get();
+
             return delta.getTranslation().getNorm() < tolerance.translationToleranceMeters
-                    && delta.getRotation().getRadians() < tolerance.rotationTolerance.getRadians();
+                    && delta.getRotation().getRadians() < tolerance.rotationTolerance.getRadians()
+                    && Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond)
+                        < tolerance.translationVelocityToleranceMeterPerSec
+                    && Math.abs(speeds.omegaRadiansPerSecond) < tolerance.rotationVelocityToleranceRadsPerSec;
         });
     }
 

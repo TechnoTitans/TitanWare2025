@@ -15,6 +15,7 @@ import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
@@ -256,6 +257,11 @@ public class Robot extends LoggedRobot {
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
 
+        Logger.recordOutput("thing", FieldConstants.getReefCenterPoses()
+                .get(FieldConstants.Reef.Face.ONE)
+                .getTranslation()
+                .getDistance(swerve.getPose().getTranslation()));
+
         LoggedCommandScheduler.periodic();
 
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
@@ -292,14 +298,14 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-//        driverController.a(testEventLoop).whileTrue(
-//                swerve.wheelRadiusCharacterization()
-//        );
-
-        driverController.y(testEventLoop).whileTrue(
-                intakeArm.pivotVoltageSysIdCommand()
-                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+        driverController.a(testEventLoop).whileTrue(
+                swerve.wheelRadiusCharacterization()
         );
+//
+//        driverController.y(testEventLoop).whileTrue(
+//                elevator.voltageSysIdCommand()
+//                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+//        );
 
 //        driverController.y(testEventLoop).whileTrue(
 //                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
@@ -378,6 +384,12 @@ public class Robot extends LoggedRobot {
         autoChooser.addAutoOption(new AutoOption(
                 "ThreePieceCage2ToReef4And5",
                 autos::threePieceCage2ToReef4And5,
+                Constants.CompetitionType.TESTING
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "ThreePieceCage3ToReef2And1",
+                autos::threePieceCage3ToReef2And1,
                 Constants.CompetitionType.TESTING
         ));
     }
