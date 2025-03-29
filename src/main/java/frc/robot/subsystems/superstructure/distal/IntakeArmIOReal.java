@@ -52,8 +52,6 @@ public class IntakeArmIOReal implements IntakeArmIO {
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
         this.encoderPosition = pivotEncoder.getPosition();
         this.encoderVelocity = pivotEncoder.getVelocity();
-
-        this.pivotMotor.setPosition(0);
     }
 
     @Override
@@ -68,16 +66,16 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         //TODO: this pid sucks
         pivotConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.3415)
-                .withKG(0.1083)
+                .withKS(0.2154)
+                .withKG(0.18532)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(5.1579)
-                .withKA(0.1686)
-                .withKP(57.24)
-                .withKD(1);
+                .withKV(5.2702)
+                .withKA(0.096685)
+                .withKP(25.606)
+                .withKD(9);
         motionMagicConfigs.MotionMagicCruiseVelocity = 0;
-        motionMagicConfigs.MotionMagicExpo_kV = 5;
-        motionMagicConfigs.MotionMagicExpo_kA = 0.5;
+        motionMagicConfigs.MotionMagicExpo_kV = 5.2702;
+        motionMagicConfigs.MotionMagicExpo_kA = 0.096685;
         pivotConfiguration.MotionMagic = motionMagicConfigs;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;

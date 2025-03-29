@@ -48,9 +48,9 @@ public class HardwareConstants {
             17,
             18,
             324,
-            -0.244384765625,
+            0.197265625,
             0,
-            0.19775390625
+            0.19091796875
     );
 
     public record IntakeArmConstants(
@@ -67,7 +67,7 @@ public class HardwareConstants {
             RobotMap.RioCANBus,
             19,
             20,
-            -0.14892578125,
+            0.19873046875,
             60,
             -0.35,
             0

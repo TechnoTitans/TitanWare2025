@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -291,14 +292,14 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-        driverController.a(testEventLoop).whileTrue(
-                swerve.wheelRadiusCharacterization()
-        );
-
-//        driverController.y(testEventLoop).whileTrue(
-//                elevator.voltageSysIdCommand()
-//                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+//        driverController.a(testEventLoop).whileTrue(
+//                swerve.wheelRadiusCharacterization()
 //        );
+
+        driverController.y(testEventLoop).whileTrue(
+                intakeArm.pivotVoltageSysIdCommand()
+                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+        );
 
 //        driverController.y(testEventLoop).whileTrue(
 //                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
