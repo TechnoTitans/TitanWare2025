@@ -103,6 +103,7 @@ public class Autos {
                                 ),
                                 superstructure.toGoal(goal)
                         ),
+                        // TODO: this isn't fast enough
                         Commands.waitUntil(superstructure.unsafeToDrive.negate())
                                 .withTimeout(0.8)
                 ),

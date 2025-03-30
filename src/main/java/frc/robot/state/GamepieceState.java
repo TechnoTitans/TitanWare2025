@@ -133,16 +133,14 @@ public class GamepieceState extends VirtualSubsystem {
 
         intake.isCoralIntaking.and(hasCoral.negate()).whileTrue(
                 Commands.sequence(
-                        waitRand(random, 0.5, 1.5),
-                        Commands.waitSeconds(0.15),
+                        waitRand(random, 0.1, 0.35),
                         setCANRangeDistanceCommand(0.1)
                 )
         );
 
         intake.isCoralOuttaking.and(hasCoral).whileTrue(
                 Commands.sequence(
-                        waitRand(random, 0.3, 1.5),
-                        Commands.waitSeconds(0.15),
+                        waitRand(random, 0.1, 0.35),
                         setCANRangeDistanceCommand(0.5)
                 )
         );

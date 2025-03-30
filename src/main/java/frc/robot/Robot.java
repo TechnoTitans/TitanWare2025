@@ -138,6 +138,7 @@ public class Robot extends LoggedRobot {
     private final EventLoop teleopEventLoop = new EventLoop();
     private final EventLoop testEventLoop = new EventLoop();
 
+    private final Trigger disabled = RobotModeTriggers.disabled();
     private final Trigger teleopEnabled = RobotModeTriggers.teleop();
     private final Trigger autonomousEnabled = RobotModeTriggers.autonomous();
     private final Trigger endgameTrigger = new Trigger(() -> DriverStation.getMatchTime() <= 20)
@@ -221,6 +222,14 @@ public class Robot extends LoggedRobot {
 
                 DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
                 DriverStationSim.notifyNewData();
+
+                autonomousEnabled.whileTrue(
+                        Commands.waitSeconds(15)
+                                .andThen(() -> {
+                                    DriverStationSim.setEnabled(false);
+                                    DriverStationSim.notifyNewData();
+                                })
+                );
             }
             case REPLAY -> {
                 setUseTiming(false);
@@ -363,6 +372,7 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
+        disabled.onTrue(swerve.stopCommand());
         teleopEnabled.onTrue(superstructure.forceGoal(Superstructure.Goal.STOW));
     }
 
