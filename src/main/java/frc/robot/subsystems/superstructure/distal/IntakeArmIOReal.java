@@ -3,9 +3,9 @@ package frc.robot.subsystems.superstructure.distal;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -22,9 +22,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
     private final CANcoder pivotEncoder;
 
     private final MotionMagicExpoVoltage motionMagicExpoVoltage;
+    private final DynamicMotionMagicVoltage dynamicMotionMagicVoltage;
     private final VoltageOut voltageOut;
-
-    private final MotionMagicConfigs motionMagicConfigs;
 
     private final StatusSignal<Angle> pivotPosition;
     private final StatusSignal<AngularVelocity> pivotVelocity;
@@ -41,9 +40,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
         this.pivotEncoder = new CANcoder(constants.intakePivotCANCoderId(), constants.CANBus());
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
+        this.dynamicMotionMagicVoltage = new DynamicMotionMagicVoltage(0, 0, 0, 0);
         this.voltageOut = new VoltageOut(0);
-
-        this.motionMagicConfigs = new MotionMagicConfigs();
 
         this.pivotPosition = pivotMotor.getPosition();
         this.pivotVelocity = pivotMotor.getVelocity();
@@ -72,10 +70,9 @@ public class IntakeArmIOReal implements IntakeArmIO {
                 .withKA(0.20274)
                 .withKP(19.476)
                 .withKD(5);
-        motionMagicConfigs.MotionMagicCruiseVelocity = 0;
-        motionMagicConfigs.MotionMagicExpo_kV = 5.2257;
-        motionMagicConfigs.MotionMagicExpo_kA = 0.20274;
-        pivotConfiguration.MotionMagic = motionMagicConfigs;
+        pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5.2257;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.20274;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
@@ -138,16 +135,22 @@ public class IntakeArmIOReal implements IntakeArmIO {
     }
 
     @Override
-    public void setMotionMagicCruiseVelocity(final double cruiseVelocity) {
-        if (motionMagicConfigs.MotionMagicCruiseVelocity != cruiseVelocity) {
-            motionMagicConfigs.MotionMagicCruiseVelocity = cruiseVelocity;
-            pivotMotor.getConfigurator().apply(motionMagicConfigs);
-        }
+    public void toPivotPosition(final double pivotPositionRots) {
+        pivotMotor.setControl(motionMagicExpoVoltage.withPosition(pivotPositionRots));
     }
 
     @Override
-    public void toPivotPosition(final double pivotPositionRots) {
-        pivotMotor.setControl(motionMagicExpoVoltage.withPosition(pivotPositionRots));
+    public void toPivotPosition(
+            final double pivotPositionRots,
+            final double velocityRotsPerSec,
+            final double accelerationRotsPerSecSquared,
+            final double jerkRotsPerSecCubed
+    ) {
+        pivotMotor.setControl(dynamicMotionMagicVoltage
+                .withVelocity(velocityRotsPerSec)
+                .withAcceleration(accelerationRotsPerSecSquared)
+                .withJerk(jerkRotsPerSecCubed)
+                .withPosition(pivotPositionRots));
     }
 
     @Override

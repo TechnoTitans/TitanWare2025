@@ -15,7 +15,6 @@ import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
-import frc.robot.constants.FieldConstants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
@@ -413,7 +412,7 @@ public class Robot extends LoggedRobot {
 
         this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
-        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreNet());
+        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreNetFlingFacingBarge());
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
@@ -445,7 +444,7 @@ public class Robot extends LoggedRobot {
 
         this.coController.rightTrigger(0.5, teleopEventLoop)
                 .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(scorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition());
+                .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
 
         this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
 

@@ -626,10 +626,10 @@ public class Swerve extends SubsystemBase {
     }
 
     public Command holdAxisFacingAngleAndDrive(
-            final double holdPosition,
+            final DoubleSupplier holdPosition,
             final DriveAxis holdAxis,
             final double driveSpeed,
-            final Supplier<Pose2d> poseTarget
+            final Supplier<Rotation2d> headingTarget
     ) {
         return Commands.sequence(
                         runOnce(() -> {
@@ -639,16 +639,13 @@ public class Swerve extends SubsystemBase {
                         }),
                         run(() -> {
                             final Pose2d currentPose = getPose();
-                            this.headingTarget = currentPose
-                                    .getTranslation()
-                                    .minus(poseTarget.get().getTranslation())
-                                    .getAngle();
+                            this.headingTarget = headingTarget.get();
 
                             final double holdEffort = holdAxisPID.calculate(
                                     holdAxis == DriveAxis.X
                                             ? currentPose.getX()
                                             : currentPose.getY(),
-                                    holdPosition
+                                    holdPosition.getAsDouble()
                             );
 
                             final double xSpeed = holdAxis == DriveAxis.X ? holdEffort : driveSpeed;
@@ -656,12 +653,56 @@ public class Swerve extends SubsystemBase {
                             drive(
                                     xSpeed,
                                     ySpeed,
-                                    headingController.calculate(getYaw().getRadians(), headingTarget.getRadians()),
+                                    headingController.calculate(getYaw().getRadians(), this.headingTarget.getRadians()),
                                     true,
                                     false
                             );
                         })
                 )
+                .finallyDo(() -> headingControllerActive = false)
+                .withName("HoldAxisFacingAngleAndDrive");
+    }
+
+    public Command driveToAxisFacingAngle(
+            final DoubleSupplier holdPosition,
+            final DriveAxis holdAxis,
+            final Supplier<Rotation2d> headingTarget
+    ) {
+        final Trigger atAxis = atAxisTrigger(
+                holdPosition,
+                holdAxis == DriveAxis.X
+                    ? () -> getPose().getX()
+                    : () -> getPose().getY()
+        );
+
+        return Commands.sequence(
+                        runOnce(() -> {
+                            headingControllerActive = true;
+                            headingController.reset();
+                            holdAxisPID.reset();
+                        }),
+                        run(() -> {
+                            final Pose2d currentPose = getPose();
+                            this.headingTarget = headingTarget.get();
+
+                            final double holdEffort = holdAxisPID.calculate(
+                                    holdAxis == DriveAxis.X
+                                            ? currentPose.getX()
+                                            : currentPose.getY(),
+                                    holdPosition.getAsDouble()
+                            );
+
+                            final double xSpeed = holdAxis == DriveAxis.X ? holdEffort : 0;
+                            final double ySpeed = holdAxis == DriveAxis.Y ? holdEffort : 0;
+                            drive(
+                                    xSpeed,
+                                    ySpeed,
+                                    headingController.calculate(getYaw().getRadians(), this.headingTarget.getRadians()),
+                                    true,
+                                    false
+                            );
+                        })
+                ).until(atAxis)
                 .finallyDo(() -> headingControllerActive = false)
                 .withName("HoldAxisFacingAngleAndDrive");
     }
@@ -738,6 +779,25 @@ public class Swerve extends SubsystemBase {
 
     public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
         return holonomicDriveController.atPose(this::getPose, this::getFieldRelativeSpeeds, targetPoseSupplier);
+    }
+
+    public Trigger atAxisTrigger(final DoubleSupplier target, final DoubleSupplier measurement) {
+        final DoubleSupplier linearSpeedSupplier = () -> {
+            final ChassisSpeeds speeds = getFieldRelativeSpeeds();
+            return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
+        };
+
+        return new Trigger(
+                () -> MathUtil.isNear(
+                        target.getAsDouble(),
+                        measurement.getAsDouble(),
+                        0.05
+                ) && MathUtil.isNear(
+                        0,
+                        linearSpeedSupplier.getAsDouble(),
+                        0.05
+                )
+        );
     }
 
     /**

@@ -4,7 +4,6 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -98,8 +97,7 @@ public class Autos {
                         Commands.waitUntil(atReef),
                         Commands.deadline(
                                 Commands.sequence(
-                                        Commands.waitUntil(superstructure.atSuperstructureSetpoint
-                                                        .and(() -> superstructure.getAtGoal() == goal))
+                                        Commands.waitUntil(superstructure.atSetpoint(goal))
                                                 .withTimeout(2),
                                         intake.scoreCoral()
                                 ),

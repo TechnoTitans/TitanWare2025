@@ -42,7 +42,7 @@ public class Superstructure extends VirtualSubsystem {
         ALIGN_L4(Elevator.Goal.STOW, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
         ALIGN_NET(Elevator.Goal.L2, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
-        SCORE_NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.STOW),
+        FLING_NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.ALGAE_FLING),
 
         SAFE(Elevator.Goal.L3, ElevatorArm.Goal.L4, IntakeArm.Goal.STOW);
 
@@ -92,6 +92,7 @@ public class Superstructure extends VirtualSubsystem {
     private final IntakeArm intakeArm;
 
     private Goal desiredGoal = Goal.STOW;
+    private Goal lastDesiredGoal = desiredGoal;
     private Goal runningGoal = desiredGoal;
     private Goal atGoal = desiredGoal;
 
@@ -100,6 +101,7 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger desiredGoalIsRunningGoal;
     private final Trigger desiredGoalIsAtGoal;
     private final Trigger desiredGoalIsDynamic;
+    private final Trigger desiredGoalNotLast;
 
     private final Trigger allowedToChangeGoal;
 
@@ -107,8 +109,8 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger desiresDownwardsMotion;
     private final Trigger desiredGoalChanged;
 
-    public final Trigger desiredGoalNotStow;
-    public final Trigger atSuperstructureSetpoint;
+    private final Trigger desiredGoalNotStow;
+    private final Trigger atSuperstructureSetpoint;
 
     public final Trigger unsafeToDrive;
 
@@ -126,15 +128,15 @@ public class Superstructure extends VirtualSubsystem {
         this.desiredGoalIsRunningGoal = new Trigger(eventLoop, () -> desiredGoal == runningGoal);
         this.desiredGoalChanged = new Trigger(eventLoop, () -> desiredGoal != runningGoal);
         this.desiredGoalIsAtGoal = new Trigger(eventLoop, () -> desiredGoal == atGoal);
-        this.desiredGoalIsDynamic = new Trigger(eventLoop, () -> desiredGoal == Superstructure.Goal.DYNAMIC);
+        this.desiredGoalIsDynamic = new Trigger(eventLoop, () -> desiredGoal == Goal.DYNAMIC);
+        this.desiredGoalNotLast = new Trigger(eventLoop, () -> desiredGoal != lastDesiredGoal);
         this.desiredGoalNotStow = new Trigger(eventLoop, () -> desiredGoal != Goal.STOW);
         this.atSuperstructureSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atSetpoint)
                 .and(intakeArm.atSetpoint)
                 .and(desiredGoalIsAtGoal);
 
-        this.unsafeToDrive = new Trigger(eventLoop, () ->
-                getCurrentTranslation().getNorm() > AllowableExtensionForDrivingMeters);
+        this.unsafeToDrive = extendedBeyond(AllowableExtensionForDrivingMeters);
 
         this.allowedToChangeGoal = desiredGoalIsDynamic.negate()
                 .and((desiredGoalIsAtGoal.and(atSuperstructureSetpoint)).negate());
@@ -175,7 +177,9 @@ public class Superstructure extends VirtualSubsystem {
                                         .and(elevator.atSetpoint)
                                         .and(intakeArm.atSetpoint)).withTimeout(4),
                         Commands.runOnce(() -> this.atGoal = runningGoal)
-                ).onlyWhile(() -> desiredGoal == runningGoal)
+                )
+                        .onlyIf(() -> desiredGoal == runningGoal)
+                        .onlyWhile(() -> desiredGoal == runningGoal)
         ).withName("UpwardsGoalChange");
     }
 
@@ -199,7 +203,9 @@ public class Superstructure extends VirtualSubsystem {
                                         .and(elevator.atSetpoint)
                                         .and(intakeArm.atSetpoint)).withTimeout(4),
                         Commands.runOnce(() -> this.atGoal = runningGoal)
-                ).onlyWhile(() -> desiredGoal == runningGoal)
+                )
+                        .onlyIf(() -> desiredGoal == runningGoal)
+                        .onlyWhile(() -> desiredGoal == runningGoal)
         ).withName("DownwardsGoalChange");
     }
 
@@ -247,12 +253,16 @@ public class Superstructure extends VirtualSubsystem {
         );
     }
 
-    public Goal getDesiredGoal() {
-        return desiredGoal;
+    public Trigger atSetpoint(final Supplier<Superstructure.Goal> goalSupplier) {
+        return atSuperstructureSetpoint.and(() -> atGoal == goalSupplier.get());
     }
 
-    public Goal getAtGoal() {
-        return atGoal;
+    public Trigger atSetpoint(final Superstructure.Goal goal) {
+        return atSetpoint(() -> goal);
+    }
+
+    public Trigger extendedBeyond(final double distance) {
+        return new Trigger(eventLoop, () -> getCurrentTranslation().getNorm() > distance);
     }
 
     public Command forceGoal(final Goal goal) {
@@ -266,37 +276,58 @@ public class Superstructure extends VirtualSubsystem {
 
     public Command toInstantGoal(final Goal goal) {
         return Commands.runOnce(
-                () -> this.desiredGoal = goal,
+                () -> {
+                    this.lastDesiredGoal = desiredGoal;
+                    this.desiredGoal = goal;
+                },
                 elevator, elevatorArm, intakeArm
         ).withName("ToInstantGoal: " + goal);
     }
 
     public Command toGoal(final Goal goal) {
         return Commands.runEnd(
-                () -> this.desiredGoal = goal,
-                () -> this.desiredGoal = Goal.STOW,
+                () -> {
+                    this.lastDesiredGoal = desiredGoal;
+                    this.desiredGoal = goal;
+                },
+                () -> {
+                    this.lastDesiredGoal = desiredGoal;
+                    this.desiredGoal = Goal.STOW;
+                },
                 elevator, elevatorArm, intakeArm
         ).withName("ToGoal: " + goal);
     }
 
     public Command toGoal(final Supplier<Goal> goal) {
         return Commands.runEnd(
-                () -> this.desiredGoal = goal.get(),
-                () -> this.desiredGoal = Goal.STOW,
+                () -> {
+                    this.lastDesiredGoal = desiredGoal;
+                    this.desiredGoal = goal.get();
+                },
+                () -> {
+                    this.lastDesiredGoal = desiredGoal;
+                    this.desiredGoal = Goal.STOW;
+                },
                 elevator, elevatorArm, intakeArm
         ).withName("ToGoal");
     }
 
     public Command runGoal(final Goal goal) {
         return Commands.run(
-                () -> this.desiredGoal = goal,
+                () -> {
+                    this.lastDesiredGoal = desiredGoal;
+                    this.desiredGoal = goal;
+                },
                 elevator, elevatorArm, intakeArm
         ).withName("RunGoal: " + goal);
     }
 
     public Command runGoal(final Supplier<Goal> goalSupplier) {
         return Commands.run(
-                () -> this.desiredGoal = goalSupplier.get(),
+                () -> {
+                    this.lastDesiredGoal = desiredGoal;
+                    this.desiredGoal = goalSupplier.get();
+                },
                 elevator, elevatorArm, intakeArm
         ).withName("RunGoal");
     }

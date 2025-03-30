@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXSConfiguration;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -38,6 +39,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
     private final TalonFXSSim pivotTalonFXSSim;
 
     private final PositionVoltage positionVoltage;
+    private final DynamicMotionMagicVoltage dynamicMotionMagicVoltage;
     private final VoltageOut voltageOut;
 
     private final StatusSignal<Angle> pivotPosition;
@@ -81,6 +83,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         this.pivotTalonFXSSim.attachFeedbackSensor(new SimCANCoder(pivotEncoder));
 
         this.positionVoltage = new PositionVoltage(0);
+        this.dynamicMotionMagicVoltage = new DynamicMotionMagicVoltage(0, 0, 0, 0);
         this.voltageOut = new VoltageOut(0);
 
         this.pivotPosition = pivotMotor.getPosition();
@@ -160,6 +163,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         pivotEncoder.getSimState().Orientation = ChassisReference.Clockwise_Positive;
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @Override
     public void updateInputs(IntakeArmIOInputs inputs) {
         BaseStatusSignal.refreshAll(
@@ -185,6 +189,21 @@ public class IntakeArmIOSim implements IntakeArmIO {
     public void toPivotPosition(final double pivotPositionRots) {
         pivotMotor.setControl(positionVoltage.withPosition(pivotPositionRots));
     }
+
+    @Override
+    public void toPivotPosition(
+            final double pivotPositionRots,
+            final double velocityRotsPerSec,
+            final double accelerationRotsPerSecSquared,
+            final double jerkRotsPerSecCubed
+    ) {
+        pivotMotor.setControl(dynamicMotionMagicVoltage
+                .withVelocity(velocityRotsPerSec)
+                .withAcceleration(accelerationRotsPerSecSquared)
+                .withJerk(jerkRotsPerSecCubed)
+                .withPosition(pivotPositionRots));
+    }
+
 
     @Override
     public void toPivotVoltage(final double volts) {

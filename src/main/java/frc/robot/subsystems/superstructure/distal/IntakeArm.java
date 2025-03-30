@@ -73,6 +73,7 @@ public class IntakeArm extends SubsystemBase {
         STOW(0),
         HP(0),
         ALGAE_GROUND(-0.349),
+        ALGAE_FLING(-0.349),
         UPPER_ALGAE(-0.35),
         LOWER_ALGAE(-0.324),
         PROCESSOR(-0.24),
@@ -133,13 +134,17 @@ public class IntakeArm extends SubsystemBase {
                     || desiredGoal == Goal.PROCESSOR
                     || desiredGoal == Goal.NET
             ) {
-                intakeArmIO.setMotionMagicCruiseVelocity(0.45);
+                positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+                intakeArmIO.toPivotPosition(
+                        positionSetpoint.pivotPositionRots,
+                        4,
+                        0.4,
+                        4
+                );
             } else {
-                intakeArmIO.setMotionMagicCruiseVelocity(0);
+                positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+                intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
             }
-
-            positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
-            intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
 
             this.currentGoal = desiredGoal;
         }
