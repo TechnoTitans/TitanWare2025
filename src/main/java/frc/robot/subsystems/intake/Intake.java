@@ -202,11 +202,13 @@ public class Intake extends SubsystemBase {
     }
 
     public Command holdCoral() {
-        return toInstantRollerTorqueCurrent(12).withName("HoldCoral");
+        return toInstantRollerTorqueCurrent(12)
+                .withName("HoldCoral");
     }
 
     public Command holdAlgae() {
-        return toInstantRollerTorqueCurrent(-40).withName("HoldAlgae");
+        return toInstantRollerTorqueCurrent(-40)
+                .withName("HoldAlgae");
     }
 
     public Command scoreCoral() {
@@ -244,7 +246,8 @@ public class Intake extends SubsystemBase {
         return Commands.sequence(
                 runOnce(() -> this.algaeOuttaking = true),
                 toInstantRollerVoltage(9),
-                Commands.waitUntil(isCurrentAboveAlgaeThreshold.negate()).withTimeout(1),
+                Commands.waitUntil(isCurrentAboveAlgaeThreshold.negate())
+                        .withTimeout(1),
                 Commands.waitSeconds(0.1),
                 instantStopCommand()
         )
@@ -256,7 +259,8 @@ public class Intake extends SubsystemBase {
         return Commands.sequence(
                         runOnce(() -> this.algaeOuttaking = true),
                         toInstantRollerVoltage(12),
-                        Commands.waitUntil(isCurrentAboveAlgaeThreshold.negate()).withTimeout(1.5),
+                        Commands.waitUntil(isCurrentAboveAlgaeThreshold.negate())
+                                .withTimeout(1.5),
                         Commands.waitSeconds(0.1),
                         instantStopCommand()
                 )

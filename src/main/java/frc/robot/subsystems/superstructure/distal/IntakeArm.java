@@ -152,7 +152,7 @@ public class IntakeArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
         Logger.recordOutput(
-                LogKey + "/PivotPositionSetpoint/PivotPositionRots",
+                LogKey + "/PositionSetpoint/PivotPositionRots",
                 positionSetpoint.pivotPositionRots
         );
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPivotPositionSetpoint());
