@@ -92,7 +92,6 @@ public class Superstructure extends VirtualSubsystem {
     private final IntakeArm intakeArm;
 
     private Goal desiredGoal = Goal.STOW;
-    private Goal lastDesiredGoal = desiredGoal;
     private Goal runningGoal = desiredGoal;
     private Goal atGoal = desiredGoal;
 
@@ -101,7 +100,6 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger desiredGoalIsRunningGoal;
     private final Trigger desiredGoalIsAtGoal;
     private final Trigger desiredGoalIsDynamic;
-    private final Trigger desiredGoalNotLast;
 
     private final Trigger allowedToChangeGoal;
 
@@ -129,7 +127,6 @@ public class Superstructure extends VirtualSubsystem {
         this.desiredGoalChanged = new Trigger(eventLoop, () -> desiredGoal != runningGoal);
         this.desiredGoalIsAtGoal = new Trigger(eventLoop, () -> desiredGoal == atGoal);
         this.desiredGoalIsDynamic = new Trigger(eventLoop, () -> desiredGoal == Goal.DYNAMIC);
-        this.desiredGoalNotLast = new Trigger(eventLoop, () -> desiredGoal != lastDesiredGoal);
         this.desiredGoalNotStow = new Trigger(eventLoop, () -> desiredGoal != Goal.STOW);
         this.atSuperstructureSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atSetpoint)
@@ -164,23 +161,21 @@ public class Superstructure extends VirtualSubsystem {
                     this.atGoal = Goal.NONE;
                     this.runningGoal = desiredGoal;
                 }),
-                Commands.sequence(
-                        Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
-                        Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
+                Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
+                Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
 
-                        Commands.waitUntil(elevatorArm.atSetpoint.and(intakeArm.atSetpoint))
-                                .withTimeout(4),
-                        Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
+                Commands.waitUntil(elevatorArm.atSetpoint.and(intakeArm.atSetpoint))
+                        .withTimeout(4),
+                Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
 
-                        Commands.waitUntil(
-                                elevatorArm.atSetpoint
-                                        .and(elevator.atSetpoint)
-                                        .and(intakeArm.atSetpoint)).withTimeout(4),
-                        Commands.runOnce(() -> this.atGoal = runningGoal)
-                )
-                        .onlyIf(() -> desiredGoal == runningGoal)
-                        .onlyWhile(() -> desiredGoal == runningGoal)
-        ).withName("UpwardsGoalChange");
+                Commands.waitUntil(
+                        elevatorArm.atSetpoint
+                                .and(elevator.atSetpoint)
+                                .and(intakeArm.atSetpoint)).withTimeout(4),
+                Commands.runOnce(() -> this.atGoal = runningGoal)
+        )
+                .onlyWhile(() -> desiredGoal == runningGoal)
+                .withName("UpwardsGoalChange");
     }
 
     private Command downwardsGoalChange() {
@@ -189,24 +184,22 @@ public class Superstructure extends VirtualSubsystem {
                     this.atGoal = Goal.NONE;
                     this.runningGoal = desiredGoal;
                 }),
-                Commands.sequence(
-                        Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
-                        Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
+                Commands.runOnce(() -> intakeArm.setGoal(runningGoal.intakeArmGoal)),
+                Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
 
-                        Commands.waitUntil(
-                                elevator.atSetpoint
-                                        .and(intakeArm.atSetpoint)).withTimeout(4),
-                        Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
+                Commands.waitUntil(
+                        elevator.atSetpoint
+                                .and(intakeArm.atSetpoint)).withTimeout(4),
+                Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
 
-                        Commands.waitUntil(
-                                elevatorArm.atSetpoint
-                                        .and(elevator.atSetpoint)
-                                        .and(intakeArm.atSetpoint)).withTimeout(4),
-                        Commands.runOnce(() -> this.atGoal = runningGoal)
-                )
-                        .onlyIf(() -> desiredGoal == runningGoal)
-                        .onlyWhile(() -> desiredGoal == runningGoal)
-        ).withName("DownwardsGoalChange");
+                Commands.waitUntil(
+                        elevatorArm.atSetpoint
+                                .and(elevator.atSetpoint)
+                                .and(intakeArm.atSetpoint)).withTimeout(4),
+                Commands.runOnce(() -> this.atGoal = runningGoal)
+        )
+                .onlyWhile(() -> desiredGoal == runningGoal)
+                .withName("DownwardsGoalChange");
     }
 
     private Command goalChange() {
@@ -218,6 +211,29 @@ public class Superstructure extends VirtualSubsystem {
                         .onlyIf(desiresDownwardsMotion)
                         .onlyWhile(desiresDownwardsMotion)
         ).withName("GoalChange");
+    }
+
+    private Command runOnce(final Runnable action) {
+        return Commands.runOnce(action, elevator, elevatorArm, intakeArm);
+    }
+
+    private Command runEnd(final Runnable run, final Runnable end) {
+        return Commands.runEnd(run, end, elevator, elevatorArm, intakeArm);
+    }
+
+    private Command run(final Runnable run) {
+        return Commands.run(run, elevator, elevatorArm, intakeArm);
+    }
+
+    private Runnable setDesiredGoal(final Supplier<Goal> desiredGoalSupplier) {
+        return () -> {
+            this.desiredGoal = desiredGoalSupplier.get();
+            eventLoop.poll();
+        };
+    }
+
+    private Runnable setDesiredGoal(final Goal desiredGoal) {
+        return setDesiredGoal(() -> desiredGoal);
     }
 
     @Override
@@ -266,70 +282,38 @@ public class Superstructure extends VirtualSubsystem {
     }
 
     public Command forceGoal(final Goal goal) {
-        return Commands.runOnce(
-                        () -> this.desiredGoal = goal,
-                        elevator, elevatorArm, intakeArm
-                )
+        return runOnce(setDesiredGoal(goal))
                 .andThen(goalChange())
                 .withName("ForceGoal: " + goal);
     }
 
     public Command toInstantGoal(final Goal goal) {
-        return Commands.runOnce(
-                () -> {
-                    this.lastDesiredGoal = desiredGoal;
-                    this.desiredGoal = goal;
-                },
-                elevator, elevatorArm, intakeArm
-        ).withName("ToInstantGoal: " + goal);
+        return runOnce(setDesiredGoal(goal))
+                .withName("ToInstantGoal: " + goal);
     }
 
     public Command toGoal(final Goal goal) {
-        return Commands.runEnd(
-                () -> {
-                    this.lastDesiredGoal = desiredGoal;
-                    this.desiredGoal = goal;
-                },
-                () -> {
-                    this.lastDesiredGoal = desiredGoal;
-                    this.desiredGoal = Goal.STOW;
-                },
-                elevator, elevatorArm, intakeArm
+        return runEnd(
+                setDesiredGoal(goal),
+                setDesiredGoal(Goal.STOW)
         ).withName("ToGoal: " + goal);
     }
 
     public Command toGoal(final Supplier<Goal> goal) {
-        return Commands.runEnd(
-                () -> {
-                    this.lastDesiredGoal = desiredGoal;
-                    this.desiredGoal = goal.get();
-                },
-                () -> {
-                    this.lastDesiredGoal = desiredGoal;
-                    this.desiredGoal = Goal.STOW;
-                },
-                elevator, elevatorArm, intakeArm
+        return runEnd(
+                setDesiredGoal(goal),
+                setDesiredGoal(Goal.STOW)
         ).withName("ToGoal");
     }
 
     public Command runGoal(final Goal goal) {
-        return Commands.run(
-                () -> {
-                    this.lastDesiredGoal = desiredGoal;
-                    this.desiredGoal = goal;
-                },
-                elevator, elevatorArm, intakeArm
-        ).withName("RunGoal: " + goal);
+        return run(setDesiredGoal(goal))
+                .withName("RunGoal: " + goal);
     }
 
     public Command runGoal(final Supplier<Goal> goalSupplier) {
-        return Commands.run(
-                () -> {
-                    this.lastDesiredGoal = desiredGoal;
-                    this.desiredGoal = goalSupplier.get();
-                },
-                elevator, elevatorArm, intakeArm
-        ).withName("RunGoal");
+        return run(setDesiredGoal(goalSupplier))
+                .withName("RunGoal");
     }
 
     public Set<Subsystem> getRequirements() {
