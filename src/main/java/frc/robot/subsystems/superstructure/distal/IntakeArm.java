@@ -103,11 +103,12 @@ public class IntakeArm extends SubsystemBase {
             return pivotPositionGoalRots;
         }
 
-        public static boolean isAlgaeGoal(final Goal goal) {
-            return switch (goal) {
-                case ALGAE_GROUND, LOWER_ALGAE, UPPER_ALGAE, PROCESSOR, NET -> true;
-                default -> false;
-            };
+        public static boolean shouldUseSlowAlgae(final Goal desiredGoal, final Goal currentGoal) {
+            return currentGoal == Goal.ALGAE_GROUND
+                    || currentGoal == Goal.LOWER_ALGAE
+                    || currentGoal == Goal.UPPER_ALGAE
+                    || desiredGoal == Goal.PROCESSOR
+                    || desiredGoal == Goal.NET;
         }
     }
 
@@ -148,7 +149,7 @@ public class IntakeArm extends SubsystemBase {
 
         if (desiredGoal != currentGoal) {
             positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
-            if (Goal.isAlgaeGoal(desiredGoal)) {
+            if (Goal.shouldUseSlowAlgae(desiredGoal, currentGoal)) {
                 algaeSlowGoal.position = positionSetpoint.pivotPositionRots;
                 algaeSlowGoal.velocity = 0;
             } else {
@@ -158,7 +159,7 @@ public class IntakeArm extends SubsystemBase {
             this.currentGoal = desiredGoal;
         }
 
-        if (Goal.isAlgaeGoal(currentGoal)) {
+        if (Goal.shouldUseSlowAlgae(desiredGoal, currentGoal)) {
             algaeSlowSetpoint = algaeSlowProfile.calculate(deltaTimeSeconds, algaeSlowSetpoint, algaeSlowGoal);
             intakeArmIO.toPivotPositionUnprofiled(
                     algaeSlowSetpoint.position,
