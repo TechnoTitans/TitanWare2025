@@ -28,11 +28,9 @@ public interface IntakeArmIO {
 
     default void toPivotPosition(final double pivotPositionRots) {}
 
-    default void toPivotPosition(
+    default void toPivotPositionUnprofiled(
             final double pivotPositionRots,
-            final double velocityRotsPerSec,
-            final double accelerationRotsPerSecSquared,
-            final double jerkRotsPerSecCubed
+            final double pivotVelocityRotsPerSec
     ) {}
 
     default void toPivotVoltage(final double volts) {}
