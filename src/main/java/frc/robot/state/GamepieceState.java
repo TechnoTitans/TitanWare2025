@@ -81,10 +81,12 @@ public class GamepieceState extends VirtualSubsystem {
                 .withName("GameStateSetAlgaeState: " + algaeState.toString());
     }
 
+    @SuppressWarnings("unused")
     public State getCoralState() {
         return coralState;
     }
 
+    @SuppressWarnings("unused")
     public State getAlgaeState() {
         return algaeState;
     }
@@ -133,14 +135,14 @@ public class GamepieceState extends VirtualSubsystem {
 
         intake.isCoralIntaking.and(hasCoral.negate()).whileTrue(
                 Commands.sequence(
-                        waitRand(random, 0.1, 0.35),
+                        waitRand(random, 0.5, 0.75),
                         setCANRangeDistanceCommand(0.1)
                 )
         );
 
         intake.isCoralOuttaking.and(hasCoral).whileTrue(
                 Commands.sequence(
-                        waitRand(random, 0.1, 0.35),
+                        waitRand(random, 0.1, 0.25),
                         setCANRangeDistanceCommand(0.5)
                 )
         );

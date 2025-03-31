@@ -85,6 +85,19 @@ public class HolonomicDriveController {
 
     public Trigger atPose(
             final Supplier<Pose2d> currentPoseSupplier,
+            final Supplier<Pose2d> targetPoseSupplier
+    ) {
+        return new Trigger(() -> {
+            final Transform2d delta = currentPoseSupplier.get().minus(targetPoseSupplier.get());
+
+            return delta.getTranslation().getNorm() < tolerance.translationToleranceMeters
+                    && delta.getRotation().getRadians() < tolerance.rotationTolerance.getRadians();
+        });
+    }
+
+    @SuppressWarnings("unused")
+    public Trigger atPoseZeroVelocity(
+            final Supplier<Pose2d> currentPoseSupplier,
             final Supplier<ChassisSpeeds> fieldRelativeSpeedsSupplier,
             final Supplier<Pose2d> targetPoseSupplier
     ) {
@@ -93,10 +106,23 @@ public class HolonomicDriveController {
             final ChassisSpeeds speeds = fieldRelativeSpeedsSupplier.get();
 
             return delta.getTranslation().getNorm() < tolerance.translationToleranceMeters
+                    && delta.getRotation().getRadians() < tolerance.rotationTolerance.getRadians()
+                    && Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond)
+                        < tolerance.translationVelocityToleranceMeterPerSec
+                    && Math.abs(speeds.omegaRadiansPerSecond) < tolerance.rotationVelocityToleranceRadsPerSec;
+        });
+    }
+
+    public Trigger atPose(
+            final Supplier<Pose2d> currentPoseSupplier,
+            final Supplier<Pose2d> targetPoseSupplier,
+            final Tolerance tolerance
+    ) {
+        return new Trigger(() -> {
+            final Transform2d delta = currentPoseSupplier.get().minus(targetPoseSupplier.get());
+
+            return delta.getTranslation().getNorm() < tolerance.translationToleranceMeters
                     && delta.getRotation().getRadians() < tolerance.rotationTolerance.getRadians();
-//                    && Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond)
-//                        < tolerance.translationVelocityToleranceMeterPerSec
-//                    && Math.abs(speeds.omegaRadiansPerSecond) < tolerance.rotationVelocityToleranceRadsPerSec;
         });
     }
 

@@ -12,6 +12,7 @@ import edu.wpi.first.util.DoubleCircularBuffer;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.subsystems.drive.OdometryThreadRunner;
 import frc.robot.utils.ctre.Phoenix6Utils;
+import frc.robot.utils.ctre.RefreshAll;
 
 public class GyroIOPigeon2 implements GyroIO {
     private final Pigeon2 pigeon;
@@ -45,21 +46,22 @@ public class GyroIOPigeon2 implements GyroIO {
 
         this.timestampBuffer = odometryThreadRunner.makeTimestampBuffer();
         this.yawSignalBuffer = odometryThreadRunner.registerSignal(pigeon, this.yaw);
+
+        RefreshAll.add(
+                RefreshAll.CANBus.CANIVORE,
+                yaw,
+                pitch,
+                roll,
+                yawVelocity,
+                pitchVelocity,
+                rollVelocity,
+                faultHardware
+        );
     }
 
     @SuppressWarnings("DuplicatedCode")
     @Override
     public void updateInputs(final GyroIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                this.yaw,
-                this.pitch,
-                this.roll,
-                this.yawVelocity,
-                this.pitchVelocity,
-                this.rollVelocity,
-                this.faultHardware
-        );
-
         inputs.yawPositionDeg = getYaw();
         inputs.pitchPositionDeg = getPitch();
         inputs.rollPositionDeg = getRoll();

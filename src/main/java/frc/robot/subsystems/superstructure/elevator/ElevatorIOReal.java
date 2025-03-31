@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.Phoenix6Utils;
+import frc.robot.utils.ctre.RefreshAll;
 
 public class ElevatorIOReal implements ElevatorIO {
     private final HardwareConstants.ElevatorConstants constants;
@@ -61,6 +62,20 @@ public class ElevatorIOReal implements ElevatorIO {
         this.followerVoltage = followerMotor.getMotorVoltage();
         this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
         this.followerDeviceTemp = followerMotor.getDeviceTemp();
+
+        RefreshAll.add(
+                RefreshAll.CANBus.CANIVORE,
+                masterPosition,
+                masterVelocity,
+                masterVoltage,
+                masterTorqueCurrent,
+                masterDeviceTemp,
+                followerPosition,
+                followerVelocity,
+                followerVoltage,
+                followerTorqueCurrent,
+                followerDeviceTemp
+        );
     }
 
     @Override
@@ -119,19 +134,6 @@ public class ElevatorIOReal implements ElevatorIO {
 
     @Override
     public void updateInputs(final ElevatorIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                masterPosition,
-                masterVelocity,
-                masterVoltage,
-                masterTorqueCurrent,
-                masterDeviceTemp,
-                followerPosition,
-                followerVelocity,
-                followerVoltage,
-                followerTorqueCurrent,
-                followerDeviceTemp
-        );
-
         inputs.masterPositionRots = masterPosition.getValueAsDouble();
         inputs.masterVelocityRotsPerSec = masterVelocity.getValueAsDouble();
         inputs.masterVoltage = masterVoltage.getValueAsDouble();

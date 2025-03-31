@@ -24,6 +24,7 @@ import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.utils.ctre.Phoenix6Utils;
+import frc.robot.utils.ctre.RefreshAll;
 
 import static frc.robot.subsystems.drive.constants.SwerveConstants.Config;
 
@@ -95,6 +96,18 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         this.timestampBuffer = odometryThreadRunner.makeTimestampBuffer();
         this.drivePositionSignalBuffer = odometryThreadRunner.registerSignal(driveMotor, this.drivePosition);
         this.turnPositionSignalBuffer = odometryThreadRunner.registerSignal(turnMotor, this.turnPosition);
+
+        RefreshAll.add(
+                RefreshAll.CANBus.CANIVORE,
+                drivePosition,
+                driveVelocity,
+                driveTorqueCurrent,
+                driveDeviceTemp,
+                turnPosition,
+                turnVelocity,
+                turnTorqueCurrent,
+                turnDeviceTemp
+        );
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -165,17 +178,6 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     @SuppressWarnings("DuplicatedCode")
     @Override
     public void updateInputs(final SwerveModuleIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                this.drivePosition,
-                this.driveVelocity,
-                this.driveTorqueCurrent,
-                this.driveDeviceTemp,
-                this.turnPosition,
-                this.turnVelocity,
-                this.turnTorqueCurrent,
-                this.turnDeviceTemp
-        );
-
         inputs.drivePositionRots = getDrivePosition();
         inputs.driveVelocityRotsPerSec = this.driveVelocity.getValueAsDouble();
         inputs.driveTorqueCurrentAmps = this.driveTorqueCurrent.getValueAsDouble();

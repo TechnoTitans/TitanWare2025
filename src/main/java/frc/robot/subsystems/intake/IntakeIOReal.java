@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
+import frc.robot.utils.ctre.RefreshAll;
 
 public class IntakeIOReal implements IntakeIO {
     private final HardwareConstants.IntakeConstants constants;
@@ -51,6 +52,16 @@ public class IntakeIOReal implements IntakeIO {
         this.rollerTorqueCurrent = rollerMotor.getTorqueCurrent();
         this.rollerDeviceTemp = rollerMotor.getDeviceTemp();
         this.rollerCANRangeDistance = coralCANRange.getDistance();
+
+        RefreshAll.add(
+                RefreshAll.CANBus.RIO,
+                rollerPosition,
+                rollerVelocity,
+                rollerVoltage,
+                rollerTorqueCurrent,
+                rollerDeviceTemp,
+                rollerCANRangeDistance
+        );
     }
 
     @Override
@@ -103,15 +114,6 @@ public class IntakeIOReal implements IntakeIO {
 
     @Override
     public void updateInputs(final IntakeIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                rollerPosition,
-                rollerVelocity,
-                rollerVoltage,
-                rollerTorqueCurrent,
-                rollerDeviceTemp,
-                rollerCANRangeDistance
-        );
-
         inputs.rollerPositionRots = rollerPosition.getValueAsDouble();
         inputs.rollerVelocityRotsPerSec = rollerVelocity.getValueAsDouble();
         inputs.rollerVoltage = rollerVoltage.getValueAsDouble();

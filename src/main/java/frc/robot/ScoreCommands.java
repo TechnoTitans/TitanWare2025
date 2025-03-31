@@ -138,16 +138,8 @@ public class ScoreCommands {
                         leftStickXInput,
                         () -> {
                             final Pose2d currentPose = swerve.getPose();
-                            final Pose2d nearestStation;
-                            if (Robot.IsRedAlliance.getAsBoolean()) {
-                                nearestStation = currentPose.nearest(
-                                        FieldConstants.CoralStation.RED_CORAL_STATIONS
-                                );
-                            } else {
-                                nearestStation = currentPose.nearest(
-                                        FieldConstants.CoralStation.BLUE_CORAL_STATIONS
-                                );
-                            }
+                            final Pose2d nearestStation = currentPose.nearest(FieldConstants.getHPPickupPoses());
+
                             return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
                         }
                 ).onlyIf(superstructure.unsafeToDrive.negate()),

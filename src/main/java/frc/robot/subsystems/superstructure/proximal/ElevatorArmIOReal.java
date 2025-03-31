@@ -14,6 +14,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
+import frc.robot.utils.ctre.RefreshAll;
 
 public class ElevatorArmIOReal implements ElevatorArmIO {
     private final HardwareConstants.ElevatorArmConstants constants;
@@ -50,6 +51,16 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
         this.pivotCANCoderPosition = pivotCANCoder.getPosition();
         this.pivotCANCoderVelocity = pivotCANCoder.getVelocity();
+
+        RefreshAll.add(
+                RefreshAll.CANBus.RIO,
+                pivotPosition,
+                pivotVelocity,
+                pivotVoltage,
+                pivotTorqueCurrent,
+                pivotCANCoderPosition,
+                pivotCANCoderVelocity
+        );
     }
 
     @Override
@@ -113,15 +124,6 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
 
     @Override
     public void updateInputs(final ElevatorArmIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                pivotPosition,
-                pivotVelocity,
-                pivotVoltage,
-                pivotTorqueCurrent,
-                pivotCANCoderPosition,
-                pivotCANCoderVelocity
-        );
-
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
         inputs.pivotVoltageVolts = pivotVoltage.getValueAsDouble();

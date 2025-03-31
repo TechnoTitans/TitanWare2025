@@ -17,6 +17,7 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.subsystems.drive.OdometryThreadRunner;
 import frc.robot.subsystems.drive.SwerveModule;
 import frc.robot.utils.control.DeltaTime;
+import frc.robot.utils.ctre.RefreshAll;
 
 public class GyroIOSim implements GyroIO {
     public static final double USE_SIMULATED_PITCH = 0;
@@ -26,10 +27,8 @@ public class GyroIOSim implements GyroIO {
     private final Pigeon2SimState pigeonSimState;
     private final SwerveDriveKinematics kinematics;
     private final SwerveModule[] swerveModules;
-    private final double[] lastSwerveModulePositionMeters = {0.0, 0.0, 0.0, 0.0};
 
     private final DeltaTime deltaTime;
-    private final LinearFilter filter = LinearFilter.movingAverage(50);
     private Rotation2d rawGyroYaw = Rotation2d.fromDegrees(0);
 
     // Cached StatusSignals
@@ -72,6 +71,17 @@ public class GyroIOSim implements GyroIO {
         pigeonSimState.setSupplyVoltage(12);
         pigeonSimState.setPitch(USE_SIMULATED_PITCH);
         pigeonSimState.setRoll(USE_SIMULATED_ROLL);
+
+        RefreshAll.add(
+                RefreshAll.CANBus.CANIVORE,
+                yaw,
+                pitch,
+                roll,
+                yawVelocity,
+                pitchVelocity,
+                rollVelocity,
+                faultHardware
+        );
     }
 
     private void updateGyro(final double dtSeconds) {
@@ -89,7 +99,6 @@ public class GyroIOSim implements GyroIO {
     @SuppressWarnings("DuplicatedCode")
     @Override
     public void config() {
-        //TODO fill in correct mount pose
         final Pigeon2Configuration pigeon2Configuration = new Pigeon2Configuration();
         pigeon2Configuration.MountPose.MountPoseRoll = -0.8288710713386536;
         pigeon2Configuration.MountPose.MountPosePitch = 1.461501121520996;
@@ -118,16 +127,6 @@ public class GyroIOSim implements GyroIO {
     @SuppressWarnings("DuplicatedCode")
     @Override
     public void updateInputs(final GyroIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                this.yaw,
-                this.pitch,
-                this.roll,
-                this.yawVelocity,
-                this.pitchVelocity,
-                this.rollVelocity,
-                this.faultHardware
-        );
-
         inputs.yawPositionDeg = getYaw();
         inputs.pitchPositionDeg = getPitch();
         inputs.rollPositionDeg = getRoll();

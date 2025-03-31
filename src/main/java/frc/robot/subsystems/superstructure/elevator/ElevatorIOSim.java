@@ -15,7 +15,6 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
@@ -27,10 +26,10 @@ import frc.robot.constants.SimConstants;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
+import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 public class ElevatorIOSim implements ElevatorIO {
     private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
@@ -61,10 +60,7 @@ public class ElevatorIOSim implements ElevatorIO {
     private final StatusSignal<Current> followerTorqueCurrent;
     private final StatusSignal<Temperature> followerDeviceTemp;
 
-    public ElevatorIOSim(
-            final HardwareConstants.ElevatorConstants constants,
-            final Supplier<Rotation2d> pivotAngle
-    ) {
+    public ElevatorIOSim(final HardwareConstants.ElevatorConstants constants) {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
         this.drumCircumferenceMeters = constants.spoolDiameterMeters() * Math.PI;
@@ -115,6 +111,20 @@ public class ElevatorIOSim implements ElevatorIO {
         this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
         this.followerDeviceTemp = followerMotor.getDeviceTemp();
 
+        RefreshAll.add(
+                RefreshAll.CANBus.CANIVORE,
+                masterPosition,
+                masterVelocity,
+                masterVoltage,
+                masterTorqueCurrent,
+                masterDeviceTemp,
+                followerPosition,
+                followerVelocity,
+                followerVoltage,
+                followerTorqueCurrent,
+                followerDeviceTemp
+        );
+
         final Notifier simUpdateNotifier = new Notifier(() -> {
             final double dt = deltaTime.get();
             motorsSim.update(dt);
@@ -132,16 +142,16 @@ public class ElevatorIOSim implements ElevatorIO {
     public void config() {
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.084543)
-                .withKG(0.53767)
+                .withKS(0.037707)
+                .withKG(0.52705)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(0.53016)
-                .withKA(0.014936)
-                .withKP(39.547)
+                .withKV(0.54587)
+                .withKA(0.012141)
+                .withKP(32.42)
                 .withKD(1);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.53016;
-        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.15;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.54587;
+        motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.1;
         motorConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 70;
         motorConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -70;
         motorConfiguration.CurrentLimits.StatorCurrentLimit = 70;
@@ -186,19 +196,6 @@ public class ElevatorIOSim implements ElevatorIO {
 
     @Override
     public void updateInputs(final ElevatorIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                masterPosition,
-                masterVelocity,
-                masterVoltage,
-                masterTorqueCurrent,
-                masterDeviceTemp,
-                followerPosition,
-                followerVelocity,
-                followerVoltage,
-                followerTorqueCurrent,
-                followerDeviceTemp
-        );
-
         inputs.masterPositionRots = masterPosition.getValueAsDouble();
         inputs.masterVelocityRotsPerSec = masterVelocity.getValueAsDouble();
         inputs.masterVoltage = masterVoltage.getValueAsDouble();

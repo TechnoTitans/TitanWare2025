@@ -24,6 +24,7 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.MoreDCMotor;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
+import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 public class IntakeIOSim implements IntakeIO {
@@ -81,6 +82,16 @@ public class IntakeIOSim implements IntakeIO {
         this.rollerTorqueCurrent = rollerMotor.getTorqueCurrent();
         this.rollerDeviceTemp = rollerMotor.getDeviceTemp();
         this.rollerCANRangeDistance = coralCANRange.getDistance();
+
+        RefreshAll.add(
+                RefreshAll.CANBus.RIO,
+                rollerPosition,
+                rollerVelocity,
+                rollerVoltage,
+                rollerTorqueCurrent,
+                rollerDeviceTemp,
+                rollerCANRangeDistance
+        );
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
         final double dt = deltaTime.get();
@@ -146,15 +157,6 @@ public class IntakeIOSim implements IntakeIO {
 
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                rollerPosition,
-                rollerVelocity,
-                rollerVoltage,
-                rollerTorqueCurrent,
-                rollerDeviceTemp,
-                rollerCANRangeDistance
-        );
-
         inputs.rollerPositionRots = rollerPosition.getValueAsDouble();
         inputs.rollerVelocityRotsPerSec = rollerVelocity.getValueAsDouble();
         inputs.rollerVoltage = rollerVoltage.getValueAsDouble();

@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -29,6 +28,7 @@ import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
+import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.sim.SimUtils;
 import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
@@ -147,6 +147,18 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
         this.drivePositionSignalBuffer = odometryThreadRunner.registerSignal(driveMotor, this.drivePosition);
         this.turnPositionSignalBuffer = odometryThreadRunner.registerSignal(turnMotor, this.turnPosition);
 
+        RefreshAll.add(
+                RefreshAll.CANBus.CANIVORE,
+                drivePosition,
+                driveVelocity,
+                driveTorqueCurrent,
+                driveDeviceTemp,
+                turnPosition,
+                turnVelocity,
+                turnTorqueCurrent,
+                turnDeviceTemp
+        );
+
         final Notifier simUpdateNotifier = new Notifier(() -> {
             final double dtSeconds = deltaTime.get();
             driveSim.update(dtSeconds);
@@ -210,17 +222,6 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
     @SuppressWarnings("DuplicatedCode")
     @Override
     public void updateInputs(final SwerveModuleIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                this.drivePosition,
-                this.driveVelocity,
-                this.driveTorqueCurrent,
-                this.driveDeviceTemp,
-                this.turnPosition,
-                this.turnVelocity,
-                this.turnTorqueCurrent,
-                this.turnDeviceTemp
-        );
-
         inputs.drivePositionRots = getDrivePosition();
         inputs.driveVelocityRotsPerSec = this.driveVelocity.getValueAsDouble();
         inputs.driveTorqueCurrentAmps = this.driveTorqueCurrent.getValueAsDouble();

@@ -32,6 +32,7 @@ import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.closeables.ToClose;
+import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.logging.LoggedCommandScheduler;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import frc.robot.utils.teleop.ControllerUtils;
@@ -85,8 +86,7 @@ public class Robot extends LoggedRobot {
 
     public final Elevator elevator = new Elevator(
             Constants.CURRENT_MODE,
-            HardwareConstants.ELEVATOR,
-            elevatorArm::getPivotPositionRadsFromHorizontal
+            HardwareConstants.ELEVATOR
     );
 
     public final IntakeArm intakeArm = new IntakeArm(
@@ -265,6 +265,8 @@ public class Robot extends LoggedRobot {
     @Override
     public void robotPeriodic() {
         Threads.setCurrentThreadPriority(true, 99);
+        RefreshAll.refreshAll();
+
         CommandScheduler.getInstance().run();
         VirtualSubsystem.run();
 

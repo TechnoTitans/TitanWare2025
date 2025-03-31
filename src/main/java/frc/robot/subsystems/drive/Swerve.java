@@ -179,7 +179,6 @@ public class Swerve extends SubsystemBase {
         );
         this.atHolonomicDrivePose = holonomicDriveController.atPose(
                 this::getPose,
-                this::getFieldRelativeSpeeds,
                 () -> holonomicPoseTarget
         );
 
@@ -778,7 +777,14 @@ public class Swerve extends SubsystemBase {
     }
 
     public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
-        return holonomicDriveController.atPose(this::getPose, this::getFieldRelativeSpeeds, targetPoseSupplier);
+        return holonomicDriveController.atPose(this::getPose, targetPoseSupplier);
+    }
+
+    public Trigger atPoseTrigger(
+            final Supplier<Pose2d> targetPoseSupplier,
+            final HolonomicDriveController.Tolerance tolerance
+    ) {
+        return holonomicDriveController.atPose(this::getPose, targetPoseSupplier, tolerance);
     }
 
     public Trigger atAxisTrigger(final DoubleSupplier target, final DoubleSupplier measurement) {
@@ -845,6 +851,7 @@ public class Swerve extends SubsystemBase {
         drive(speeds, moduleForceVectors);
     }
 
+    @SuppressWarnings("unused")
     public Command wheelRadiusCharacterization() {
         final double wheelRadiusMaxVelocityRadsPerSec = 0.25;
         final double wheelRadiusRampRateRadPerSecSquared = 0.05;

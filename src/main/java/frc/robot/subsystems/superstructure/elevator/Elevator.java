@@ -106,15 +106,14 @@ public class Elevator extends SubsystemBase {
 
     public Elevator(
             final Constants.RobotMode mode,
-            final HardwareConstants.ElevatorConstants constants,
-            final Supplier<Rotation2d> pivotAngle
+            final HardwareConstants.ElevatorConstants constants
     ) {
         this.constants = constants;
         this.drumCircumferenceMeters = constants.spoolDiameterMeters() * Math.PI;
 
         this.elevatorIO = switch (mode) {
             case REAL -> new ElevatorIOReal(constants);
-            case SIM -> new ElevatorIOSim(constants, pivotAngle);
+            case SIM -> new ElevatorIOSim(constants);
             case REPLAY, DISABLED -> new ElevatorIO() {};
         };
 

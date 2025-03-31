@@ -26,6 +26,7 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
+import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
@@ -102,6 +103,16 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         this.pivotCANCoderPosition = pivotCANCoder.getPosition();
         this.pivotCANCoderVelocity = pivotCANCoder.getVelocity();
 
+        RefreshAll.add(
+                RefreshAll.CANBus.RIO,
+                pivotPosition,
+                pivotVelocity,
+                pivotVoltage,
+                pivotTorqueCurrent,
+                pivotCANCoderPosition,
+                pivotCANCoderVelocity
+        );
+
         final Notifier simUpdateNotifier = new Notifier(() -> {
         final double dt = deltaTime.get();
             pivotMotorSim.update(dt);
@@ -169,15 +180,6 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
 
     @Override
     public void updateInputs(final ElevatorArmIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                pivotPosition,
-                pivotVelocity,
-                pivotVoltage,
-                pivotTorqueCurrent,
-                pivotCANCoderPosition,
-                pivotCANCoderVelocity
-        );
-
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
         inputs.pivotVoltageVolts = pivotVoltage.getValueAsDouble();

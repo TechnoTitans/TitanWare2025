@@ -23,6 +23,7 @@ import frc.robot.constants.SimConstants;
 import frc.robot.utils.MoreDCMotor;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
+import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.sim.feedback.SimCANCoder;
 import frc.robot.utils.sim.motors.TalonFXSSim;
 
@@ -93,6 +94,17 @@ public class IntakeArmIOSim implements IntakeArmIO {
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
         this.encoderPosition = pivotEncoder.getPosition();
         this.encoderVelocity = pivotEncoder.getVelocity();
+
+        RefreshAll.add(
+                RefreshAll.CANBus.RIO,
+                pivotPosition,
+                pivotVelocity,
+                pivotVoltage,
+                pivotTorqueCurrent,
+                pivotDeviceTemp,
+                encoderPosition,
+                encoderVelocity
+        );
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
             final double dt = deltaTime.get();
@@ -166,16 +178,6 @@ public class IntakeArmIOSim implements IntakeArmIO {
     @SuppressWarnings("DuplicatedCode")
     @Override
     public void updateInputs(IntakeArmIOInputs inputs) {
-        BaseStatusSignal.refreshAll(
-                pivotPosition,
-                pivotVelocity,
-                pivotVoltage,
-                pivotTorqueCurrent,
-                pivotDeviceTemp,
-                encoderPosition,
-                encoderVelocity
-        );
-
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
         inputs.pivotVoltage = pivotVoltage.getValueAsDouble();

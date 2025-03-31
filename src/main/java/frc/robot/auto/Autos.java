@@ -4,6 +4,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -16,6 +17,7 @@ import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
 import frc.robot.state.ReefState;
 import frc.robot.subsystems.drive.Swerve;
+import frc.robot.subsystems.drive.controllers.HolonomicDriveController;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.PhotonVision;
@@ -23,9 +25,11 @@ import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Supplier;
 
-// C:\Users\TechnoTitans\AppData\Local\Choreo\choreo-cli.exe --chor C:\Users\TechnoTitans\Documents\Repos\TitanWare2025\src\main\deploy\choreo\choreo.chor --all-trajectory --generate
 public class Autos {
+    // choreo-cli.exe --chor choreo.chor --all-trajectory --generate
     public static final String LogKey = "Auto";
+
+    private static final double AllowableDistanceFromHPForEarlyAlign = 0.2;
 
     private final Swerve swerve;
     private final Superstructure superstructure;
@@ -90,7 +94,15 @@ public class Autos {
         };
 
         final Superstructure.Goal goal = ScoreCommands.Level.LevelMap.get(branch.level());
-        final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
+        final Trigger atReef = swerve.atPoseTrigger(
+                scoringPoseSupplier,
+                new HolonomicDriveController.Tolerance(
+                        0.2,
+                        0.35,
+                        Rotation2d.fromDegrees(8),
+                        Math.PI / 4
+                )
+        );
 
         return Commands.deadline(
                 Commands.sequence(
@@ -103,9 +115,8 @@ public class Autos {
                                 ),
                                 superstructure.toGoal(goal)
                         ),
-                        // TODO: this isn't fast enough
-                        Commands.waitUntil(superstructure.unsafeToDrive.negate())
-                                .withTimeout(0.8)
+                        Commands.waitUntil(superstructure.extendedBeyond(0.9).negate())
+                                .withTimeout(0.2)
                 ),
                 swerve.driveToPose(scoringPoseSupplier)
                         .andThen(swerve.runWheelXCommand())
@@ -299,6 +310,14 @@ public class Autos {
         final AutoTrajectory secondRightHPToReef5 = routine.trajectory("LeftHPToReef1");
         final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
 
+        final Trigger farEnoughAwayFromHP = new Trigger(() -> {
+            final Pose2d pose = swerve.getPose();
+            final Pose2d closestHPPose = pose.nearest(FieldConstants.getHPPickupPoses());
+
+            return pose.getTranslation()
+                    .getDistance(closestHPPose.getTranslation()) >= AllowableDistanceFromHPForEarlyAlign;
+        });
+
         routine.active().onTrue(runStartingTrajectory(startToReef));
 
         startToReef.active().whileTrue(
@@ -319,7 +338,8 @@ public class Autos {
                         Commands.parallel(
                                 firstRightHPToReef5.cmd(),
                                 Commands.sequence(
-                                        Commands.waitSeconds(0.75),
+                                        Commands.waitUntil(farEnoughAwayFromHP)
+                                                .withTimeout(0.3),
                                         superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4)
                                 )
                         )
@@ -340,7 +360,8 @@ public class Autos {
                         Commands.parallel(
                                 secondRightHPToReef5.cmd(),
                                 Commands.sequence(
-                                        Commands.waitSeconds(0.75),
+                                        Commands.waitUntil(farEnoughAwayFromHP)
+                                                .withTimeout(0.3),
                                         superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4)
                                 )
                         )
