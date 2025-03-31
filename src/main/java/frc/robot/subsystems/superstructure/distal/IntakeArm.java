@@ -29,11 +29,17 @@ public class IntakeArm extends SubsystemBase {
     private static final double PositionToleranceRots = 0.03;
     private static final double VelocityToleranceRotsPerSec = 0.015;
 
+    private enum Mode {
+        NORMAL,
+        ALGAE_SLOW
+    }
+
     private final IntakeArmIO intakeArmIO;
     private final IntakeArmIOInputsAutoLogged inputs;
 
     private final SysIdRoutine pivotVoltageSysIdRoutine;
 
+    private Mode mode = Mode.NORMAL;
     private Goal desiredGoal = Goal.STOW;
     private Goal currentGoal = desiredGoal;
 
@@ -103,7 +109,7 @@ public class IntakeArm extends SubsystemBase {
             return pivotPositionGoalRots;
         }
 
-        public static boolean shouldUseSlowAlgae(final Goal desiredGoal, final Goal currentGoal) {
+        public static boolean shouldUseSlowAlgaeNext(final Goal desiredGoal, final Goal currentGoal) {
             return currentGoal == Goal.ALGAE_GROUND
                     || currentGoal == Goal.LOWER_ALGAE
                     || currentGoal == Goal.UPPER_ALGAE
@@ -149,17 +155,19 @@ public class IntakeArm extends SubsystemBase {
 
         if (desiredGoal != currentGoal) {
             positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
-            if (Goal.shouldUseSlowAlgae(desiredGoal, currentGoal)) {
+            if (Goal.shouldUseSlowAlgaeNext(desiredGoal, currentGoal)) {
                 algaeSlowGoal.position = positionSetpoint.pivotPositionRots;
                 algaeSlowGoal.velocity = 0;
+                mode = Mode.ALGAE_SLOW;
             } else {
                 intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
+                mode = Mode.NORMAL;
             }
 
             this.currentGoal = desiredGoal;
         }
 
-        if (Goal.shouldUseSlowAlgae(desiredGoal, currentGoal)) {
+        if (mode == Mode.ALGAE_SLOW) {
             algaeSlowSetpoint = algaeSlowProfile.calculate(deltaTimeSeconds, algaeSlowSetpoint, algaeSlowGoal);
             intakeArmIO.toPivotPositionUnprofiled(
                     algaeSlowSetpoint.position,
