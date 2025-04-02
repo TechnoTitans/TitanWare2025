@@ -1,19 +1,21 @@
 package frc.robot;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
+import frc.robot.subsystems.drive.controllers.HolonomicDriveController;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.utils.Container;
 
 import java.util.HashMap;
@@ -23,6 +25,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 public class ScoreCommands {
     public enum CoralStation {
@@ -67,7 +71,8 @@ public class ScoreCommands {
     public record ScorePosition(
             Reef.Side side,
             Level level
-    ) {}
+    ) {
+    }
 
     private final Swerve swerve;
     private final Superstructure superstructure;
@@ -132,7 +137,7 @@ public class ScoreCommands {
             final DoubleSupplier leftStickXInput
     ) {
         //noinspection SuspiciousNameCombination
-        return Commands.parallel(
+        return parallel(
                 swerve.teleopFacingAngle(
                         leftStickYInput,
                         leftStickXInput,
@@ -199,45 +204,94 @@ public class ScoreCommands {
         final Trigger atAlignReef = swerve.atPoseTrigger(reefAlignmentPoseSupplier);
         final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
 
+        final Trigger stoppedNearReef = atReef.negate()
+                .and(swerve.atPoseAndStoppedTrigger(
+                        scoringPoseSupplier,
+                        new HolonomicDriveController.PositionTolerance(
+                                0.4,
+                                Rotation2d.fromDegrees(8)
+                        ),
+                        new HolonomicDriveController.VelocityTolerance(
+                                0.1,
+                                Math.PI / 8
+                        )
+                ))
+                .debounce(0.15, Debouncer.DebounceType.kFalling);
+
         final Container<Superstructure.Goal> superstructureGoalContainer = Container.empty();
         final Runnable setSuperstructureGoalToAlign = () -> superstructureGoalContainer.value
                 = Superstructure.Goal.getAlignGoal(scorePositionContainer.value.level.goal);
         final Runnable setSuperstructureGoalToScore = () -> superstructureGoalContainer.value
                 = scorePositionContainer.value.level.goal;
 
-        return Commands.sequence(
-                Commands.runOnce(updateScorePosition),
-                Commands.runOnce(updateScoringPoseMap),
-                Commands.either(
-                        Commands.runOnce(setSuperstructureGoalToAlign),
-                        Commands.runOnce(setSuperstructureGoalToScore),
+        return sequence(
+                runOnce(updateScorePosition),
+                runOnce(updateScoringPoseMap),
+                either(
+                        runOnce(setSuperstructureGoalToAlign),
+                        runOnce(setSuperstructureGoalToScore),
                         shouldUseEarlyAlign
                 ),
-                Commands.deadline(
-                        Commands.sequence(
+                deadline(
+                        sequence(
                                 superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                         .onlyIf(superstructure.unsafeToDrive),
-                                Commands.waitUntil(atAlignReef)
+                                waitUntil(atAlignReef)
                                         .onlyIf(shouldUseEarlyAlign.and(atReef.negate())),
-                                Commands.deadline(
-                                        Commands.sequence(
-                                                Commands.waitUntil(atReef),
-                                                Commands.runOnce(setSuperstructureGoalToScore),
-                                                Commands.waitUntil(superstructure
-                                                                .atSetpoint(scorePositionContainer.value.level.goal))
-                                                        .withTimeout(2),
+                                deadline(
+                                        sequence(
+                                                waitUntil(atReef.or(stoppedNearReef)),
+                                                runOnce(setSuperstructureGoalToScore),
+                                                either(
+                                                        waitUntil(superstructure.atDynamicSetpoint),
+                                                        waitUntil(superstructure
+                                                                .atSetpoint(superstructureGoalContainer))
+                                                                .withTimeout(2),
+                                                        stoppedNearReef
+                                                ),
+                                                waitSeconds(10),
                                                 intake.scoreCoral()
                                         ),
-                                        superstructure.toGoal(superstructureGoalContainer)
+                                        repeatingSequence(
+                                                either(
+                                                        superstructure.toDynamic(
+                                                                () -> superstructureGoalContainer
+                                                                        .value
+                                                                        .elevatorArmGoal
+                                                                        .getPivotPositionGoalRots(),
+                                                                () -> superstructureGoalContainer
+                                                                        .value
+                                                                        .elevatorGoal
+                                                                        .getPositionGoalMeters(),
+                                                                () -> {
+                                                                    final IntakeArm.Goal goal =
+                                                                            superstructureGoalContainer
+                                                                                    .value
+                                                                                    .intakeArmGoal;
+
+                                                                    return goal.getPivotPositionGoalRots();
+                                                                }
+                                                        ).onlyWhile(stoppedNearReef),
+                                                        superstructure.toGoal(superstructureGoalContainer)
+                                                                .onlyWhile(stoppedNearReef.negate()),
+                                                        stoppedNearReef
+                                                )
+                                        )
                                 )
                         ),
-                        Commands.either(
-                                Commands.sequence(
+                        either(
+                                sequence(
                                         swerve.driveToPose(reefAlignmentPoseSupplier)
                                                 .onlyIf(atReef.negate())
                                                 .onlyWhile(shouldUseEarlyAlign),
-                                        swerve.runToPose(scoringPoseSupplier)
-                                                .until(atReef),
+                                        race(
+                                                swerve.runToPose(() -> scoringPoseSupplier.get().transformBy(new Transform2d(-0.25, 0, Rotation2d.kZero)))
+                                                        .until(atReef),
+//                                                swerve.runToPose(scoringPoseSupplier)
+//                                                        .until(atReef),
+                                                waitSeconds(0.5)
+                                                        .andThen(waitUntil(stoppedNearReef))
+                                        ),
                                         swerve.runWheelXCommand()
                                 ),
                                 swerve.runToPose(scoringPoseSupplier)
@@ -246,7 +300,8 @@ public class ScoreCommands {
                                 shouldUseEarlyAlign
                         )
                 ),
-                Commands.waitUntil(superstructure.unsafeToDrive.negate()).withTimeout(0.8)
+                waitUntil(superstructure.unsafeToDrive.negate())
+                        .withTimeout(0.8)
         ).withName("ScoreAtFixedPosition");
     }
 
@@ -299,12 +354,12 @@ public class ScoreCommands {
 
         final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
 
-        return Commands.runOnce(updateScoringPoseMap).andThen(Commands.parallel(
-                Commands.sequence(
-                        Commands.waitUntil(superstructure.unsafeToDrive.negate()),
-                        Commands.repeatingSequence(
-                                Commands.either(
-                                        Commands.sequence(
+        return runOnce(updateScoringPoseMap).andThen(parallel(
+                sequence(
+                        waitUntil(superstructure.unsafeToDrive.negate()),
+                        repeatingSequence(
+                                either(
+                                        sequence(
                                                 swerve.driveToPose(
                                                                 () -> scoringPoseSupplier
                                                                         .get()
@@ -319,24 +374,24 @@ public class ScoreCommands {
                                 )
                         )
                 ),
-                Commands.sequence(
+                sequence(
                         superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
-                        Commands.deadline(
-                                Commands.waitUntil(swerve.atHolonomicDrivePose),
-                                Commands.run(() -> setDriveToScorePosition.accept(wantScorePosition.get()))
+                        deadline(
+                                waitUntil(swerve.atHolonomicDrivePose),
+                                run(() -> setDriveToScorePosition.accept(wantScorePosition.get()))
                         ),
                         superstructure.runGoal(() ->
                                         Superstructure.Goal.getAlignGoal(wantScorePosition.get().level.goal))
                                 .until(swerve.atHolonomicDrivePose)
                                 .onlyIf(shouldUseEarlyAlign),
-                        Commands.repeatingSequence(
-                                Commands.defer(() -> {
+                        repeatingSequence(
+                                defer(() -> {
                                     final ScorePosition scorePosition = wantScorePosition.get();
                                     final BooleanSupplier desiredScorePositionHasNotChanged =
                                             () -> scorePosition.equals(wantScorePosition.get());
 
-                                    return Commands.sequence(
+                                    return sequence(
                                             superstructure.runGoal(Superstructure.Goal.SAFE)
                                                     .until(superstructure.atSetpoint(scorePosition.level.goal)
                                                             .and(superstructure.unsafeToDrive.negate()))
@@ -345,8 +400,8 @@ public class ScoreCommands {
                                                             () -> driveToScorePosition.get().side
                                                                     != scorePosition.side
                                                     )),
-                                            Commands.runOnce(() -> setDriveToScorePosition.accept(scorePosition)),
-                                            Commands.waitUntil(swerve.atHolonomicDrivePose),
+                                            runOnce(() -> setDriveToScorePosition.accept(scorePosition)),
+                                            waitUntil(swerve.atHolonomicDrivePose),
                                             superstructure.runGoal(scorePosition.level.goal)
                                     ).onlyWhile(desiredScorePositionHasNotChanged);
                                 }, superstructure.getRequirements())
@@ -382,27 +437,27 @@ public class ScoreCommands {
         final Trigger atAlignReef = swerve.atPoseTrigger(alignPoseSupplier);
         final Trigger atReef = swerve.atPoseTrigger(descorePoseSupplier);
 
-        return Commands.deadline(
-                Commands.sequence(
+        return deadline(
+                sequence(
                         superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
-                        Commands.waitUntil(atAlignReef).withTimeout(4),
-                        Commands.deadline(
-                                Commands.sequence(
-                                        Commands.waitUntil(atReef).withTimeout(2),
-                                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.UPPER_ALGAE)
+                        waitUntil(atAlignReef).withTimeout(4),
+                        deadline(
+                                sequence(
+                                        waitUntil(atReef).withTimeout(2),
+                                        waitUntil(superstructure.atSetpoint(Superstructure.Goal.UPPER_ALGAE)
                                                 .and(gamepieceState.hasAlgae)
                                                 .and(atAlignReef)).withTimeout(3)
                                 ),
                                 superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE)
                         )
                 ),
-                Commands.sequence(
+                sequence(
                         swerve.driveToPose(alignPoseSupplier),
-                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.UPPER_ALGAE))
+                        waitUntil(superstructure.atSetpoint(Superstructure.Goal.UPPER_ALGAE))
                                 .withTimeout(2),
                         swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
-                        Commands.waitSeconds(0.1),
+                        waitSeconds(0.1),
                         swerve.driveToPose(alignPoseSupplier)
                 ),
                 intake.intakeAlgae().asProxy()
@@ -431,27 +486,27 @@ public class ScoreCommands {
         final Trigger atAlignReef = swerve.atPoseTrigger(alignPoseSupplier);
         final Trigger atReef = swerve.atPoseTrigger(descorePoseSupplier);
 
-        return Commands.deadline(
-                Commands.sequence(
+        return deadline(
+                sequence(
                         superstructure.toInstantGoal(Superstructure.Goal.STOW)
                                 .onlyIf(superstructure.unsafeToDrive),
-                        Commands.waitUntil(atAlignReef).withTimeout(4),
-                        Commands.deadline(
-                                Commands.sequence(
-                                        Commands.waitUntil(atReef).withTimeout(2),
-                                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.LOWER_ALGAE)
+                        waitUntil(atAlignReef).withTimeout(4),
+                        deadline(
+                                sequence(
+                                        waitUntil(atReef).withTimeout(2),
+                                        waitUntil(superstructure.atSetpoint(Superstructure.Goal.LOWER_ALGAE)
                                                 .and(gamepieceState.hasAlgae)
                                                 .and(atAlignReef)).withTimeout(3)
                                 ),
                                 superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE)
                         )
                 ),
-                Commands.sequence(
+                sequence(
                         swerve.driveToPose(alignPoseSupplier),
-                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.LOWER_ALGAE))
+                        waitUntil(superstructure.atSetpoint(Superstructure.Goal.LOWER_ALGAE))
                                 .withTimeout(2),
                         swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
-                        Commands.waitSeconds(0.1),
+                        waitSeconds(0.1),
                         swerve.driveToPose(alignPoseSupplier)
                 ),
                 intake.intakeAlgae().asProxy()
@@ -461,16 +516,16 @@ public class ScoreCommands {
     public Command scoreAtPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         final Container<Superstructure.Goal> goalContainer = Container.empty();
 
-        return Commands.deadline(
-                Commands.sequence(
+        return deadline(
+                sequence(
                         goalContainer.set(() -> scorePositionSupplier.get().level.goal),
-                        Commands.deadline(
-                                Commands.waitUntil(superstructure.atSetpoint(goalContainer))
+                        deadline(
+                                waitUntil(superstructure.atSetpoint(goalContainer))
                                         .withTimeout(3)
                                         .andThen(intake.scoreCoral()),
                                 superstructure.toGoal(goalContainer)
                         ),
-                        Commands.waitUntil(superstructure.unsafeToDrive.negate()
+                        waitUntil(superstructure.unsafeToDrive.negate()
                                 .or(superstructure.atSetpoint(Superstructure.Goal.STOW)))
                 ),
                 swerve.runWheelXCommand()
@@ -483,11 +538,11 @@ public class ScoreCommands {
         final DoubleSupplier axisTarget = () -> FieldConstants.getScoringBargeCenterCage().getX();
         final DoubleSupplier robotX = () -> swerve.getPose().getX();
 
-        return Commands.sequence(
+        return sequence(
                 superstructureGoal.set(Superstructure.Goal.STOW),
-                Commands.deadline(
-                        Commands.sequence(
-                                Commands.parallel(
+                deadline(
+                        sequence(
+                                parallel(
                                         superstructureGoal.set(Superstructure.Goal.ALIGN_NET),
                                         swerve.driveToAxisFacingAngle(
                                                 axisTarget,
@@ -497,13 +552,13 @@ public class ScoreCommands {
                                 ).onlyIf(swerve.atAxisTrigger(axisTarget, robotX).negate()),
                                 swerve.wheelXCommand(),
                                 superstructureGoal.set(Superstructure.Goal.NET),
-                                Commands.waitUntil(superstructure.extendedBeyond(0.7)),
+                                waitUntil(superstructure.extendedBeyond(0.7)),
                                 intake.releaseAlgae(),
-                                Commands.parallel(
+                                parallel(
                                         superstructureGoal.set(Superstructure.Goal.FLING_NET),
-                                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.FLING_NET))
+                                        waitUntil(superstructure.atSetpoint(Superstructure.Goal.FLING_NET))
                                 ),
-                                Commands.waitSeconds(1.5)
+                                waitSeconds(1.5)
                         ),
                         superstructure.toGoal(superstructureGoal)
                 )
@@ -516,12 +571,12 @@ public class ScoreCommands {
     }
 
     public Command scoreProcessor() {
-        return Commands.deadline(
-                Commands.sequence(
-                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.PROCESSOR))
+        return deadline(
+                sequence(
+                        waitUntil(superstructure.atSetpoint(Superstructure.Goal.PROCESSOR))
                                 .withTimeout(2),
                         intake.scoreAlgae(),
-                        Commands.waitUntil(intake.isCurrentAboveAlgaeThreshold.negate()).withTimeout(2)
+                        waitUntil(intake.isCurrentAboveAlgaeThreshold.negate()).withTimeout(2)
                 ),
                 superstructure.toGoal(Superstructure.Goal.PROCESSOR),
                 swerve.runWheelXCommand()
@@ -529,21 +584,21 @@ public class ScoreCommands {
     }
 
     public Command intakeLowerAlgae() {
-        return Commands.parallel(
+        return parallel(
                 superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
                 intake.intakeAlgae().asProxy()
         ).withName("IntakeLowerAlgae");
     }
 
     public Command intakeUpperAlgae() {
-        return Commands.parallel(
+        return parallel(
                 superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
                 intake.intakeAlgae().asProxy()
         ).withName("IntakeUpperAlgae");
     }
 
     public Command intakeAlgaeFromGround() {
-        return Commands.parallel(
+        return parallel(
                 superstructure.toGoal(Superstructure.Goal.ALGAE_GROUND),
                 intake.intakeAlgae()
         ).withName("IntakeAlgaeFromGround");
@@ -554,7 +609,7 @@ public class ScoreCommands {
             final DoubleSupplier leftStickYInput,
             final DoubleSupplier leftStickXInput
     ) {
-        return Commands.parallel(
+        return parallel(
                 superstructure.runGoal(Superstructure.Goal.CLIMB),
                 swerve.teleopFacingAngle(
                         leftStickYInput,

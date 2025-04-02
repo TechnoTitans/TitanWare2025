@@ -11,9 +11,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 public class ControllerUtils {
-    public final static double STICK_TO_GYRO_ROTATION = -1;
-    public final static Rotation2d STICK_TO_FIELD_RELATIVE_ROTATION = Rotation2d.fromDegrees(-90);
-
     /**
      * Converts an X & Y joystick input into a {@link Translation2d} describing the <b>squared</b> input of the stick.
      * <p>This gives the joystick (driver) finer control at lower speeds and is pretty standard practice in FRC.</p>
@@ -43,14 +40,14 @@ public class ControllerUtils {
 
         final Rotation2d direction;
         if (MathUtil.isNear(0, xInput, 1e-6) && MathUtil.isNear(0, yInput, 1e-6)) {
-            direction = new Rotation2d(0);
+            direction = Rotation2d.kZero;
         } else {
              direction = new Rotation2d(xInput, yInput);
         }
 
         final double squaredMagnitude = Math.copySign(magnitude * magnitude, magnitude);
-        return new Pose2d(new Translation2d(), direction)
-                .transformBy(new Transform2d(squaredMagnitude, 0, new Rotation2d()))
+        return new Pose2d(Translation2d.kZero, direction)
+                .transformBy(new Transform2d(squaredMagnitude, 0, Rotation2d.kZero))
                 .getTranslation();
     }
 

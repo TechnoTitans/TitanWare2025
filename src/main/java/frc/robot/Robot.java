@@ -3,7 +3,7 @@ package frc.robot;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.*;
@@ -19,10 +19,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
-import frc.robot.constants.Constants;
-import frc.robot.constants.FieldConstants;
-import frc.robot.constants.HardwareConstants;
-import frc.robot.constants.RobotMap;
+import frc.robot.constants.*;
 import frc.robot.selector.BranchSelector;
 import frc.robot.state.GamepieceState;
 import frc.robot.state.ReefState;
@@ -279,6 +276,33 @@ public class Robot extends LoggedRobot {
 
         LoggedCommandScheduler.periodic();
 
+        final Pose2d swerveAt = swerve.getPose();
+        final Translation2d center = new Translation2d(
+                elevator.getExtensionMeters() + SimConstants.ElevatorArm.LENGTH_METERS,
+                elevatorArm.getPivotPosition()
+                        .plus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL.unaryMinus())
+        );
+        final Translation2d offset = new Translation2d(-0.267, 0.153);
+        final Translation2d pos = center.plus(offset);
+        final Pose3d posInWorld = new Pose3d(swerveAt).plus(new Transform3d(
+                new Translation3d(pos.getX(), 0, pos.getY()),
+                Rotation3d.kZero
+        ));
+
+        final Pose3d branchPose = FieldConstants.Reef.BLUE_BRANCH_POSITIONS
+                .get(FieldConstants.Reef.Face.ZERO_FACING_DRIVERS)
+                .get(FieldConstants.Reef.Side.LEFT)
+                .get(FieldConstants.Reef.Level.L4);
+
+        final Rotation2d angleToBranch = new Translation2d(branchPose.getX(), branchPose.getZ())
+                .minus(new Translation2d(posInWorld.getX(), posInWorld.getZ()))
+                .getAngle()
+                .unaryMinus();
+
+        Logger.recordOutput("PosInWorld", posInWorld);
+        Logger.recordOutput("BranchPose", branchPose);
+        Logger.recordOutput("PosToBranch", angleToBranch);
+
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
         Threads.setCurrentThreadPriority(false, 10);
     }
@@ -318,7 +342,7 @@ public class Robot extends LoggedRobot {
 //        );
 
         final Container<Pose2d> pose2dContainer = Container.empty();
-        driverController.x(teleopEventLoop).whileTrue(
+        driverController.x(testEventLoop).whileTrue(
                 Commands.sequence(
                         pose2dContainer.set(() -> swerve.getPose().transformBy(new Transform2d(1, 0, Rotation2d.kZero))),
                         Commands.parallel(
@@ -439,12 +463,13 @@ public class Robot extends LoggedRobot {
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
         );
 
-        this.driverController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
+        // TODO: remove before merging
+        this.driverController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.scoreAtFixedPosition(() -> new ScoreCommands.ScorePosition(FieldConstants.Reef.Side.LEFT, ScoreCommands.Level.L4)));
 
         this.driverController.y(teleopEventLoop).whileTrue(scoreCommands.descoreUpperAlgae());
 
-        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
+//        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
         this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreNetFlingFacingBarge());
 

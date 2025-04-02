@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Superstructure extends VirtualSubsystem {
@@ -72,6 +73,10 @@ public class Superstructure extends VirtualSubsystem {
             this.intakeArmGoal = intakeArmGoal;
         }
 
+        public static Translation2d getGoalTranslation(final Goal goal) {
+            return GoalTranslations.get(goal);
+        }
+
         public static Goal getAlignGoal(final Goal goal) {
             return switch (goal) {
                 case L1 -> ALIGN_L1;
@@ -85,7 +90,7 @@ public class Superstructure extends VirtualSubsystem {
 
     protected static final String LogKey = "Superstructure";
     public static final double AllowableExtensionForDrivingMeters =
-            Goal.GoalTranslations.get(Goal.SAFE).getNorm();
+            Goal.getGoalTranslation(Goal.SAFE).getNorm();
 
     private final Elevator elevator;
     private final ElevatorArm elevatorArm;
@@ -108,8 +113,9 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger desiredGoalChanged;
 
     private final Trigger desiredGoalNotStow;
-    private final Trigger atSuperstructureSetpoint;
+    private final Trigger atDesiredSetpoint;
 
+    public final Trigger atDynamicSetpoint;
     public final Trigger unsafeToDrive;
 
     public Superstructure(
@@ -128,18 +134,19 @@ public class Superstructure extends VirtualSubsystem {
         this.desiredGoalIsAtGoal = new Trigger(eventLoop, () -> desiredGoal == atGoal);
         this.desiredGoalIsDynamic = new Trigger(eventLoop, () -> desiredGoal == Goal.DYNAMIC);
         this.desiredGoalNotStow = new Trigger(eventLoop, () -> desiredGoal != Goal.STOW);
-        this.atSuperstructureSetpoint = elevator.atSetpoint
+        this.atDesiredSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atSetpoint)
                 .and(intakeArm.atSetpoint)
                 .and(desiredGoalIsAtGoal);
 
+        this.atDynamicSetpoint = atDesiredSetpoint.and(desiredGoalIsDynamic);
         this.unsafeToDrive = extendedBeyond(AllowableExtensionForDrivingMeters);
 
         this.allowedToChangeGoal = desiredGoalIsDynamic.negate()
-                .and((desiredGoalIsAtGoal.and(atSuperstructureSetpoint)).negate());
+                .and((desiredGoalIsAtGoal.and(atDesiredSetpoint)).negate());
         this.desiresUpwardsMotion = new Trigger(eventLoop, () -> {
             final Translation2d currentTranslation = getCurrentTranslation();
-            final Translation2d desiredTranslation = Superstructure.Goal.GoalTranslations.get(desiredGoal);
+            final Translation2d desiredTranslation = Goal.getGoalTranslation(desiredGoal);
 
             return desiredTranslation.getY() >= currentTranslation.getY();
         });
@@ -245,7 +252,7 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/AtGoal", atGoal.toString());
 
         Logger.recordOutput(LogKey + "/DesiredGoalNotStow", desiredGoalNotStow);
-        Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint);
+        Logger.recordOutput(LogKey + "/AtDesiredSetpoint", atDesiredSetpoint);
         Logger.recordOutput(LogKey + "/UnsafeToDrive", unsafeToDrive);
 
         Logger.recordOutput(LogKey + "/ExtensionDistanceMeters", getCurrentTranslation().getNorm());
@@ -270,7 +277,7 @@ public class Superstructure extends VirtualSubsystem {
     }
 
     public Trigger atSetpoint(final Supplier<Superstructure.Goal> goalSupplier) {
-        return atSuperstructureSetpoint.and(() -> atGoal == goalSupplier.get());
+        return atDesiredSetpoint.and(() -> atGoal == goalSupplier.get());
     }
 
     public Trigger atSetpoint(final Superstructure.Goal goal) {
@@ -316,11 +323,28 @@ public class Superstructure extends VirtualSubsystem {
                 .withName("RunGoal");
     }
 
+    public Command toDynamic(
+            final DoubleSupplier elevatorArmPositionRots,
+            final DoubleSupplier elevatorPositionMeters,
+            final DoubleSupplier intakeArmPositionRots
+    ) {
+        return Commands.parallel(
+                Commands.runOnce(() -> {
+                    this.desiredGoal = Goal.DYNAMIC;
+                    this.runningGoal = Goal.DYNAMIC;
+                    this.atGoal = Goal.NONE;
+                }),
+                elevatorArm.runPositionCommand(elevatorArmPositionRots),
+                elevator.runPositionMetersCommand(elevatorPositionMeters),
+                intakeArm.runPositionCommand(intakeArmPositionRots)
+        ).finallyDo(setDesiredGoal(Goal.STOW));
+    }
+
     public Set<Subsystem> getRequirements() {
         return Set.of(elevator, elevatorArm, intakeArm);
     }
 
-    private Translation2d getCurrentTranslation() {
+    public Translation2d getCurrentTranslation() {
         return new Translation2d(
                 elevator.getExtensionMeters(),
                 elevatorArm.getPivotPosition()

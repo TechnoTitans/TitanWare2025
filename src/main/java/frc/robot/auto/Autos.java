@@ -96,11 +96,9 @@ public class Autos {
         final Superstructure.Goal goal = ScoreCommands.Level.LevelMap.get(branch.level());
         final Trigger atReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
-                new HolonomicDriveController.Tolerance(
+                new HolonomicDriveController.PositionTolerance(
                         0.2,
-                        0.35,
-                        Rotation2d.fromDegrees(8),
-                        Math.PI / 4
+                        Rotation2d.fromDegrees(8)
                 )
         );
 

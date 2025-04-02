@@ -82,7 +82,7 @@ public class Swerve extends SubsystemBase {
 
     public final Trigger atHeadingSetpoint;
     private boolean headingControllerActive = false;
-    private Rotation2d headingTarget = new Rotation2d();
+    private Rotation2d headingTarget = Rotation2d.kZero;
     private final PIDController headingController;
 
     public final Trigger atHolonomicDrivePose;
@@ -170,10 +170,12 @@ public class Swerve extends SubsystemBase {
                         Config.maxAngularVelocityRadsPerSec(),
                         Config.maxAngularAccelerationRadsPerSecSquared()
                 ),
-                new HolonomicDriveController.Tolerance(
+                new HolonomicDriveController.PositionTolerance(
                         0.05,
+                        Rotation2d.fromDegrees(4)
+                ),
+                new HolonomicDriveController.VelocityTolerance(
                         0.1,
-                        Rotation2d.fromDegrees(4),
                         Math.PI / 6
                 )
         );
@@ -782,9 +784,23 @@ public class Swerve extends SubsystemBase {
 
     public Trigger atPoseTrigger(
             final Supplier<Pose2d> targetPoseSupplier,
-            final HolonomicDriveController.Tolerance tolerance
+            final HolonomicDriveController.PositionTolerance tolerance
     ) {
-        return holonomicDriveController.atPose(this::getPose, targetPoseSupplier, tolerance);
+        return HolonomicDriveController.atPose(this::getPose, targetPoseSupplier, tolerance);
+    }
+
+    public Trigger atPoseAndStoppedTrigger(
+            final Supplier<Pose2d> targetPoseSupplier,
+            final HolonomicDriveController.PositionTolerance positionTolerance,
+            final HolonomicDriveController.VelocityTolerance velocityTolerance
+    ) {
+        return HolonomicDriveController.atPoseAndStopped(
+                this::getPose,
+                this::getFieldRelativeSpeeds,
+                targetPoseSupplier,
+                positionTolerance,
+                velocityTolerance
+        );
     }
 
     public Trigger atAxisTrigger(final DoubleSupplier target, final DoubleSupplier measurement) {

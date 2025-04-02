@@ -21,6 +21,7 @@ import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -85,6 +86,7 @@ public class IntakeArm extends SubsystemBase {
     }
 
     public enum Goal {
+        DYNAMIC(0),
         STOW(0),
         HP(0),
         ALGAE_GROUND(-0.349),
@@ -218,12 +220,17 @@ public class IntakeArm extends SubsystemBase {
 
     public void setGoal(final Goal goal) {
         this.desiredGoal = goal;
+
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
     }
 
-    public Command runPivotGoalCommand(final Goal goal) {
-        return Commands.run(() -> setGoal(goal));
+    public Command runPositionCommand(final DoubleSupplier pivotPositionRots) {
+        return run(() -> {
+            this.desiredGoal = Goal.DYNAMIC;
+            positionSetpoint.pivotPositionRots = pivotPositionRots.getAsDouble();
+            intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
+        });
     }
 
     private SysIdRoutine makeVoltageSysIdRoutine(

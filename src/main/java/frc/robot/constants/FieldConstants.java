@@ -189,7 +189,7 @@ public class FieldConstants {
                             Rotation2d.fromDegrees(-120))
             );
 
-            final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);;
+            final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);
             for (final Map.Entry<Face, Pose2d> entry : BLUE_CENTER_FACES.entrySet()) {
                 RED_CENTER_FACES.put(entry.getKey(), entry.getValue().relativeTo(RED_ORIGIN));
                 BLUE_CENTER_SCORING_FACES.put(entry.getKey(), entry.getValue().transformBy(SCORING_DISTANCE_OFFSET));
@@ -219,10 +219,10 @@ public class FieldConstants {
                     final Pose3d rightPose = new Pose3d(
                                     new Translation3d(
                                             poseDirection
-                                                    .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
+                                                    .transformBy(new Transform2d(adjustX, adjustY, Rotation2d.kZero))
                                                     .getX(),
                                             poseDirection
-                                                    .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
+                                                    .transformBy(new Transform2d(adjustX, adjustY, Rotation2d.kZero))
                                                     .getY(),
                                             level.heightMeters),
                                     new Rotation3d(
@@ -242,10 +242,10 @@ public class FieldConstants {
                     final Pose3d leftPose = new Pose3d(
                                     new Translation3d(
                                             poseDirection
-                                                    .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
+                                                    .transformBy(new Transform2d(adjustX, -adjustY, Rotation2d.kZero))
                                                     .getX(),
                                             poseDirection
-                                                    .transformBy(new Transform2d(adjustX, -adjustY, new Rotation2d()))
+                                                    .transformBy(new Transform2d(adjustX, -adjustY, Rotation2d.kZero))
                                                     .getY(),
                                             level.heightMeters),
                                     new Rotation3d(
