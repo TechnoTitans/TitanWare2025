@@ -2,7 +2,10 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -31,6 +34,7 @@ import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
+import frc.robot.utils.Container;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.logging.LoggedCommandScheduler;
@@ -312,6 +316,18 @@ public class Robot extends LoggedRobot {
 //        driverController.a(testEventLoop).whileTrue(
 //                swerve.wheelRadiusCharacterization()
 //        );
+
+        final Container<Pose2d> pose2dContainer = Container.empty();
+        driverController.x(teleopEventLoop).whileTrue(
+                Commands.sequence(
+                        pose2dContainer.set(() -> swerve.getPose().transformBy(new Transform2d(1, 0, Rotation2d.kZero))),
+                        Commands.parallel(
+                                Commands.run(() -> Logger.recordOutput("newDist", pose2dContainer.value.getTranslation().getNorm())),
+                                Commands.run(() -> Logger.recordOutput("robot", swerve.getPose().getTranslation().getNorm())),
+                                swerve.runToPose(pose2dContainer)
+                        )
+                )
+        );
 
         driverController.y(testEventLoop).whileTrue(
                 intakeArm.pivotVoltageSysIdCommand()

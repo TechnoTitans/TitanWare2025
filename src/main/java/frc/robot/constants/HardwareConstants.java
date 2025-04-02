@@ -67,7 +67,7 @@ public class HardwareConstants {
             RobotMap.RioCANBus,
             19,
             20,
-            0.19873046875,
+            0.62939453125,
             60,
             -0.35,
             0

@@ -80,11 +80,11 @@ public class IntakeArmIOReal implements IntakeArmIO {
                 .withGravityType(GravityTypeValue.Elevator_Static)
                 .withKV(5.2257)
                 .withKA(0.20274)
-                .withKP(19.476)
-                .withKD(5);
+                .withKP(10)
+                .withKD(4);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5.2257;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.20274;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.4;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
@@ -104,7 +104,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotMotor.getConfigurator().apply(pivotConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
-                250,
+                100,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

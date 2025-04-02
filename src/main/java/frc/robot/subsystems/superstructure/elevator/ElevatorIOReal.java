@@ -87,7 +87,7 @@ public class ElevatorIOReal implements ElevatorIO {
                 .withGravityType(GravityTypeValue.Elevator_Static)
                 .withKV(0.54587)
                 .withKA(0.012141)
-                .withKP(32.42)
+                .withKP(15)
                 .withKD(1);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.54587;
