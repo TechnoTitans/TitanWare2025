@@ -20,7 +20,6 @@ import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
-import frc.robot.constants.FieldConstants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
@@ -318,7 +317,7 @@ public class Robot extends LoggedRobot {
 //        );
 
         final Container<Pose2d> pose2dContainer = Container.empty();
-        driverController.x(teleopEventLoop).whileTrue(
+        driverController.x(testEventLoop).whileTrue(
                 Commands.sequence(
                         pose2dContainer.set(() -> swerve.getPose().transformBy(new Transform2d(1, 0, Rotation2d.kZero))),
                         Commands.parallel(
