@@ -49,7 +49,7 @@ public class IntakeArm extends SubsystemBase {
 
     private final DeltaTime deltaTime;
     private final TrapezoidProfile algaeSlowProfile = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(1, 0.1)
+            new TrapezoidProfile.Constraints(0.1, 0.01)
     );
     private final TrapezoidProfile.State algaeSlowGoal = new TrapezoidProfile.State(0, 0);
     private TrapezoidProfile.State algaeSlowSetpoint = new TrapezoidProfile.State(0, 0);
