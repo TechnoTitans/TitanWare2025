@@ -163,7 +163,6 @@ public class IntakeArm extends SubsystemBase {
                 intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
                 mode = Mode.NORMAL;
             }
-
             this.currentGoal = desiredGoal;
         }
 
@@ -184,6 +183,7 @@ public class IntakeArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPivotPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atPivotLowerLimit());
         Logger.recordOutput(LogKey + "/AtUpperLimit", atPivotUpperLimit());
+        Logger.recordOutput(LogKey + "/Mode", mode);
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
