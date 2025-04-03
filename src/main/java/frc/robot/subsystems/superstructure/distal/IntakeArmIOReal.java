@@ -81,7 +81,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
                 .withKV(4.0382)
                 .withKA(0.21825)
                 .withKP(100)
-                .withKD(3);
+                .withKD(5);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 4.0382;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
