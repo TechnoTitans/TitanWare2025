@@ -160,9 +160,7 @@ public class IntakeArm extends SubsystemBase {
                 algaeSlowGoal.velocity = 0;
                 mode = Mode.ALGAE_SLOW;
             } else {
-                if(mode != Mode.ALGAE_SLOW) {
-                    intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
-                }
+                intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
                 mode = Mode.NORMAL;
             }
             this.currentGoal = desiredGoal;
