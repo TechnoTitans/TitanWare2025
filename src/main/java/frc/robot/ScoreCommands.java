@@ -225,7 +225,7 @@ public class ScoreCommands {
                                                 Commands.runOnce(setSuperstructureGoalToScore),
                                                 Commands.waitUntil(superstructure
                                                                 .atSetpoint(scorePositionContainer.value.level.goal))
-                                                        .withTimeout(2),
+                                                        .withTimeout(10),
                                                 intake.scoreCoral()
                                         ),
                                         superstructure.toGoal(superstructureGoalContainer)
