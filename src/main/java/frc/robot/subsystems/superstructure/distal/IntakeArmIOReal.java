@@ -80,7 +80,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
                 .withGravityType(GravityTypeValue.Elevator_Static)
                 .withKV(4.0382)
                 .withKA(0.21825)
-                .withKP(36.584)
+                .withKP(114.57)
                 .withKD(3);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 4.0382;
