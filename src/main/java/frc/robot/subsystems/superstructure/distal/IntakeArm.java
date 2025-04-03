@@ -27,7 +27,7 @@ import static edu.wpi.first.units.Units.*;
 public class IntakeArm extends SubsystemBase {
     protected static final String LogKey = "IntakeArm";
     private static final double PositionToleranceRots = 0.03;
-    private static final double VelocityToleranceRotsPerSec = 0.015;
+    private static final double VelocityToleranceRotsPerSec = 0.02;
 
     private enum Mode {
         NORMAL,
