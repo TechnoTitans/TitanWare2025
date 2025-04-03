@@ -156,8 +156,12 @@ public class IntakeArm extends SubsystemBase {
         if (desiredGoal != currentGoal) {
             positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
             if (Goal.shouldUseSlowAlgaeNext(desiredGoal, currentGoal)) {
+                algaeSlowSetpoint.position = inputs.pivotPositionRots;
+                algaeSlowSetpoint.velocity = inputs.pivotVelocityRotsPerSec;
+
                 algaeSlowGoal.position = positionSetpoint.pivotPositionRots;
                 algaeSlowGoal.velocity = 0;
+
                 mode = Mode.ALGAE_SLOW;
             } else {
                 intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
@@ -167,7 +171,7 @@ public class IntakeArm extends SubsystemBase {
         }
 
         if (mode == Mode.ALGAE_SLOW) {
-            algaeSlowSetpoint = algaeSlowProfile.calculate(0.02, algaeSlowSetpoint, algaeSlowGoal);
+            algaeSlowSetpoint = algaeSlowProfile.calculate(deltaTimeSeconds, algaeSlowSetpoint, algaeSlowGoal);
             intakeArmIO.toPivotPositionUnprofiled(
                     algaeSlowSetpoint.position,
                     algaeSlowSetpoint.velocity
