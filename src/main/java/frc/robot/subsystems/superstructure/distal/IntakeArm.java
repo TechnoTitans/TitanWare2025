@@ -169,7 +169,6 @@ public class IntakeArm extends SubsystemBase {
         }
 
         if (mode == Mode.ALGAE_SLOW) {
-            if (true) throw new RuntimeException();
             algaeSlowSetpoint = algaeSlowProfile.calculate(deltaTimeSeconds, algaeSlowSetpoint, algaeSlowGoal);
             intakeArmIO.toPivotPositionUnprofiled(
                     algaeSlowSetpoint.position,
