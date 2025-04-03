@@ -168,13 +168,14 @@ public class IntakeArm extends SubsystemBase {
 
         if (mode == Mode.ALGAE_SLOW) {
             algaeSlowSetpoint = algaeSlowProfile.calculate(deltaTimeSeconds, algaeSlowSetpoint, algaeSlowGoal);
-            Logger.recordOutput("Goal", algaeSlowGoal.position);
-            Logger.recordOutput("Setpoint", algaeSlowSetpoint.position);
             intakeArmIO.toPivotPositionUnprofiled(
                     algaeSlowSetpoint.position,
                     algaeSlowSetpoint.velocity
             );
         }
+
+        Logger.recordOutput("Goal", algaeSlowGoal.position);
+        Logger.recordOutput("Setpoint", algaeSlowSetpoint.position);
 
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
