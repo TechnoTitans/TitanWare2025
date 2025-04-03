@@ -202,7 +202,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command holdCoral() {
-        return toInstantRollerTorqueCurrent(10)
+        return toInstantRollerTorqueCurrent(11)
                 .withName("HoldCoral");
     }
 
