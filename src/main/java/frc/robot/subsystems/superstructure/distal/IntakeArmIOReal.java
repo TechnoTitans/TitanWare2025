@@ -76,12 +76,12 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         pivotConfiguration.Slot0 = new Slot0Configs()
                 .withKS(0.28234)
-                .withKG(0.13263)
+                .withKG(0.12263)
                 .withGravityType(GravityTypeValue.Elevator_Static)
                 .withKV(5.2257)
                 .withKA(0.20274)
-                .withKP(10)
-                .withKD(4);
+                .withKP(18)
+                .withKD(1);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5.2257;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
