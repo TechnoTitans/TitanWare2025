@@ -41,7 +41,7 @@ public interface Constants {
                 new Rotation3d(0, Units.degreesToRadians(-5), Units.degreesToRadians(10))
         );
         Transform3d ROBOT_TO_BL_APRILTAG = new Transform3d(
-                new Translation3d(Units.inchesToMeters(-11.521), Units.inchesToMeters(10.667), Units.inchesToMeters(8.063)),
+                new Translation3d(Units.inchesToMeters(-11.995), Units.inchesToMeters(10.584), Units.inchesToMeters(7.749)),
                 new Rotation3d(0, Units.degreesToRadians(-5), Units.degreesToRadians(-170))
         );
         Transform3d ROBOT_TO_FL_BOTTOM_APRILTAG = new Transform3d(
