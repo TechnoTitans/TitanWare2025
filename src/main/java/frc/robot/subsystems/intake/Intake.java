@@ -43,16 +43,16 @@ public class Intake extends SubsystemBase {
         coralTreeMap.put(0.155, Units.inchesToMeters(4.6));
         coralTreeMap.put(0.165, Units.inchesToMeters(5.0));
         coralTreeMap.put(0.178, Units.inchesToMeters(5.5));
-        coralTreeMap.put(0.18, Units.inchesToMeters(5.75));
+        coralTreeMap.put(0.181, Units.inchesToMeters(5.75));
         coralTreeMap.put(0.197, Units.inchesToMeters(6.25));
         coralTreeMap.put(0.207, Units.inchesToMeters(6.6));
         coralTreeMap.put(0.229, Units.inchesToMeters(7.25));
-        coralTreeMap.put(0.237, Units.inchesToMeters(7.75));
+        coralTreeMap.put(0.24, Units.inchesToMeters(7.75));
         coralTreeMap.put(0.246, Units.inchesToMeters(8.1));
         coralTreeMap.put(0.268, Units.inchesToMeters(8.75));
         coralTreeMap.put(0.272, Units.inchesToMeters(9.0));
         coralTreeMap.put(0.28, Units.inchesToMeters(9.25));
-        coralTreeMap.put(0.294, Units.inchesToMeters(9.75));
+        coralTreeMap.put(0.295, Units.inchesToMeters(9.75));
         coralTreeMap.put(0.301, Units.inchesToMeters(10.2));
         coralTreeMap.put(0.321, Units.inchesToMeters(11.0));
         coralTreeMap.put(0.42, Units.inchesToMeters(15.5));
@@ -202,7 +202,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command holdCoral() {
-        return toInstantRollerTorqueCurrent(12)
+        return toInstantRollerTorqueCurrent(10)
                 .withName("HoldCoral");
     }
 

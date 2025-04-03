@@ -248,6 +248,14 @@ public class Autos {
         final AutoTrajectory secondRightHPToReef5 = routine.trajectory("RightHPToReef5");
         final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
 
+        final Trigger farEnoughAwayFromHP = new Trigger(() -> {
+            final Pose2d pose = swerve.getPose();
+            final Pose2d closestHPPose = pose.nearest(FieldConstants.getHPPickupPoses());
+
+            return pose.getTranslation()
+                    .getDistance(closestHPPose.getTranslation()) >= AllowableDistanceFromHPForEarlyAlign;
+        });
+
         routine.active().onTrue(runStartingTrajectory(startToReef));
 
         startToReef.active().whileTrue(
@@ -256,7 +264,7 @@ public class Autos {
 
         startToReef.done().onTrue(
                 Commands.sequence(
-                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.RIGHT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
                         reef4ToRightHP.cmd()
                 )
@@ -264,9 +272,15 @@ public class Autos {
 
         reef4ToRightHP.done().onTrue(
                 Commands.sequence(
-                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
-                        firstRightHPToReef5.cmd()
-                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        Commands.parallel(
+                                firstRightHPToReef5.cmd(),
+                                Commands.sequence(
+                                        Commands.waitUntil(farEnoughAwayFromHP)
+                                                .withTimeout(0.3),
+                                        superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4)
+                                )
+                        )
                 )
         );
 
@@ -280,9 +294,15 @@ public class Autos {
 
         reef5ToRightHP.done().onTrue(
                 Commands.sequence(
-                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
-                        secondRightHPToReef5.cmd()
-                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        Commands.parallel(
+                                secondRightHPToReef5.cmd(),
+                                Commands.sequence(
+                                        Commands.waitUntil(farEnoughAwayFromHP)
+                                                .withTimeout(0.3),
+                                        superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4)
+                                )
+                        )
                 )
         );
 
@@ -297,7 +317,6 @@ public class Autos {
         moveEndOfAuto.done().onTrue(
                 swerve.runWheelXCommand()
         );
-
         return routine;
     }
 

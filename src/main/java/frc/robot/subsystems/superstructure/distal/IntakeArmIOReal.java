@@ -84,7 +84,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
                 .withKD(4);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5.2257;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.4;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;

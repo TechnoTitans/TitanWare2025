@@ -140,7 +140,7 @@ public class ScoreCommands {
                             final Pose2d currentPose = swerve.getPose();
                             final Pose2d nearestStation = currentPose.nearest(FieldConstants.getHPPickupPoses());
 
-                            return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
+                            return nearestStation.getRotation();
                         }
                 ).onlyIf(superstructure.unsafeToDrive.negate()),
                 superstructure.toGoal(Superstructure.Goal.HP),
@@ -488,22 +488,19 @@ public class ScoreCommands {
                 Commands.deadline(
                         Commands.sequence(
                                 Commands.parallel(
-                                        superstructureGoal.set(Superstructure.Goal.ALIGN_NET),
-                                        swerve.driveToAxisFacingAngle(
-                                                axisTarget,
-                                                Swerve.DriveAxis.X,
-                                                () -> Rotation2d.kZero
-                                        )
+                                        superstructureGoal.set(Superstructure.Goal.ALIGN_NET)
+//                                        swerve.driveToAxisFacingAngle(
+//                                                axisTarget,
+//                                                Swerve.DriveAxis.X,
+//                                                () -> Rotation2d.kZero
+//                                        )
                                 ).onlyIf(swerve.atAxisTrigger(axisTarget, robotX).negate()),
                                 swerve.wheelXCommand(),
                                 superstructureGoal.set(Superstructure.Goal.NET),
                                 Commands.waitUntil(superstructure.extendedBeyond(0.7)),
-                                intake.releaseAlgae(),
-                                Commands.parallel(
-                                        superstructureGoal.set(Superstructure.Goal.FLING_NET),
-                                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.FLING_NET))
-                                ),
-                                Commands.waitSeconds(1.5)
+                                intake.scoreAlgae(),
+                                superstructureGoal.set(Superstructure.Goal.FLING_NET),
+                                Commands.waitSeconds(0.5)
                         ),
                         superstructure.toGoal(superstructureGoal)
                 )
