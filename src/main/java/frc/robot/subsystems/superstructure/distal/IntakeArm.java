@@ -167,6 +167,7 @@ public class IntakeArm extends SubsystemBase {
                 intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
                 mode = Mode.NORMAL;
             }
+            
             this.currentGoal = desiredGoal;
         }
 
@@ -177,9 +178,6 @@ public class IntakeArm extends SubsystemBase {
                     algaeSlowSetpoint.velocity
             );
         }
-
-        Logger.recordOutput("Goal", algaeSlowGoal.position);
-        Logger.recordOutput("Setpoint", algaeSlowSetpoint.position);
 
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
