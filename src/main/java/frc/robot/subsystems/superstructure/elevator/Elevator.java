@@ -79,7 +79,7 @@ public class Elevator extends SubsystemBase {
     public enum Goal {
         DYNAMIC(0),
         STOW(0.01),
-        CLIMB_DOWN(0.0255),
+        CLIMB_DOWN(0.0765),
 //        CLIMB_DOWN(0.051),
         HP(0.065),
         ALGAE_GROUND(0),
