@@ -328,6 +328,8 @@ public class Robot extends LoggedRobot {
                 )
         );
 
+        driverController.y().whileTrue(swerve.wheelRadiusCharacterization());
+
         driverController.y(testEventLoop).whileTrue(
                 intakeArm.pivotVoltageSysIdCommand()
                         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
