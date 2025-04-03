@@ -413,13 +413,13 @@ public class Robot extends LoggedRobot {
         autoChooser.addAutoOption(new AutoOption(
                 "ThreePieceCage2ToReef4And5",
                 autos::threePieceCage2ToReef4And5,
-                Constants.CompetitionType.COMPETITION
+                Constants.CompetitionType.TESTING
         ));
 
         autoChooser.addAutoOption(new AutoOption(
                 "ThreePieceCage3ToReef2And1",
                 autos::threePieceCage3ToReef2And1,
-                Constants.CompetitionType.COMPETITION
+                Constants.CompetitionType.TESTING
         ));
     }
 
