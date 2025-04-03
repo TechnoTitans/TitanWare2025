@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.*;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.RefreshAll;
+import org.littletonrobotics.junction.Logger;
 
 public class IntakeArmIOReal implements IntakeArmIO {
     private final HardwareConstants.IntakeArmConstants constants;
@@ -75,16 +76,16 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         pivotConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.28234)
-                .withKG(0.13263)
-                .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(5.2257)
-                .withKA(0.20274)
-                .withKP(10)
-                .withKD(4);
+//                .withKS(0.38224)
+//                .withKG(0.1053)
+//                .withGravityType(GravityTypeValue.Elevator_Static)
+//                .withKV(4.0382)
+//                .withKA(0.21825)
+                .withKP(100);
+//                .withKD(5);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5.2257;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.4;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 4.0382;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
@@ -126,7 +127,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
     }
 
     @Override
-    public void updateInputs(IntakeArmIOInputs inputs) {
+    public void updateInputs(final IntakeArmIOInputs inputs) {
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
         inputs.pivotVoltage = pivotVoltage.getValueAsDouble();
