@@ -163,8 +163,8 @@ public class Swerve extends SubsystemBase {
                 new PIDController(8, 0, 0),
                 new PIDController(6, 0, 0),
                 new TrapezoidProfile.Constraints(
-                        Units.feetToMeters(10),
-                        Units.feetToMeters(6)
+                        Units.feetToMeters(13),
+                        Units.feetToMeters(13)
                 ),
                 new TrapezoidProfile.Constraints(
                         Config.maxAngularVelocityRadsPerSec(),
