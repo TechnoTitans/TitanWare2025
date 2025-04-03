@@ -52,6 +52,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
         this.encoderPosition = pivotEncoder.getPosition();
         this.encoderVelocity = pivotEncoder.getVelocity();
 
+        this.pivotMotor.setPosition(0);
+
         RefreshAll.add(
                 RefreshAll.CANBus.RIO,
                 pivotPosition,
@@ -91,10 +93,10 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
         pivotConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
-        pivotConfiguration.ExternalFeedback.ExternalFeedbackSensorSource = ExternalFeedbackSensorSourceValue.FusedCANcoder;
-        pivotConfiguration.ExternalFeedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
-        pivotConfiguration.ExternalFeedback.RotorToSensorRatio = constants.pivotGearing();
-        pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = 1;
+        pivotConfiguration.ExternalFeedback.ExternalFeedbackSensorSource = ExternalFeedbackSensorSourceValue.Commutation;
+//        pivotConfiguration.ExternalFeedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
+        pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = constants.pivotGearing();
+//        pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = 1;
         pivotConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();
