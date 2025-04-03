@@ -15,6 +15,7 @@ import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
+import org.littletonrobotics.junction.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -231,6 +232,11 @@ public class ScoreCommands {
                                         superstructure.toGoal(superstructureGoalContainer)
                                 )
                         ),
+                        Commands.run(() -> {
+                            Logger.recordOutput("val", scorePositionContainer.value.level.goal);
+                            Logger.recordOutput("setpt", superstructure
+                                    .atSetpoint(scorePositionContainer.value.level.goal));
+                        }),
                         Commands.either(
                                 Commands.sequence(
                                         swerve.driveToPose(reefAlignmentPoseSupplier)
