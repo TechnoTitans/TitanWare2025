@@ -164,7 +164,7 @@ public class Swerve extends SubsystemBase {
                 new PIDController(6, 0, 0),
                 new TrapezoidProfile.Constraints(
                         Units.feetToMeters(13),
-                        Units.feetToMeters(5)
+                        Units.feetToMeters(10)
                 ),
                 new TrapezoidProfile.Constraints(
                         Config.maxAngularVelocityRadsPerSec(),
@@ -247,6 +247,8 @@ public class Swerve extends SubsystemBase {
                 OdometryThreadRunner.State.struct,
                 odometryThreadRunner.getState()
         );
+
+        Logger.recordOutput("Holonomic", holonomicPoseTarget.getTranslation().getNorm());
 
         //log current swerve chassis speeds
         final ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
