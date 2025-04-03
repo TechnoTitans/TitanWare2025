@@ -52,8 +52,6 @@ public class IntakeArmIOReal implements IntakeArmIO {
         this.encoderPosition = pivotEncoder.getPosition();
         this.encoderVelocity = pivotEncoder.getVelocity();
 
-        this.pivotMotor.setPosition(0);
-
         RefreshAll.add(
                 RefreshAll.CANBus.RIO,
                 pivotPosition,
@@ -77,15 +75,15 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
         pivotConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.27234)
-                .withKG(0.12263)
+                .withKS(0.38224)
+                .withKG(0.1053)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(5.2257)
-                .withKA(0.20274)
-                .withKP(40)
-                .withKD(1);
+                .withKV(4.0382)
+                .withKA(0.21825)
+                .withKP(36.584)
+                .withKD(3);
         pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 5.2257;
+        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 4.0382;
         pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
         pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -93,10 +91,10 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
         pivotConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
         pivotConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
-        pivotConfiguration.ExternalFeedback.ExternalFeedbackSensorSource = ExternalFeedbackSensorSourceValue.Commutation;
-//        pivotConfiguration.ExternalFeedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
-        pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = constants.pivotGearing();
-//        pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = 1;
+        pivotConfiguration.ExternalFeedback.ExternalFeedbackSensorSource = ExternalFeedbackSensorSourceValue.FusedCANcoder;
+        pivotConfiguration.ExternalFeedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
+        pivotConfiguration.ExternalFeedback.RotorToSensorRatio = constants.pivotGearing();
+        pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = 1;
         pivotConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();

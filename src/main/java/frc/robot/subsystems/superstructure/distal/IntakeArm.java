@@ -142,7 +142,7 @@ public class IntakeArm extends SubsystemBase {
         this.pivotUpperLimit = new PositionSetpoint().withPivotPositionRots(constants.pivotUpperLimitRots());
 
         this.intakeArmIO.config();
-//        this.intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
+        this.intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
     }
 
     @Override
