@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.*;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.RefreshAll;
+import org.littletonrobotics.junction.Logger;
 
 public class IntakeArmIOReal implements IntakeArmIO {
     private final HardwareConstants.IntakeArmConstants constants;
@@ -126,7 +127,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
     }
 
     @Override
-    public void updateInputs(IntakeArmIOInputs inputs) {
+    public void updateInputs(final IntakeArmIOInputs inputs) {
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
         inputs.pivotVoltage = pivotVoltage.getValueAsDouble();
