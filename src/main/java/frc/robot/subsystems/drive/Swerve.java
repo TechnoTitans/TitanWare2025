@@ -177,8 +177,9 @@ public class Swerve extends SubsystemBase {
                         Math.PI / 6
                 )
         );
-        this.atHolonomicDrivePose = holonomicDriveController.atPose(
+        this.atHolonomicDrivePose = holonomicDriveController.atPoseZeroVelocity(
                 this::getPose,
+                this::getFieldRelativeSpeeds,
                 () -> holonomicPoseTarget
         );
 
