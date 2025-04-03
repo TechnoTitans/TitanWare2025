@@ -132,7 +132,7 @@ public class Superstructure extends VirtualSubsystem {
         this.atSuperstructureSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atSetpoint)
                 .and(intakeArm.atSetpoint)
-                .and(desiredGoalIsAtGoal).debounce(0.025);
+                .and(desiredGoalIsAtGoal);
 
         this.unsafeToDrive = extendedBeyond(AllowableExtensionForDrivingMeters);
 
