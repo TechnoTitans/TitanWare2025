@@ -225,18 +225,13 @@ public class ScoreCommands {
                                                 Commands.waitUntil(atReef),
                                                 Commands.runOnce(setSuperstructureGoalToScore),
                                                 Commands.waitUntil(superstructure
-                                                                .atSetpoint(scorePositionContainer.value.level.goal))
-                                                        .withTimeout(10),
+                                                                .atSetpoint(() -> scorePositionContainer.value.level.goal))
+                                                        .withTimeout(2),
                                                 intake.scoreCoral()
                                         ),
                                         superstructure.toGoal(superstructureGoalContainer)
                                 )
                         ),
-                        Commands.run(() -> {
-                            Logger.recordOutput("val", scorePositionContainer.value.level.goal);
-                            Logger.recordOutput("setpt", superstructure
-                                    .atSetpoint(scorePositionContainer.value.level.goal));
-                        }),
                         Commands.either(
                                 Commands.sequence(
                                         swerve.driveToPose(reefAlignmentPoseSupplier)
