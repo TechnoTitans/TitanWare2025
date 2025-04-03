@@ -447,11 +447,6 @@ public class Robot extends LoggedRobot {
 
         this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
-        this.driverController.x(teleopEventLoop).whileTrue(Commands.sequence(
-                superstructure.toInstantGoal(Superstructure.Goal.LOWER_ALGAE),
-                Commands.waitSeconds(3),
-                superstructure.toInstantGoal(Superstructure.Goal.STOW)
-        ));
 //        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreNetFlingFacingBarge());
 
         this.driverController.b(teleopEventLoop)
