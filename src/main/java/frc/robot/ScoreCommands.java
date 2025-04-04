@@ -198,8 +198,8 @@ public class ScoreCommands {
                 .get()
                 .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET);
 
-        final Trigger atAlignReef = swerve.atPoseTrigger(reefAlignmentPoseSupplier);
-        final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
+        final Trigger atAlignReef = swerve.atPoseNoVelTrigger(reefAlignmentPoseSupplier);
+        final Trigger atReef = swerve.atPoseNoVelTrigger(scoringPoseSupplier);
 
         final Container<Superstructure.Goal> superstructureGoalContainer = Container.empty();
         final Runnable setSuperstructureGoalToAlign = () -> superstructureGoalContainer.value

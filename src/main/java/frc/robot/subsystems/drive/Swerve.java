@@ -172,7 +172,7 @@ public class Swerve extends SubsystemBase {
                 ),
                 new HolonomicDriveController.Tolerance(
                         0.05,
-                        0.05,
+                        0.1,
                         Rotation2d.fromDegrees(4),
                         Math.PI / 5
                 )
@@ -781,6 +781,12 @@ public class Swerve extends SubsystemBase {
 
     public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
         return holonomicDriveController.atPose(this::getPose, targetPoseSupplier);
+    }
+
+    public Trigger atPoseNoVelTrigger(final Supplier<Pose2d> targetPoseSupplier) {
+        return holonomicDriveController.atPoseZeroVelocity(
+                this::getPose, this::getFieldRelativeSpeeds, targetPoseSupplier
+        );
     }
 
     public Trigger atPoseTrigger(

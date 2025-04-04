@@ -573,7 +573,7 @@ public class Autos {
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
-                        scoreCommands.descoreLowerAlgae().withTimeout(5),
+                        scoreCommands.descoreLowerAlgae(),
                         moveEndOfAuto.cmd()
                 )
         );
