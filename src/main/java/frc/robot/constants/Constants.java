@@ -9,7 +9,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 
 public interface Constants {
-    RobotMode CURRENT_MODE = RobotMode.REAL;
+    RobotMode CURRENT_MODE = RobotMode.SIM;
     CompetitionType CURRENT_COMPETITION_TYPE = CompetitionType.TESTING;
     double LOOP_PERIOD_SECONDS = 0.02;
 
