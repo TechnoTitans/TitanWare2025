@@ -387,9 +387,9 @@ public class Autos {
 
 
 
-    public AutoRoutine threePieceCage2ToReef4And5() {
-        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage2ToReef4And5");
-        final AutoTrajectory startToReef = routine.trajectory("Cage2Reef4");
+    public AutoRoutine threePieceCage1ToReef4And5() {
+        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage1ToReef4And5");
+        final AutoTrajectory startToReef = routine.trajectory("Cage1Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
         final AutoTrajectory firstRightHPToReef5 = routine.trajectory("RightHPToReef5");
         final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
@@ -468,9 +468,9 @@ public class Autos {
         return routine;
     }
 
-    public AutoRoutine threePieceCage3ToReef2And1() {
-        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage3ToReef2And1");
-        final AutoTrajectory startToReef = routine.trajectory("Cage3Reef2");
+    public AutoRoutine threePieceCage4ToReef2And1() {
+        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage4ToReef2And1");
+        final AutoTrajectory startToReef = routine.trajectory("Cage4Reef2");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef2ToLeftHP");
         final AutoTrajectory firstRightHPToReef5 = routine.trajectory("LeftHPToReef1");
         final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef1ToLeftHP");
