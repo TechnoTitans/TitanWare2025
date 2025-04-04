@@ -155,8 +155,8 @@ public class ScoreCommands {
 
         final Trigger shouldUseEarlyAlign = new Trigger(() ->
                 switch (scorePositionContainer.value.level) {
-                    case L1, L2 -> false;
-                    case L3, L4 -> true;
+                    case L1, L2, L3 -> false;
+                    case L4 -> true;
                 }
         );
 
