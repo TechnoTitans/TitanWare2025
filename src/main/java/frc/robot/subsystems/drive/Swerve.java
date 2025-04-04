@@ -184,9 +184,9 @@ public class Swerve extends SubsystemBase {
         );
 
         this.choreoController = new HolonomicChoreoController(
-                new PIDController(6, 0, 0),
-                new PIDController(6, 0, 0),
-                new PIDController(6, 0, 0)
+                new PIDController(5, 0, 0),
+                new PIDController(5, 0, 0),
+                new PIDController(5, 0, 0)
         );
 
         this.linearVoltageSysIdRoutine = makeLinearVoltageSysIdRoutine();
