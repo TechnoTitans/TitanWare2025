@@ -499,7 +499,7 @@ public class ScoreCommands {
                                 swerve.wheelXCommand(),
                                 superstructureGoal.set(Superstructure.Goal.NET),
                                 Commands.waitUntil(superstructure.extendedBeyond(0.7)),
-                                intake.scoreAlgae(),
+                                intake.releaseAlgae(),
                                 superstructureGoal.set(Superstructure.Goal.FLING_NET),
                                 Commands.waitSeconds(0.5)
                         ),
