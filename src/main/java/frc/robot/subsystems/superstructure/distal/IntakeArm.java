@@ -94,7 +94,7 @@ public class IntakeArm extends SubsystemBase {
         PROCESSOR(-0.24),
         CLIMB(-0.348),
         CLIMB_DOWN(-0.235),
-        NET(-0.2),
+        NET(-0.22),
         L4(-0.1851),
         L3(-0.16602),
         L2(-0.13),
