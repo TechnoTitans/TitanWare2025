@@ -493,7 +493,9 @@ public class ScoreCommands {
                                         swerve.driveToAxisFacingAngle(
                                                 axisTarget,
                                                 Swerve.DriveAxis.X,
-                                                () -> Rotation2d.kZero
+                                                () -> Robot.IsRedAlliance.getAsBoolean()
+                                                        ? Rotation2d.kPi
+                                                        : Rotation2d.kZero
                                         )
                                 ).onlyIf(swerve.atAxisTrigger(axisTarget, robotX).negate()),
                                 swerve.wheelXCommand(),
