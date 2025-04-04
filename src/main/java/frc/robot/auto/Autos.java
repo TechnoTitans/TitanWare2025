@@ -97,10 +97,10 @@ public class Autos {
         final Trigger atReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.Tolerance(
-                        0.1,
+                        0.05,
                         0.1,
                         Rotation2d.fromDegrees(4),
-                        Math.PI / 4
+                        Math.PI / 5
                 )
         );
 
