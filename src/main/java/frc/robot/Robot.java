@@ -401,39 +401,45 @@ public class Robot extends LoggedRobot {
         autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage0ToReef4And5",
-                autos::twoPieceCage0ToReef4And5,
+                "TwoPieceCage0",
+                autos::twoPieceCage0,
                 Constants.CompetitionType.COMPETITION
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage1ToReef4And5",
-                autos::twoPieceCage1ToReef4And5,
+                "TwoPieceCage1",
+                autos::twoPieceCage1,
                 Constants.CompetitionType.COMPETITION
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage2ToReef4And5",
-                autos::twoPieceCage2ToReef4And5,
+                "TwoPieceCage2",
+                autos::twoPieceCage2,
                 Constants.CompetitionType.COMPETITION
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage3ToReef2And1",
-                autos::twoPieceCage3ToReef2And1,
+                "TwoPieceCage3",
+                autos::twoPieceCage3,
                 Constants.CompetitionType.COMPETITION
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage4ToReef2And1",
-                autos::twoPieceCage4ToReef2And1,
+                "TwoPieceCage4",
+                autos::twoPieceCage4,
                 Constants.CompetitionType.COMPETITION
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage5ToReef2And1",
-                autos::twoPieceCage5ToReef2And1,
+                "TwoPieceCage5",
+                autos::twoPieceCage5,
                 Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage0Dealgae",
+                autos::twoPieceCage0Dealgae,
+                Constants.CompetitionType.TESTING
         ));
 
         autoChooser.addAutoOption(new AutoOption(
