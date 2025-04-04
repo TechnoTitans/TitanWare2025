@@ -17,6 +17,7 @@ import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -414,16 +415,9 @@ public class ScoreCommands {
         final Supplier<Pose2d> descorePoseSupplier = () -> {
             final Pose2d currentPose = swerve.getPose();
 
-            double closestDistance = Double.MAX_VALUE;
-            Pose2d closestPose = new Pose2d();
-            for (final Pose2d reefPose : FieldConstants.getReefCenterPoses().values()) {
-                final double distance = currentPose.getTranslation().getDistance(reefPose.getTranslation());
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestPose = reefPose;
-                }
-            }
-            return closestPose.plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
+            return currentPose.
+                    nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
+                    .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
         };
 
         final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
