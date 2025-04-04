@@ -498,7 +498,7 @@ public class ScoreCommands {
                                 ).onlyIf(swerve.atAxisTrigger(axisTarget, robotX).negate()),
                                 swerve.wheelXCommand(),
                                 superstructureGoal.set(Superstructure.Goal.NET),
-                                Commands.waitUntil(superstructure.extendedBeyond(0.45)),
+                                Commands.waitUntil(superstructure.extendedBeyond(0.55)),
                                 intake.netAlgae(),
 //                                superstructureGoal.set(Superstructure.Goal.FLING_NET),
                                 Commands.waitSeconds(0.5)
