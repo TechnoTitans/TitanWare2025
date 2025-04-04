@@ -489,7 +489,7 @@ public class ScoreCommands {
                 Commands.deadline(
                         Commands.sequence(
                                 Commands.parallel(
-                                        superstructureGoal.set(Superstructure.Goal.ALIGN_NET)
+                                        superstructureGoal.set(Superstructure.Goal.ALIGN_NET),
                                         swerve.driveToAxisFacingAngle(
                                                 axisTarget,
                                                 Swerve.DriveAxis.X,
