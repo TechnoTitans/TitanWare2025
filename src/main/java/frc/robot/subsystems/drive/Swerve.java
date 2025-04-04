@@ -172,7 +172,7 @@ public class Swerve extends SubsystemBase {
                 ),
                 new HolonomicDriveController.Tolerance(
                         0.05,
-                        0.1,
+                        0.05,
                         Rotation2d.fromDegrees(4),
                         Math.PI / 5
                 )

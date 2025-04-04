@@ -412,13 +412,9 @@ public class ScoreCommands {
     }
 
     public Command descoreLowerAlgae() {
-        final Supplier<Pose2d> descorePoseSupplier = () -> {
-            final Pose2d currentPose = swerve.getPose();
-
-            return currentPose.
-                    nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
-                    .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
-        };
+        final Supplier<Pose2d> descorePoseSupplier = () -> swerve.getPose().
+                nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
+                .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
         final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
                 .transformBy(FieldConstants.ALGAE_ALIGN_DISTANCE_OFFSET);
