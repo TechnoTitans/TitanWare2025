@@ -490,18 +490,18 @@ public class ScoreCommands {
                         Commands.sequence(
                                 Commands.parallel(
                                         superstructureGoal.set(Superstructure.Goal.ALIGN_NET)
-//                                        swerve.driveToAxisFacingAngle(
-//                                                axisTarget,
-//                                                Swerve.DriveAxis.X,
-//                                                () -> Robot.IsRedAlliance.getAsBoolean()
-//                                                        ? Rotation2d.kPi
-//                                                        : Rotation2d.kZero
-//                                        )
+                                        swerve.driveToAxisFacingAngle(
+                                                axisTarget,
+                                                Swerve.DriveAxis.X,
+                                                () -> Robot.IsRedAlliance.getAsBoolean()
+                                                        ? Rotation2d.kPi
+                                                        : Rotation2d.kZero
+                                        )
                                 ).onlyIf(swerve.atAxisTrigger(axisTarget, robotX).negate()),
                                 swerve.wheelXCommand(),
                                 superstructureGoal.set(Superstructure.Goal.NET),
                                 Commands.waitUntil(superstructure.extendedBeyond(0.47)),
-                                intake.netAlgae(),
+                                intake.netAlgae()
                         ),
                         superstructure.toGoal(superstructureGoal)
                 )
