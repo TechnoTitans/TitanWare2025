@@ -574,7 +574,7 @@ public class Autos {
                         scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
                         swerve.drive(() -> -0.5, () -> 0, () -> 0, false, false).withTimeout(1),
-                        scoreCommands.descoreLowerAlgae(),
+                        scoreCommands.descoreLowerAlgae().withTimeout(5),
                         moveEndOfAuto.cmd()
                 )
         );
