@@ -268,6 +268,18 @@ public class Intake extends SubsystemBase {
                 .withName("ShootAlgae");
     }
 
+    public Command netAlgae() {
+        return Commands.sequence(
+                        runOnce(() -> this.algaeOuttaking = true),
+                        toInstantRollerVoltage(5),
+                        Commands.waitSeconds(0.1),
+                        instantStopCommand()
+                )
+                .finallyDo(() -> this.algaeOuttaking = false)
+                .withName("ShootAlgae");
+    }
+
+
     public Command releaseAlgae() {
         return Commands.sequence(
                         runOnce(() -> this.algaeOuttaking = true),
