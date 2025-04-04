@@ -171,10 +171,10 @@ public class Swerve extends SubsystemBase {
                         Config.maxAngularAccelerationRadsPerSecSquared()
                 ),
                 new HolonomicDriveController.Tolerance(
-                        0.07,
-                        0.15,
+                        0.05,
+                        0.1,
                         Rotation2d.fromDegrees(4),
-                        Math.PI / 4
+                        Math.PI / 5
                 )
         );
         this.atHolonomicDrivePose = holonomicDriveController.atPoseZeroVelocity(
