@@ -25,7 +25,7 @@ public class FieldConstants {
     public static final Transform2d ALIGN_DISTANCE_OFFSET =
             new Transform2d(-Units.inchesToMeters(24), 0, Rotation2d.kZero);
     public static final Transform2d ALGAE_ALIGN_DISTANCE_OFFSET =
-            new Transform2d(-Units.inchesToMeters(6), 0, Rotation2d.kZero);
+            new Transform2d(-Units.inchesToMeters(7), 0, Rotation2d.kZero);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =
