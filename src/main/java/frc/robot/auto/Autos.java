@@ -156,7 +156,7 @@ public class Autos {
         final AutoTrajectory cage4Reef2 = routine.trajectory("Cage3Reef2");
         final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
         final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
-        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
 
         routine.active().onTrue(runStartingTrajectory(cage4Reef2));
 
@@ -195,7 +195,7 @@ public class Autos {
         final AutoTrajectory cage0Reef2 = routine.trajectory("Cage5Reef2");
         final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
         final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
-        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
 
         routine.active().onTrue(runStartingTrajectory(cage0Reef2));
 
@@ -234,7 +234,7 @@ public class Autos {
         final AutoTrajectory cage0Reef2 = routine.trajectory("Cage4Reef2");
         final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
         final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
-        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
 
         routine.active().onTrue(runStartingTrajectory(cage0Reef2));
 
@@ -273,7 +273,7 @@ public class Autos {
         final AutoTrajectory cage2Reef4 = routine.trajectory("Cage2Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
         final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
-        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
 
         routine.active().onTrue(runStartingTrajectory(cage2Reef4));
 
@@ -312,7 +312,7 @@ public class Autos {
         final AutoTrajectory cage0Reef4 = routine.trajectory("Cage0Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
         final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
-        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
 
         routine.active().onTrue(runStartingTrajectory(cage0Reef4));
 
@@ -351,7 +351,7 @@ public class Autos {
         final AutoTrajectory cage0Reef4 = routine.trajectory("Cage1Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
         final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
-        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
 
         routine.active().onTrue(runStartingTrajectory(cage0Reef4));
 
