@@ -401,14 +401,38 @@ public class Robot extends LoggedRobot {
         autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage3ToReef2And1",
-                autos::twoPieceCage3ToReef2And1,
+                "TwoPieceCage0ToReef4And5",
+                autos::twoPieceCage0ToReef4And5,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage1ToReef4And5",
+                autos::twoPieceCage1ToReef4And5,
                 Constants.CompetitionType.COMPETITION
         ));
 
         autoChooser.addAutoOption(new AutoOption(
                 "TwoPieceCage2ToReef4And5",
                 autos::twoPieceCage2ToReef4And5,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage3ToReef2And1",
+                autos::twoPieceCage3ToReef2And1,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage4ToReef2And1",
+                autos::twoPieceCage4ToReef2And1,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage5ToReef2And1",
+                autos::twoPieceCage5ToReef2And1,
                 Constants.CompetitionType.COMPETITION
         ));
 
