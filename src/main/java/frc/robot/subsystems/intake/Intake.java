@@ -272,6 +272,7 @@ public class Intake extends SubsystemBase {
         return Commands.sequence(
                         runOnce(() -> this.algaeOuttaking = true),
                         toInstantRollerVoltage(7.5),
+                        Commands.waitSeconds(0.2),
                         instantStopCommand()
                 )
                 .finallyDo(() -> this.algaeOuttaking = false)
