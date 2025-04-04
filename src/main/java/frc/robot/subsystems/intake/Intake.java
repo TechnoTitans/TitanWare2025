@@ -271,7 +271,7 @@ public class Intake extends SubsystemBase {
     public Command netAlgae() {
         return Commands.sequence(
                         runOnce(() -> this.algaeOuttaking = true),
-                        toInstantRollerVoltage(5),
+                        toInstantRollerVoltage(7.5),
                         instantStopCommand()
                 )
                 .finallyDo(() -> this.algaeOuttaking = false)
