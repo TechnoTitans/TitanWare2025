@@ -147,7 +147,11 @@ public class Autos {
         final AutoRoutine routine = autoFactory.newRoutine("straight");
         final AutoTrajectory testMeter = routine.trajectory("testMeter");
 
-        routine.active().onTrue(testMeter.cmd());
+        routine.active().onTrue(
+                Commands.sequence(
+                        testMeter.resetOdometry(),
+                        testMeter.cmd()
+                ));
 
         testMeter.done().onTrue(
                 swerve.runWheelXCommand()
@@ -161,7 +165,11 @@ public class Autos {
         final AutoRoutine routine = autoFactory.newRoutine("spin");
         final AutoTrajectory testSpin = routine.trajectory("testSpin");
 
-        routine.active().onTrue(testSpin.cmd());
+        routine.active().onTrue(
+                Commands.sequence(
+
+                        testSpin.cmd()
+                ));
 
         testSpin.done().onTrue(
                 swerve.runWheelXCommand()
