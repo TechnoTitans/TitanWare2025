@@ -143,6 +143,33 @@ public class Autos {
         return routine;
     }
 
+    public AutoRoutine straight() {
+        final AutoRoutine routine = autoFactory.newRoutine("straight");
+        final AutoTrajectory testMeter = routine.trajectory("testMeter");
+
+        routine.active().onTrue(testMeter.cmd());
+
+        testMeter.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+
+    public AutoRoutine spin() {
+        final AutoRoutine routine = autoFactory.newRoutine("spin");
+        final AutoTrajectory testSpin = routine.trajectory("testSpin");
+
+        routine.active().onTrue(testSpin.cmd());
+
+        testSpin.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
     public AutoRoutine twoPieceCage0() {
         final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage0");
         final AutoTrajectory cage0Reef4 = routine.trajectory("Cage0Reef4");

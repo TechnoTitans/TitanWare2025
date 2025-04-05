@@ -77,7 +77,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final PhotonVision photonVision = new PhotonVision(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             swerve,
             swerve.getPoseEstimator()
     );
@@ -435,37 +435,14 @@ public class Robot extends LoggedRobot {
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage0Dealgae",
-                autos::twoPieceCage0Dealgae,
+                "Straight",
+                autos::straight,
                 Constants.CompetitionType.TESTING
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage1Dealgae",
-                autos::twoPieceCage1Dealgae,
-                Constants.CompetitionType.TESTING
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage2Dealgae",
-                autos::twoPieceCage2Dealgae,
-                Constants.CompetitionType.TESTING
-        ));
-        autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage3Dealgae",
-                autos::twoPieceCage3Dealgae,
-                Constants.CompetitionType.TESTING
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage4Dealgae",
-                autos::twoPieceCage4Dealgae,
-                Constants.CompetitionType.TESTING
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage5Dealgae",
-                autos::twoPieceCage5Dealgae,
+                "Spin",
+                autos::spin,
                 Constants.CompetitionType.TESTING
         ));
 
