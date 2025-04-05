@@ -184,9 +184,9 @@ public class Swerve extends SubsystemBase {
         );
 
         this.choreoController = new HolonomicChoreoController(
-                new PIDController(0, 0, 0),
-                new PIDController(0, 0, 0),
-                new PIDController(0, 0, 0)
+                new PIDController(3, 0, 0),
+                new PIDController(3, 0, 0),
+                new PIDController(4, 0, 0)
 //                new PIDController(5, 0, 0),
 //                new PIDController(5, 0, 0),
 //                new PIDController(5, 0, 0)
