@@ -445,7 +445,6 @@ public class Autos {
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
-                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.STOW)),
                         scoreCommands.descoreLowerAlgae(),
                         moveEndOfAuto.cmd()
                 )

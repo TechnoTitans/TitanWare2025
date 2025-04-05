@@ -276,8 +276,6 @@ public class Robot extends LoggedRobot {
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
 
-        Logger.recordOutput("robot", swerve.getPose().getTranslation().getNorm());
-
         LoggedCommandScheduler.periodic();
 
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
