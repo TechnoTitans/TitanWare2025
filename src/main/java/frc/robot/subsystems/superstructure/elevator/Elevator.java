@@ -79,16 +79,17 @@ public class Elevator extends SubsystemBase {
     public enum Goal {
         DYNAMIC(0),
         STOW(0.01),
+        CLIMB_DOWN(0.08925),
         HP(0.065),
         ALGAE_GROUND(0),
         PROCESSOR(0),
-        UPPER_ALGAE(0.459),
+        UPPER_ALGAE(0.452401),
         LOWER_ALGAE(0.183),
-        L4(0.99177),
-        L3(0.4387),
+        L4(0.9925853),
+        L3(0.438842),
         L2(0.12),
         L1(0.01),
-        NET(1);
+        NET(0.995);
 
         private final double positionGoalMeters;
         Goal(final double positionGoalMeters) {

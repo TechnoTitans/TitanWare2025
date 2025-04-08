@@ -26,8 +26,8 @@ import static edu.wpi.first.units.Units.*;
 
 public class IntakeArm extends SubsystemBase {
     protected static final String LogKey = "IntakeArm";
-    private static final double PositionToleranceRots = 0.03;
-    private static final double VelocityToleranceRotsPerSec = 0.015;
+    private static final double PositionToleranceRots = 0.031;
+    private static final double VelocityToleranceRotsPerSec = 0.26;
 
     private enum Mode {
         NORMAL,
@@ -49,7 +49,7 @@ public class IntakeArm extends SubsystemBase {
 
     private final DeltaTime deltaTime;
     private final TrapezoidProfile algaeSlowProfile = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(4, 0.4)
+            new TrapezoidProfile.Constraints(4, 2)
     );
     private final TrapezoidProfile.State algaeSlowGoal = new TrapezoidProfile.State(0, 0);
     private TrapezoidProfile.State algaeSlowSetpoint = new TrapezoidProfile.State(0, 0);
@@ -89,13 +89,14 @@ public class IntakeArm extends SubsystemBase {
         HP(0),
         ALGAE_GROUND(-0.349),
         ALGAE_FLING(-0.349),
-        UPPER_ALGAE(-0.35),
+        UPPER_ALGAE(-0.33301),
         LOWER_ALGAE(-0.324),
         PROCESSOR(-0.24),
         CLIMB(-0.348),
-        NET(-0.2),
-        L4(-0.1851),
-        L3(-0.1812),
+        CLIMB_DOWN(-0.235),
+        NET(-0.235),
+        L4(-0.187012),
+        L3(-0.16602),
         L2(-0.13),
         L1(-0.052);
 
@@ -156,8 +157,12 @@ public class IntakeArm extends SubsystemBase {
         if (desiredGoal != currentGoal) {
             positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
             if (Goal.shouldUseSlowAlgaeNext(desiredGoal, currentGoal)) {
+                algaeSlowSetpoint.position = inputs.pivotPositionRots;
+                algaeSlowSetpoint.velocity = inputs.pivotVelocityRotsPerSec;
+
                 algaeSlowGoal.position = positionSetpoint.pivotPositionRots;
                 algaeSlowGoal.velocity = 0;
+
                 mode = Mode.ALGAE_SLOW;
             } else {
                 intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
@@ -184,6 +189,7 @@ public class IntakeArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPivotPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atPivotLowerLimit());
         Logger.recordOutput(LogKey + "/AtUpperLimit", atPivotUpperLimit());
+        Logger.recordOutput(LogKey + "/Mode", mode);
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",

@@ -15,7 +15,9 @@ import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
+import org.littletonrobotics.junction.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +142,7 @@ public class ScoreCommands {
                             final Pose2d currentPose = swerve.getPose();
                             final Pose2d nearestStation = currentPose.nearest(FieldConstants.getHPPickupPoses());
 
-                            return nearestStation.getRotation().rotateBy(Rotation2d.kPi);
+                            return nearestStation.getRotation();
                         }
                 ).onlyIf(superstructure.unsafeToDrive.negate()),
                 superstructure.toGoal(Superstructure.Goal.HP),
@@ -196,8 +198,8 @@ public class ScoreCommands {
                 .get()
                 .transformBy(FieldConstants.ALIGN_DISTANCE_OFFSET);
 
-        final Trigger atAlignReef = swerve.atPoseTrigger(reefAlignmentPoseSupplier);
-        final Trigger atReef = swerve.atPoseTrigger(scoringPoseSupplier);
+        final Trigger atAlignReef = swerve.atPoseNoVelTrigger(reefAlignmentPoseSupplier);
+        final Trigger atReef = swerve.atPoseNoVelTrigger(scoringPoseSupplier);
 
         final Container<Superstructure.Goal> superstructureGoalContainer = Container.empty();
         final Runnable setSuperstructureGoalToAlign = () -> superstructureGoalContainer.value
@@ -224,7 +226,7 @@ public class ScoreCommands {
                                                 Commands.waitUntil(atReef),
                                                 Commands.runOnce(setSuperstructureGoalToScore),
                                                 Commands.waitUntil(superstructure
-                                                                .atSetpoint(scorePositionContainer.value.level.goal))
+                                                                .atSetpoint(() -> scorePositionContainer.value.level.goal))
                                                         .withTimeout(2),
                                                 intake.scoreCoral()
                                         ),
@@ -410,20 +412,9 @@ public class ScoreCommands {
     }
 
     public Command descoreLowerAlgae() {
-        final Supplier<Pose2d> descorePoseSupplier = () -> {
-            final Pose2d currentPose = swerve.getPose();
-
-            double closestDistance = Double.MAX_VALUE;
-            Pose2d closestPose = new Pose2d();
-            for (final Pose2d reefPose : FieldConstants.getReefCenterPoses().values()) {
-                final double distance = currentPose.getTranslation().getDistance(reefPose.getTranslation());
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestPose = reefPose;
-                }
-            }
-            return closestPose.plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
-        };
+        final Supplier<Pose2d> descorePoseSupplier = () -> swerve.getPose().
+                nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
+                .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
         final Supplier<Pose2d> alignPoseSupplier = () -> descorePoseSupplier.get()
                 .transformBy(FieldConstants.ALGAE_ALIGN_DISTANCE_OFFSET);
@@ -492,18 +483,15 @@ public class ScoreCommands {
                                         swerve.driveToAxisFacingAngle(
                                                 axisTarget,
                                                 Swerve.DriveAxis.X,
-                                                () -> Rotation2d.kZero
+                                                () -> Robot.IsRedAlliance.getAsBoolean()
+                                                        ? Rotation2d.kPi
+                                                        : Rotation2d.kZero
                                         )
                                 ).onlyIf(swerve.atAxisTrigger(axisTarget, robotX).negate()),
                                 swerve.wheelXCommand(),
                                 superstructureGoal.set(Superstructure.Goal.NET),
-                                Commands.waitUntil(superstructure.extendedBeyond(0.7)),
-                                intake.releaseAlgae(),
-                                Commands.parallel(
-                                        superstructureGoal.set(Superstructure.Goal.FLING_NET),
-                                        Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.FLING_NET))
-                                ),
-                                Commands.waitSeconds(1.5)
+                                Commands.waitUntil(superstructure.extendedBeyond(0.47)),
+                                intake.netAlgae()
                         ),
                         superstructure.toGoal(superstructureGoal)
                 )

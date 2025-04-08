@@ -21,11 +21,11 @@ public class FieldConstants {
     public static final Transform2d HP_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
         public static final Transform2d SCORING_BARGE_OFFSET = //Fling
-            new Transform2d(-Units.inchesToMeters(30), 0, Rotation2d.kPi);
+            new Transform2d(-Units.inchesToMeters(35.5), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_DISTANCE_OFFSET =
             new Transform2d(-Units.inchesToMeters(24), 0, Rotation2d.kZero);
     public static final Transform2d ALGAE_ALIGN_DISTANCE_OFFSET =
-            new Transform2d(-Units.inchesToMeters(16), 0, Rotation2d.kZero);
+            new Transform2d(-Units.inchesToMeters(4), 0, Rotation2d.kZero);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =

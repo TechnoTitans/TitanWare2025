@@ -328,6 +328,8 @@ public class Robot extends LoggedRobot {
                 )
         );
 
+        driverController.a().whileTrue(swerve.wheelRadiusCharacterization());
+
         driverController.y(testEventLoop).whileTrue(
                 intakeArm.pivotVoltageSysIdCommand()
                         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
@@ -397,26 +399,62 @@ public class Robot extends LoggedRobot {
         autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage3ToReef2And1",
-                autos::twoPieceCage3ToReef2And1,
+                "TwoPieceCage0",
+                autos::twoPieceCage0,
                 Constants.CompetitionType.COMPETITION
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "TwoPieceCage2ToReef4And5",
-                autos::twoPieceCage2ToReef4And5,
+                "TwoPieceCage1",
+                autos::twoPieceCage1,
                 Constants.CompetitionType.COMPETITION
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "ThreePieceCage2ToReef4And5",
-                autos::threePieceCage2ToReef4And5,
+                "TwoPieceCage2",
+                autos::twoPieceCage2,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage3",
+                autos::twoPieceCage3,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage4",
+                autos::twoPieceCage4,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "TwoPieceCage5",
+                autos::twoPieceCage5,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "Straight",
+                autos::straight,
                 Constants.CompetitionType.TESTING
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "ThreePieceCage3ToReef2And1",
-                autos::threePieceCage3ToReef2And1,
+                "Spin",
+                autos::spin,
+                Constants.CompetitionType.TESTING
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "ThreePieceCage1ToReef4And5",
+                autos::threePieceCage1ToReef4And5,
+                Constants.CompetitionType.TESTING
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "ThreePieceCage4ToReef2And1",
+                autos::threePieceCage4ToReef2And1,
                 Constants.CompetitionType.TESTING
         ));
     }

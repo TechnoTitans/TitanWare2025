@@ -94,15 +94,7 @@ public class Autos {
         };
 
         final Superstructure.Goal goal = ScoreCommands.Level.LevelMap.get(branch.level());
-        final Trigger atReef = swerve.atPoseTrigger(
-                scoringPoseSupplier,
-                new HolonomicDriveController.Tolerance(
-                        0.2,
-                        0.35,
-                        Rotation2d.fromDegrees(8),
-                        Math.PI / 4
-                )
-        );
+        final Trigger atReef = swerve.atPoseNoVelTrigger(scoringPoseSupplier);
 
         return Commands.deadline(
                 Commands.sequence(
@@ -151,64 +143,51 @@ public class Autos {
         return routine;
     }
 
-    public AutoRoutine twoPieceCage3ToReef2And1() {
-        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage3ToReef2And1");
-        final AutoTrajectory cage4Reef2 = routine.trajectory("Cage3Reef2");
-        final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
-        final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
-        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef2ToLeftHP");
+    public AutoRoutine straight() {
+        final AutoRoutine routine = autoFactory.newRoutine("straight");
+        final AutoTrajectory testMeter = routine.trajectory("testMeter");
 
-        routine.active().onTrue(runStartingTrajectory(cage4Reef2));
-
-        cage4Reef2.active().whileTrue(
-                superstructure.runGoal(Superstructure.Goal.ALIGN_L4)
-        );
-
-        cage4Reef2.done().onTrue(
+        routine.active().onTrue(
                 Commands.sequence(
-                        scoreAtLevel(new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.L4))
-                                .onlyIf(gamepieceState.hasCoral),
-                        reef2ToLeftHP.cmd()
-                )
-        );
+                        testMeter.resetOdometry(),
+                        testMeter.cmd()
+                ));
 
-        reef2ToLeftHP.done().onTrue(
-                Commands.sequence(
-                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
-                        leftHPToReef1Left.cmd()
-                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
-                )
-        );
-
-        leftHPToReef1Left.done().onTrue(
-                Commands.sequence(
-                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
-                                .onlyIf(gamepieceState.hasCoral),
-                        moveEndOfAuto.cmd()
-                )
-        );
-
-        moveEndOfAuto.done().onTrue(
+        testMeter.done().onTrue(
                 swerve.runWheelXCommand()
         );
 
         return routine;
     }
 
-    public AutoRoutine twoPieceCage2ToReef4And5() {
-        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage2ToReef4And5");
-        final AutoTrajectory cage2Reef4 = routine.trajectory("Cage2Reef4");
-        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
-        final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
-        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef4ToRightHP");
 
-        routine.active().onTrue(runStartingTrajectory(cage2Reef4));
+    public AutoRoutine spin() {
+        final AutoRoutine routine = autoFactory.newRoutine("spin");
+        final AutoTrajectory testSpin = routine.trajectory("testSpin");
 
-        cage2Reef4.active().whileTrue(
-                superstructure.runGoal(Superstructure.Goal.ALIGN_L4)
+        routine.active().onTrue(
+                Commands.sequence(
+
+                        testSpin.cmd()
+                ));
+
+        testSpin.done().onTrue(
+                swerve.runWheelXCommand()
         );
 
-        cage2Reef4.done().onTrue(
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage0() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage0");
+        final AutoTrajectory cage0Reef4 = routine.trajectory("Cage0Reef4");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
+
+        routine.active().onTrue(runStartingTrajectory(cage0Reef4));
+
+        cage0Reef4.done().onTrue(
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
@@ -220,7 +199,6 @@ public class Autos {
                 Commands.sequence(
                         intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
                         rightHPToReef5.cmd()
-                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
                 )
         );
 
@@ -239,22 +217,16 @@ public class Autos {
         return routine;
     }
 
-    public AutoRoutine threePieceCage2ToReef4And5() {
-        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage2ToReef4And5");
-        final AutoTrajectory startToReef = routine.trajectory("Cage2Reef4");
+    public AutoRoutine twoPieceCage1() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage1");
+        final AutoTrajectory cage0Reef4 = routine.trajectory("Cage1Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
-        final AutoTrajectory firstRightHPToReef5 = routine.trajectory("RightHPToReef5");
-        final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
-        final AutoTrajectory secondRightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
         final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
 
-        routine.active().onTrue(runStartingTrajectory(startToReef));
+        routine.active().onTrue(runStartingTrajectory(cage0Reef4));
 
-        startToReef.active().whileTrue(
-                superstructure.runGoal(Superstructure.Goal.ALIGN_L4)
-        );
-
-        startToReef.done().onTrue(
+        cage0Reef4.done().onTrue(
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
@@ -265,8 +237,463 @@ public class Autos {
         reef4ToRightHP.done().onTrue(
                 Commands.sequence(
                         intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
-                        firstRightHPToReef5.cmd()
-                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
+                        rightHPToReef5.cmd()
+                )
+        );
+
+        rightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage2() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage2");
+        final AutoTrajectory cage2Reef4 = routine.trajectory("Cage2Reef4");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
+
+        routine.active().onTrue(runStartingTrajectory(cage2Reef4));
+
+        cage2Reef4.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHP.cmd()
+                )
+        );
+
+        reef4ToRightHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
+                        rightHPToReef5.cmd()
+                )
+        );
+
+        rightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage3() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage3");
+        final AutoTrajectory cage4Reef2 = routine.trajectory("Cage3Reef2");
+        final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
+
+        routine.active().onTrue(runStartingTrajectory(cage4Reef2));
+
+        cage4Reef2.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef2ToLeftHP.cmd()
+                )
+        );
+
+        reef2ToLeftHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        leftHPToReef1Left.cmd()
+                )
+        );
+
+        leftHPToReef1Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage4() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage4");
+        final AutoTrajectory cage0Reef2 = routine.trajectory("Cage4Reef2");
+        final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
+
+        routine.active().onTrue(runStartingTrajectory(cage0Reef2));
+
+        cage0Reef2.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef2ToLeftHP.cmd()
+                )
+        );
+
+        reef2ToLeftHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        leftHPToReef1Left.cmd()
+                )
+        );
+
+        leftHPToReef1Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage5() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage5");
+        final AutoTrajectory cage0Reef2 = routine.trajectory("Cage5Reef2");
+        final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
+
+        routine.active().onTrue(runStartingTrajectory(cage0Reef2));
+
+        cage0Reef2.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef2ToLeftHP.cmd()
+                )
+        );
+
+        reef2ToLeftHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        leftHPToReef1Left.cmd()
+                )
+        );
+
+        leftHPToReef1Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage0Dealgae() {
+        final AutoRoutine routine = autoFactory.newRoutine("twoPieceCage0Dealgae");
+        final AutoTrajectory cage0Reef4 = routine.trajectory("Cage0Reef4");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToBarge");
+
+        routine.active().onTrue(runStartingTrajectory(cage0Reef4));
+
+        cage0Reef4.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHP.cmd()
+                )
+        );
+
+        reef4ToRightHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
+                        rightHPToReef5.cmd()
+                )
+        );
+
+        rightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        scoreCommands.descoreLowerAlgae(),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage1Dealgae() {
+        final AutoRoutine routine = autoFactory.newRoutine("TwoPieceCage1Dealgae");
+        final AutoTrajectory cage0Reef4 = routine.trajectory("Cage1Reef4");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToBarge");
+
+        routine.active().onTrue(runStartingTrajectory(cage0Reef4));
+
+        cage0Reef4.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHP.cmd()
+                )
+        );
+
+        reef4ToRightHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
+                        rightHPToReef5.cmd()
+                )
+        );
+
+        rightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        scoreCommands.descoreLowerAlgae(),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage2Dealgae() {
+        final AutoRoutine routine = autoFactory.newRoutine("TwoPieceCage2Dealgae");
+        final AutoTrajectory cage2Reef4 = routine.trajectory("Cage2Reef4");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory rightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToBarge");
+
+        routine.active().onTrue(runStartingTrajectory(cage2Reef4));
+
+        cage2Reef4.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHP.cmd()
+                )
+        );
+
+        reef4ToRightHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
+                        rightHPToReef5.cmd()
+                )
+        );
+
+        rightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        scoreCommands.descoreLowerAlgae(),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage3Dealgae() {
+        final AutoRoutine routine = autoFactory.newRoutine("TwoPieceCage3Dealgae");
+        final AutoTrajectory cage4Reef2 = routine.trajectory("Cage3Reef2");
+        final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToBarge");
+
+        routine.active().onTrue(runStartingTrajectory(cage4Reef2));
+
+        cage4Reef2.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef2ToLeftHP.cmd()
+                )
+        );
+
+        reef2ToLeftHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        leftHPToReef1Left.cmd()
+                )
+        );
+
+        leftHPToReef1Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        scoreCommands.descoreLowerAlgae(),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage4Dealgae() {
+        final AutoRoutine routine = autoFactory.newRoutine("TwoPieceCage4Dealgae");
+        final AutoTrajectory cage0Reef2 = routine.trajectory("Cage4Reef2");
+        final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToBarge");
+
+        routine.active().onTrue(runStartingTrajectory(cage0Reef2));
+
+        cage0Reef2.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef2ToLeftHP.cmd()
+                )
+        );
+
+        reef2ToLeftHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        leftHPToReef1Left.cmd()
+                )
+        );
+
+        leftHPToReef1Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        scoreCommands.descoreLowerAlgae(),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine twoPieceCage5Dealgae() {
+        final AutoRoutine routine = autoFactory.newRoutine("TwoPieceCage5Dealgae");
+        final AutoTrajectory cage0Reef2 = routine.trajectory("Cage5Reef2");
+        final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
+        final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToBarge");
+
+        routine.active().onTrue(runStartingTrajectory(cage0Reef2));
+
+        cage0Reef2.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef2ToLeftHP.cmd()
+                )
+        );
+
+        reef2ToLeftHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.LEFT),
+                        leftHPToReef1Left.cmd()
+                )
+        );
+
+        leftHPToReef1Left.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        scoreCommands.descoreLowerAlgae(),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+
+        return routine;
+    }
+
+    public AutoRoutine threePieceCage1ToReef4And5() {
+        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage1ToReef4And5");
+        final AutoTrajectory startToReef = routine.trajectory("Cage1Reef4");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory firstRightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
+        final AutoTrajectory secondRightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
+
+        final Trigger farEnoughAwayFromHP = new Trigger(() -> {
+            final Pose2d pose = swerve.getPose();
+            final Pose2d closestHPPose = pose.nearest(FieldConstants.getHPPickupPoses());
+
+            return pose.getTranslation()
+                    .getDistance(closestHPPose.getTranslation()) >= AllowableDistanceFromHPForEarlyAlign;
+        });
+
+        routine.active().onTrue(runStartingTrajectory(startToReef));
+
+        startToReef.active().whileTrue(
+                superstructure.runGoal(Superstructure.Goal.ALIGN_L4)
+        );
+
+        startToReef.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.RIGHT, Reef.Level.L4))
+                                .onlyIf(gamepieceState.hasCoral),
+                        reef4ToRightHP.cmd()
+                )
+        );
+
+        reef4ToRightHP.done().onTrue(
+                Commands.sequence(
+                        intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
+                        Commands.parallel(
+                                firstRightHPToReef5.cmd(),
+                                Commands.sequence(
+                                        Commands.waitUntil(farEnoughAwayFromHP)
+                                                .withTimeout(0.3),
+                                        superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4)
+                                )
+                        )
                 )
         );
 
@@ -281,8 +708,14 @@ public class Autos {
         reef5ToRightHP.done().onTrue(
                 Commands.sequence(
                         intakeCoralFromHP(ScoreCommands.CoralStation.RIGHT),
-                        secondRightHPToReef5.cmd()
-                                .alongWith(superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4))
+                        Commands.parallel(
+                                secondRightHPToReef5.cmd(),
+                                Commands.sequence(
+                                        Commands.waitUntil(farEnoughAwayFromHP)
+                                                .withTimeout(0.3),
+                                        superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4)
+                                )
+                        )
                 )
         );
 
@@ -297,13 +730,12 @@ public class Autos {
         moveEndOfAuto.done().onTrue(
                 swerve.runWheelXCommand()
         );
-
         return routine;
     }
 
-    public AutoRoutine threePieceCage3ToReef2And1() {
-        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage3ToReef2And1");
-        final AutoTrajectory startToReef = routine.trajectory("Cage3Reef2");
+    public AutoRoutine threePieceCage4ToReef2And1() {
+        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage4ToReef2And1");
+        final AutoTrajectory startToReef = routine.trajectory("Cage4Reef2");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef2ToLeftHP");
         final AutoTrajectory firstRightHPToReef5 = routine.trajectory("LeftHPToReef1");
         final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef1ToLeftHP");

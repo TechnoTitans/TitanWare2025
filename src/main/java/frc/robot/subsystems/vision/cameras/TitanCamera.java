@@ -19,46 +19,46 @@ public enum TitanCamera {
             true,
             new TitanCameraCalibration()
                     .withCalibration(
-                            CameraProperties.Resolution.R1920x1080,
+                            CameraProperties.Resolution.R1280x720,
                             MatBuilder.fill(
                                     Nat.N3(),
                                     Nat.N3(),
                                     // intrinsic
-                                    1040.7268360455328,
+                                    691.1847272,
                                     0.0,
-                                    988.2378226542257,
+                                    669.781416,
                                     0.0,
-                                    1040.4068711002674,
-                                    544.230023439286,
+                                    691.0630782,
+                                    373.655306,
                                     0.0,
                                     0.0,
                                     1.0
                             ),
                             VecBuilder.fill(
                                     // distort
-                                    -0.35148800442491696,
-                                    0.16199158054202314,
-                                    0.0003847806133909519,
-                                    0.000042723769639477994,
-                                    -0.042523738490321664,
-                                    0,
-                                    0,
-                                    0
+                                    0.170009144,
+                                    -0.09435815026,
+                                    8.282499574E-6,
+                                    1.31427394E-4,
+                                    -0.002606170512,
+                                    0.5344905386,
+                                    -0.1168168982,
+                                    -0.0197253292
                             )
                     )
                     .withCalibrationError(
-                            CameraProperties.Resolution.R1920x1080,
+                            CameraProperties.Resolution.R1280x720,
                             0.15223032073535464,
                             0.06
                     )
                     .withFPS(
-                            CameraProperties.Resolution.R1920x1080,
+                            CameraProperties.Resolution.R1280x720,
                             60
                     )
                     .withLatency(
-                            CameraProperties.Resolution.R1920x1080,
+                            CameraProperties.Resolution.R1280x720,
                             7,
-                            3
+                            20
                     ),
             false
     ),
@@ -71,45 +71,45 @@ public enum TitanCamera {
             true,
             new TitanCameraCalibration()
                     .withCalibration(
-                            CameraProperties.Resolution.R1920x1080,
+                            CameraProperties.Resolution.R1280x720,
                             MatBuilder.fill(
                                     Nat.N3(),
                                     Nat.N3(),
                                     // intrinsic
-                                    1040.7268360455328,
+                                    686.0622656,
                                     0.0,
-                                    988.2378226542257,
+                                    683.547432,
                                     0.0,
-                                    1040.4068711002674,
-                                    544.230023439286,
+                                    686.060165,
+                                    341.3336965,
                                     0.0,
                                     0.0,
                                     1.0
                             ),
                             VecBuilder.fill(
                                     // distortion
-                                    -0.35148800442491696,
-                                    0.16199158054202314,
-                                    0.0003847806133909519,
-                                    0.000042723769639477994,
-                                    -0.042523738490321664,
-                                    0,
-                                    0,
-                                    0
+                                    0.1597115205,
+                                    -0.0912664895,
+                                    -1.875352567E-4,
+                                    1.617147315E-4,
+                                    -0.002312794241,
+                                    0.5251817734,
+                                    -0.1170233158,
+                                    -0.01828650622
                             )
                     )
                     .withCalibrationError(
-                            CameraProperties.Resolution.R1920x1080,
+                            CameraProperties.Resolution.R1280x720,
                             0.15223032073535464,
                             0.06
                     )
                     .withFPS(
-                            CameraProperties.Resolution.R1920x1080,
+                            CameraProperties.Resolution.R1280x720,
                             60
                     )
                     .withLatency(
-                            CameraProperties.Resolution.R1920x1080,
-                            7,
+                            CameraProperties.Resolution.R1280x720,
+                            15,
                             3
                     ),
             false
@@ -123,23 +123,45 @@ public enum TitanCamera {
             true,
             new TitanCameraCalibration()
                     .withCalibration(
-                            CameraProperties.Resolution.R640x480,
-                            // TODO: calibrations from real
-                            SimCameraProperties.PERFECT_90DEG().getIntrinsics(),
-                            SimCameraProperties.PERFECT_90DEG().getDistCoeffs()
+                            CameraProperties.Resolution.R1280x720,
+                            MatBuilder.fill(
+                                    Nat.N3(),
+                                    Nat.N3(),
+                                    // intrinsic
+                                    913.8057298291733,
+                                    0.0,
+                                    639.4170623483981,
+                                    0.0,
+                                    913.3620266692185,
+                                    354.2383130253713,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                            ),
+                            VecBuilder.fill(
+                                    // distortion
+                                    0.047,
+                                    -0.069,
+                                    0.001,
+                                    0.001,
+                                    0.015,
+                                    -0.002,
+                                    0.006,
+                                    0.001
+                            )
                     )
                     .withCalibrationError(
-                            CameraProperties.Resolution.R640x480,
-                            0.54,
+                            CameraProperties.Resolution.R1280x720,
+                            0.39,
                             0.06
                     )
                     .withFPS(
-                            CameraProperties.Resolution.R640x480,
-                            130
+                            CameraProperties.Resolution.R1280x720,
+                            60
                     )
                     .withLatency(
-                            CameraProperties.Resolution.R640x480,
-                            6,
+                            CameraProperties.Resolution.R1280x720,
+                            25,
                             3
                     ),
             false

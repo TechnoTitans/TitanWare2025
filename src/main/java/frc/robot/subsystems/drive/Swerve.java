@@ -159,12 +159,12 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveController = new HolonomicDriveController(
-                new PIDController(10, 0, 0.3),
-                new PIDController(10, 0, 0.3),
-                new PIDController(10, 0, 0),
+                new PIDController(8, 0, 0),
+                new PIDController(8, 0, 0),
+                new PIDController(6, 0, 0),
                 new TrapezoidProfile.Constraints(
-                        Units.feetToMeters(14),
-                        Units.feetToMeters(15)
+                        Units.feetToMeters(10),
+                        Units.feetToMeters(6)
                 ),
                 new TrapezoidProfile.Constraints(
                         Config.maxAngularVelocityRadsPerSec(),
@@ -174,18 +174,22 @@ public class Swerve extends SubsystemBase {
                         0.05,
                         0.1,
                         Rotation2d.fromDegrees(4),
-                        Math.PI / 6
+                        Math.PI / 5
                 )
         );
-        this.atHolonomicDrivePose = holonomicDriveController.atPose(
+        this.atHolonomicDrivePose = holonomicDriveController.atPoseZeroVelocity(
                 this::getPose,
+                this::getFieldRelativeSpeeds,
                 () -> holonomicPoseTarget
         );
 
         this.choreoController = new HolonomicChoreoController(
-                new PIDController(4, 0, 0),
-                new PIDController(4, 0, 0),
+                new PIDController(3, 0, 0),
+                new PIDController(3, 0, 0),
                 new PIDController(4, 0, 0)
+//                new PIDController(5, 0, 0),
+//                new PIDController(5, 0, 0),
+//                new PIDController(5, 0, 0)
         );
 
         this.linearVoltageSysIdRoutine = makeLinearVoltageSysIdRoutine();
@@ -247,6 +251,8 @@ public class Swerve extends SubsystemBase {
                 OdometryThreadRunner.State.struct,
                 odometryThreadRunner.getState()
         );
+
+        Logger.recordOutput("Holonomic", holonomicPoseTarget.getTranslation().getNorm());
 
         //log current swerve chassis speeds
         final ChassisSpeeds robotRelativeSpeeds = getRobotRelativeSpeeds();
@@ -778,6 +784,12 @@ public class Swerve extends SubsystemBase {
 
     public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
         return holonomicDriveController.atPose(this::getPose, targetPoseSupplier);
+    }
+
+    public Trigger atPoseNoVelTrigger(final Supplier<Pose2d> targetPoseSupplier) {
+        return holonomicDriveController.atPoseZeroVelocity(
+                this::getPose, this::getFieldRelativeSpeeds, targetPoseSupplier
+        );
     }
 
     public Trigger atPoseTrigger(
