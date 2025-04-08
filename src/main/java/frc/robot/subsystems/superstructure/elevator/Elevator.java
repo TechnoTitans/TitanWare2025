@@ -81,8 +81,8 @@ public class Elevator extends SubsystemBase {
         HP(0.065),
         ALGAE_GROUND(0),
         PROCESSOR(0),
-        UPPER_ALGAE(0.452401),
-        LOWER_ALGAE(0.183),
+        UPPER_ALGAE(0.66330802),
+        LOWER_ALGAE(0.302354),
         L4(0.9925853),
         L3(0.438842),
         L2(0.12),
@@ -149,7 +149,13 @@ public class Elevator extends SubsystemBase {
         if (desiredGoal != currentGoal) {
             if (desiredGoal != Goal.DYNAMIC) {
                 setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
-                elevatorIO.toPosition(setpoint.elevatorPositionRots);
+
+                if (desiredGoal == Goal.UPPER_ALGAE
+                        || desiredGoal == Goal.LOWER_ALGAE) {
+                    elevatorIO.toDynamicMotionMagicPosition(setpoint.elevatorPositionRots);
+                } else {
+                    elevatorIO.toPosition(setpoint.elevatorPositionRots);
+                }
             }
 
             this.currentGoal = desiredGoal;

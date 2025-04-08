@@ -15,7 +15,6 @@ import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
-import org.littletonrobotics.junction.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,6 +67,8 @@ public class ScoreCommands {
             Reef.Side side,
             Level level
     ) {}
+
+    private static final double AllowableDistanceAlgaeFromReefMeters = 0.22;
 
     private final Swerve swerve;
     private final Superstructure superstructure;
@@ -150,7 +151,13 @@ public class ScoreCommands {
 
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
-        final Runnable updateScorePosition = () -> scorePositionContainer.value = scorePositionSupplier.get();
+        final Runnable updateScorePosition = () -> {
+            if (gamepieceState.hasCoral.negate().getAsBoolean()) {
+                scorePositionContainer.value = new ScorePosition(scorePositionSupplier.get().side, Level.L1);
+            } else {
+                scorePositionContainer.value = scorePositionSupplier.get();
+            }
+        };
 
         final Trigger shouldUseEarlyAlign = new Trigger(() ->
                 scorePositionContainer.value.level == Level.L4
@@ -200,8 +207,8 @@ public class ScoreCommands {
                 = scorePositionContainer.value.level.goal;
 
         return Commands.sequence(
-                Commands.runOnce(updateScorePosition),
                 Commands.runOnce(updateScoringPoseMap),
+                Commands.runOnce(updateScorePosition),
                 Commands.either(
                         Commands.runOnce(setSuperstructureGoalToAlign),
                         Commands.runOnce(setSuperstructureGoalToScore),
@@ -237,12 +244,15 @@ public class ScoreCommands {
                 nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
                 .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
+        final Trigger farEnoughAwayFromReef = new Trigger(() -> swerve.getPose().getTranslation()
+                .getDistance(descorePoseSupplier.get().getTranslation()) >= AllowableDistanceAlgaeFromReefMeters);
+
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
-                        Commands.waitSeconds(0.1),
-                        swerve.drive(() -> -2, () -> 0, () -> 0, false, false)
-                                .withTimeout(0.2)
+                        Commands.waitSeconds(0.2),
+                        swerve.drive(() -> -0.7, () -> 0, () -> 0, false, false)
+                                .until(farEnoughAwayFromReef)
                 ),
                 superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
                 intake.intakeAlgae().asProxy()
@@ -254,12 +264,15 @@ public class ScoreCommands {
                 nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
                 .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
+        final Trigger farEnoughAwayFromReef = new Trigger(() -> swerve.getPose().getTranslation()
+                .getDistance(descorePoseSupplier.get().getTranslation()) >= AllowableDistanceAlgaeFromReefMeters);
+
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
-                        Commands.waitSeconds(0.1),
-                        swerve.drive(() -> -2, () -> 0, () -> 0, false, false)
-                                .withTimeout(0.2)
+                        Commands.waitSeconds(0.2),
+                        swerve.drive(() -> -0.7, () -> 0, () -> 0, false, false)
+                                .until(farEnoughAwayFromReef)
                 ),
                 superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
                 intake.intakeAlgae().asProxy()
@@ -354,6 +367,19 @@ public class ScoreCommands {
         ).withName("IntakeAlgaeFromGround");
     }
 
+    public Command processor() {
+        return Commands.deadline(
+                Commands.sequence(
+                        swerve.driveToPose(FieldConstants::getProcessorScoringPose),
+                        Commands.parallel(
+                                swerve.runWheelXCommand(),
+                                intake.scoreAlgae()
+                        )
+                ),
+                superstructure.toGoal(Superstructure.Goal.PROCESSOR)
+        );
+    }
+
     @SuppressWarnings("SuspiciousNameCombination")
     public Command readyClimb(
             final DoubleSupplier leftStickYInput,
@@ -367,5 +393,18 @@ public class ScoreCommands {
                         () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.k180deg
                 )
         ).withName("ReadyClimb");
+    }
+
+    public Command climb() {
+        final DoubleSupplier climbAxisX = () -> FieldConstants.getCenterCage().getX();
+
+        return Commands.sequence(
+                swerve.driveToAxisFacingAngle(
+                        climbAxisX,
+                        Swerve.DriveAxis.X,
+                        () -> Robot.IsRedAlliance.getAsBoolean() ? Rotation2d.kZero : Rotation2d.k180deg
+                ),
+                superstructure.toInstantGoal(Superstructure.Goal.CLIMB_DOWN)
+        ).withName("Climb");
     }
 }

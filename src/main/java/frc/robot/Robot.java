@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -77,7 +78,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final PhotonVision photonVision = new PhotonVision(
-            Constants.RobotMode.DISABLED,
+            Constants.CURRENT_MODE,
             swerve,
             swerve.getPoseEstimator()
     );
@@ -265,8 +266,6 @@ public class Robot extends LoggedRobot {
         Logger.recordOutput("EmptyPose", Pose3d.kZero);
     }
 
-    double initialX = 0;
-
     @Override
     public void robotPeriodic() {
         Threads.setCurrentThreadPriority(true, 99);
@@ -277,11 +276,6 @@ public class Robot extends LoggedRobot {
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
-
-        Logger.recordOutput(
-                "Change in X",
-                swerve.getPose().getX() - initialX
-        );
 
         LoggedCommandScheduler.periodic();
 
@@ -326,7 +320,9 @@ public class Robot extends LoggedRobot {
         final Container<Pose2d> pose2dContainer = Container.empty();
         driverController.x(testEventLoop).whileTrue(
                 Commands.sequence(
-                        pose2dContainer.set(() -> swerve.getPose().transformBy(new Transform2d(1, 0, Rotation2d.kZero))),
+                        pose2dContainer.set(() -> swerve.getPose().transformBy(
+                                new Transform2d(Units.inchesToMeters(15 * 12), 0, Rotation2d.kZero)
+                        )),
                         Commands.parallel(
                                 Commands.run(() -> Logger.recordOutput("newDist", pose2dContainer.value.getTranslation().getNorm())),
                                 Commands.run(() -> Logger.recordOutput("robot", swerve.getPose().getTranslation().getNorm())),
@@ -336,13 +332,6 @@ public class Robot extends LoggedRobot {
         );
 
         driverController.b().whileTrue(swerve.wheelRadiusCharacterization());
-
-        driverController.a().whileTrue(
-                Commands.sequence(
-                        Commands.runOnce(() -> swerve.getGyro().setAngle(Rotation2d.kZero)),
-                        Commands.runOnce(() -> this.initialX = swerve.getPose().getX())
-                )
-        );
 
         driverController.y(testEventLoop).whileTrue(
                 intakeArm.pivotVoltageSysIdCommand()
@@ -495,7 +484,9 @@ public class Robot extends LoggedRobot {
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
-                .onFalse(superstructure.toInstantGoal(Superstructure.Goal.CLIMB_DOWN));
+                .onFalse(scoreCommands.climb());
+
+        this.driverController.start().whileTrue(scoreCommands.processor());
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))

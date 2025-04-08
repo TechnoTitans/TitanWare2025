@@ -160,11 +160,11 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveController = new HolonomicDriveController(
-                new PIDController(8, 0, 0),
-                new PIDController(8, 0, 0),
-                new PIDController(6, 0, 0),
+                new PIDController(7, 0, 0.21),
+                new PIDController(7, 0, 0.21),
+                new PIDController(4, 0, 0.1),
                 new TrapezoidProfile.Constraints(
-                        Units.feetToMeters(10),
+                        Units.feetToMeters(13),
                         Units.feetToMeters(6)
                 ),
                 new TrapezoidProfile.Constraints(
@@ -172,11 +172,11 @@ public class Swerve extends SubsystemBase {
                         Config.maxAngularAccelerationRadsPerSecSquared()
                 ),
                 new HolonomicDriveController.PositionTolerance(
-                        0.05,
+                        0.025,
                         Rotation2d.fromDegrees(4)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.1,
+                        0.05,
                         Math.PI / 5
                 )
         );

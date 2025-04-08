@@ -15,25 +15,23 @@ public class FieldConstants {
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
     public static final Transform2d SCORING_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(9), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(26.5), 0, Rotation2d.kPi);
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(17.5) + Units.inchesToMeters(1.5), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(26.5), 0, Rotation2d.kPi);
+    public static final Transform2d PROCESSOR_DISTANCE_OFFSET =
+            new Transform2d(Units.inchesToMeters(33), 0, Rotation2d.kPi);
     public static final Transform2d HP_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
-        public static final Transform2d SCORING_BARGE_OFFSET = //Fling
+        public static final Transform2d SCORING_BARGE_OFFSET =
             new Transform2d(-Units.inchesToMeters(35.5), 0, Rotation2d.kPi);
-    public static final Transform2d ALIGN_DISTANCE_OFFSET =
-            new Transform2d(-Units.inchesToMeters(24), 0, Rotation2d.kZero);
-    public static final Transform2d ALGAE_ALIGN_DISTANCE_OFFSET =
-            new Transform2d(-Units.inchesToMeters(4), 0, Rotation2d.kZero);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =
                 new Pose2d(Units.inchesToMeters(235.726), 0, Rotation2d.fromDegrees(90));
         public static final Pose2d RED_CENTER_FACE = BLUE_CENTER_FACE.relativeTo(RED_ORIGIN);
 
-        public static final Pose2d BLUE_SCORING_POSE = BLUE_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET);
-        public static final Pose2d RED_SCORING_POSE = RED_CENTER_FACE.transformBy(SCORING_DISTANCE_OFFSET);
+        public static final Pose2d BLUE_SCORING_POSE = BLUE_CENTER_FACE.transformBy(PROCESSOR_DISTANCE_OFFSET);
+        public static final Pose2d RED_SCORING_POSE = RED_CENTER_FACE.transformBy(PROCESSOR_DISTANCE_OFFSET);
     }
 
     public static class Barge {
@@ -308,6 +306,10 @@ public class FieldConstants {
 
     public static Map<Reef.Face, Pose2d> getReefScoringCenterPoses() {
         return getAllianceFlipped(Reef.BLUE_CENTER_SCORING_FACES, Reef.RED_CENTER_SCORING_FACES);
+    }
+
+    public static Pose2d getCenterCage() {
+        return getAllianceFlipped(Barge.BLUE_MIDDLE_CAGE, Barge.RED_MIDDLE_CAGE);
     }
 
     public static Pose2d getScoringBargeCenterCage() {
