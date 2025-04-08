@@ -86,6 +86,7 @@ public class Swerve extends SubsystemBase {
     private final PIDController headingController;
 
     public final Trigger atHolonomicDrivePose;
+    public final Trigger atHolonomicDrivePoseStopped;
     private boolean holonomicControllerActive = false;
     private Pose2d holonomicPoseTarget = Pose2d.kZero;
     private final HolonomicDriveController holonomicDriveController;
@@ -170,26 +171,29 @@ public class Swerve extends SubsystemBase {
                         Config.maxAngularVelocityRadsPerSec(),
                         Config.maxAngularAccelerationRadsPerSecSquared()
                 ),
-                new HolonomicDriveController.Tolerance(
+                new HolonomicDriveController.PositionTolerance(
                         0.05,
+                        Rotation2d.fromDegrees(4)
+                ),
+                new HolonomicDriveController.VelocityTolerance(
                         0.1,
-                        Rotation2d.fromDegrees(4),
                         Math.PI / 5
                 )
         );
-        this.atHolonomicDrivePose = holonomicDriveController.atPoseZeroVelocity(
+        this.atHolonomicDrivePose = holonomicDriveController.atPose(
+                this::getPose,
+                () -> holonomicPoseTarget
+        );
+        this.atHolonomicDrivePoseStopped = holonomicDriveController.atPoseAndStopped(
                 this::getPose,
                 this::getFieldRelativeSpeeds,
                 () -> holonomicPoseTarget
         );
 
         this.choreoController = new HolonomicChoreoController(
-                new PIDController(3, 0, 0),
-                new PIDController(3, 0, 0),
-                new PIDController(4, 0, 0)
-//                new PIDController(5, 0, 0),
-//                new PIDController(5, 0, 0),
-//                new PIDController(5, 0, 0)
+                new PIDController(7, 0, 0.1),
+                new PIDController(7, 0, 0.1),
+                new PIDController(7, 0, 0)
         );
 
         this.linearVoltageSysIdRoutine = makeLinearVoltageSysIdRoutine();
@@ -297,6 +301,10 @@ public class Swerve extends SubsystemBase {
         Logger.recordOutput(LogKey + "/HolonomicController/Active", holonomicControllerActive);
         Logger.recordOutput(LogKey + "/HolonomicController/TargetPose", holonomicPoseTarget);
         Logger.recordOutput(LogKey + "/HolonomicController/AtHolonomicSetpoint", atHolonomicDrivePose.getAsBoolean());
+        Logger.recordOutput(
+                LogKey + "/HolonomicController/AtHolonomicSetpointStopped",
+                atHolonomicDrivePoseStopped.getAsBoolean()
+        );
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
@@ -452,7 +460,6 @@ public class Swerve extends SubsystemBase {
         ));
     }
 
-
     public void drive(final ChassisSpeeds speeds) {
         drive(speeds, Swerve.NoTorqueFeedforwards);
     }
@@ -561,6 +568,7 @@ public class Swerve extends SubsystemBase {
                 .withName("FaceAngle");
     }
 
+    //THIS DOES NOT CHECK 0 VELOCITY
     public Command driveToPose(final Supplier<Pose2d> poseSupplier) {
         return Commands.sequence(
                         runOnce(() -> {
@@ -676,8 +684,8 @@ public class Swerve extends SubsystemBase {
         final Trigger atAxis = atAxisTrigger(
                 holdPosition,
                 holdAxis == DriveAxis.X
-                    ? () -> getPose().getX()
-                    : () -> getPose().getY()
+                        ? () -> getPose().getX()
+                        : () -> getPose().getY()
         );
 
         return Commands.sequence(
@@ -786,17 +794,33 @@ public class Swerve extends SubsystemBase {
         return holonomicDriveController.atPose(this::getPose, targetPoseSupplier);
     }
 
-    public Trigger atPoseNoVelTrigger(final Supplier<Pose2d> targetPoseSupplier) {
-        return holonomicDriveController.atPoseZeroVelocity(
-                this::getPose, this::getFieldRelativeSpeeds, targetPoseSupplier
+    public Trigger atPoseTrigger(
+            final Supplier<Pose2d> targetPoseSupplier,
+            final HolonomicDriveController.PositionTolerance tolerance
+    ) {
+        return HolonomicDriveController.atPose(this::getPose, targetPoseSupplier, tolerance);
+    }
+
+    public Trigger atPoseAndStoppedTrigger(
+            final Supplier<Pose2d> targetPoseSupplier,
+            final HolonomicDriveController.PositionTolerance positionTolerance,
+            final HolonomicDriveController.VelocityTolerance velocityTolerance
+    ) {
+        return HolonomicDriveController.atPoseAndStopped(
+                this::getPose,
+                this::getFieldRelativeSpeeds,
+                targetPoseSupplier,
+                positionTolerance,
+                velocityTolerance
         );
     }
 
-    public Trigger atPoseTrigger(
-            final Supplier<Pose2d> targetPoseSupplier,
-            final HolonomicDriveController.Tolerance tolerance
-    ) {
-        return holonomicDriveController.atPose(this::getPose, targetPoseSupplier, tolerance);
+    public Trigger atPoseAndStoppedTrigger(final Supplier<Pose2d> targetPoseSupplier) {
+        return holonomicDriveController.atPoseAndStopped(
+                this::getPose,
+                this::getFieldRelativeSpeeds,
+                targetPoseSupplier
+        );
     }
 
     public Trigger atAxisTrigger(final DoubleSupplier target, final DoubleSupplier measurement) {
@@ -860,7 +884,8 @@ public class Swerve extends SubsystemBase {
                 MathUtil.angleModulus(currentPose.getRotation().getRadians())
         );
 
-        drive(speeds, moduleForceVectors);
+        //TODO: Torque FF doesnt work well
+        drive(speeds);
     }
 
     @SuppressWarnings("unused")
@@ -897,23 +922,13 @@ public class Swerve extends SubsystemBase {
                             final Rotation2d rotation = getYaw();
                             state.gyroDelta += Math.abs(rotation.minus(state.lastAngle).getRotations());
                             state.lastAngle = rotation;
-
-                            final double[] positions = drivePositionsSupplier.get();
-                            double wheelDeltaRots = 0.0;
-                            for (int i = 0; i < 4; i++) {
-                                wheelDeltaRots += Math.abs(positions[i] - state.positions[i]) / 4.0;
-                            }
-                            final double wheelRadius =
-                                    (state.gyroDelta * Config.driveBaseRadiusMeters()) / wheelDeltaRots;
-
-                            Logger.recordOutput(LogKey + "/WheelDelta", wheelDeltaRots);
-                            Logger.recordOutput(LogKey + "/WheelRadius", wheelRadius);
                         }).finallyDo(() -> {
                             final double[] positions = drivePositionsSupplier.get();
                             double wheelDeltaRots = 0.0;
                             for (int i = 0; i < 4; i++) {
                                 wheelDeltaRots += Math.abs(positions[i] - state.positions[i]) / 4.0;
                             }
+
                             final double wheelRadius =
                                     (state.gyroDelta * Config.driveBaseRadiusMeters()) / wheelDeltaRots;
 
@@ -922,6 +937,8 @@ public class Swerve extends SubsystemBase {
                             System.out.println("\tWheel Delta: " + formatter.format(wheelDeltaRots) + " rotations");
                             System.out.println("\tGyro Delta: " + formatter.format(state.gyroDelta) + " rotations");
                             System.out.println("\tWheel Radius: " + formatter.format(wheelRadius) + " meters");
+
+                            stop();
                         })
                 )
         );

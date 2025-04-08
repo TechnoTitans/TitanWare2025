@@ -2,7 +2,6 @@ package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.CurrentUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Current;
@@ -21,7 +20,6 @@ import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 

@@ -16,6 +16,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -57,8 +58,6 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
     private final StatusSignal<AngularVelocity> turnVelocity;
     private final StatusSignal<Current> turnTorqueCurrent;
     private final StatusSignal<Temperature> turnDeviceTemp;
-
-
 
     // Odometry StatusSignal update buffers
     private final DoubleCircularBuffer timestampBuffer;
@@ -121,13 +120,13 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
         // TODO: drive and azimuth gains both need to be re-tuned
         driveTalonFXConfiguration.Slot0 = new Slot0Configs()
-                .withKS(2.2557)
+                .withKS(3.5)
                 .withKV(0)
-                .withKA(3.1912)
-                .withKP(42);
-        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 65;
-        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -65;
-        driveTalonFXConfiguration.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 0.2;
+                .withKA(14)
+                .withKP(27)
+                .withKD(1);
+        driveTalonFXConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 80;
+        driveTalonFXConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -80;
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -136,7 +135,8 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
         turnTalonFXConfiguration.Slot0 = new Slot0Configs()
                 .withKP(30)
-                .withKS(0.3);
+                .withKS(0.3)
+                .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
         turnTalonFXConfiguration.CurrentLimits.StatorCurrentLimit = 40;
         turnTalonFXConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         turnTalonFXConfiguration.CurrentLimits.SupplyCurrentLimit = 40;

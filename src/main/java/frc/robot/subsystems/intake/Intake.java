@@ -255,19 +255,6 @@ public class Intake extends SubsystemBase {
                 .withName("ScoreAlgae");
     }
 
-    public Command shootAlgae() {
-        return Commands.sequence(
-                        runOnce(() -> this.algaeOuttaking = true),
-                        toInstantRollerVoltage(12),
-                        Commands.waitUntil(isCurrentAboveAlgaeThreshold.negate())
-                                .withTimeout(1.5),
-                        Commands.waitSeconds(0.1),
-                        instantStopCommand()
-                )
-                .finallyDo(() -> this.algaeOuttaking = false)
-                .withName("ShootAlgae");
-    }
-
     public Command netAlgae() {
         return Commands.sequence(
                         runOnce(() -> this.algaeOuttaking = true),
@@ -276,18 +263,9 @@ public class Intake extends SubsystemBase {
                         instantStopCommand()
                 )
                 .finallyDo(() -> this.algaeOuttaking = false)
-                .withName("ShootAlgae");
+                .withName("NetAlgae");
     }
 
-
-    public Command releaseAlgae() {
-        return Commands.sequence(
-                        runOnce(() -> this.algaeOuttaking = true),
-                        instantStopCommand()
-                )
-                .finallyDo(() -> this.algaeOuttaking = false)
-                .withName("ReleaseAlgae");
-    }
 
     private Command toInstantRollerVoltage(final double volts) {
         return runOnce(

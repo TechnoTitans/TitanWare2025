@@ -32,19 +32,19 @@ public class HolonomicChoreoController {
             final Pose2d pose,
             final SwerveSample swerveSample
     ) {
-        double xFF = swerveSample.vx;
-        double yFF = swerveSample.vy;
-        double rotationFF = swerveSample.omega;
+        final double xFF = swerveSample.vx;
+        final double yFF = swerveSample.vy;
+        final double rotationFF = swerveSample.omega;
 
-        double xFeedback = xController.calculate(pose.getX(), swerveSample.x);
-        double yFeedback = yController.calculate(pose.getY(), swerveSample.y);
-        double rotationFeedback =
+        final double xFeedback = xController.calculate(pose.getX(), swerveSample.x);
+        final double yFeedback = yController.calculate(pose.getY(), swerveSample.y);
+        final double rotationFeedback =
                 rotationController.calculate(pose.getRotation().getRadians(), swerveSample.heading);
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(
                 xFF + xFeedback,
                 yFF + yFeedback,
-                rotationFeedback,
+                rotationFF + rotationFeedback,
                 pose.getRotation()
         );
     }

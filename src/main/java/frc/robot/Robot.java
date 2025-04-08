@@ -77,7 +77,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final PhotonVision photonVision = new PhotonVision(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             swerve,
             swerve.getPoseEstimator()
     );
@@ -265,6 +265,8 @@ public class Robot extends LoggedRobot {
         Logger.recordOutput("EmptyPose", Pose3d.kZero);
     }
 
+    double initialX = 0;
+
     @Override
     public void robotPeriodic() {
         Threads.setCurrentThreadPriority(true, 99);
@@ -275,6 +277,11 @@ public class Robot extends LoggedRobot {
 
         driverControllerDisconnected.set(!driverController.getHID().isConnected());
         coControllerDisconnected.set(!coController.getHID().isConnected());
+
+        Logger.recordOutput(
+                "Change in X",
+                swerve.getPose().getX() - initialX
+        );
 
         LoggedCommandScheduler.periodic();
 
@@ -328,7 +335,14 @@ public class Robot extends LoggedRobot {
                 )
         );
 
-        driverController.a().whileTrue(swerve.wheelRadiusCharacterization());
+        driverController.b().whileTrue(swerve.wheelRadiusCharacterization());
+
+        driverController.a().whileTrue(
+                Commands.sequence(
+                        Commands.runOnce(() -> swerve.getGyro().setAngle(Rotation2d.kZero)),
+                        Commands.runOnce(() -> this.initialX = swerve.getPose().getX())
+                )
+        );
 
         driverController.y(testEventLoop).whileTrue(
                 intakeArm.pivotVoltageSysIdCommand()
@@ -441,12 +455,6 @@ public class Robot extends LoggedRobot {
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "Spin",
-                autos::spin,
-                Constants.CompetitionType.TESTING
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
                 "ThreePieceCage1ToReef4And5",
                 autos::threePieceCage1ToReef4And5,
                 Constants.CompetitionType.TESTING
@@ -483,7 +491,7 @@ public class Robot extends LoggedRobot {
 
         this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
-        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreNetFlingFacingBarge());
+        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreBarge());
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
