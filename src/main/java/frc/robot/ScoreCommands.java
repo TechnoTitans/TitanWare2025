@@ -154,12 +154,11 @@ public class ScoreCommands {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
         final Runnable updateScorePosition = () -> scorePositionContainer.value = scorePositionSupplier.get();
 
-        final Container<ScorePosition> lastScorePositionContainer = Container.empty();
-        final Runnable updateLastScorePosition = () ->
-                lastScorePositionContainer.value = scorePositionContainer.get();
-
         final Trigger shouldUseEarlyAlign = new Trigger(() ->
-                scorePositionContainer.value.level == Level.L4
+                switch (scorePositionContainer.value.level) {
+                    case L4 -> true;
+                    case L3, L2, L1 -> false;
+                }
         );
 
         final Supplier<Map<Reef.Side, Map<Reef.Level, Pose2d>>> scoringPoseMap = () -> {
@@ -195,6 +194,7 @@ public class ScoreCommands {
             return offsetScoringPoseWithCoralPosition(scoringPose);
         };
 
+        final Trigger atReef = swerve.atPoseAndStoppedTrigger(scoringPoseSupplier);
         final Trigger atCloseEnoughReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
@@ -206,7 +206,6 @@ public class ScoreCommands {
                         Math.PI / 2
                 )
         );
-        final Trigger atReef = swerve.atPoseAndStoppedTrigger(scoringPoseSupplier);
         final Trigger atSuperstructureSetpoint = superstructure
                 .atSetpoint(() -> scorePositionContainer.value.level.goal);
 
@@ -218,7 +217,6 @@ public class ScoreCommands {
 
         return Commands.sequence(
                 Commands.runOnce(updateScorePosition),
-                Commands.runOnce(updateLastScorePosition),
                 Commands.runOnce(updateScoringPoseMap),
                 Commands.either(
                         Commands.runOnce(setSuperstructureGoalToAlign),
@@ -237,13 +235,8 @@ public class ScoreCommands {
                                 intake.scoreCoral()
                         ),
                         Commands.sequence(
-                                Commands.repeatingSequence(
-                                        swerve.runToPose(scoringPoseSupplier)
-                                                .onlyWhile(() ->
-                                                        lastScorePositionContainer.value == scorePositionContainer.value
-                                                ),
-                                        Commands.runOnce(updateLastScorePosition)
-                                ).until(atReef),
+                                swerve.runToPose(scoringPoseSupplier)
+                                        .until(atReef),
                                 swerve.runWheelXCommand()
                         ),
                         Commands.parallel(
@@ -251,16 +244,17 @@ public class ScoreCommands {
                                 Commands.either(
                                         Commands.runOnce(setSuperstructureGoalToAlign)
                                                 .andThen(Commands.idle())
-                                                .until(shouldUseEarlyAlign.negate()),
+                                                .onlyWhile(shouldUseEarlyAlign),
                                         Commands.runOnce(setSuperstructureGoalToScore)
                                                 .andThen(Commands.idle())
-                                                .until(shouldUseEarlyAlign),
+                                                .onlyWhile(shouldUseEarlyAlign.negate()),
                                         shouldUseEarlyAlign
                                 ).repeatedly()
                         ).until(atCloseEnoughReef),
                         superstructure.toGoal(superstructureGoalContainer)
                 ),
-                Commands.waitUntil(superstructure.unsafeToDrive.negate()).withTimeout(0.8)
+                Commands.waitUntil(superstructure.unsafeToDrive.negate())
+                        .withTimeout(0.8)
         ).withName("ScoreAtFixedPosition");
     }
 
@@ -279,7 +273,8 @@ public class ScoreCommands {
 
         return Commands.deadline(
                 Commands.sequence(
-                        swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
+                        swerve.runToPose(descorePoseSupplier)
+                                .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
                         swerve.drive(() -> -0.7, () -> 0, () -> 0, false, false)
                                 .until(farEnoughAwayFromReef)
@@ -299,7 +294,8 @@ public class ScoreCommands {
 
         return Commands.deadline(
                 Commands.sequence(
-                        swerve.runToPose(descorePoseSupplier).until(gamepieceState.hasAlgae),
+                        swerve.runToPose(descorePoseSupplier)
+                                .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
                         swerve.drive(() -> -0.7, () -> 0, () -> 0, false, false)
                                 .until(farEnoughAwayFromReef)

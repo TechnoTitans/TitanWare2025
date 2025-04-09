@@ -329,11 +329,11 @@ public class Robot extends LoggedRobot {
         driverController.x(testEventLoop).whileTrue(
                 Commands.sequence(
                         pose2dContainer.set(() -> swerve.getPose().transformBy(
-                                new Transform2d(Units.inchesToMeters(15 * 12), 0, Rotation2d.kZero)
+                                new Transform2d(Units.feetToMeters(15), 0, Rotation2d.kZero)
                         )),
                         Commands.parallel(
-                                Commands.run(() -> Logger.recordOutput("newDist", pose2dContainer.value.getTranslation().getNorm())),
-                                Commands.run(() -> Logger.recordOutput("robot", swerve.getPose().getTranslation().getNorm())),
+                                Commands.run(() -> Logger.recordOutput("NewDist", pose2dContainer.value.getTranslation().getNorm())),
+                                Commands.run(() -> Logger.recordOutput("Robot", swerve.getPose().getTranslation().getNorm())),
                                 swerve.runToPose(pose2dContainer)
                         )
                 )

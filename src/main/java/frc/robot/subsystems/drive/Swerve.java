@@ -178,7 +178,8 @@ public class Swerve extends SubsystemBase {
                 new HolonomicDriveController.VelocityTolerance(
                         0.05,
                         Math.PI / 5
-                )
+                ),
+                this::getFieldRelativeSpeeds
         );
         this.atHolonomicDrivePose = holonomicDriveController.atPose(
                 this::getPose,
@@ -568,16 +569,15 @@ public class Swerve extends SubsystemBase {
                 .withName("FaceAngle");
     }
 
-    //THIS DOES NOT CHECK 0 VELOCITY
     public Command driveToPose(final Supplier<Pose2d> poseSupplier) {
         return Commands.sequence(
                         runOnce(() -> {
                             holonomicControllerActive = true;
-                            holonomicDriveController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
+                            holonomicDriveController.reset(getPose(), poseSupplier.get());
                         }),
                         run(() -> {
                             this.holonomicPoseTarget = poseSupplier.get();
-                            drive(holonomicDriveController.calculate(getPose()));
+                            drive(holonomicDriveController.calculate(getPose(), poseSupplier.get()));
                         }).until(atHolonomicDrivePose),
                         runOnce(this::stop)
                 )
@@ -589,11 +589,11 @@ public class Swerve extends SubsystemBase {
         return Commands.sequence(
                         runOnce(() -> {
                             holonomicControllerActive = true;
-                            holonomicDriveController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
+                            holonomicDriveController.reset(getPose(), poseSupplier.get());
                         }),
                         run(() -> {
                             this.holonomicPoseTarget = poseSupplier.get();
-                            drive(holonomicDriveController.calculate(getPose()));
+                            drive(holonomicDriveController.calculate(getPose(), poseSupplier.get()));
                         })
                 )
                 .finallyDo(() -> holonomicControllerActive = false)
