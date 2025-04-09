@@ -803,19 +803,6 @@ public class Swerve extends SubsystemBase {
 
     public Trigger atPoseTrigger(
             final Supplier<Pose2d> targetPoseSupplier,
-            final HolonomicDriveController.VelocityTolerance tolerance
-    ) {
-        return HolonomicDriveController.atPoseAndStopped(
-                this::getPose,
-                this::getFieldRelativeSpeeds,
-                targetPoseSupplier,
-                holonomicDriveController.positionTolerance,
-                tolerance
-        );
-    }
-
-    public Trigger atPoseTrigger(
-            final Supplier<Pose2d> targetPoseSupplier,
             final HolonomicDriveController.PositionTolerance positionTolerance,
             final HolonomicDriveController.VelocityTolerance velocityTolerance
     ) {

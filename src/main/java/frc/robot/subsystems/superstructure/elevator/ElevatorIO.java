@@ -32,7 +32,11 @@ public interface ElevatorIO {
 
     default void toPosition(final double positionRots) {}
 
-    default void toDynamicMotionMagicPosition(final double positionRots) {}
+    default void toPosition(
+            final double positionRots,
+            final double velocityRotsPerSec,
+            final double accelerationRotsPerSec2
+    ) {}
 
     default void toVoltage(final double volts) {}
 

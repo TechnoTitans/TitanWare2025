@@ -42,8 +42,8 @@ public class HolonomicDriveController {
             double rotationVelocityToleranceRadsPerSec
     ) {}
 
-    public final PositionTolerance positionTolerance;
-    public final VelocityTolerance velocityTolerance;
+    private final PositionTolerance positionTolerance;
+    private final VelocityTolerance velocityTolerance;
 
     private double distance;
     private Rotation2d heading;

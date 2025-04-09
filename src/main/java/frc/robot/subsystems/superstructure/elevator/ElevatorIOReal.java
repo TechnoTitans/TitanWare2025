@@ -158,11 +158,15 @@ public class ElevatorIOReal implements ElevatorIO {
     }
 
     @Override
-    public void toDynamicMotionMagicPosition(final double positionRots) {
+    public void toPosition(
+            final double positionRots,
+            final double velocityRotsPerSec,
+            final double accelerationRotsPerSec2
+    ) {
         masterMotor.setControl(dynamicMotionMagicVoltage
                 .withPosition(positionRots)
-                .withVelocity(25)
-                .withAcceleration(35)
+                .withVelocity(velocityRotsPerSec)
+                .withAcceleration(accelerationRotsPerSec2)
         );
         followerMotor.setControl(follower);
     }

@@ -4,10 +4,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
-import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -45,6 +42,7 @@ public class ElevatorIOSim implements ElevatorIO {
     private final TalonFXSim motorsSim;
 
     private final MotionMagicExpoVoltage motionMagicExpoVoltage;
+    private final DynamicMotionMagicVoltage dynamicMotionMagicVoltage;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
     private final Follower follower;
@@ -96,6 +94,7 @@ public class ElevatorIOSim implements ElevatorIO {
         );
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
+        this.dynamicMotionMagicVoltage = new DynamicMotionMagicVoltage(0, 0, 0, 0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
         this.follower = new Follower(masterMotor.getDeviceID(), false);
@@ -217,6 +216,20 @@ public class ElevatorIOSim implements ElevatorIO {
     @Override
     public void toPosition(final double positionRots) {
         masterMotor.setControl(motionMagicExpoVoltage.withPosition(positionRots));
+        followerMotor.setControl(follower);
+    }
+
+    @Override
+    public void toPosition(
+            final double positionRots,
+            final double velocityRotsPerSec,
+            final double accelerationRotsPerSec2
+    ) {
+        masterMotor.setControl(dynamicMotionMagicVoltage
+                .withPosition(positionRots)
+                .withVelocity(velocityRotsPerSec)
+                .withAcceleration(accelerationRotsPerSec2)
+        );
         followerMotor.setControl(follower);
     }
 

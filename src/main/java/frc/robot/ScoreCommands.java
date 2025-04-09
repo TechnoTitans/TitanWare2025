@@ -152,13 +152,11 @@ public class ScoreCommands {
 
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
-        final Runnable updateScorePosition = () -> {
-            if (gamepieceState.hasCoral.negate().getAsBoolean()) {
-                scorePositionContainer.value = new ScorePosition(scorePositionSupplier.get().side, Level.L1);
-            } else {
-                scorePositionContainer.value = scorePositionSupplier.get();
-            }
-        };
+        final Runnable updateScorePosition = () -> scorePositionContainer.value = scorePositionSupplier.get();
+
+        final Container<ScorePosition> lastScorePositionContainer = Container.empty();
+        final Runnable updateLastScorePosition = () ->
+                lastScorePositionContainer.value = scorePositionContainer.get();
 
         final Trigger shouldUseEarlyAlign = new Trigger(() ->
                 scorePositionContainer.value.level == Level.L4
@@ -219,8 +217,9 @@ public class ScoreCommands {
                 = scorePositionContainer.value.level.goal;
 
         return Commands.sequence(
-                Commands.runOnce(updateScoringPoseMap),
                 Commands.runOnce(updateScorePosition),
+                Commands.runOnce(updateLastScorePosition),
+                Commands.runOnce(updateScoringPoseMap),
                 Commands.either(
                         Commands.runOnce(setSuperstructureGoalToAlign),
                         Commands.runOnce(setSuperstructureGoalToScore),
@@ -232,15 +231,33 @@ public class ScoreCommands {
                         Commands.sequence(
                                 Commands.waitUntil(atCloseEnoughReef),
                                 Commands.runOnce(setSuperstructureGoalToScore),
-                                Commands.waitUntil(atSuperstructureSetpoint).withTimeout(2),
                                 Commands.waitUntil(atReef),
+                                Commands.waitUntil(atSuperstructureSetpoint)
+                                        .withTimeout(2),
                                 intake.scoreCoral()
                         ),
                         Commands.sequence(
-                                swerve.runToPose(scoringPoseSupplier)
-                                        .until(atReef),
+                                Commands.repeatingSequence(
+                                        swerve.runToPose(scoringPoseSupplier)
+                                                .onlyWhile(() ->
+                                                        lastScorePositionContainer.value == scorePositionContainer.value
+                                                ),
+                                        Commands.runOnce(updateLastScorePosition)
+                                ).until(atReef),
                                 swerve.runWheelXCommand()
                         ),
+                        Commands.parallel(
+                                Commands.run(updateScorePosition),
+                                Commands.either(
+                                        Commands.runOnce(setSuperstructureGoalToAlign)
+                                                .andThen(Commands.idle())
+                                                .until(shouldUseEarlyAlign.negate()),
+                                        Commands.runOnce(setSuperstructureGoalToScore)
+                                                .andThen(Commands.idle())
+                                                .until(shouldUseEarlyAlign),
+                                        shouldUseEarlyAlign
+                                ).repeatedly()
+                        ).until(atCloseEnoughReef),
                         superstructure.toGoal(superstructureGoalContainer)
                 ),
                 Commands.waitUntil(superstructure.unsafeToDrive.negate()).withTimeout(0.8)

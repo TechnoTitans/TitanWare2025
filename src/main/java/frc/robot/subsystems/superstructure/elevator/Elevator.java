@@ -101,6 +101,13 @@ public class Elevator extends SubsystemBase {
         public double getPositionGoalMeters() {
             return positionGoalMeters;
         }
+
+        public static boolean shouldUseSlowAlgaeNext(final Goal desiredGoal, final Goal currentGoal) {
+            return desiredGoal == UPPER_ALGAE
+                    || desiredGoal == LOWER_ALGAE
+                    || currentGoal == UPPER_ALGAE
+                    || currentGoal == LOWER_ALGAE;
+        }
     }
 
     public Elevator(
@@ -150,9 +157,12 @@ public class Elevator extends SubsystemBase {
             if (desiredGoal != Goal.DYNAMIC) {
                 setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
 
-                if (desiredGoal == Goal.UPPER_ALGAE
-                        || desiredGoal == Goal.LOWER_ALGAE) {
-                    elevatorIO.toDynamicMotionMagicPosition(setpoint.elevatorPositionRots);
+                if (Goal.shouldUseSlowAlgaeNext(desiredGoal, currentGoal)) {
+                    elevatorIO.toPosition(
+                            setpoint.elevatorPositionRots,
+                            25,
+                            35
+                    );
                 } else {
                     elevatorIO.toPosition(setpoint.elevatorPositionRots);
                 }

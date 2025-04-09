@@ -149,7 +149,14 @@ public class Robot extends LoggedRobot {
             .and(DriverStation::isFMSAttached)
             .and(RobotModeTriggers.teleop());
 
-    final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier = branchSelector::getSelected;
+    final Supplier<ScoreCommands.ScorePosition> rawScorePositionSupplier = branchSelector::getSelected;
+    final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier = () -> {
+            final ScoreCommands.ScorePosition rawScorePosition = rawScorePositionSupplier.get();
+            if (!gamePieceState.hasCoral.getAsBoolean()) {
+                return new ScoreCommands.ScorePosition(rawScorePosition.side(), ScoreCommands.Level.L1);
+            }
+            return rawScorePosition;
+    };
 
     @Override
     public void robotInit() {
@@ -279,6 +286,7 @@ public class Robot extends LoggedRobot {
 
         LoggedCommandScheduler.periodic();
 
+        Logger.recordOutput("RawScorePosition", rawScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
         Threads.setCurrentThreadPriority(false, 10);
     }
@@ -513,8 +521,8 @@ public class Robot extends LoggedRobot {
                 );
 
         this.coController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(scorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition(scorePositionSupplier));
+                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(rawScorePositionSupplier))
+                .onFalse(scoreCommands.scoreAtPosition(rawScorePositionSupplier));
 
         this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
 
