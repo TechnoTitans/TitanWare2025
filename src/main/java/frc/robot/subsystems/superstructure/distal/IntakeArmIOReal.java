@@ -98,11 +98,15 @@ public class IntakeArmIOReal implements IntakeArmIO {
         pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = 1;
         pivotConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         pivotConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        pivotConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();
         pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         pivotConfiguration.SoftwareLimitSwitch.ReverseSoftLimitThreshold = constants.pivotLowerLimitRots();
         pivotConfiguration.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         pivotMotor.getConfigurator().apply(pivotConfiguration);
+
+        positionVoltage.UseTimesync = true;
+        positionVoltage.UpdateFreqHz = 0;
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
