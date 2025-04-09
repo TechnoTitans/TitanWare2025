@@ -129,7 +129,6 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        driveTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         driveMotor.getConfigurator().apply(driveTalonFXConfiguration);
 
         turnTalonFXConfiguration.Slot0 = new Slot0Configs()
@@ -146,12 +145,9 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         turnTalonFXConfiguration.Feedback.RotorToSensorRatio = turnReduction;
         turnTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         turnTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        turnTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         turnMotor.getConfigurator().apply(turnTalonFXConfiguration);
 
-        velocityTorqueCurrentFOC.UseTimesync = true;
         velocityTorqueCurrentFOC.UpdateFreqHz = 0;
-        positionVoltage.UseTimesync = true;
         positionVoltage.UpdateFreqHz = 0;
 
         BaseStatusSignal.setUpdateFrequencyForAll(

@@ -195,7 +195,6 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
         driveTalonFXConfiguration.Feedback.SensorToMechanismRatio = driveReduction;
         driveTalonFXConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         driveTalonFXConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        driveTalonFXConfiguration.MotorOutput.ControlTimesyncFreqHz = 250;
         driveMotor.getConfigurator().apply(driveTalonFXConfiguration);
 
         final InvertedValue turnInvertedValue = InvertedValue.Clockwise_Positive;
