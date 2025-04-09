@@ -12,6 +12,7 @@ import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
+import frc.robot.subsystems.drive.controllers.HolonomicDriveController;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
@@ -196,6 +197,17 @@ public class ScoreCommands {
             return offsetScoringPoseWithCoralPosition(scoringPose);
         };
 
+        final Trigger atCloseEnoughReef = swerve.atPoseTrigger(
+                scoringPoseSupplier,
+                new HolonomicDriveController.PositionTolerance(
+                        0.35,
+                        Rotation2d.fromDegrees(8)
+                ),
+                new HolonomicDriveController.VelocityTolerance(
+                        0.25,
+                        Math.PI / 2
+                )
+        );
         final Trigger atReef = swerve.atPoseAndStoppedTrigger(scoringPoseSupplier);
         final Trigger atSuperstructureSetpoint = superstructure
                 .atSetpoint(() -> scorePositionContainer.value.level.goal);
@@ -218,9 +230,10 @@ public class ScoreCommands {
                         .onlyIf(superstructure.unsafeToDrive),
                 Commands.deadline(
                         Commands.sequence(
-                                Commands.waitUntil(atReef),
+                                Commands.waitUntil(atCloseEnoughReef),
                                 Commands.runOnce(setSuperstructureGoalToScore),
                                 Commands.waitUntil(atSuperstructureSetpoint).withTimeout(2),
+                                Commands.waitUntil(atReef),
                                 intake.scoreCoral()
                         ),
                         Commands.sequence(
