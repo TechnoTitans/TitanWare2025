@@ -154,11 +154,6 @@ public class ScoreCommands {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
         final Runnable updateScorePosition = () -> scorePositionContainer.value = scorePositionSupplier.get();
 
-        final Container<ScorePosition> lastScorePositionContainer = Container.empty();
-        final Runnable updateLastScorePosition = () ->
-                lastScorePositionContainer.value = scorePositionContainer.get();
-
-
         final Trigger shouldUseEarlyAlign = new Trigger(() ->
                 switch (scorePositionContainer.value.level) {
                     case L4 -> true;
@@ -222,7 +217,6 @@ public class ScoreCommands {
 
         return Commands.sequence(
                 Commands.runOnce(updateScorePosition),
-                Commands.runOnce(updateLastScorePosition),
                 Commands.runOnce(updateScoringPoseMap),
                 Commands.either(
                         Commands.runOnce(setSuperstructureGoalToAlign),
@@ -241,13 +235,8 @@ public class ScoreCommands {
                                 intake.scoreCoral()
                         ),
                         Commands.sequence(
-                                Commands.repeatingSequence(
-                                        swerve.runToPose(scoringPoseSupplier)
-                                                .onlyWhile(() ->
-                                                        lastScorePositionContainer.value == scorePositionContainer.value
-                                                ),
-                                        Commands.runOnce(updateLastScorePosition)
-                                ).until(atReef),
+                                swerve.runToPose(scoringPoseSupplier)
+                                        .until(atReef),
                                 swerve.runWheelXCommand()
                         ),
                         Commands.parallel(
