@@ -10,7 +10,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.utils.control.DeltaTime;
-import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Supplier;
 
@@ -46,12 +45,10 @@ public class HolonomicDriveController {
     private final PositionTolerance positionTolerance;
     private final VelocityTolerance velocityTolerance;
 
-    private final Supplier<ChassisSpeeds> fieldRelativeSpeedsSupplier;
-
     private double distance;
     private Rotation2d heading;
     private Pose2d initialPose;
-    private Pose2d targetPose;
+    private Pose2d desiredPose;
 
     /**
      * Constructs a {@link HolonomicDriveController}
@@ -67,8 +64,7 @@ public class HolonomicDriveController {
             final TrapezoidProfile.Constraints translationConstraints,
             final TrapezoidProfile.Constraints rotationConstraints,
             final PositionTolerance positionTolerance,
-            final VelocityTolerance velocityTolerance,
-            final Supplier<ChassisSpeeds> fieldRelativeSpeedsSupplier
+            final VelocityTolerance velocityTolerance
     ) {
         this.deltaTime = new DeltaTime();
 
@@ -88,24 +84,10 @@ public class HolonomicDriveController {
         this.positionTolerance = positionTolerance;
         this.velocityTolerance = velocityTolerance;
 
-        this.fieldRelativeSpeedsSupplier = fieldRelativeSpeedsSupplier;
-
         this.distance = 0;
         this.heading = Rotation2d.kZero;
-        this.initialPose = Pose2d.kZero;
-        this.targetPose = Pose2d.kZero;
-    }
-
-    public static boolean poseNear(
-            final Pose2d currentPose,
-            final Pose2d targetPose,
-            final double positionToleranceMeters,
-            final double angularToleranceRadians
-    ) {
-        final Transform2d delta = currentPose.minus(targetPose);
-
-        return delta.getTranslation().getNorm() < positionToleranceMeters
-                && delta.getRotation().getRadians() < angularToleranceRadians;
+        this.initialPose = new Pose2d();
+        this.desiredPose = new Pose2d();
     }
 
     public static Trigger atPose(
@@ -113,12 +95,12 @@ public class HolonomicDriveController {
             final Supplier<Pose2d> targetPoseSupplier,
             final PositionTolerance positionTolerance
     ) {
-        return new Trigger(() -> poseNear(
-                currentPoseSupplier.get(),
-                targetPoseSupplier.get(),
-                positionTolerance.translationToleranceMeters,
-                positionTolerance.rotationTolerance.getRadians())
-        );
+        return new Trigger(() -> {
+            final Transform2d delta = currentPoseSupplier.get().minus(targetPoseSupplier.get());
+
+            return delta.getTranslation().getNorm() < positionTolerance.translationToleranceMeters
+                    && delta.getRotation().getRadians() < positionTolerance.rotationTolerance.getRadians();
+        });
     }
 
     public static Trigger atPoseAndStopped(
@@ -169,7 +151,8 @@ public class HolonomicDriveController {
      */
     public void reset(
             final Pose2d currentPose,
-            final Pose2d targetPose
+            final Pose2d desiredPose,
+            final ChassisSpeeds fieldRelativeSpeeds
     ) {
         deltaTime.reset();
 
@@ -177,38 +160,32 @@ public class HolonomicDriveController {
         yController.reset();
         rotationController.reset();
 
-        final Translation2d initialToDesired = targetPose.getTranslation().minus(currentPose.getTranslation());
+        final Translation2d initialToDesired = desiredPose.getTranslation().minus(currentPose.getTranslation());
         this.distance = initialToDesired.getNorm();
         this.heading = initialToDesired.getAngle();
         this.initialPose = currentPose;
-        this.targetPose = targetPose;
+        this.desiredPose = desiredPose;
 
-        final ChassisSpeeds fieldSpeeds = fieldRelativeSpeedsSupplier.get();
-        final Translation2d fieldSpeedsTranslation = new Translation2d(
-                fieldSpeeds.vxMetersPerSecond,
-                fieldSpeeds.vyMetersPerSecond
+        final Translation2d fieldSpeeds = new Translation2d(
+                fieldRelativeSpeeds.vxMetersPerSecond,
+                fieldRelativeSpeeds.vyMetersPerSecond
         );
 
         this.translationPreviousProfiledReference = new TrapezoidProfile.State(
-                distance,
-                Math.min(0, -fieldSpeedsTranslation
-                        .rotateBy(targetPose
-                                .getTranslation()
-                                .minus(currentPose.getTranslation())
-                                .getAngle()
-                                .unaryMinus()
+                currentPose.getTranslation().getDistance(desiredPose.getTranslation()),
+                Math.min(0, -fieldSpeeds
+                        .rotateBy(
+                                desiredPose
+                                        .getTranslation()
+                                        .minus(currentPose.getTranslation())
+                                        .getAngle()
+                                        .unaryMinus()
                         ).getX())
         );
 
-        final TrapezoidProfile.State rotationState = new TrapezoidProfile.State(
-                currentPose.getRotation().getRadians(),
-                fieldSpeeds.omegaRadiansPerSecond
+        this.rotationPreviousProfiledReference = new TrapezoidProfile.State(
+                currentPose.getRotation().getRadians(), fieldRelativeSpeeds.omegaRadiansPerSecond
         );
-
-//        rotationUnprofiledReference.position = rotationState.position;
-//        rotationUnprofiledReference.velocity = rotationState.velocity;
-
-        this.rotationPreviousProfiledReference = rotationState;
     }
 
     /**
@@ -217,14 +194,9 @@ public class HolonomicDriveController {
      * @param currentPose The current {@link Pose2d}
      * @return The next output of the holonomic drive controller
      */
-    public ChassisSpeeds calculate(final Pose2d currentPose, final Pose2d targetPose) {
-//        if (!poseNear(this.targetPose, targetPose, 1.5E-2, 1.5E-2)) {
-//            Logger.recordOutput("Class targetpose", this.targetPose);
-//            Logger.recordOutput("method targetpose", targetPose);
-//            reset(currentPose, targetPose);
-//        }
-
+    public ChassisSpeeds calculate(final Pose2d currentPose) {
         final double time = deltaTime.get();
+
         this.translationPreviousProfiledReference = translationProfile.calculate(
                 time,
                 translationPreviousProfiledReference,
@@ -254,7 +226,7 @@ public class HolonomicDriveController {
         final double ySpeed = yFeedback + yFF;
 
         final double currentRotationRadians = currentPose.getRotation().getRadians();
-        rotationUnprofiledReference.position = this.targetPose.getRotation().getRadians();
+        rotationUnprofiledReference.position = desiredPose.getRotation().getRadians();
 
         double errorBound = (MaxRotationInput - MinimumRotationInput) / 2.0;
         double goalMinDistance =

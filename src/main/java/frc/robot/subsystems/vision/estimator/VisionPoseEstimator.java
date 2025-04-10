@@ -175,6 +175,7 @@ public class VisionPoseEstimator {
                     )
             );
         } else {
+            //TODO: Do we stil need this?
             if (true) return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_AMBIGUOUS_NO_POSE);
         }
 

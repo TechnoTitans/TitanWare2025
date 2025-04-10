@@ -15,7 +15,6 @@ import com.ctre.phoenix6.signals.*;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.RefreshAll;
-import org.littletonrobotics.junction.Logger;
 
 public class IntakeArmIOReal implements IntakeArmIO {
     private final HardwareConstants.IntakeArmConstants constants;

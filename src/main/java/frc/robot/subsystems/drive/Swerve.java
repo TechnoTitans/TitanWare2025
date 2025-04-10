@@ -178,8 +178,7 @@ public class Swerve extends SubsystemBase {
                 new HolonomicDriveController.VelocityTolerance(
                         0.08,
                         Math.PI / 4
-                ),
-                this::getFieldRelativeSpeeds
+                )
         );
         this.atHolonomicDrivePose = holonomicDriveController.atPose(
                 this::getPose,
@@ -599,11 +598,11 @@ public class Swerve extends SubsystemBase {
         return Commands.sequence(
                         runOnce(() -> {
                             holonomicControllerActive = true;
-                            holonomicDriveController.reset(getPose(), poseSupplier.get());
+                            holonomicDriveController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
                         }),
                         run(() -> {
                             this.holonomicPoseTarget = poseSupplier.get();
-                            drive(holonomicDriveController.calculate(getPose(), poseSupplier.get()));
+                            drive(holonomicDriveController.calculate(getPose()));
                         }).until(atHolonomicDrivePose),
                         runOnce(this::stop)
                 )
@@ -615,11 +614,11 @@ public class Swerve extends SubsystemBase {
         return Commands.sequence(
                         runOnce(() -> {
                             holonomicControllerActive = true;
-                            holonomicDriveController.reset(getPose(), poseSupplier.get());
+                            holonomicDriveController.reset(getPose(), poseSupplier.get(), getFieldRelativeSpeeds());
                         }),
                         run(() -> {
                             this.holonomicPoseTarget = poseSupplier.get();
-                            drive(holonomicDriveController.calculate(getPose(), poseSupplier.get()));
+                            drive(holonomicDriveController.calculate(getPose()));
                         })
                 )
                 .finallyDo(() -> holonomicControllerActive = false)
