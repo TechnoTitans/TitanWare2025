@@ -8,16 +8,22 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.utils.control.DeltaTime;
+import frc.robot.constants.Constants;
 
 import java.util.function.Supplier;
 
 public class HolonomicDriveController {
-    private final static double MinimumRotationInput = -Math.PI;
-    private final static double MaxRotationInput = Math.PI;
+    private static final double AllowableDistanceMetersBeforeReset = 0.3;
+    private static final double AllowableAngleRadsBeforeReset = Units.degreesToRadians(15);
+    private static final double AllowableHeadingRadsBeforeReset = Units.degreesToRadians(15);
 
-    private final DeltaTime deltaTime;
+    private static final double TranslationFFMaxRadiusMeters = 0.05;
+    private static final double TranslationFFMinRadiusMeters = 0.01;
+
+    private static final double MinimumRotationInput = -Math.PI;
+    private static final double MaxRotationInput = Math.PI;
 
     private final PIDController xController;
     private final PIDController yController;
@@ -26,11 +32,11 @@ public class HolonomicDriveController {
     private final TrapezoidProfile translationProfile;
     private final TrapezoidProfile rotationProfile;
 
-    private final TrapezoidProfile.State translationUnprofiledReference;
-    private final TrapezoidProfile.State rotationUnprofiledReference;
+    private final TrapezoidProfile.State translationGoal;
+    private final TrapezoidProfile.State rotationGoal;
 
-    private TrapezoidProfile.State translationPreviousProfiledReference;
-    private TrapezoidProfile.State rotationPreviousProfiledReference;
+    private TrapezoidProfile.State translationSetpoint;
+    private TrapezoidProfile.State rotationSetpoint;
 
     public record PositionTolerance(
             double translationToleranceMeters,
@@ -44,11 +50,9 @@ public class HolonomicDriveController {
 
     private final PositionTolerance positionTolerance;
     private final VelocityTolerance velocityTolerance;
+    private final Supplier<ChassisSpeeds> fieldRelativeSpeedsSupplier;
 
-    private double distance;
-    private Rotation2d heading;
-    private Pose2d initialPose;
-    private Pose2d desiredPose;
+    private Translation2d lastSetpointTranslation;
 
     /**
      * Constructs a {@link HolonomicDriveController}
@@ -63,31 +67,28 @@ public class HolonomicDriveController {
             final PIDController rotationController,
             final TrapezoidProfile.Constraints translationConstraints,
             final TrapezoidProfile.Constraints rotationConstraints,
+            final Supplier<ChassisSpeeds> fieldRelativeSpeedsSupplier,
             final PositionTolerance positionTolerance,
             final VelocityTolerance velocityTolerance
     ) {
-        this.deltaTime = new DeltaTime();
-
         this.xController = xController;
         this.yController = yController;
         this.rotationController = rotationController;
         this.rotationController.enableContinuousInput(MinimumRotationInput, MaxRotationInput);
 
         this.translationProfile = new TrapezoidProfile(translationConstraints);
-        this.translationPreviousProfiledReference = new TrapezoidProfile.State();
-        this.translationUnprofiledReference = new TrapezoidProfile.State(0, 0);
+        this.translationSetpoint = new TrapezoidProfile.State();
+        this.translationGoal = new TrapezoidProfile.State(0, 0);
 
         this.rotationProfile = new TrapezoidProfile(rotationConstraints);
-        this.rotationPreviousProfiledReference = new TrapezoidProfile.State();
-        this.rotationUnprofiledReference = new TrapezoidProfile.State(0, 0);
+        this.rotationSetpoint = new TrapezoidProfile.State();
+        this.rotationGoal = new TrapezoidProfile.State(0, 0);
 
         this.positionTolerance = positionTolerance;
         this.velocityTolerance = velocityTolerance;
+        this.fieldRelativeSpeedsSupplier = fieldRelativeSpeedsSupplier;
 
-        this.distance = 0;
-        this.heading = Rotation2d.kZero;
-        this.initialPose = new Pose2d();
-        this.desiredPose = new Pose2d();
+        this.lastSetpointTranslation = Translation2d.kZero;
     }
 
     public static Trigger atPose(
@@ -132,7 +133,6 @@ public class HolonomicDriveController {
 
     public Trigger atPoseAndStopped(
             final Supplier<Pose2d> currentPoseSupplier,
-            final Supplier<ChassisSpeeds> fieldRelativeSpeedsSupplier,
             final Supplier<Pose2d> targetPoseSupplier
     ) {
         return atPoseAndStopped(
@@ -151,31 +151,23 @@ public class HolonomicDriveController {
      */
     public void reset(
             final Pose2d currentPose,
-            final Pose2d desiredPose,
-            final ChassisSpeeds fieldRelativeSpeeds
+            final Pose2d targetPose
     ) {
-        deltaTime.reset();
+        final ChassisSpeeds fieldSpeeds = fieldRelativeSpeedsSupplier.get();
+        final Translation2d linearFieldSpeeds = new Translation2d(
+                fieldSpeeds.vxMetersPerSecond,
+                fieldSpeeds.vyMetersPerSecond
+        );
 
         xController.reset();
         yController.reset();
         rotationController.reset();
 
-        final Translation2d initialToDesired = desiredPose.getTranslation().minus(currentPose.getTranslation());
-        this.distance = initialToDesired.getNorm();
-        this.heading = initialToDesired.getAngle();
-        this.initialPose = currentPose;
-        this.desiredPose = desiredPose;
-
-        final Translation2d fieldSpeeds = new Translation2d(
-                fieldRelativeSpeeds.vxMetersPerSecond,
-                fieldRelativeSpeeds.vyMetersPerSecond
-        );
-
-        this.translationPreviousProfiledReference = new TrapezoidProfile.State(
-                currentPose.getTranslation().getDistance(desiredPose.getTranslation()),
-                Math.min(0, -fieldSpeeds
+        this.translationSetpoint = new TrapezoidProfile.State(
+                currentPose.getTranslation().getDistance(targetPose.getTranslation()),
+                Math.min(0, -linearFieldSpeeds
                         .rotateBy(
-                                desiredPose
+                                targetPose
                                         .getTranslation()
                                         .minus(currentPose.getTranslation())
                                         .getAngle()
@@ -183,61 +175,87 @@ public class HolonomicDriveController {
                         ).getX())
         );
 
-        this.rotationPreviousProfiledReference = new TrapezoidProfile.State(
-                currentPose.getRotation().getRadians(), fieldRelativeSpeeds.omegaRadiansPerSecond
+        this.rotationSetpoint = new TrapezoidProfile.State(
+                currentPose.getRotation().getRadians(),
+                fieldSpeeds.omegaRadiansPerSecond
         );
+
+        this.lastSetpointTranslation = currentPose.getTranslation();
     }
 
     /**
      * Calculates the next output of the holonomic drive controller
      *
      * @param currentPose The current {@link Pose2d}
+     * @param targetPose The target {@link Pose2d}
      * @return The next output of the holonomic drive controller
      */
-    public ChassisSpeeds calculate(final Pose2d currentPose) {
-        final double time = deltaTime.get();
+    public ChassisSpeeds calculate(final Pose2d currentPose, final Pose2d targetPose) {
+        final Translation2d targetToCurrent = currentPose.getTranslation()
+                .minus(targetPose.getTranslation());
+        final double currentDistance = targetToCurrent.getNorm();
+        final Rotation2d currentAngle = targetToCurrent.getAngle();
 
-        this.translationPreviousProfiledReference = translationProfile.calculate(
-                time,
-                translationPreviousProfiledReference,
-                translationUnprofiledReference
+        this.translationSetpoint = translationProfile.calculate(
+                Constants.LOOP_PERIOD_SECONDS,
+                translationSetpoint,
+                translationGoal
         );
 
-        final Translation2d profiledTranslation = initialPose
+        final double setpointVelocity = translationSetpoint.velocity;
+        this.lastSetpointTranslation = targetPose
                 .getTranslation()
                 .plus(new Translation2d(
-                        distance - translationPreviousProfiledReference.position,
-                        heading
+                        translationSetpoint.position,
+                        currentAngle
                 ));
 
-        final double xFF = -translationPreviousProfiledReference.velocity * heading.getCos();
+        final Translation2d targetToSetpoint = lastSetpointTranslation
+                .minus(targetPose.getTranslation());
+        final double setpointDistance = targetToSetpoint.getNorm();
+        final Rotation2d setpointAngle = targetToSetpoint.getAngle();
+
+//        Logger.recordOutput("Target", targetPose);
+//        Logger.recordOutput("SetpointPos", translationSetpoint.position);
+//        Logger.recordOutput("SetpointAngle", currentAngle);
+//        Logger.recordOutput("Setpoint", new Pose2d(lastSetpointTranslation, Rotation2d.kZero));
+
+        final double translationFFScalar = MathUtil.clamp(
+                (currentDistance - TranslationFFMinRadiusMeters)
+                        / (TranslationFFMaxRadiusMeters - TranslationFFMinRadiusMeters),
+                0.0,
+                1.0
+        );
+        final double translationFF = setpointVelocity * translationFFScalar;
+
+        final double xFF = translationFF * currentAngle.getCos();
         final double xFeedback = xController.calculate(
                 currentPose.getX(),
-                profiledTranslation.getX()
+                lastSetpointTranslation.getX()
         );
 
-        final double yFF = -translationPreviousProfiledReference.velocity * heading.getSin();
+        final double yFF = translationFF * currentAngle.getSin();
         final double yFeedback = yController.calculate(
                 currentPose.getY(),
-                profiledTranslation.getY()
+                lastSetpointTranslation.getY()
         );
 
         final double xSpeed = xFeedback + xFF;
         final double ySpeed = yFeedback + yFF;
 
-        final double currentRotationRadians = currentPose.getRotation().getRadians();
-        rotationUnprofiledReference.position = desiredPose.getRotation().getRadians();
+        final double currentRotationRads = currentPose.getRotation().getRadians();
+        rotationGoal.position = targetPose.getRotation().getRadians();
 
         double errorBound = (MaxRotationInput - MinimumRotationInput) / 2.0;
         double goalMinDistance =
                 MathUtil.inputModulus(
-                        rotationUnprofiledReference.position - currentRotationRadians,
+                        rotationGoal.position - currentRotationRads,
                         -errorBound,
                         errorBound
                 );
         double setpointMinDistance =
                 MathUtil.inputModulus(
-                        rotationPreviousProfiledReference.position - currentRotationRadians,
+                        rotationSetpoint.position - currentRotationRads,
                         -errorBound,
                         errorBound
                 );
@@ -246,21 +264,43 @@ public class HolonomicDriveController {
         // may be outside the input range after this operation, but that's OK because the controller
         // will still go there and report an error of zero. In other words, the setpoint only needs to
         // be offset from the measurement by the input range modulus; they don't need to be equal.
-        rotationUnprofiledReference.position = goalMinDistance + currentRotationRadians;
-        rotationPreviousProfiledReference.position = setpointMinDistance + currentRotationRadians;
+        rotationGoal.position = goalMinDistance + currentRotationRads;
+        rotationSetpoint.position = setpointMinDistance + currentRotationRads;
 
-        this.rotationPreviousProfiledReference = rotationProfile.calculate(
-                time,
-                rotationPreviousProfiledReference,
-                rotationUnprofiledReference
+        this.rotationSetpoint = rotationProfile.calculate(
+                Constants.LOOP_PERIOD_SECONDS,
+                rotationSetpoint,
+                rotationGoal
         );
 
-        final double rotationFF = rotationPreviousProfiledReference.velocity;
+        final double rotationFF = rotationSetpoint.velocity;
         final double rotationFeedback = rotationController.calculate(
-                currentRotationRadians,
-                rotationPreviousProfiledReference.position
+                currentRotationRads,
+                rotationSetpoint.position
         );
         final double rotationSpeed = rotationFeedback + rotationFF;
+
+//        Logger.recordOutput("Distance", Math.abs(setpointDistance - currentDistance));
+//        Logger.recordOutput("Angle", Math.abs(
+//                MathUtil.angleModulus(
+//                        setpointAngle.getRadians()
+//                                - currentAngle.getRadians())));
+//        Logger.recordOutput("Heading", Math.abs(
+//                MathUtil.angleModulus(
+//                        rotationSetpoint.position
+//                                - currentRotationRads)));
+        if (Math.abs(setpointDistance - currentDistance) > AllowableDistanceMetersBeforeReset
+                || Math.abs(
+                        MathUtil.angleModulus(
+                        setpointAngle.getRadians()
+                                - currentAngle.getRadians())) > AllowableAngleRadsBeforeReset
+                || Math.abs(
+                        MathUtil.angleModulus(
+                        rotationSetpoint.position
+                                - currentRotationRads)) > AllowableHeadingRadsBeforeReset
+        ) {
+            reset(currentPose, targetPose);
+        }
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(
                 xSpeed,
