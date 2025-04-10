@@ -15,11 +15,11 @@ public class FieldConstants {
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
     public static final Transform2d SCORING_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(26.5), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(28.5), 0, Rotation2d.kPi);
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(26.5), 0, Rotation2d.kPi);
     public static final Transform2d PROCESSOR_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(33), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(36), 0, Rotation2d.kPi);
     public static final Transform2d HP_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
         public static final Transform2d SCORING_BARGE_OFFSET =

@@ -67,7 +67,7 @@ public enum TitanCamera {
             Constants.Vision.ROBOT_TO_BL_APRILTAG,
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.SEE3CAM_24CUG,
-            1,
+            2,
             true,
             new TitanCameraCalibration()
                     .withCalibration(

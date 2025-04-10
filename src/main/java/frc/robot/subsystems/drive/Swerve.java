@@ -162,22 +162,22 @@ public class Swerve extends SubsystemBase {
         this.holonomicDriveController = new HolonomicDriveController(
                 new PIDController(7, 0, 0.21),
                 new PIDController(7, 0, 0.21),
-                new PIDController(4, 0, 0.1),
+                new PIDController(4, 0, 0),
                 new TrapezoidProfile.Constraints(
                         Units.feetToMeters(13),
-                        Units.feetToMeters(6)
+                        Units.feetToMeters(5.5)
                 ),
                 new TrapezoidProfile.Constraints(
                         Config.maxAngularVelocityRadsPerSec(),
                         Config.maxAngularAccelerationRadsPerSecSquared()
                 ),
                 new HolonomicDriveController.PositionTolerance(
-                        0.025,
+                        0.04,
                         Rotation2d.fromDegrees(4)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.05,
-                        Math.PI / 5
+                        0.08,
+                        Math.PI / 4
                 ),
                 this::getFieldRelativeSpeeds
         );
@@ -192,9 +192,9 @@ public class Swerve extends SubsystemBase {
         );
 
         this.choreoController = new HolonomicChoreoController(
-                new PIDController(7, 0, 0.1),
-                new PIDController(7, 0, 0.1),
-                new PIDController(7, 0, 0)
+                new PIDController(5, 0, 0.1),
+                new PIDController(5, 0, 0.1),
+                new PIDController(5, 0, 0.2)
         );
 
         this.linearVoltageSysIdRoutine = makeLinearVoltageSysIdRoutine();
@@ -462,6 +462,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public void drive(final ChassisSpeeds speeds) {
+        Logger.recordOutput(LogKey + "/ChassisSpeeds", speeds);
         drive(speeds, Swerve.NoTorqueFeedforwards);
     }
 
@@ -546,6 +547,31 @@ public class Swerve extends SubsystemBase {
                 )
                 .finallyDo(() -> headingControllerActive = false)
                 .withName("TeleopFacingAngle");
+    }
+
+    public Command robotRelativeFacingAngle(
+            final DoubleSupplier xSpeedSupplier,
+            final DoubleSupplier ySpeedSupplier,
+            final Supplier<Rotation2d> rotationTargetSupplier
+    ) {
+        return Commands.sequence(
+                        runOnce(() -> {
+                            headingControllerActive = true;
+                            headingController.reset();
+                        }),
+                        run(() -> {
+                            this.headingTarget = rotationTargetSupplier.get();
+                            drive(
+                                    xSpeedSupplier.getAsDouble(),
+                                    ySpeedSupplier.getAsDouble(),
+                                    headingController.calculate(getYaw().getRadians(), headingTarget.getRadians()),
+                                    false,
+                                    Robot.IsRedAlliance.getAsBoolean()
+                            );
+                        })
+                )
+                .finallyDo(() -> headingControllerActive = false)
+                .withName("RobotRelativeFacingAngle");
     }
 
     public Command faceAngle(final Supplier<Rotation2d> rotationTargetSupplier) {

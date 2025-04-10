@@ -321,9 +321,9 @@ public class Robot extends LoggedRobot {
 
         driverController.leftBumper(testEventLoop).onTrue(Commands.runOnce(SignalLogger::stop));
 
-//        driverController.a(testEventLoop).whileTrue(
-//                swerve.wheelRadiusCharacterization()
-//        );
+        driverController.a(testEventLoop).whileTrue(
+                swerve.wheelRadiusCharacterization()
+        );
 
         final Container<Pose2d> pose2dContainer = Container.empty();
         driverController.x(testEventLoop).whileTrue(

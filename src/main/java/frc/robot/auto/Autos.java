@@ -4,6 +4,7 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -24,7 +25,6 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.Supplier;
 
 public class Autos {
-    // choreo-cli.exe --chor choreo.chor --all-trajectory --generate
     public static final String LogKey = "Auto";
 
     private static final double AllowableDistanceFromHPForEarlyAlign = 0.2;
@@ -100,13 +100,11 @@ public class Autos {
                         Commands.deadline(
                                 Commands.sequence(
                                         Commands.waitUntil(superstructure.atSetpoint(goal))
-                                                .withTimeout(2),
+                                                .withTimeout(1.9),
                                         intake.scoreCoral()
                                 ),
                                 superstructure.toGoal(goal)
-                        ),
-                        Commands.waitUntil(superstructure.extendedBeyond(0.9).negate())
-                                .withTimeout(0.2)
+                        )
                 ),
                 swerve.runToPose(scoringPoseSupplier)
                         .until(atReef)
@@ -118,7 +116,12 @@ public class Autos {
         return Commands.parallel(
                 superstructure.toGoal(Superstructure.Goal.HP),
                 intake.intakeCoralHP().asProxy(),
-                swerve.runToPose(() -> ScoreCommands.CoralStation.getCoralStation(coralStation))
+                swerve.stopCommand()
+//                swerve.robotRelativeFacingAngle(
+//                        () -> 1,
+//                        () -> 0,
+//                        () -> ScoreCommands.CoralStation.getCoralStation(coralStation).getRotation()
+//                )
         ).until(gamepieceState.hasCoral);
     }
 
@@ -398,9 +401,9 @@ public class Autos {
         final AutoRoutine routine = autoFactory.newRoutine("threePieceCage1ToReef4And5");
         final AutoTrajectory startToReef = routine.trajectory("Cage1Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
-        final AutoTrajectory firstRightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory firstRightHPToReef5 = routine.trajectory("RightHPToReef5Right");
         final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
-        final AutoTrajectory secondRightHPToReef5 = routine.trajectory("RightHPToReef5");
+        final AutoTrajectory secondRightHPToReef5 = routine.trajectory("RightHPToReef5Left");
         final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
 
         final Trigger farEnoughAwayFromHP = new Trigger(() -> {
@@ -419,7 +422,7 @@ public class Autos {
 
         startToReef.done().onTrue(
                 Commands.sequence(
-                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.RIGHT, Reef.Level.L4))
+                        scoreAtLevel(new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
                         reef4ToRightHP.cmd()
                 )
@@ -465,6 +468,74 @@ public class Autos {
                 Commands.sequence(
                         scoreAtLevel(new ReefState.Branch(Reef.Face.FIVE, Reef.Side.LEFT, Reef.Level.L4))
                                 .onlyIf(gamepieceState.hasCoral),
+                        moveEndOfAuto.cmd()
+                )
+        );
+
+        moveEndOfAuto.done().onTrue(
+                swerve.runWheelXCommand()
+        );
+        return routine;
+    }
+
+     public AutoRoutine threePieceCage1ToReef4And51() {
+        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage1ToReef4And5");
+        final AutoTrajectory startToReef = routine.trajectory("Cage1Reef4");
+        final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
+        final AutoTrajectory firstRightHPToReef5 = routine.trajectory("RightHPToReef5Right");
+        final AutoTrajectory reef5ToRightHP = routine.trajectory("Reef5ToRightHP");
+        final AutoTrajectory secondRightHPToReef5 = routine.trajectory("RightHPToReef5Left");
+        final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
+
+        final Trigger farEnoughAwayFromHP = new Trigger(() -> {
+            final Pose2d pose = swerve.getPose();
+            final Pose2d closestHPPose = pose.nearest(FieldConstants.getHPPickupPoses());
+
+            return pose.getTranslation()
+                    .getDistance(closestHPPose.getTranslation()) >= AllowableDistanceFromHPForEarlyAlign;
+        });
+
+        routine.active().onTrue(Commands.sequence(
+                startToReef.resetOdometry(),
+                startToReef.cmd()
+        ));
+
+        startToReef.done().onTrue(
+                Commands.sequence(
+                        swerve.stopCommand(),
+                        Commands.waitSeconds(5),
+                        reef4ToRightHP.cmd()
+                )
+        );
+
+        reef4ToRightHP.done().onTrue(
+                Commands.sequence(
+                        swerve.stopCommand(),
+                        Commands.waitSeconds(5),
+                        firstRightHPToReef5.cmd()
+                )
+        );
+
+        firstRightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        swerve.stopCommand(),
+                        Commands.waitSeconds(5),
+                        reef5ToRightHP.cmd()
+                )
+        );
+
+        reef5ToRightHP.done().onTrue(
+                Commands.sequence(
+                        swerve.stopCommand(),
+                        Commands.waitSeconds(5),
+                        secondRightHPToReef5.cmd()
+                )
+        );
+
+        secondRightHPToReef5.done().onTrue(
+                Commands.sequence(
+                        swerve.stopCommand(),
+                        Commands.waitSeconds(5),
                         moveEndOfAuto.cmd()
                 )
         );
