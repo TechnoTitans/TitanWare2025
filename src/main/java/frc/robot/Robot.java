@@ -2,10 +2,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -26,6 +23,7 @@ import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
 import frc.robot.state.GamepieceState;
 import frc.robot.state.ReefState;
+import frc.robot.state.Visualizer;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.intake.Intake;
@@ -107,6 +105,7 @@ public class Robot extends LoggedRobot {
 
     public final ReefState reefState = new ReefState();
     public final GamepieceState gamePieceState = new GamepieceState(Constants.CURRENT_MODE, intake);
+    public final Visualizer visualizer = new Visualizer(swerve, superstructure, gamePieceState);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
 
     public final Autos autos = new Autos(
@@ -285,9 +284,11 @@ public class Robot extends LoggedRobot {
         coControllerDisconnected.set(!coController.getHID().isConnected());
 
         LoggedCommandScheduler.periodic();
+        visualizer.periodic();
 
         Logger.recordOutput("RawScorePosition", rawScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
+
         Threads.setCurrentThreadPriority(false, 10);
     }
 

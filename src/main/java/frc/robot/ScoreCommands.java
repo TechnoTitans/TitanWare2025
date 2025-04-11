@@ -1,9 +1,11 @@
 package frc.robot;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -21,10 +23,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class ScoreCommands {
+    public enum ExtendWhen {
+        CLOSE,
+        ROTATION_CLOSE,
+        ALWAYS
+    }
+
     public enum CoralStation {
         LEFT,
         RIGHT;
@@ -88,6 +97,22 @@ public class ScoreCommands {
         this.gamepieceState = gamepieceState;
     }
 
+    private Trigger atRotationTrigger(
+            final Supplier<Pose2d> scoringPoseSupplier,
+            final Rotation2d rotationTolerance,
+            final double rotationVelocityToleranceRadsPerSec
+    ) {
+        return new Trigger(() -> {
+            final Transform2d delta = swerve.getPose().minus(scoringPoseSupplier.get());
+            final ChassisSpeeds speeds = swerve.getFieldRelativeSpeeds();
+
+            final double rotationDeltaRads = Math.abs(MathUtil.angleModulus(delta.getRotation().getRadians()));
+
+            return rotationDeltaRads < rotationTolerance.getRadians()
+                    && Math.abs(speeds.omegaRadiansPerSecond) < rotationVelocityToleranceRadsPerSec;
+        });
+    }
+
     @SuppressWarnings("unused")
     public Supplier<ScorePosition> getScorePositionSupplier(final CommandXboxController controller) {
         return () -> {
@@ -148,14 +173,23 @@ public class ScoreCommands {
     //TODO: Make this not extend elevator until somewhat facing reef
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
+
         final Runnable updateScorePosition = () -> scorePositionContainer.value = scorePositionSupplier.get();
+        final Container<ScorePosition> runningScorePositionContainer = Container.empty();
+
 
         final Trigger shouldUseEarlyAlign = new Trigger(() ->
                 switch (scorePositionContainer.value.level) {
-                    case L4 -> true;
-                    case L3, L2, L1 -> false;
+                    case L4, L3 -> true;
+                    case L2, L1 -> false;
                 }
         );
+        final Supplier<ExtendWhen> extendWhenSupplier = () ->
+                switch (scorePositionContainer.value.level) {
+                    case L4 -> ExtendWhen.CLOSE;
+                    case L3 -> ExtendWhen.ROTATION_CLOSE;
+                    case L2, L1 -> ExtendWhen.ALWAYS;
+                };
 
         final Supplier<Map<Reef.Side, Map<Reef.Level, Pose2d>>> scoringPoseMap = () -> {
             final Map<Reef.Face, Map<Reef.Side, Map<Reef.Level, Pose2d>>> branchScoringPositions =
@@ -191,10 +225,10 @@ public class ScoreCommands {
         };
 
         final Trigger atReef = swerve.atPoseAndStoppedTrigger(scoringPoseSupplier);
-        final Trigger atCloseEnoughReef = swerve.atPoseTrigger(
+        final Trigger atCloseReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
-                        0.35,
+                        0.5,
                         Rotation2d.fromDegrees(8)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
@@ -202,6 +236,27 @@ public class ScoreCommands {
                         Math.PI / 2
                 )
         );
+        final Trigger atRotationCloseReef = atRotationTrigger(
+                scoringPoseSupplier,
+                Rotation2d.fromDegrees(30),
+                Math.PI / 2
+        );
+        final Trigger always = new Trigger(() -> true);
+
+        final Map<ExtendWhen, Command> extendWhenCommandMap = Map.of(
+                ExtendWhen.CLOSE, Commands.waitUntil(atCloseReef),
+                ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
+                ExtendWhen.ALWAYS, Commands.none()
+        );
+        final Supplier<Trigger> extendWhenTriggerSupplier = () ->
+                switch (extendWhenSupplier.get()) {
+                    case CLOSE -> atCloseReef;
+                    case ROTATION_CLOSE -> atRotationCloseReef;
+                    case ALWAYS -> always;
+                };
+        final BooleanSupplier willWaitToExtend = () ->
+                !extendWhenTriggerSupplier.get().getAsBoolean();
+
         final Trigger atSuperstructureSetpoint = superstructure
                 .atSetpoint(() -> scorePositionContainer.value.level.goal);
 
@@ -223,30 +278,89 @@ public class ScoreCommands {
                         .onlyIf(superstructure.unsafeToDrive),
                 Commands.deadline(
                         Commands.sequence(
-                                Commands.waitUntil(atCloseEnoughReef),
+                                Commands.deadline(
+                                        Commands.repeatingSequence(
+                                                runningScorePositionContainer.set(scorePositionContainer),
+                                                Commands.sequence(
+                                                        Commands.sequence(
+                                                                Commands.either(
+                                                                        Commands.runOnce(setSuperstructureGoalToAlign),
+                                                                        Commands.runOnce(setSuperstructureGoalToScore),
+                                                                        shouldUseEarlyAlign
+                                                                ),
+                                                                Commands.select(
+                                                                        extendWhenCommandMap,
+                                                                        extendWhenSupplier
+                                                                )
+                                                        ).onlyIf(willWaitToExtend),
+                                                        Commands.run(setSuperstructureGoalToScore)
+                                                ).onlyWhile(
+                                                        () -> runningScorePositionContainer.value
+                                                                == scorePositionContainer.value
+                                                )
+                                        ).until(atReef),
+                                        Commands.run(updateScorePosition)
+                                ),
                                 Commands.runOnce(setSuperstructureGoalToScore),
                                 Commands.waitUntil(atReef),
                                 Commands.waitUntil(atSuperstructureSetpoint)
                                         .withTimeout(2),
                                 intake.scoreCoral().asProxy()
                         ),
+//                        Commands.sequence(
+//                                Commands.either(
+//                                        Commands.runOnce(setSuperstructureGoalToAlign),
+//                                        Commands.runOnce(setSuperstructureGoalToScore),
+//                                        shouldUseEarlyAlign
+//                                ),
+//                                Commands.select(
+//                                        Map.of(
+//                                                ExtendWhen.CLOSE, Commands.waitUntil(atCloseReef),
+//                                                ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
+//                                                ExtendWhen.ALWAYS, Commands.none()
+//                                        ),
+//                                        extendWhenSupplier
+//                                ),
+//                                Commands.runOnce(setSuperstructureGoalToScore),
+//                                Commands.waitUntil(atReef),
+//                                Commands.waitUntil(atSuperstructureSetpoint)
+//                                        .withTimeout(2),
+//                                intake.scoreCoral().asProxy()
+//                        )
+
+//                        Commands.sequence(
+//                                Commands.repeatingSequence(
+//                                        Commands.deadline(
+//                                                Commands.select(
+//                                                        Map.of(
+//                                                                ExtendWhen.CLOSE, Commands.waitUntil(atCloseReef),
+//                                                                ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
+//                                                                ExtendWhen.ALWAYS, Commands.none()
+//                                                        ),
+//                                                        extendWhenSupplier
+//                                                ),
+//                                                Commands.run(updateScorePosition),
+//                                                Commands.either(
+//                                                        Commands.runOnce(setSuperstructureGoalToAlign),
+//                                                        Commands.runOnce(setSuperstructureGoalToScore),
+//                                                        shouldUseEarlyAlign
+//                                                ).repeatedly()
+//                                        ),
+//                                        Commands.runOnce(setSuperstructureGoalToScore)
+//                                ).until(atCloseReef),
+//                                Commands.sequence(
+//                                        Commands.runOnce(setSuperstructureGoalToScore),
+//                                        Commands.waitUntil(atReef),
+//                                        Commands.waitUntil(atSuperstructureSetpoint)
+//                                                .withTimeout(2),
+//                                        intake.scoreCoral().asProxy()
+//                                )
+//                        ),
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
                                         .until(atReef),
                                 swerve.runWheelXCommand()
                         ),
-                        Commands.parallel(
-                                Commands.run(updateScorePosition),
-                                Commands.either(
-                                        Commands.runOnce(setSuperstructureGoalToAlign)
-                                                .andThen(Commands.idle())
-                                                .onlyWhile(shouldUseEarlyAlign),
-                                        Commands.runOnce(setSuperstructureGoalToScore)
-                                                .andThen(Commands.idle())
-                                                .onlyWhile(shouldUseEarlyAlign.negate()),
-                                        shouldUseEarlyAlign
-                                ).repeatedly()
-                        ).until(atCloseEnoughReef),
                         superstructure.toGoal(superstructureGoalContainer)
                 ),
                 Commands.waitUntil(superstructure.unsafeToDrive.negate())

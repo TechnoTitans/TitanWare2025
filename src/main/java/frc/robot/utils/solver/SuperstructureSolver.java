@@ -4,8 +4,9 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import frc.robot.constants.SimConstants;
 import frc.robot.constants.SimConstants.Elevator;
+import frc.robot.constants.SimConstants.ElevatorArm;
+import frc.robot.constants.SimConstants.IntakeArm;
 
 public class SuperstructureSolver {
     private SuperstructureSolver() {}
@@ -16,14 +17,14 @@ public class SuperstructureSolver {
             final Rotation2d armPivotRotation
     ) {
         final Pose3d baseStagePose = new Pose3d(
-                Elevator.ORIGIN,
+                ElevatorArm.ORIGIN,
                 new Rotation3d(
                         0,
                         baseStageRotation
                                 .unaryMinus()
                                 .plus(
                                         Rotation2d.kCCW_Pi_2
-                                                .plus(SimConstants.ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                                .plus(ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
                                 ).getRadians(),
                         0
                 )
@@ -34,7 +35,8 @@ public class SuperstructureSolver {
                 new Transform3d(
                         0,
                         0,
-                        stage1ExtensionMeters,
+                        Elevator.ORIGIN_OFFSET
+                                + stage1ExtensionMeters,
                         Rotation3d.kZero
                 )
         );
@@ -44,13 +46,15 @@ public class SuperstructureSolver {
                 new Transform3d(
                         0,
                         0,
-                        stage2ExtensionMeters,
+                        Elevator.STAGE_2_OFFSET
+                                + stage2ExtensionMeters,
                         Rotation3d.kZero
                 )
         );
 
-        final Pose3d intakePose = stage2Pose.transformBy(
-                new Transform3d(
+        final Pose3d intakePose = stage2Pose
+                .transformBy(IntakeArm.ORIGIN_OFFSET)
+                .transformBy(new Transform3d(
                         0,
                         0,
                         Elevator.STAGE_2_TO_INTAKE,
@@ -58,12 +62,11 @@ public class SuperstructureSolver {
                                 0,
                                 armPivotRotation
                                         .unaryMinus()
-                                        .minus(SimConstants.IntakeArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                        .minus(IntakeArm.ZEROED_POSITION_TO_HORIZONTAL)
                                         .getRadians(),
                                 0
                         )
-                )
-        );
+                ));
 
         return new Pose3d[] {baseStagePose, stage1Pose, stage2Pose, intakePose};
     }

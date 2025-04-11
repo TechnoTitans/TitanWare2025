@@ -86,7 +86,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
                 constants.gearing(),
                 pivotSim::update,
                 pivotSim::setInputVoltage,
-                () -> pivotSim.getAngleRads() - zeroedPositionToHorizontalRads,
+                () -> pivotSim.getAngleRads() + zeroedPositionToHorizontalRads,
                 pivotSim::getVelocityRadPerSec
         );
         this.pivotMotorSim.attachFeedbackSensor(new SimCANCoder(pivotCANCoder));

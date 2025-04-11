@@ -1,5 +1,6 @@
 package frc.robot.subsystems.superstructure;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -37,7 +38,7 @@ public class Superstructure extends VirtualSubsystem {
         L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2),
         ALIGN_L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2),
         L3(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
-        ALIGN_L3(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
+        ALIGN_L3(Elevator.Goal.STOW, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
         L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
         ALIGN_L4(Elevator.Goal.STOW, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
@@ -145,14 +146,19 @@ public class Superstructure extends VirtualSubsystem {
         });
         this.desiresDownwardsMotion = desiresUpwardsMotion.negate();
 
-        final Command upwardGoalChange = upwardsGoalChange();
-        final Command downwardGoalChange = downwardsGoalChange();
-
+        final Command upwardsGoalChange = upwardsGoalChange();
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresUpwardsMotion)
-                .onTrue(upwardGoalChange);
+                .onTrue(Commands.runOnce(() -> {
+                    upwardsGoalChange.cancel();
+                    upwardsGoalChange.schedule();
+                }));
 
+        final Command downwardsGoalChange = downwardsGoalChange();
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresDownwardsMotion)
-                .onTrue(downwardGoalChange);
+                .onTrue(Commands.runOnce(() -> {
+                    downwardsGoalChange.cancel();
+                    downwardsGoalChange.schedule();
+                }));
 
         elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
         elevator.setGoal(desiredGoal.elevatorGoal);
@@ -175,8 +181,7 @@ public class Superstructure extends VirtualSubsystem {
                 Commands.waitUntil(
                         elevatorArm.atSetpoint
                                 .and(elevator.atSetpoint)
-                                .and(intakeArm.atSetpoint))
-                        .withTimeout(4),
+                                .and(intakeArm.atSetpoint)).withTimeout(4),
                 Commands.runOnce(() -> this.atGoal = runningGoal)
         )
                 .onlyWhile(() -> desiredGoal == runningGoal)
@@ -193,15 +198,14 @@ public class Superstructure extends VirtualSubsystem {
                 Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
 
                 Commands.waitUntil(
-                        elevator.atSetpoint.and(intakeArm.atSetpoint))
-                        .withTimeout(4),
+                        elevator.atSetpoint
+                                .and(intakeArm.atSetpoint)).withTimeout(4),
                 Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
 
                 Commands.waitUntil(
                         elevatorArm.atSetpoint
                                 .and(elevator.atSetpoint)
-                                .and(intakeArm.atSetpoint))
-                        .withTimeout(4),
+                                .and(intakeArm.atSetpoint)).withTimeout(4),
                 Commands.runOnce(() -> this.atGoal = runningGoal)
         )
                 .onlyWhile(() -> desiredGoal == runningGoal)
@@ -265,13 +269,14 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/Triggers/DesiresDownwardsMotion", desiresDownwardsMotion);
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalChanged", desiredGoalChanged);
 
-        Logger.recordOutput(
-                LogKey + "/Components",
-                SuperstructureSolver.calculatePoses(
-                        elevatorArm.getPivotPosition(),
-                        elevator.getExtensionMeters(),
-                        intakeArm.getPivotPosition()
-                )
+        Logger.recordOutput(LogKey + "/Components", getComponentPoses());
+    }
+
+    public Pose3d[] getComponentPoses() {
+        return SuperstructureSolver.calculatePoses(
+                elevatorArm.getPivotPosition(),
+                elevator.getExtensionMeters(),
+                intakeArm.getPivotPosition()
         );
     }
 

@@ -289,7 +289,7 @@ public class PhotonVision extends VirtualSubsystem {
     }
 
     public void updateOutputs() {
-        Logger.recordOutput("LastPoseResetTimestampSeconds", this.lastPoseResetTimestampSeconds);
+        Logger.recordOutput(PhotonLogKey + "/LastPoseResetTimestampSeconds", this.lastPoseResetTimestampSeconds);
 
         for (
                 final Map.Entry<VisionIO, VisionResult>

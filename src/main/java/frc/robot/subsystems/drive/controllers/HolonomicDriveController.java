@@ -16,6 +16,8 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.Supplier;
 
 public class HolonomicDriveController {
+    private static final String LogKey = "HolonomicDriveController";
+
     private static final double AllowableDistanceMetersBeforeReset = 0.3;
     private static final double AllowableAngleRadsBeforeReset = Units.degreesToRadians(15);
     private static final double AllowableHeadingRadsBeforeReset = Units.degreesToRadians(15);
@@ -100,8 +102,11 @@ public class HolonomicDriveController {
         return new Trigger(() -> {
             final Transform2d delta = currentPoseSupplier.get().minus(targetPoseSupplier.get());
 
-            return delta.getTranslation().getNorm() < positionTolerance.translationToleranceMeters
-                    && delta.getRotation().getRadians() < positionTolerance.rotationTolerance.getRadians();
+            final double translationDistanceMeters = Math.abs(delta.getTranslation().getNorm());
+            final double rotationDeltaRads = Math.abs(MathUtil.angleModulus(delta.getRotation().getRadians()));
+
+            return translationDistanceMeters < positionTolerance.translationToleranceMeters
+                    && rotationDeltaRads < positionTolerance.rotationTolerance.getRadians();
         });
     }
 
@@ -116,10 +121,13 @@ public class HolonomicDriveController {
             final Transform2d delta = currentPoseSupplier.get().minus(targetPoseSupplier.get());
             final ChassisSpeeds speeds = fieldRelativeSpeedsSupplier.get();
 
+            final double translationDistanceMeters = Math.abs(delta.getTranslation().getNorm());
+            final double rotationDeltaRads = Math.abs(MathUtil.angleModulus(delta.getRotation().getRadians()));
+
             final double linearSpeedMetersPerSec = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
 
-            return delta.getTranslation().getNorm() < positionTolerance.translationToleranceMeters
-                    && delta.getRotation().getRadians() < positionTolerance.rotationTolerance.getRadians()
+            return translationDistanceMeters < positionTolerance.translationToleranceMeters
+                    && rotationDeltaRads < positionTolerance.rotationTolerance.getRadians()
                     && linearSpeedMetersPerSec < velocityTolerance.translationVelocityToleranceMeterPerSec
                     && Math.abs(speeds.omegaRadiansPerSecond) < velocityTolerance.rotationVelocityToleranceRadsPerSec;
         });
@@ -214,12 +222,9 @@ public class HolonomicDriveController {
         final Translation2d targetToSetpoint = lastSetpointTranslation
                 .minus(targetPose.getTranslation());
         final double setpointDistance = targetToSetpoint.getNorm();
-        final Rotation2d setpointAngle = targetToSetpoint.getAngle();
-
-//        Logger.recordOutput("Target", targetPose);
-//        Logger.recordOutput("SetpointPos", translationSetpoint.position);
-//        Logger.recordOutput("SetpointAngle", currentAngle);
-        Logger.recordOutput("Setpoint", new Pose2d(lastSetpointTranslation, Rotation2d.kZero));
+        final Rotation2d setpointAngle = Math.abs(setpointDistance) < 1e-6
+                ? Rotation2d.kZero
+                : targetToSetpoint.getAngle();
 
         final double translationFFScalar = MathUtil.clamp(
                 (currentDistance - TranslationFFMinRadiusMeters)
@@ -281,15 +286,6 @@ public class HolonomicDriveController {
         );
         final double rotationSpeed = rotationFeedback + rotationFF;
 
-//        Logger.recordOutput("Distance", Math.abs(setpointDistance - currentDistance));
-//        Logger.recordOutput("Angle", Math.abs(
-//                MathUtil.angleModulus(
-//                        setpointAngle.getRadians()
-//                                - currentAngle.getRadians())));
-//        Logger.recordOutput("Heading", Math.abs(
-//                MathUtil.angleModulus(
-//                        rotationSetpoint.position
-//                                - currentRotationRads)));
         if (Math.abs(setpointDistance - currentDistance) > AllowableDistanceMetersBeforeReset
                 || Math.abs(
                         MathUtil.angleModulus(
@@ -302,6 +298,37 @@ public class HolonomicDriveController {
         ) {
             reset(currentPose, targetPose);
         }
+
+        final ChassisSpeeds fieldSpeeds = fieldRelativeSpeedsSupplier.get();
+        final Translation2d linearFieldSpeeds = new Translation2d(
+                fieldSpeeds.vxMetersPerSecond,
+                fieldSpeeds.vyMetersPerSecond
+        );
+        final Pose2d setpointPose = new Pose2d(
+                lastSetpointTranslation,
+                Rotation2d.fromRadians(rotationSetpoint.position)
+        );
+
+        Logger.recordOutput(LogKey + "/Distance", currentDistance);
+        Logger.recordOutput(LogKey + "/DistanceSetpoint", translationSetpoint.position);
+        Logger.recordOutput(
+                LogKey + "/Velocity",
+                // Component of field speeds along direction from current to target
+                -linearFieldSpeeds
+                        .toVector()
+                        .dot(targetToCurrent.unaryMinus().toVector())
+                        / currentDistance
+        );
+        Logger.recordOutput(LogKey + "/VelocitySetpoint", translationSetpoint.velocity);
+
+        Logger.recordOutput(LogKey + "/Rotation", currentRotationRads);
+        Logger.recordOutput(LogKey + "/RotationSetpoint", rotationSetpoint.position);
+
+        Logger.recordOutput(LogKey + "/RotationVelocity", fieldSpeeds.omegaRadiansPerSecond);
+        Logger.recordOutput(LogKey + "/RotationVelocitySetpoint", rotationSetpoint.velocity);
+
+        Logger.recordOutput(LogKey + "/TargetPose", targetPose);
+        Logger.recordOutput(LogKey + "/Setpoint", setpointPose);
 
         return ChassisSpeeds.fromFieldRelativeSpeeds(
                 xSpeed,
