@@ -160,12 +160,12 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveController = new HolonomicDriveController(
-                new PIDController(7, 0, 0.21),
-                new PIDController(7, 0, 0.21),
-                new PIDController(4, 0, 0),
+                new PIDController(9, 0, 0.15),
+                new PIDController(9, 0, 0.15),
+                new PIDController(5, 0, 1),
                 new TrapezoidProfile.Constraints(
                         Units.feetToMeters(13),
-                        Units.feetToMeters(5.5)
+                        Units.feetToMeters(7)
                 ),
                 new TrapezoidProfile.Constraints(
                         Config.maxAngularVelocityRadsPerSec(),
@@ -173,12 +173,12 @@ public class Swerve extends SubsystemBase {
                 ),
                 this::getFieldRelativeSpeeds,
                 new HolonomicDriveController.PositionTolerance(
-                        0.04,
+                        0.025,
                         Rotation2d.fromDegrees(4)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.08,
-                        Math.PI / 4
+                        0.04,
+                        Math.PI / 6
                 )
         );
         this.atHolonomicDrivePose = holonomicDriveController.atPose(

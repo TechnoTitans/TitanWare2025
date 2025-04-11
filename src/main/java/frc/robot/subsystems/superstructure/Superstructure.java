@@ -145,10 +145,14 @@ public class Superstructure extends VirtualSubsystem {
         });
         this.desiresDownwardsMotion = desiresUpwardsMotion.negate();
 
+        final Command upwardGoalChange = upwardsGoalChange();
+        final Command downwardGoalChange = downwardsGoalChange();
+
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresUpwardsMotion)
-                .onTrue(upwardsGoalChange());
+                .onTrue(upwardGoalChange);
+
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresDownwardsMotion)
-                .onTrue(downwardsGoalChange());
+                .onTrue(downwardGoalChange);
 
         elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
         elevator.setGoal(desiredGoal.elevatorGoal);
@@ -171,7 +175,8 @@ public class Superstructure extends VirtualSubsystem {
                 Commands.waitUntil(
                         elevatorArm.atSetpoint
                                 .and(elevator.atSetpoint)
-                                .and(intakeArm.atSetpoint)).withTimeout(4),
+                                .and(intakeArm.atSetpoint))
+                        .withTimeout(4),
                 Commands.runOnce(() -> this.atGoal = runningGoal)
         )
                 .onlyWhile(() -> desiredGoal == runningGoal)
@@ -188,14 +193,15 @@ public class Superstructure extends VirtualSubsystem {
                 Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
 
                 Commands.waitUntil(
-                        elevator.atSetpoint
-                                .and(intakeArm.atSetpoint)).withTimeout(4),
+                        elevator.atSetpoint.and(intakeArm.atSetpoint))
+                        .withTimeout(4),
                 Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
 
                 Commands.waitUntil(
                         elevatorArm.atSetpoint
                                 .and(elevator.atSetpoint)
-                                .and(intakeArm.atSetpoint)).withTimeout(4),
+                                .and(intakeArm.atSetpoint))
+                        .withTimeout(4),
                 Commands.runOnce(() -> this.atGoal = runningGoal)
         )
                 .onlyWhile(() -> desiredGoal == runningGoal)

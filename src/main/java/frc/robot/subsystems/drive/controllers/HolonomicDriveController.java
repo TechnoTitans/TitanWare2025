@@ -11,6 +11,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
+import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Supplier;
 
@@ -218,7 +219,7 @@ public class HolonomicDriveController {
 //        Logger.recordOutput("Target", targetPose);
 //        Logger.recordOutput("SetpointPos", translationSetpoint.position);
 //        Logger.recordOutput("SetpointAngle", currentAngle);
-//        Logger.recordOutput("Setpoint", new Pose2d(lastSetpointTranslation, Rotation2d.kZero));
+        Logger.recordOutput("Setpoint", new Pose2d(lastSetpointTranslation, Rotation2d.kZero));
 
         final double translationFFScalar = MathUtil.clamp(
                 (currentDistance - TranslationFFMinRadiusMeters)

@@ -138,18 +138,14 @@ public class ScoreCommands {
                 swerve.teleopFacingAngle(
                         leftStickYInput,
                         leftStickXInput,
-                        () -> {
-                            final Pose2d currentPose = swerve.getPose();
-                            final Pose2d nearestStation = currentPose.nearest(FieldConstants.getHPPickupPoses());
-
-                            return nearestStation.getRotation();
-                        }
+                        () -> swerve.getPose().nearest(FieldConstants.getHPPickupPoses()).getRotation()
                 ).onlyIf(superstructure.unsafeToDrive.negate()),
                 superstructure.toGoal(Superstructure.Goal.HP),
                 intake.intakeCoralHP()
-        );
+        ).withName("IntakeFromClosestCoralStation");
     }
 
+    //TODO: Make this not extend elevator until somewhat facing reef
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
         final Runnable updateScorePosition = () -> scorePositionContainer.value = scorePositionSupplier.get();
@@ -232,7 +228,7 @@ public class ScoreCommands {
                                 Commands.waitUntil(atReef),
                                 Commands.waitUntil(atSuperstructureSetpoint)
                                         .withTimeout(2),
-                                intake.scoreCoral()
+                                intake.scoreCoral().asProxy()
                         ),
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
@@ -254,7 +250,7 @@ public class ScoreCommands {
                         superstructure.toGoal(superstructureGoalContainer)
                 ),
                 Commands.waitUntil(superstructure.unsafeToDrive.negate())
-                        .withTimeout(0.8)
+                        .withTimeout(0.5)
         ).withName("ScoreAtFixedPosition");
     }
 
