@@ -171,7 +171,6 @@ public class ScoreCommands {
         ).withName("IntakeFromClosestCoralStation");
     }
 
-    //TODO: Make this not extend elevator until somewhat facing reef
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
 

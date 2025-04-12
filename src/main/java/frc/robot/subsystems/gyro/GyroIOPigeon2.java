@@ -82,7 +82,6 @@ public class GyroIOPigeon2 implements GyroIO {
     @SuppressWarnings("DuplicatedCode")
     @Override
     public void config() {
-        //TODO fill in correct mount pose
         final Pigeon2Configuration pigeon2Configuration = new Pigeon2Configuration();
         pigeon2Configuration.MountPose.MountPoseRoll = -0.2720952332019806;
         pigeon2Configuration.MountPose.MountPosePitch = 0.06304807960987091;

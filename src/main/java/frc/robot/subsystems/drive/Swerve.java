@@ -159,7 +159,6 @@ public class Swerve extends SubsystemBase {
                         )
         );
 
-        //TODO: change this back on the real robot
         this.holonomicDriveController = new HolonomicDriveController(
                 new PIDController(9, 0, 0.15),
                 new PIDController(9, 0, 0.15),
@@ -909,7 +908,7 @@ public class Swerve extends SubsystemBase {
                 MathUtil.angleModulus(currentPose.getRotation().getRadians())
         );
 
-        //TODO: Torque FF doesnt work well
+        //TODO: Torque FF doesn't work well
         drive(speeds);
     }
 

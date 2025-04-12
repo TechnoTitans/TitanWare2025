@@ -30,7 +30,7 @@ public class HardwareConstants {
             4,
             0,
             6.242,
-            Units.inchesToMeters(2) //TODO: measure drum
+            Units.inchesToMeters(2)
     );
 
     public record ElevatorArmConstants(
