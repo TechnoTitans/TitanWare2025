@@ -312,6 +312,7 @@ public class PhotonVision extends VirtualSubsystem {
             if (maybeVisionUpdate.isPresent()) {
                 final VisionResult.VisionUpdate visionUpdate = maybeVisionUpdate.get();
                 final Pose3d estimatedPose = visionUpdate.estimatedPose();
+                final Pose3d ambiguousPose = visionUpdate.ambiguousPose();
 
                 final List<PhotonTrackedTarget> targetsUsed = visionUpdate.targetsUsed();
                 for (int i = 0; i < apriltagIds.length; i++) {
@@ -325,6 +326,7 @@ public class PhotonVision extends VirtualSubsystem {
                 }
 
                 Logger.recordOutput(logKey + "/EstimatedPose3d", estimatedPose);
+                Logger.recordOutput(logKey + "/AmbiguousPose3d", ambiguousPose);
                 Logger.recordOutput(logKey + "/EstimatedPose2d", estimatedPose.toPose2d());
             }
 
@@ -351,7 +353,6 @@ public class PhotonVision extends VirtualSubsystem {
     }
 
     public void resetPose(final Pose2d robotPose) {
-        Logger.recordOutput("emk", robotPose);
         poseEstimator.resetPose(robotPose);
         runner.resetRobotPose(GyroUtils.robotPose2dToPose3dWithGyro(
                 new Pose2d(robotPose.getTranslation(), robotPose.getRotation()),

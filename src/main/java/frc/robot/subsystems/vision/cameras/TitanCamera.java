@@ -119,7 +119,7 @@ public enum TitanCamera {
             Constants.Vision.ROBOT_TO_FL_BOTTOM_APRILTAG,
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.ARDUCAM_OV9281,
-            1,
+            4,
             true,
             new TitanCameraCalibration()
                     .withCalibration(

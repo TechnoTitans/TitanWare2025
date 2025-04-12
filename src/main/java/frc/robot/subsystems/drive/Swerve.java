@@ -163,15 +163,14 @@ public class Swerve extends SubsystemBase {
         this.holonomicDriveController = new HolonomicDriveController(
                 new PIDController(9, 0, 0.15),
                 new PIDController(9, 0, 0.15),
-                new PIDController(5, 0, 0),
-//                new PIDController(5, 0, 1),
+                new PIDController(7, 0, 0.7),
                 new TrapezoidProfile.Constraints(
                         Units.feetToMeters(13),
                         Units.feetToMeters(7)
                 ),
                 new TrapezoidProfile.Constraints(
-                        Config.maxAngularVelocityRadsPerSec(),
-                        Config.maxAngularAccelerationRadsPerSecSquared()
+                        3 * Math.PI,
+                        3 * Math.PI
                 ),
                 this::getFieldRelativeSpeeds,
                 new HolonomicDriveController.PositionTolerance(
@@ -929,6 +928,8 @@ public class Swerve extends SubsystemBase {
                 backRight.getDrivePosition()
         };
 
+        final Supplier<Rotation2d> yawRotation2dSupplier = gyro::getYawRotation2d;
+
         return Commands.parallel(
                 Commands.sequence(
                         Commands.runOnce(() -> limiter.reset(0.0)),
@@ -942,10 +943,10 @@ public class Swerve extends SubsystemBase {
                         Commands.runOnce(() -> {
                             state.positions = drivePositionsSupplier.get();
                             state.gyroDelta = 0.0;
-                            state.lastAngle = getYaw();
+                            state.lastAngle = yawRotation2dSupplier.get();
                         }),
                         Commands.run(() -> {
-                            final Rotation2d rotation = getYaw();
+                            final Rotation2d rotation = yawRotation2dSupplier.get();
                             state.gyroDelta += Math.abs(rotation.minus(state.lastAngle).getRotations());
                             state.lastAngle = rotation;
                         }).finallyDo(() -> {

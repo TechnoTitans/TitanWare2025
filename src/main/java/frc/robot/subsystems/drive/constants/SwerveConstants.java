@@ -12,7 +12,7 @@ public class SwerveConstants {
     private static final DCMotor KrakenX60Foc = DCMotor.getKrakenX60Foc(1);
 
     public static final SwerveConfig Config = new SwerveConfig(
-            0.0589972,
+            0.04963169,
             6.75,
             150.0 / 7.0,
             50.0 / 17.0,
@@ -20,7 +20,7 @@ public class SwerveConstants {
             Units.inchesToMeters(22.75),
             Units.feetToMeters(15.0),
             4 * Math.PI,
-            4 * Math.PI,
+            6 * Math.PI,
             Translation2d.kZero
     );
 

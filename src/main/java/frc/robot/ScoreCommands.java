@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -238,8 +239,8 @@ public class ScoreCommands {
         );
         final Trigger atRotationCloseReef = atRotationTrigger(
                 scoringPoseSupplier,
-                Rotation2d.fromDegrees(30),
-                Math.PI / 2
+                Rotation2d.fromDegrees(25),
+                Math.PI / 3
         );
         final Trigger always = new Trigger(() -> true);
 
@@ -504,8 +505,24 @@ public class ScoreCommands {
     }
 
     public Command processor() {
+        final Supplier<Pose2d> alignPoseSupplier = FieldConstants::getProcessorAlignPose;
+
+        final Trigger atAlignProcessor = swerve.atPoseTrigger(
+                alignPoseSupplier,
+                new HolonomicDriveController.PositionTolerance(
+                        0.2,
+                        Rotation2d.fromDegrees(10)
+                ),
+                new HolonomicDriveController.VelocityTolerance(
+                        0.2,
+                        Units.degreesToRadians(20)
+                )
+        );
+
         return Commands.deadline(
                 Commands.sequence(
+                        swerve.runToPose(alignPoseSupplier)
+                                .until(atAlignProcessor),
                         swerve.driveToPose(FieldConstants::getProcessorScoringPose),
                         Commands.parallel(
                                 swerve.runWheelXCommand(),

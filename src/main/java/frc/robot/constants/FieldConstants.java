@@ -19,7 +19,9 @@ public class FieldConstants {
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(26.5), 0, Rotation2d.kPi);
     public static final Transform2d PROCESSOR_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(36), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(32), 0, Rotation2d.kPi);
+    public static final Transform2d ALIGN_PROCESSOR_DISTANCE_OFFSET =
+            new Transform2d(Units.inchesToMeters(-24), 0, Rotation2d.kZero);
     public static final Transform2d HP_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
         public static final Transform2d SCORING_BARGE_OFFSET =
@@ -32,6 +34,9 @@ public class FieldConstants {
 
         public static final Pose2d BLUE_SCORING_POSE = BLUE_CENTER_FACE.transformBy(PROCESSOR_DISTANCE_OFFSET);
         public static final Pose2d RED_SCORING_POSE = RED_CENTER_FACE.transformBy(PROCESSOR_DISTANCE_OFFSET);
+
+        public static final Pose2d BLUE_ALIGN_POSE = BLUE_SCORING_POSE.transformBy(ALIGN_PROCESSOR_DISTANCE_OFFSET);
+        public static final Pose2d RED_ALIGN_POSE = RED_SCORING_POSE.transformBy(ALIGN_PROCESSOR_DISTANCE_OFFSET);
     }
 
     public static class Barge {
@@ -292,6 +297,10 @@ public class FieldConstants {
 
     public static Pose2d getProcessorScoringPose() {
         return getAllianceFlipped(Processor.BLUE_SCORING_POSE, Processor.RED_SCORING_POSE);
+    }
+
+    public static Pose2d getProcessorAlignPose() {
+        return getAllianceFlipped(Processor.BLUE_ALIGN_POSE, Processor.RED_ALIGN_POSE);
     }
 
     public static List<Pose2d> getHPPickupPoses() {

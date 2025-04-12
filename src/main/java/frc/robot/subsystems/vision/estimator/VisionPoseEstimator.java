@@ -1,7 +1,7 @@
 package frc.robot.subsystems.vision.estimator;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.cscore.OpenCvLoader;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.numbers.N1;
@@ -11,19 +11,13 @@ import frc.robot.constants.Constants;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.estimation.VisionEstimation;
-import org.photonvision.targeting.MultiTargetPNPResult;
-import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
-import org.photonvision.targeting.PnpResult;
+import org.photonvision.targeting.*;
 
 import java.util.Optional;
 import java.util.function.Function;
 
 public class VisionPoseEstimator {
-    static {
-        //noinspection ResultOfMethodCallIgnored
-        OpenCvLoader.forceStaticLoad();
-    }
+    private static final int EdgeTolerancePixels = 15;
 
     private VisionPoseEstimator() {}
 
@@ -115,6 +109,7 @@ public class VisionPoseEstimator {
                 VisionResult.Result.CONSTRAINED_PNP_RESULT,
                 new VisionResult.VisionUpdate(
                         best,
+                        new Pose3d(),
                         timestamp,
                         result.getTargets()
                 )
@@ -138,6 +133,7 @@ public class VisionPoseEstimator {
                 VisionResult.Result.MULTI_TARGET_RESULT,
                 new VisionResult.VisionUpdate(
                         bestPose,
+                        new Pose3d(),
                         poseTimestamp,
                         pipelineResult.getTargets()
                 )
@@ -158,6 +154,19 @@ public class VisionPoseEstimator {
             return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_INVALID_TAG);
         }
 
+        for (final TargetCorner targetCorner : target.detectedCorners) {
+            final double x = targetCorner.x;
+            final double y = targetCorner.y;
+
+            //TODO publish resolution
+            if (MathUtil.isNear(0, x, EdgeTolerancePixels)
+                    || MathUtil.isNear(1280, x, EdgeTolerancePixels)
+                    || MathUtil.isNear(0, y, EdgeTolerancePixels)
+                    || MathUtil.isNear(720, y, EdgeTolerancePixels)) {
+                return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_CUTOFF_CORNER);
+            }
+        }
+
         final Pose3d tagPose = maybeTagPose.get();
         final Pose3d cameraPose0 = tagPose.transformBy(target.getBestCameraToTarget().inverse());
         final Pose3d cameraPose1 = tagPose.transformBy(target.getAlternateCameraToTarget().inverse());
@@ -170,13 +179,11 @@ public class VisionPoseEstimator {
                     VisionResult.Result.SINGLE_TARGET_RESULT,
                     new VisionResult.VisionUpdate(
                             robotPose0,
+                            new Pose3d(),
                             poseTimestamp,
                             pipelineResult.getTargets()
                     )
             );
-        } else {
-            //TODO: Do we stil need this?
-            if (true) return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_AMBIGUOUS_NO_POSE);
         }
 
         final Optional<Pose2d> maybePose = poseAtTimestamp.apply(poseTimestamp);
@@ -185,16 +192,19 @@ public class VisionPoseEstimator {
         }
 
         final Pose2d robotPose = maybePose.get();
-        final Rotation2d yawDifference0 = robotPose0.getRotation().toRotation2d()
-                .minus(robotPose.getRotation());
-        final Rotation2d yawDifference1 = robotPose1.getRotation().toRotation2d()
-                .minus(robotPose.getRotation());
+        final double yawDifference0 = robotPose0.getRotation().toRotation2d()
+                .minus(robotPose.getRotation())
+                .getRadians();
+        final double yawDifference1 = robotPose1.getRotation().toRotation2d()
+                .minus(robotPose.getRotation())
+                .getRadians();
 
-        if (yawDifference0.getRadians() < yawDifference1.getRadians()) {
+        if (yawDifference0 < yawDifference1) {
             return VisionResult.valid(
                     VisionResult.Result.SINGLE_TARGET_DISAMBIGUATE_POSE0_RESULT,
                     new VisionResult.VisionUpdate(
                             robotPose0,
+                            robotPose1,
                             poseTimestamp,
                             pipelineResult.getTargets()
                     )
@@ -204,6 +214,7 @@ public class VisionPoseEstimator {
                     VisionResult.Result.SINGLE_TARGET_DISAMBIGUATE_POSE1_RESULT,
                     new VisionResult.VisionUpdate(
                             robotPose1,
+                            robotPose0,
                             poseTimestamp,
                             pipelineResult.getTargets()
                     )

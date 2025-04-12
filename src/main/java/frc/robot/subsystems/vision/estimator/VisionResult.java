@@ -18,6 +18,7 @@ public record VisionResult(
         SINGLE_TARGET_AMBIGUOUS_NO_POSE,
         SINGLE_TARGET_DISAMBIGUATE_POSE0_RESULT,
         SINGLE_TARGET_DISAMBIGUATE_POSE1_RESULT,
+        SINGLE_TARGET_CUTOFF_CORNER,
         MULTI_TARGET_RESULT,
         CONSTRAINED_PNP_RESULT,
         CONSTRAINED_PNP_NO_SEED_POSE
@@ -25,6 +26,7 @@ public record VisionResult(
 
     public record VisionUpdate(
             Pose3d estimatedPose,
+            Pose3d ambiguousPose,
             double timestamp,
             List<PhotonTrackedTarget> targetsUsed
     ) {}
