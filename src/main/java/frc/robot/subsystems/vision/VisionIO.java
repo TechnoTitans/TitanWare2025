@@ -21,25 +21,34 @@ public interface VisionIO {
     Matrix<N8, N1> EmptyDistortionCoeffs = MatBuilder.fill(Nat.N8(), Nat.N1(), 0, 0, 0, 0, 0, 0, 0, 0);
 
     class VisionIOInputs implements LoggableInputs {
-
         public String name = "";
         public boolean isConnected = false;
         public double stdDevFactor = 1.0;
-        public PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
         public Transform3d robotToCamera;
-        public PhotonPipelineResult[] pipelineResults;
+        public PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
+
+        public int resolutionWidthPx = 0;
+        public int resolutionHeightPx = 0;
+
         public Matrix<N3, N3> cameraMatrix;
         public Matrix<N8, N1> distortionCoeffs;
+
+        public PhotonPipelineResult[] pipelineResults;
 
         @Override
         public void toLog(final LogTable table) {
             table.put("Name", name);
             table.put("IsConnected", isConnected);
             table.put("StdDevFactor", stdDevFactor);
-            table.put("ConstrainedPnpParams", constrainedPnpParams);
             table.put("RobotToCamera", robotToCamera);
+            table.put("ConstrainedPnpParams", constrainedPnpParams);
+
+            table.put("ResolutionWidthPx", resolutionWidthPx);
+            table.put("ResolutionHeightPx", resolutionHeightPx);
+
             table.put("CameraMatrix", cameraMatrix.getData());
             table.put("DistortionCoeffs", distortionCoeffs.getData());
+
             LogUtils.serializePhotonPipelineResults(table, "LatestResult", pipelineResults);
         }
 
@@ -48,8 +57,11 @@ public interface VisionIO {
             this.name = table.get("Name", "unknown");
             this.isConnected = table.get("IsConnected", false);
             this.stdDevFactor = table.get("StdDevFactor", Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR);
-            this.constrainedPnpParams = table.get("ConstrainedPnpParams", DefaultConstrainedPnpParams);
             this.robotToCamera = table.get("RobotToCamera", Transform3d.kZero);
+            this.constrainedPnpParams = table.get("ConstrainedPnpParams", DefaultConstrainedPnpParams);
+
+            this.resolutionWidthPx = table.get("ResolutionWidthPx", 0);
+            this.resolutionHeightPx = table.get("ResolutionHeightPx", 0);
 
             final double[] cameraMatrix = table.get("CameraMatrix", (double[]) null);
             this.cameraMatrix = cameraMatrix == null

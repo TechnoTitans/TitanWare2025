@@ -21,13 +21,9 @@ import java.util.function.Function;
 public class ReplayVisionRunner implements PhotonVisionRunner {
     public static class VisionIOReplay implements VisionIO {
         private final PhotonCamera photonCamera;
-        private final Transform3d robotToCamera;
-        private final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
 
         public VisionIOReplay(final TitanCamera titanCamera) {
             this.photonCamera = titanCamera.getPhotonCamera();
-            this.robotToCamera = titanCamera.getRobotToCameraTransform();
-            this.constrainedPnpParams = titanCamera.getConstrainedPnpParams();
         }
     }
 
@@ -81,11 +77,8 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
                 final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
-                        visionIO.robotToCamera,
-                        pipelineResult,
-                        inputs.cameraMatrix,
-                        inputs.distortionCoeffs,
-                        visionIO.constrainedPnpParams
+                        inputs,
+                        pipelineResult
                 );
 
                 visionResults.put(

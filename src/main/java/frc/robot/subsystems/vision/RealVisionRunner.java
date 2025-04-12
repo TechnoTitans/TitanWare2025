@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N8;
+import frc.robot.subsystems.vision.cameras.CameraProperties;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
 import frc.robot.subsystems.vision.estimator.VisionResult;
@@ -31,6 +32,9 @@ public class RealVisionRunner implements PhotonVisionRunner {
         private final Transform3d robotToCamera;
         private final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
 
+        private final int resolutionWidthPx;
+        private final int resolutionHeightPx;
+
         private Matrix<N3, N3> cameraMatrix;
         private Matrix<N8, N1> distortionCoeffs;
 
@@ -41,6 +45,13 @@ public class RealVisionRunner implements PhotonVisionRunner {
             this.stdDevFactor = titanCamera.getStdDevFactor();
             this.robotToCamera = titanCamera.getRobotToCameraTransform();
             this.constrainedPnpParams = titanCamera.getConstrainedPnpParams();
+
+            final CameraProperties.Resolution resolution = titanCamera
+                    .getCameraProperties()
+                    .getFirstResolution();
+            this.resolutionWidthPx = resolution.getWidth();
+            this.resolutionHeightPx = resolution.getHeight();
+
             this.cameraMatrix = photonCamera.getCameraMatrix().orElse(null);
             this.distortionCoeffs = photonCamera.getDistCoeffs().orElse(null);
         }
@@ -50,8 +61,11 @@ public class RealVisionRunner implements PhotonVisionRunner {
             inputs.name = cameraName;
             inputs.isConnected = photonCamera.isConnected();
             inputs.stdDevFactor = stdDevFactor;
-            inputs.constrainedPnpParams = constrainedPnpParams;
             inputs.robotToCamera = robotToCamera;
+            inputs.constrainedPnpParams = constrainedPnpParams;
+
+            inputs.resolutionWidthPx = resolutionWidthPx;
+            inputs.resolutionHeightPx = resolutionHeightPx;
 
             if (cameraMatrix != null) {
                 inputs.cameraMatrix = cameraMatrix;
@@ -124,11 +138,8 @@ public class RealVisionRunner implements PhotonVisionRunner {
                 final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
-                        visionIO.robotToCamera,
-                        pipelineResult,
-                        inputs.cameraMatrix,
-                        inputs.distortionCoeffs,
-                        visionIO.constrainedPnpParams
+                        inputs,
+                        pipelineResult
                 );
 
                 visionResults.put(

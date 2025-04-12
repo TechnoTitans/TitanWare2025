@@ -8,6 +8,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N8;
 import frc.robot.constants.Constants;
+import frc.robot.subsystems.vision.VisionIO;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.estimation.VisionEstimation;
@@ -23,12 +24,14 @@ public class VisionPoseEstimator {
 
     private static VisionResult constrainedPnpStrategy(
             final AprilTagFieldLayout fieldLayout,
-            final PhotonPipelineResult result,
-            final Function<Double, Optional<Pose2d>> poseAtTimestamp,
             final Transform3d robotToCamera,
+            final int resolutionWidthPx,
+            final int resolutionHeightPx,
             final Matrix<N3, N3> cameraMatrix,
             final Matrix<N8, N1> distCoeffs,
-            final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams
+            final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams,
+            final Function<Double, Optional<Pose2d>> poseAtTimestamp,
+            final PhotonPipelineResult result
     ) {
         final double timestamp = result.getTimestampSeconds();
         final Optional<Pose2d> maybeRobotPose = poseAtTimestamp.apply(timestamp);
@@ -47,7 +50,8 @@ public class VisionPoseEstimator {
                 return singleTag(
                         fieldLayout,
                         robotToCamera,
-                        timestamp,
+                        resolutionWidthPx,
+                        resolutionHeightPx,
                         poseAtTimestamp,
                         result
                 );
@@ -64,8 +68,15 @@ public class VisionPoseEstimator {
         } else {
             // HACK - use fallback strategy to gimme a seed pose
             // TODO - make sure nested update doesn't break state
-            final VisionResult maybeSingleTag =
-                    singleTag(fieldLayout, robotToCamera, timestamp, poseAtTimestamp, result);
+            final VisionResult maybeSingleTag = singleTag(
+                    fieldLayout,
+                    robotToCamera,
+                    resolutionWidthPx,
+                    resolutionHeightPx,
+                    poseAtTimestamp,
+                    result
+            );
+
             final Optional<VisionResult.VisionUpdate> visionUpdate = maybeSingleTag.visionUpdate();
             if (visionUpdate.isEmpty()) {
                 return VisionResult.invalid(VisionResult.Result.CONSTRAINED_PNP_NO_SEED_POSE);
@@ -100,16 +111,22 @@ public class VisionPoseEstimator {
 
         // try fallback strategy if solvePNP fails for some reason
         if (pnpResult.isEmpty()) {
-            return singleTag(fieldLayout, robotToCamera, timestamp, poseAtTimestamp, result);
+            return singleTag(
+                    fieldLayout,
+                    robotToCamera,
+                    resolutionWidthPx,
+                    resolutionHeightPx,
+                    poseAtTimestamp,
+                    result
+            );
         }
 
         final Pose3d best = Pose3d.kZero.plus(pnpResult.get().best); // field-to-robot
-
         return VisionResult.valid(
                 VisionResult.Result.CONSTRAINED_PNP_RESULT,
                 new VisionResult.VisionUpdate(
                         best,
-                        new Pose3d(),
+                        Pose3d.kZero,
                         timestamp,
                         result.getTargets()
                 )
@@ -119,7 +136,7 @@ public class VisionPoseEstimator {
     private static VisionResult multitag(
             final AprilTagFieldLayout fieldLayout,
             final Transform3d robotToCamera,
-            final double poseTimestamp,
+            final double timestamp,
             final PhotonPipelineResult pipelineResult,
             final MultiTargetPNPResult result
     ) {
@@ -133,8 +150,8 @@ public class VisionPoseEstimator {
                 VisionResult.Result.MULTI_TARGET_RESULT,
                 new VisionResult.VisionUpdate(
                         bestPose,
-                        new Pose3d(),
-                        poseTimestamp,
+                        Pose3d.kZero,
+                        timestamp,
                         pipelineResult.getTargets()
                 )
         );
@@ -143,10 +160,12 @@ public class VisionPoseEstimator {
     private static VisionResult singleTag(
             final AprilTagFieldLayout fieldLayout,
             final Transform3d robotToCamera,
-            final double poseTimestamp,
+            final int resolutionWidthPx,
+            final int resolutionHeightPx,
             final Function<Double, Optional<Pose2d>> poseAtTimestamp,
             final PhotonPipelineResult pipelineResult
     ) {
+        final double timestamp = pipelineResult.getTimestampSeconds();
         final PhotonTrackedTarget target = pipelineResult.getTargets().get(0);
 
         final Optional<Pose3d> maybeTagPose = fieldLayout.getTagPose(target.getFiducialId());
@@ -158,11 +177,10 @@ public class VisionPoseEstimator {
             final double x = targetCorner.x;
             final double y = targetCorner.y;
 
-            //TODO publish resolution
             if (MathUtil.isNear(0, x, EdgeTolerancePixels)
-                    || MathUtil.isNear(1280, x, EdgeTolerancePixels)
+                    || MathUtil.isNear(resolutionWidthPx, x, EdgeTolerancePixels)
                     || MathUtil.isNear(0, y, EdgeTolerancePixels)
-                    || MathUtil.isNear(720, y, EdgeTolerancePixels)) {
+                    || MathUtil.isNear(resolutionHeightPx, y, EdgeTolerancePixels)) {
                 return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_CUTOFF_CORNER);
             }
         }
@@ -179,14 +197,14 @@ public class VisionPoseEstimator {
                     VisionResult.Result.SINGLE_TARGET_RESULT,
                     new VisionResult.VisionUpdate(
                             robotPose0,
-                            new Pose3d(),
-                            poseTimestamp,
+                            Pose3d.kZero,
+                            timestamp,
                             pipelineResult.getTargets()
                     )
             );
         }
 
-        final Optional<Pose2d> maybePose = poseAtTimestamp.apply(poseTimestamp);
+        final Optional<Pose2d> maybePose = poseAtTimestamp.apply(timestamp);
         if (maybePose.isEmpty()) {
             return VisionResult.invalid(VisionResult.Result.SINGLE_TARGET_AMBIGUOUS_NO_POSE);
         }
@@ -205,7 +223,7 @@ public class VisionPoseEstimator {
                     new VisionResult.VisionUpdate(
                             robotPose0,
                             robotPose1,
-                            poseTimestamp,
+                            timestamp,
                             pipelineResult.getTargets()
                     )
             );
@@ -215,26 +233,24 @@ public class VisionPoseEstimator {
                     new VisionResult.VisionUpdate(
                             robotPose1,
                             robotPose0,
-                            poseTimestamp,
+                            timestamp,
                             pipelineResult.getTargets()
                     )
             );
         }
     }
 
+    @SuppressWarnings("unused")
     public static VisionResult update(
             final AprilTagFieldLayout fieldLayout,
             final Function<Double, Optional<Pose2d>> poseAtTimestamp,
-            final Transform3d robotToCamera,
-            final PhotonPipelineResult pipelineResult,
-            final Matrix<N3, N3> cameraMatrix,
-            final Matrix<N8, N1> distCoeffs,
-            final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams
+            final VisionIO.VisionIOInputs inputs,
+            final PhotonPipelineResult pipelineResult
     ) {
-        final double resultTimestampSeconds = pipelineResult.getTimestampSeconds();
+        final double timestamp = pipelineResult.getTimestampSeconds();
 
         // Time in the past -- give up, since the following if expects times > 0
-        if (resultTimestampSeconds < 0) {
+        if (timestamp < 0) {
             return VisionResult.invalid(VisionResult.Result.NEGATIVE_TIMESTAMP);
         }
 
@@ -243,19 +259,26 @@ public class VisionPoseEstimator {
             return VisionResult.invalid(VisionResult.Result.NO_TARGETS);
         }
 
-        return pipelineResult.multitagResult.map(multiTargetPNPResult -> multitag(
-                fieldLayout,
-                robotToCamera,
-                resultTimestampSeconds,
-                pipelineResult,
-                multiTargetPNPResult
-        )).orElseGet(() -> singleTag(
-                fieldLayout,
-                robotToCamera,
-                pipelineResult.getTimestampSeconds(),
-                poseAtTimestamp,
-                pipelineResult
-        ));
+        final Optional<MultiTargetPNPResult> maybeMultitagResult = pipelineResult.multitagResult;
+        //noinspection OptionalIsPresent
+        if (maybeMultitagResult.isPresent()) {
+            return multitag(
+                    fieldLayout,
+                    inputs.robotToCamera,
+                    timestamp,
+                    pipelineResult,
+                    maybeMultitagResult.get()
+            );
+        } else {
+            return singleTag(
+                    fieldLayout,
+                    inputs.robotToCamera,
+                    inputs.resolutionWidthPx,
+                    inputs.resolutionHeightPx,
+                    poseAtTimestamp,
+                    pipelineResult
+            );
+        }
 
 //        return constrainedPnpStrategy(
 //                fieldLayout,

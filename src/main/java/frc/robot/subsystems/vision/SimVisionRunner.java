@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import frc.robot.subsystems.drive.Swerve;
+import frc.robot.subsystems.vision.cameras.CameraProperties;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
 import frc.robot.subsystems.vision.estimator.VisionResult;
@@ -33,6 +34,9 @@ public class SimVisionRunner implements PhotonVisionRunner {
         public final Transform3d robotToCamera;
         public final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
 
+        private final int resolutionWidthPx;
+        private final int resolutionHeightPx;
+
         public VisionIOApriltagsSim(final TitanCamera titanCamera, final VisionSystemSim visionSystemSim) {
             this.photonCamera = titanCamera.getPhotonCamera();
             this.cameraName = photonCamera.getName();
@@ -40,6 +44,12 @@ public class SimVisionRunner implements PhotonVisionRunner {
             this.stdDevFactor = titanCamera.getStdDevFactor();
             this.robotToCamera = titanCamera.getRobotToCameraTransform();
             this.constrainedPnpParams = titanCamera.getConstrainedPnpParams();
+
+            final CameraProperties.Resolution resolution = titanCamera
+                    .getCameraProperties()
+                    .getFirstResolution();
+            this.resolutionWidthPx = resolution.getWidth();
+            this.resolutionHeightPx = resolution.getHeight();
 
             final PhotonCameraSim photonCameraSim =
                     new PhotonCameraSim(titanCamera.getPhotonCamera(), titanCamera.toSimCameraProperties());
@@ -57,10 +67,15 @@ public class SimVisionRunner implements PhotonVisionRunner {
             inputs.name = cameraName;
             inputs.isConnected = photonCamera.isConnected();
             inputs.stdDevFactor = stdDevFactor;
-            inputs.constrainedPnpParams = constrainedPnpParams;
             inputs.robotToCamera = robotToCamera;
+            inputs.constrainedPnpParams = constrainedPnpParams;
+
+            inputs.resolutionWidthPx = resolutionWidthPx;
+            inputs.resolutionHeightPx = resolutionHeightPx;
+
             inputs.cameraMatrix = photonCamera.getCameraMatrix().orElse(EmptyCameraMatrix);
             inputs.distortionCoeffs = photonCamera.getDistCoeffs().orElse(EmptyDistortionCoeffs);
+
             inputs.pipelineResults = photonCamera.getAllUnreadResults().toArray(new PhotonPipelineResult[0]);
         }
     }
@@ -133,11 +148,8 @@ public class SimVisionRunner implements PhotonVisionRunner {
                 final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
-                        visionIO.robotToCamera,
-                        pipelineResult,
-                        inputs.cameraMatrix,
-                        inputs.distortionCoeffs,
-                        visionIO.constrainedPnpParams
+                        inputs,
+                        pipelineResult
                 );
 
                 visionResults.put(
