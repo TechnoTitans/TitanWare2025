@@ -26,7 +26,8 @@ public class FieldConstants {
             new Transform2d(Units.inchesToMeters(-24), 0, Rotation2d.kZero);
     public static final Transform2d HP_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
-        public static final Transform2d SCORING_BARGE_OFFSET =
+    //TODO: Maybe move more back because it might hit barge tag
+    public static final Transform2d SCORING_BARGE_OFFSET =
             new Transform2d(-Units.inchesToMeters(33.5), 0, Rotation2d.kPi);
 
     public static class Processor {
