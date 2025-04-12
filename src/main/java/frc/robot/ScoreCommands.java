@@ -52,7 +52,8 @@ public class ScoreCommands {
         L1(Reef.Level.L1, Superstructure.Goal.L1),
         L2(Reef.Level.L2, Superstructure.Goal.L2),
         L3(Reef.Level.L3, Superstructure.Goal.L3),
-        L4(Reef.Level.L4, Superstructure.Goal.L4);
+        L4(Reef.Level.L4, Superstructure.Goal.L4),
+        AUTO_L4(Reef.Level.AUTO_L4, Superstructure.Goal.AUTO_L4);
 
         public static final Map<Reef.Level, Superstructure.Goal> LevelMap = new HashMap<>();
 
@@ -78,8 +79,6 @@ public class ScoreCommands {
             Reef.Side side,
             Level level
     ) {}
-
-    private static final double AllowableDistanceAlgaeFromReefMeters = 0.22;
 
     private final Swerve swerve;
     private final Superstructure superstructure;
@@ -112,6 +111,13 @@ public class ScoreCommands {
             return rotationDeltaRads < rotationTolerance.getRadians()
                     && Math.abs(speeds.omegaRadiansPerSecond) < rotationVelocityToleranceRadsPerSec;
         });
+    }
+
+    private Supplier<Intake.ScoreMode> scoreModeFromScorePosition(final Supplier<ScorePosition> scorePositionSupplier) {
+        return () -> switch (scorePositionSupplier.get().level.level) {
+            case AUTO_L4, L4, L3, L2 -> Intake.ScoreMode.RUN_UNTIL_NO_CORAL;
+            case L1 -> Intake.ScoreMode.RUN_FOR_TIME;
+        };
     }
 
     @SuppressWarnings("unused")
@@ -180,13 +186,13 @@ public class ScoreCommands {
 
         final Trigger shouldUseEarlyAlign = new Trigger(() ->
                 switch (scorePositionContainer.value.level) {
-                    case L4, L3 -> true;
+                    case AUTO_L4, L4, L3 -> true;
                     case L2, L1 -> false;
                 }
         );
         final Supplier<ExtendWhen> extendWhenSupplier = () ->
                 switch (scorePositionContainer.value.level) {
-                    case L4 -> ExtendWhen.CLOSE;
+                    case AUTO_L4, L4 -> ExtendWhen.CLOSE;
                     case L3 -> ExtendWhen.ROTATION_CLOSE;
                     case L2, L1 -> ExtendWhen.ALWAYS;
                 };
@@ -243,6 +249,8 @@ public class ScoreCommands {
         );
         final Trigger always = new Trigger(() -> true);
 
+        final Container<Boolean> wasEverAtReef = Container.of(false);
+
         final Map<ExtendWhen, Command> extendWhenCommandMap = Map.of(
                 ExtendWhen.CLOSE, Commands.waitUntil(atCloseReef),
                 ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
@@ -269,6 +277,7 @@ public class ScoreCommands {
         return Commands.sequence(
                 Commands.runOnce(updateScorePosition),
                 Commands.runOnce(updateScoringPoseMap),
+                wasEverAtReef.set(false),
                 Commands.either(
                         Commands.runOnce(setSuperstructureGoalToAlign),
                         Commands.runOnce(setSuperstructureGoalToScore),
@@ -302,10 +311,10 @@ public class ScoreCommands {
                                         Commands.run(updateScorePosition)
                                 ),
                                 Commands.runOnce(setSuperstructureGoalToScore),
-                                Commands.waitUntil(atReef),
+                                Commands.waitUntil(atReef.or(wasEverAtReef::get)),
                                 Commands.waitUntil(atSuperstructureSetpoint)
                                         .withTimeout(2),
-                                intake.scoreCoral().asProxy()
+                                intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy()
                         ),
 //                        Commands.sequence(
 //                                Commands.either(
@@ -359,6 +368,7 @@ public class ScoreCommands {
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
                                         .until(atReef),
+                                wasEverAtReef.set(true),
                                 swerve.runWheelXCommand()
                         ),
                         superstructure.toGoal(superstructureGoalContainer)
@@ -378,16 +388,13 @@ public class ScoreCommands {
                 nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
                 .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
-        final Trigger farEnoughAwayFromReef = new Trigger(() -> swerve.getPose().getTranslation()
-                .getDistance(descorePoseSupplier.get().getTranslation()) >= AllowableDistanceAlgaeFromReefMeters);
-
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
                                 .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
-                        swerve.drive(() -> -0.7, () -> 0, () -> 0, false, false)
-                                .until(farEnoughAwayFromReef)
+                        swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
+                                .withTimeout(0.25)
                 ),
                 superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
                 intake.intakeAlgae().asProxy()
@@ -399,16 +406,13 @@ public class ScoreCommands {
                 nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
                 .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
-        final Trigger farEnoughAwayFromReef = new Trigger(() -> swerve.getPose().getTranslation()
-                .getDistance(descorePoseSupplier.get().getTranslation()) >= AllowableDistanceAlgaeFromReefMeters);
-
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
                                 .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
-                        swerve.drive(() -> -0.7, () -> 0, () -> 0, false, false)
-                                .until(farEnoughAwayFromReef)
+                        swerve.drive(() -> -0.65, () -> 0, () -> 0, false, false)
+                                .withTimeout(0.35)
                 ),
                 superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
                 intake.intakeAlgae().asProxy()
@@ -424,7 +428,7 @@ public class ScoreCommands {
                         Commands.deadline(
                                 Commands.waitUntil(superstructure.atSetpoint(goalContainer))
                                         .withTimeout(3)
-                                        .andThen(intake.scoreCoral()),
+                                        .andThen(intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier))),
                                 superstructure.toGoal(goalContainer)
                         ),
                         Commands.waitUntil(superstructure.unsafeToDrive.negate()

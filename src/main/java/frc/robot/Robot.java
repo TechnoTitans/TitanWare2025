@@ -450,12 +450,6 @@ public class Robot extends LoggedRobot {
         ));
 
         autoChooser.addAutoOption(new AutoOption(
-                "Straight",
-                autos::straight,
-                Constants.CompetitionType.TESTING
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
                 "ThreePieceCage1ToReef4And5",
                 autos::threePieceCage1ToReef4And5,
                 Constants.CompetitionType.TESTING
@@ -464,6 +458,12 @@ public class Robot extends LoggedRobot {
         autoChooser.addAutoOption(new AutoOption(
                 "ThreePieceCage4ToReef2And1",
                 autos::threePieceCage4ToReef2And1,
+                Constants.CompetitionType.TESTING
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "CenterBarge",
+                autos::centerBarge,
                 Constants.CompetitionType.TESTING
         ));
     }

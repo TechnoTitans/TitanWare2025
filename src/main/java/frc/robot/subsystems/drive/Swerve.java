@@ -160,8 +160,8 @@ public class Swerve extends SubsystemBase {
         );
 
         this.holonomicDriveController = new HolonomicDriveController(
-                new PIDController(9, 0, 0.15),
-                new PIDController(9, 0, 0.15),
+                new PIDController(8, 0, 0.18),
+                new PIDController(8, 0, 0.18),
                 new PIDController(7, 0, 0.7),
                 new TrapezoidProfile.Constraints(
                         Units.feetToMeters(13),
@@ -191,9 +191,9 @@ public class Swerve extends SubsystemBase {
         );
 
         this.choreoController = new HolonomicChoreoController(
-                new PIDController(5, 0, 0.1),
-                new PIDController(5, 0, 0.1),
-                new PIDController(5, 0, 0.2)
+                new PIDController(10, 0, 0.2),
+                new PIDController(10, 0, 0.2),
+                new PIDController(7, 0, 1.2)
         );
 
         this.linearVoltageSysIdRoutine = makeLinearVoltageSysIdRoutine();

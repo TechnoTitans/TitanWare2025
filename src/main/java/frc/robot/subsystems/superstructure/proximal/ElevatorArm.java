@@ -37,7 +37,7 @@ public class ElevatorArm extends SubsystemBase {
     private final SysIdRoutine voltageSysIdRoutine;
     private final SysIdRoutine torqueCurrentSysIdRoutine;
 
-    private Goal desiredGoal = Goal.STOW;
+    private Goal desiredGoal = Goal.UNSTAND;
     private Goal currentGoal = desiredGoal;
 
     private final PositionSetpoint setpoint;
@@ -73,12 +73,14 @@ public class ElevatorArm extends SubsystemBase {
     public enum Goal {
         DYNAMIC(0),
         STOW(0.106),
+        UNSTAND(0.12),
         UPRIGHT(0.1844),
         HP(Units.degreesToRotations(33)),
         ALGAE_GROUND(0),
         PROCESSOR(Units.degreesToRotations(1)),
         UPPER_ALGAE(0.10303),
         LOWER_ALGAE(0.074219),
+        AUTO_L4(0.169434),
         L4(0.1525),
         L3(0.12842),
         L2(0.1),

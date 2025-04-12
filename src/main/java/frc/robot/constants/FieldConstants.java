@@ -16,8 +16,10 @@ public class FieldConstants {
 
     public static final Transform2d SCORING_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(26.5), 0, Rotation2d.kPi);
+    public static final Transform2d AUTO_SCORING_DISTANCE_OFFSET =
+            new Transform2d(Units.inchesToMeters(7.5), 0, Rotation2d.kZero);
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(26.5), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.kPi);
     public static final Transform2d PROCESSOR_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(32), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_PROCESSOR_DISTANCE_OFFSET =
@@ -25,7 +27,7 @@ public class FieldConstants {
     public static final Transform2d HP_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
         public static final Transform2d SCORING_BARGE_OFFSET =
-            new Transform2d(-Units.inchesToMeters(35.5), 0, Rotation2d.kPi);
+            new Transform2d(-Units.inchesToMeters(33.5), 0, Rotation2d.kPi);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =
@@ -107,6 +109,7 @@ public class FieldConstants {
         }
 
         public enum Level {
+            AUTO_L4(Units.inchesToMeters(72), -90, Transform2d.kZero),
             L4(Units.inchesToMeters(72), -90, Transform2d.kZero),
             L3(Units.inchesToMeters(47.625), -35, Transform2d.kZero),
             L2(Units.inchesToMeters(31.875), -35, Transform2d.kZero),

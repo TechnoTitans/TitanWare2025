@@ -22,8 +22,10 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -56,6 +58,11 @@ public class Intake extends SubsystemBase {
         coralTreeMap.put(0.301, Units.inchesToMeters(10.2));
         coralTreeMap.put(0.321, Units.inchesToMeters(11.0));
         coralTreeMap.put(0.42, Units.inchesToMeters(15.5));
+    }
+
+    public enum ScoreMode {
+        RUN_UNTIL_NO_CORAL,
+        RUN_FOR_TIME
     }
 
     protected static final String LogKey = "Intake";
@@ -211,18 +218,26 @@ public class Intake extends SubsystemBase {
                 .withName("HoldAlgae");
     }
 
-    public Command scoreCoral() {
+    public Command scoreCoral(final Supplier<ScoreMode> scoreModeSupplier) {
         return Commands.sequence(
-                runOnce(() -> this.coralOuttaking = true),
-                toInstantRollerVoltage(-9),
-                Commands.waitUntil(isCoralPresent.negate())
-                        .withTimeout(2),
-                Commands.waitSeconds(0.2),
-                instantStopCommand()
-        )
+                        runOnce(() -> this.coralOuttaking = true),
+                        toInstantRollerVoltage(-9),
+                        Commands.select(
+                                Map.of(
+                                    ScoreMode.RUN_UNTIL_NO_CORAL,
+                                        Commands.waitUntil(isCoralPresent.negate())
+                                                .withTimeout(2),
+                                    ScoreMode.RUN_FOR_TIME,
+                                        Commands.waitSeconds(0.2)
+                                ),
+                                scoreModeSupplier
+                        ),
+                        instantStopCommand()
+                )
                 .finallyDo(() -> this.coralOuttaking = false)
                 .withName("ScoreCoral");
     }
+
 
     public Command ejectCoral() {
         return Commands.sequence(
@@ -258,8 +273,8 @@ public class Intake extends SubsystemBase {
     public Command netAlgae() {
         return Commands.sequence(
                         runOnce(() -> this.algaeOuttaking = true),
-                        toInstantRollerVoltage(7.5),
-                        Commands.waitSeconds(0.2),
+                        toInstantRollerVoltage(8),
+                        Commands.waitSeconds(0.23),
                         instantStopCommand()
                 )
                 .finallyDo(() -> this.algaeOuttaking = false)

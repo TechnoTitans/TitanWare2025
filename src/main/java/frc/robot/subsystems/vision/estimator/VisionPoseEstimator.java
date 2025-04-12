@@ -210,14 +210,18 @@ public class VisionPoseEstimator {
         }
 
         final Pose2d robotPose = maybePose.get();
-        final double yawDifference0 = robotPose0.getRotation().toRotation2d()
+        final double yawDifference0 = robotPose0
+                .getRotation()
+                .toRotation2d()
                 .minus(robotPose.getRotation())
                 .getRadians();
-        final double yawDifference1 = robotPose1.getRotation().toRotation2d()
+        final double yawDifference1 = robotPose1
+                .getRotation()
+                .toRotation2d()
                 .minus(robotPose.getRotation())
                 .getRadians();
 
-        if (yawDifference0 < yawDifference1) {
+        if (Math.abs(MathUtil.angleModulus(yawDifference0)) < Math.abs(MathUtil.angleModulus(yawDifference1))) {
             return VisionResult.valid(
                     VisionResult.Result.SINGLE_TARGET_DISAMBIGUATE_POSE0_RESULT,
                     new VisionResult.VisionUpdate(
@@ -247,6 +251,7 @@ public class VisionPoseEstimator {
             final VisionIO.VisionIOInputs inputs,
             final PhotonPipelineResult pipelineResult
     ) {
+        //TODO: When seeing opposite reef tags super std dev
         final double timestamp = pipelineResult.getTimestampSeconds();
 
         // Time in the past -- give up, since the following if expects times > 0

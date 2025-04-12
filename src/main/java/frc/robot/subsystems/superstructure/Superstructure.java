@@ -25,6 +25,7 @@ public class Superstructure extends VirtualSubsystem {
     public enum Goal {
         NONE(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW),
         DYNAMIC(Elevator.Goal.DYNAMIC, ElevatorArm.Goal.DYNAMIC, IntakeArm.Goal.STOW),
+        UNSTAND(Elevator.Goal.STOW, ElevatorArm.Goal.UNSTAND, IntakeArm.Goal.STOW),
         STOW(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW),
         CLIMB(Elevator.Goal.STOW, ElevatorArm.Goal.CLIMB, IntakeArm.Goal.CLIMB),
         CLIMB_DOWN(Elevator.Goal.CLIMB_DOWN, ElevatorArm.Goal.CLIMB_DOWN, IntakeArm.Goal.CLIMB_DOWN),
@@ -40,9 +41,10 @@ public class Superstructure extends VirtualSubsystem {
         L3(Elevator.Goal.L3, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
         ALIGN_L3(Elevator.Goal.STOW, ElevatorArm.Goal.L3, IntakeArm.Goal.L3),
         L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
+        AUTO_L4(Elevator.Goal.AUTO_L4, ElevatorArm.Goal.AUTO_L4, IntakeArm.Goal.AUTO_L4),
         ALIGN_L4(Elevator.Goal.STOW, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
-        ALIGN_NET(Elevator.Goal.L2, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
+        ALIGN_NET(Elevator.Goal.STOW, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
         FLING_NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.ALGAE_FLING),
 
         SAFE(Elevator.Goal.L3, ElevatorArm.Goal.L4, IntakeArm.Goal.STOW);
@@ -92,7 +94,8 @@ public class Superstructure extends VirtualSubsystem {
     private final ElevatorArm elevatorArm;
     private final IntakeArm intakeArm;
 
-    private Goal desiredGoal = Goal.STOW;
+    //TODO: change to stow right after this has happened
+    private Goal desiredGoal = Goal.UNSTAND;
     private Goal runningGoal = desiredGoal;
     private Goal atGoal = desiredGoal;
 

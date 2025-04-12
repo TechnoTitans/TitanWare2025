@@ -103,7 +103,8 @@ public class GamepieceState extends VirtualSubsystem {
         isCoralHolding.onTrue(intake.holdCoral());
 
         intake.isCoralOuttaking.and(isCoralHolding).onTrue(setCoralState(State.SCORING));
-        intake.isCoralOuttaking.and(intake.isCoralPresent.negate()).onTrue(setCoralState(State.NONE));
+        intake.isCoralPresent.negate()
+                .onTrue(setCoralState(State.NONE));
         intake.isCoralOuttaking.negate().and(isCoralScoring).and(intake.isCoralPresent)
                 .onTrue(setCoralState(State.HOLDING));
 
