@@ -16,6 +16,7 @@ public enum TitanCamera {
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.SEE3CAM_24CUG,
             1,
+            1,
             true,
             new TitanCameraCalibration()
                     .withCalibration(
@@ -68,6 +69,7 @@ public enum TitanCamera {
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.SEE3CAM_24CUG,
             2,
+            9,
             true,
             new TitanCameraCalibration()
                     .withCalibration(
@@ -119,6 +121,7 @@ public enum TitanCamera {
             Constants.Vision.ROBOT_TO_FL_BOTTOM_APRILTAG,
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.ARDUCAM_OV9281,
+            4,
             4,
             true,
             new TitanCameraCalibration()
@@ -172,6 +175,7 @@ public enum TitanCamera {
     private final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
     private final CameraProperties cameraProperties;
     private final double stdDevFactor;
+    private final double oppositeReefStdFactor;
     private final TitanCameraCalibration cameraCalibration;
     private final boolean driverCam;
 
@@ -181,6 +185,7 @@ public enum TitanCamera {
             final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams,
             final CameraProperties cameraProperties,
             final double stdDevFactor,
+            final double oppositeReefStdFactor,
             final boolean requiresCalibration,
             final TitanCameraCalibration titanCameraCalibration,
             final boolean driverCam
@@ -190,6 +195,7 @@ public enum TitanCamera {
         this.constrainedPnpParams = constrainedPnpParams;
         this.cameraProperties = cameraProperties;
         this.stdDevFactor = stdDevFactor;
+        this.oppositeReefStdFactor = oppositeReefStdFactor;
         this.cameraCalibration = titanCameraCalibration;
         this.driverCam = driverCam;
 
@@ -223,6 +229,7 @@ public enum TitanCamera {
                 constrainedPnpParams,
                 cameraProperties,
                 1.0,
+                1.0,
                 false,
                 TitanCameraCalibration.perfect(cameraProperties),
                 driverCam
@@ -245,7 +252,13 @@ public enum TitanCamera {
         return cameraProperties;
     }
 
-    public double getStdDevFactor() { return stdDevFactor; }
+    public double getStdDevFactor() {
+        return stdDevFactor;
+    }
+
+    public double getOppositeReefStdFactor() {
+        return oppositeReefStdFactor;
+    }
 
     public TitanCameraCalibration getCameraCalibration() {
         return cameraCalibration;

@@ -14,7 +14,9 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Robot;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
@@ -219,7 +221,12 @@ public class PhotonVision extends VirtualSubsystem {
         return RejectionReason.DID_NOT_REJECT;
     }
 
-    public Vector<N3> calculateStdDevs(final VisionResult.VisionUpdate visionUpdate, final double stdDevFactor) {
+    public Vector<N3> calculateStdDevs(
+            final VisionResult.VisionUpdate visionUpdate,
+            final List<Integer> oppositeReefTagIds,
+            final double stdDevFactor,
+            final double oppositeReefStdFactor
+    ) {
         if (visionUpdate.targetsUsed().isEmpty()) {
             return VecBuilder.fill(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
         }
@@ -230,14 +237,28 @@ public class PhotonVision extends VirtualSubsystem {
             totalDistanceMeters += target.getBestCameraToTarget().getTranslation().getNorm();
         }
 
+        double stdDev = stdDevFactor;
+        if (stdDevFactor != oppositeReefStdFactor) {
+            for (final PhotonTrackedTarget target : visionUpdate.targetsUsed()) {
+                if (oppositeReefTagIds.contains(target.getFiducialId())) {
+                    stdDev = oppositeReefStdFactor;
+                    break;
+                }
+            }
+        }
+
         final double avgDistanceMeters = totalDistanceMeters / nTargetsUsed;
         return Constants.Vision.VISION_STD_DEV_COEFFS
                 .times(Math.pow(avgDistanceMeters, 2))
                 .div(nTargetsUsed)
-                .times(stdDevFactor);
+                .times(stdDev);
     }
 
     private void update() {
+        final List<Integer> oppositeReefTagIds = Robot.IsRedAlliance.getAsBoolean()
+                ? FieldConstants.Reef.BLUE_APRILTAG_IDS
+                : FieldConstants.Reef.RED_APRILTAG_IDS;
+
         for (
                 final Map.Entry<? extends VisionIO, VisionIO.VisionIOInputs>
                         visionIOInputsEntry : aprilTagVisionIOInputsMap.entrySet()
@@ -275,7 +296,12 @@ public class PhotonVision extends VirtualSubsystem {
                     continue;
                 }
 
-                final Vector<N3> stdDevs = calculateStdDevs(visionUpdate, inputs.stdDevFactor);
+                final Vector<N3> stdDevs = calculateStdDevs(
+                        visionUpdate,
+                        oppositeReefTagIds,
+                        inputs.stdDevFactor,
+                        inputs.oppositeReefStdFactor
+                );
                 Logger.recordOutput(logKey + "/StdDevs", stdDevs.getData());
 
                 lastVisionUpdateMap.put(visionIO, visionResult);

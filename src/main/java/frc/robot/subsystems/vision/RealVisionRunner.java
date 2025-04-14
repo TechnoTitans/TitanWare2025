@@ -29,6 +29,7 @@ public class RealVisionRunner implements PhotonVisionRunner {
         private final String cameraName;
 
         private final double stdDevFactor;
+        private final double oppositeReefStdFactor;
         private final Transform3d robotToCamera;
         private final PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
 
@@ -43,6 +44,7 @@ public class RealVisionRunner implements PhotonVisionRunner {
             this.cameraName = photonCamera.getName();
 
             this.stdDevFactor = titanCamera.getStdDevFactor();
+            this.oppositeReefStdFactor = titanCamera.getOppositeReefStdFactor();
             this.robotToCamera = titanCamera.getRobotToCameraTransform();
             this.constrainedPnpParams = titanCamera.getConstrainedPnpParams();
 
@@ -61,6 +63,7 @@ public class RealVisionRunner implements PhotonVisionRunner {
             inputs.name = cameraName;
             inputs.isConnected = photonCamera.isConnected();
             inputs.stdDevFactor = stdDevFactor;
+            inputs.oppositeReefStdFactor = oppositeReefStdFactor;
             inputs.robotToCamera = robotToCamera;
             inputs.constrainedPnpParams = constrainedPnpParams;
 

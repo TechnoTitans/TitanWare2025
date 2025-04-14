@@ -414,6 +414,24 @@ public class Robot extends LoggedRobot {
         autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
+                "ThreePieceCage1",
+                autos::threePieceCage1,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "ThreePieceCage4",
+                autos::threePieceCage4,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
+                "CenterBarge",
+                autos::centerBarge,
+                Constants.CompetitionType.COMPETITION
+        ));
+
+        autoChooser.addAutoOption(new AutoOption(
                 "TwoPieceCage0",
                 autos::twoPieceCage0,
                 Constants.CompetitionType.COMPETITION
@@ -447,24 +465,6 @@ public class Robot extends LoggedRobot {
                 "TwoPieceCage5",
                 autos::twoPieceCage5,
                 Constants.CompetitionType.COMPETITION
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
-                "ThreePieceCage1ToReef4And5",
-                autos::threePieceCage1ToReef4And5,
-                Constants.CompetitionType.TESTING
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
-                "ThreePieceCage4ToReef2And1",
-                autos::threePieceCage4ToReef2And1,
-                Constants.CompetitionType.TESTING
-        ));
-
-        autoChooser.addAutoOption(new AutoOption(
-                "CenterBarge",
-                autos::centerBarge,
-                Constants.CompetitionType.TESTING
         ));
     }
 

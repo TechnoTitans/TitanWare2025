@@ -20,6 +20,8 @@ public class FieldConstants {
             new Transform2d(Units.inchesToMeters(7.5), 0, Rotation2d.kZero);
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.kPi);
+    public static final Transform2d ALGAE_SAFE_REEF_OFFSET =
+            new Transform2d(-Units.inchesToMeters(12), 0, Rotation2d.kZero);
     public static final Transform2d PROCESSOR_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(32), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_PROCESSOR_DISTANCE_OFFSET =
@@ -126,6 +128,9 @@ public class FieldConstants {
                 this.scoringOffset = scoringOffset;
             }
         }
+
+        public static final List<Integer> BLUE_APRILTAG_IDS = List.of(18, 19, 20, 21, 22, 17);
+        public static final List<Integer> RED_APRILTAG_IDS = List.of(7, 6, 11, 10, 9, 8);
 
         public static final Translation2d BLUE_CENTER =
                 new Translation2d(Units.inchesToMeters(176.746), Units.inchesToMeters(158.501));
