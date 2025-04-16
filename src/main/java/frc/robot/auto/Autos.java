@@ -353,7 +353,7 @@ public class Autos {
         final ReefState.Branch oneRightL4 = new ReefState.Branch(Reef.Face.ONE, Reef.Side.RIGHT, Reef.Level.AUTO_L4);
         reef2ToLeftHP.done().onTrue(
                 Commands.sequence(
-                        driveIntoCoralStation(ScoreCommands.CoralStation.RIGHT),
+                        driveIntoCoralStation(ScoreCommands.CoralStation.LEFT),
                         Commands.parallel(
                                 leftHPToReef1Right.cmd(),
                                 Commands.sequence(
@@ -380,7 +380,7 @@ public class Autos {
         final ReefState.Branch oneLeftL4 = new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.AUTO_L4);
         reef1ToLeftHP.done().onTrue(
                 Commands.sequence(
-                        driveIntoCoralStation(ScoreCommands.CoralStation.RIGHT),
+                        driveIntoCoralStation(ScoreCommands.CoralStation.LEFT),
                         Commands.parallel(
                                 leftHPToReef1Left.cmd(),
                                 Commands.sequence(
