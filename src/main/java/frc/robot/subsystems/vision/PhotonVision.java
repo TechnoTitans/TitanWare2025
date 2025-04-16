@@ -1,6 +1,7 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -223,7 +224,7 @@ public class PhotonVision extends VirtualSubsystem {
 
     public Vector<N3> calculateStdDevs(
             final VisionResult.VisionUpdate visionUpdate,
-            final List<Integer> oppositeReefTagIds,
+            final Set<Integer> oppositeReefTagIds,
             final double stdDevFactor,
             final double oppositeReefStdFactor
     ) {
@@ -238,7 +239,7 @@ public class PhotonVision extends VirtualSubsystem {
         }
 
         double stdDev = stdDevFactor;
-        if (stdDevFactor != oppositeReefStdFactor) {
+        if (MathUtil.isNear(stdDevFactor, oppositeReefStdFactor, 1E-6)) {
             for (final PhotonTrackedTarget target : visionUpdate.targetsUsed()) {
                 if (oppositeReefTagIds.contains(target.getFiducialId())) {
                     stdDev = oppositeReefStdFactor;
@@ -255,7 +256,7 @@ public class PhotonVision extends VirtualSubsystem {
     }
 
     private void update() {
-        final List<Integer> oppositeReefTagIds = Robot.IsRedAlliance.getAsBoolean()
+        final Set<Integer> oppositeReefTagIds = Robot.IsRedAlliance.getAsBoolean()
                 ? FieldConstants.Reef.BLUE_APRILTAG_IDS
                 : FieldConstants.Reef.RED_APRILTAG_IDS;
 

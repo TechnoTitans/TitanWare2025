@@ -251,7 +251,6 @@ public class VisionPoseEstimator {
             final VisionIO.VisionIOInputs inputs,
             final PhotonPipelineResult pipelineResult
     ) {
-        //TODO: When seeing opposite reef tags super std dev
         final double timestamp = pipelineResult.getTimestampSeconds();
 
         // Time in the past -- give up, since the following if expects times > 0

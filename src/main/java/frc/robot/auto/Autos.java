@@ -220,7 +220,7 @@ public class Autos {
     }
 
     public AutoRoutine threePieceCage1() {
-        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage1ToReef4And5");
+        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage1");
         final AutoTrajectory startToReef = routine.trajectory("Cage1Reef4");
         final AutoTrajectory reef4ToRightHP = routine.trajectory("Reef4ToRightHP");
         final AutoTrajectory firstRightHPToReef5 = routine.trajectory("RightHPToReef5Right");
@@ -315,7 +315,7 @@ public class Autos {
     }
 
     public AutoRoutine threePieceCage4() {
-        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage4ToReef2And1");
+        final AutoRoutine routine = autoFactory.newRoutine("threePieceCage4");
         final AutoTrajectory startToReef = routine.trajectory("Cage4Reef2");
         final AutoTrajectory reef2ToLeftHP = routine.trajectory("Reef2ToLeftHP");
         final AutoTrajectory leftHPToReef1Right = routine.trajectory("LeftHPToReef1Right");

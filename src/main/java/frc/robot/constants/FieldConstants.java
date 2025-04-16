@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class FieldConstants {
     //borrowed from mechanical advantage :)
@@ -129,8 +130,8 @@ public class FieldConstants {
             }
         }
 
-        public static final List<Integer> BLUE_APRILTAG_IDS = List.of(18, 19, 20, 21, 22, 17);
-        public static final List<Integer> RED_APRILTAG_IDS = List.of(7, 6, 11, 10, 9, 8);
+        public static final Set<Integer> BLUE_APRILTAG_IDS = Set.of(18, 19, 20, 21, 22, 17);
+        public static final Set<Integer> RED_APRILTAG_IDS = Set.of(7, 6, 11, 10, 9, 8);
 
         public static final Translation2d BLUE_CENTER =
                 new Translation2d(Units.inchesToMeters(176.746), Units.inchesToMeters(158.501));
