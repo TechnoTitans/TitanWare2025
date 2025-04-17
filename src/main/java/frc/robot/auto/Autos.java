@@ -101,11 +101,11 @@ public class Autos {
         final Trigger atCloseReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
-                        0.3,
-                        Rotation2d.fromDegrees(8)
+                        0.28,
+                        Rotation2d.fromDegrees(7)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.38,
+                        0.35,
                         Math.PI
                 )
         );
@@ -133,7 +133,7 @@ public class Autos {
         final Trigger atReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
-                        0.05,
+                        0.045,
                         Rotation2d.fromDegrees(4)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
@@ -145,11 +145,11 @@ public class Autos {
         final Trigger atCloseReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
-                        0.3,
-                        Rotation2d.fromDegrees(8)
+                        0.28,
+                        Rotation2d.fromDegrees(7)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.38,
+                        0.35,
                         Math.PI
                 )
         );
