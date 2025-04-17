@@ -105,7 +105,7 @@ public class Autos {
                         Rotation2d.fromDegrees(8)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.4,
+                        0.38,
                         Math.PI
                 )
         );
@@ -149,7 +149,7 @@ public class Autos {
                         Rotation2d.fromDegrees(8)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.4,
+                        0.38,
                         Math.PI
                 )
         );

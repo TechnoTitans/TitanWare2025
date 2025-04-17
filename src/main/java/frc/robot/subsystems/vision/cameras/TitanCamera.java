@@ -16,7 +16,7 @@ public enum TitanCamera {
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.SEE3CAM_24CUG,
             1,
-            2,
+            9,
             true,
             new TitanCameraCalibration()
                     .withCalibration(
@@ -122,7 +122,7 @@ public enum TitanCamera {
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.ARDUCAM_OV9281,
             2,
-            4,
+            10,
             true,
             new TitanCameraCalibration()
                     .withCalibration(
