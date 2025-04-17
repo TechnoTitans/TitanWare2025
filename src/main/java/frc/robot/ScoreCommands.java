@@ -317,55 +317,6 @@ public class ScoreCommands {
                                         .withTimeout(2),
                                 intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy()
                         ),
-//                        Commands.sequence(
-//                                Commands.either(
-//                                        Commands.runOnce(setSuperstructureGoalToAlign),
-//                                        Commands.runOnce(setSuperstructureGoalToScore),
-//                                        shouldUseEarlyAlign
-//                                ),
-//                                Commands.select(
-//                                        Map.of(
-//                                                ExtendWhen.CLOSE, Commands.waitUntil(atCloseReef),
-//                                                ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
-//                                                ExtendWhen.ALWAYS, Commands.none()
-//                                        ),
-//                                        extendWhenSupplier
-//                                ),
-//                                Commands.runOnce(setSuperstructureGoalToScore),
-//                                Commands.waitUntil(atReef),
-//                                Commands.waitUntil(atSuperstructureSetpoint)
-//                                        .withTimeout(2),
-//                                intake.scoreCoral().asProxy()
-//                        )
-
-//                        Commands.sequence(
-//                                Commands.repeatingSequence(
-//                                        Commands.deadline(
-//                                                Commands.select(
-//                                                        Map.of(
-//                                                                ExtendWhen.CLOSE, Commands.waitUntil(atCloseReef),
-//                                                                ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
-//                                                                ExtendWhen.ALWAYS, Commands.none()
-//                                                        ),
-//                                                        extendWhenSupplier
-//                                                ),
-//                                                Commands.run(updateScorePosition),
-//                                                Commands.either(
-//                                                        Commands.runOnce(setSuperstructureGoalToAlign),
-//                                                        Commands.runOnce(setSuperstructureGoalToScore),
-//                                                        shouldUseEarlyAlign
-//                                                ).repeatedly()
-//                                        ),
-//                                        Commands.runOnce(setSuperstructureGoalToScore)
-//                                ).until(atCloseReef),
-//                                Commands.sequence(
-//                                        Commands.runOnce(setSuperstructureGoalToScore),
-//                                        Commands.waitUntil(atReef),
-//                                        Commands.waitUntil(atSuperstructureSetpoint)
-//                                                .withTimeout(2),
-//                                        intake.scoreCoral().asProxy()
-//                                )
-//                        ),
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
                                         .until(atReef),
@@ -444,20 +395,29 @@ public class ScoreCommands {
 
         final DoubleSupplier axisTarget = () -> FieldConstants.getScoringBargeCenterCage().getX();
         final DoubleSupplier robotX = () -> swerve.getPose().getX();
+        final DoubleSupplier robotY = () -> swerve.getPose().getY();
+
+        final Trigger allowedToScore = new Trigger(() -> {
+            if (Robot.IsRedAlliance.getAsBoolean()) {
+                return robotY.getAsDouble() > FieldConstants.FIELD_WIDTH_Y_METERS / 2.0;
+            } else {
+                return robotY.getAsDouble() < FieldConstants.FIELD_WIDTH_Y_METERS / 2.0;
+            }
+        });
 
         return Commands.sequence(
                 superstructureGoal.set(Superstructure.Goal.STOW),
                 Commands.deadline(
                         Commands.sequence(
                                 Commands.parallel(
-                                        superstructureGoal.set(Superstructure.Goal.ALIGN_NET),
-                                        swerve.driveToAxisFacingAngle(
-                                                axisTarget,
-                                                Swerve.DriveAxis.X,
-                                                () -> Robot.IsRedAlliance.getAsBoolean()
-                                                        ? Rotation2d.kPi
-                                                        : Rotation2d.kZero
-                                        )
+                                        superstructureGoal.set(Superstructure.Goal.ALIGN_NET)
+//                                        swerve.driveToAxisFacingAngle(
+//                                                axisTarget,
+//                                                Swerve.DriveAxis.X,
+//                                                () -> Robot.IsRedAlliance.getAsBoolean()
+//                                                        ? Rotation2d.kPi
+//                                                        : Rotation2d.kZero
+//                                        )
                                 ).onlyIf(swerve.atAxisTrigger(axisTarget, robotX).negate()),
                                 swerve.wheelXCommand(),
                                 superstructureGoal.set(Superstructure.Goal.NET),
@@ -466,7 +426,9 @@ public class ScoreCommands {
                         ),
                         superstructure.toGoal(superstructureGoal)
                 )
-        ).withName("ScoreNetFlingFacingBarge");
+        )
+                .onlyIf(allowedToScore)
+                .withName("ScoreNetFlingFacingBarge");
     }
 
     public Command readyScoreProcessor() {
