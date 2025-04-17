@@ -105,13 +105,13 @@ public class Autos {
                         Rotation2d.fromDegrees(7)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.35,
+                        0.3,
                         Math.PI
                 )
         );
 
         return Commands.sequence(
-                superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4),
+                superstructure.toInstantGoal(Superstructure.Goal.ALIGN_AUTO_L4),
                 Commands.waitUntil(atCloseReef),
                 superstructure.runGoal(goal)
         );
@@ -149,7 +149,7 @@ public class Autos {
                         Rotation2d.fromDegrees(7)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.35,
+                        0.3,
                         Math.PI
                 )
         );
@@ -164,7 +164,7 @@ public class Autos {
                                 Commands.deadline(
                                         Commands.sequence(
                                                 Commands.waitUntil(superstructure.atSetpoint(goal))
-                                                        .withTimeout(1.9),
+                                                        .withTimeout(2.5),
                                                 Commands.waitUntil(atReef.or(wasEverAtReef::get)),
                                                 intake.scoreCoral(() -> Intake.ScoreMode.RUN_UNTIL_NO_CORAL).asProxy()
                                         ),
