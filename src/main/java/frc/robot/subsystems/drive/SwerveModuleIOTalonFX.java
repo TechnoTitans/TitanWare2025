@@ -259,7 +259,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
 
     @Override
     public void setNeutralMode(final NeutralModeValue neutralMode) {
-        final StatusCode refreshCode = driveMotor.getConfigurator().refresh(turnTalonFXConfiguration);
+        final StatusCode refreshCode = driveMotor.getConfigurator().refresh(driveTalonFXConfiguration);
         if (!refreshCode.isOK()) {
             DriverStation.reportWarning(
                     String.format(
@@ -271,7 +271,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
             return;
         }
 
-        turnTalonFXConfiguration.MotorOutput.NeutralMode = neutralMode;
-        driveMotor.getConfigurator().apply(turnTalonFXConfiguration);
+        driveTalonFXConfiguration.MotorOutput.NeutralMode = neutralMode;
+        driveMotor.getConfigurator().apply(driveTalonFXConfiguration);
     }
 }
