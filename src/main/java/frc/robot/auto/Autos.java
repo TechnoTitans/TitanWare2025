@@ -164,7 +164,7 @@ public class Autos {
                                 Commands.deadline(
                                         Commands.sequence(
                                                 Commands.waitUntil(superstructure.atSetpoint(goal))
-                                                        .withTimeout(2.5),
+                                                        .withTimeout(3),
                                                 Commands.waitUntil(atReef.or(wasEverAtReef::get)),
                                                 intake.scoreCoral(() -> Intake.ScoreMode.RUN_UNTIL_NO_CORAL).asProxy()
                                         ),
