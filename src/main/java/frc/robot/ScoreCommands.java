@@ -399,9 +399,9 @@ public class ScoreCommands {
 
         final Trigger allowedToScore = new Trigger(() -> {
             if (Robot.IsRedAlliance.getAsBoolean()) {
-                return robotY.getAsDouble() > FieldConstants.FIELD_WIDTH_Y_METERS / 2.0;
-            } else {
                 return robotY.getAsDouble() < FieldConstants.FIELD_WIDTH_Y_METERS / 2.0;
+            } else {
+                return robotY.getAsDouble() > FieldConstants.FIELD_WIDTH_Y_METERS / 2.0;
             }
         });
 
