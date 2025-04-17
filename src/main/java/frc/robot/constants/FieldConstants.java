@@ -31,7 +31,7 @@ public class FieldConstants {
             new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
     //TODO: Maybe move more back because it might hit barge tag
     public static final Transform2d SCORING_BARGE_OFFSET =
-            new Transform2d(-Units.inchesToMeters(33.5), 0, Rotation2d.kPi);
+            new Transform2d(-Units.inchesToMeters(36.5), 0, Rotation2d.kPi);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =
