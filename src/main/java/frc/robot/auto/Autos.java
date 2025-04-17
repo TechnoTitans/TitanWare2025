@@ -24,6 +24,7 @@ import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.Container;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.ArrayList;
 import java.util.function.Supplier;
 
 public class Autos {
@@ -217,6 +218,64 @@ public class Autos {
         );
 
         return routine;
+    }
+
+    private Command descoreUpperAlgae() {
+        final Supplier<Pose2d> descorePoseSupplier = () -> swerve.getPose().
+                nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
+                .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
+
+        final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
+                .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
+
+        final Trigger safeFromReef = swerve.atPoseTrigger(
+                safeReefPoseSupplier,
+                new HolonomicDriveController.PositionTolerance(
+                        0.1,
+                        Rotation2d.fromDegrees(8)
+                )
+        );
+
+        return Commands.deadline(
+                Commands.sequence(
+                        swerve.runToPose(descorePoseSupplier)
+                                .until(gamepieceState.hasAlgae),
+                        Commands.waitSeconds(0.2),
+                        swerve.runToPose(safeReefPoseSupplier).until(safeFromReef)
+                                .withTimeout(0.35)
+                ),
+                superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
+                intake.intakeAlgae().asProxy()
+        ).withName("DescoreUpperAlgae");
+    }
+
+    private Command descoreLowerAlgae() {
+        final Supplier<Pose2d> descorePoseSupplier = () -> swerve.getPose().
+                nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
+                .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
+
+        final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
+                .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
+
+        final Trigger safeFromReef = swerve.atPoseTrigger(
+                safeReefPoseSupplier,
+                new HolonomicDriveController.PositionTolerance(
+                        0.1,
+                        Rotation2d.fromDegrees(8)
+                )
+        );
+
+        return Commands.deadline(
+                Commands.sequence(
+                        swerve.runToPose(descorePoseSupplier)
+                                .until(gamepieceState.hasAlgae),
+                        Commands.waitSeconds(0.2),
+                        swerve.runToPose(safeReefPoseSupplier).until(safeFromReef)
+                                .withTimeout(0.35)
+                ),
+                superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
+                intake.intakeAlgae().asProxy()
+        ).withName("DescoreLowerAlgae");
     }
 
     public AutoRoutine threePieceCage1() {
@@ -428,7 +487,7 @@ public class Autos {
                 Commands.sequence(
                         scoreAtLevel(threeRightL4)
                                 .onlyIf(gamepieceState.hasCoral),
-                        scoreCommands.descoreLowerAlgae(),
+                        descoreLowerAlgae(),
                         Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.STOW)),
                         reef3ToBarge.cmd()
                 )

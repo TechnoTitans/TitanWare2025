@@ -389,24 +389,13 @@ public class ScoreCommands {
                 nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
                 .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
-        final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
-                .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
-
-        final Trigger safeFromReef = swerve.atPoseTrigger(
-                safeReefPoseSupplier,
-                new HolonomicDriveController.PositionTolerance(
-                        0.2,
-                        Rotation2d.fromDegrees(8)
-                )
-        );
-
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
                                 .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
-                        swerve.runToPose(safeReefPoseSupplier).until(safeFromReef)
-                                .withTimeout(0.35)
+                        swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
+                                .withTimeout(0.3)
                 ),
                 superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
                 intake.intakeAlgae().asProxy()
@@ -418,24 +407,13 @@ public class ScoreCommands {
                 nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
                 .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
-        final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
-                .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
-
-        final Trigger safeFromReef = swerve.atPoseTrigger(
-                safeReefPoseSupplier,
-                new HolonomicDriveController.PositionTolerance(
-                        0.2,
-                        Rotation2d.fromDegrees(8)
-                )
-        );
-
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
                                 .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
-                        swerve.runToPose(safeReefPoseSupplier).until(safeFromReef)
-                                .withTimeout(0.35)
+                        swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
+                                .withTimeout(0.3)
                 ),
                 superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
                 intake.intakeAlgae().asProxy()
