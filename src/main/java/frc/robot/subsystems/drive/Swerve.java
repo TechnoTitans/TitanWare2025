@@ -190,7 +190,7 @@ public class Swerve extends SubsystemBase {
                 () -> holonomicPoseTarget
         );
 
-       this.holdAxisPID = new PIDController(5, 0, 0.2);
+       this.holdAxisPID = new PIDController(5, 0, 0.1);
 
         this.choreoController = new HolonomicChoreoController(
                 new PIDController(10, 0, 0.2),
