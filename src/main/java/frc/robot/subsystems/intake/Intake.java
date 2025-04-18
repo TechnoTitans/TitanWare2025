@@ -221,14 +221,19 @@ public class Intake extends SubsystemBase {
     public Command scoreCoral(final Supplier<ScoreMode> scoreModeSupplier) {
         return Commands.sequence(
                         runOnce(() -> this.coralOuttaking = true),
-                        toInstantRollerVoltage(-9),
                         Commands.select(
                                 Map.of(
                                     ScoreMode.RUN_UNTIL_NO_CORAL,
-                                        Commands.waitUntil(isCoralPresent.negate())
-                                                .withTimeout(2),
+                                        Commands.sequence(
+                                                toInstantRollerVoltage(-9),
+                                                Commands.waitUntil(isCoralPresent.negate())
+                                                        .withTimeout(2)
+                                        ),
                                     ScoreMode.RUN_FOR_TIME,
-                                        Commands.waitSeconds(0.2)
+                                        Commands.sequence(
+                                                toInstantRollerVoltage(-8),
+                                                Commands.waitSeconds(0.2)
+                                        )
                                 ),
                                 scoreModeSupplier
                         ),
