@@ -22,7 +22,7 @@ public class FieldConstants {
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.kPi);
     public static final Transform2d ALGAE_SAFE_REEF_OFFSET =
-            new Transform2d(-Units.inchesToMeters(12), 0, Rotation2d.kZero);
+            new Transform2d(-Units.inchesToMeters(18), 0, Rotation2d.kZero);
     public static final Transform2d PROCESSOR_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(32), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_PROCESSOR_DISTANCE_OFFSET =

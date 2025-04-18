@@ -346,7 +346,7 @@ public class ScoreCommands {
                                 .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
                         swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
-                                .withTimeout(0.3)
+                                .withTimeout(0.35)
                 ),
                 superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
                 intake.intakeAlgae().asProxy()
@@ -364,7 +364,7 @@ public class ScoreCommands {
                                 .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
                         swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
-                                .withTimeout(0.3)
+                                .withTimeout(0.35)
                 ),
                 superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
                 intake.intakeAlgae().asProxy()
