@@ -21,6 +21,7 @@ import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
@@ -524,9 +525,11 @@ public class Robot extends LoggedRobot {
                         .alongWith(intake.intakeCoralHP())
                 );
 
+        final ScoreCommands.ScorePosition scorePosition = new ScoreCommands.ScorePosition(FieldConstants.Reef.Side.LEFT, ScoreCommands.Level.AUTO_L4);
+
         this.coController.rightTrigger(0.5, teleopEventLoop)
-                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(rawScorePositionSupplier))
-                .onFalse(scoreCommands.scoreAtPosition(rawScorePositionSupplier));
+                .whileTrue(scoreCommands.readyScoreAtPositionNoLineup(() -> scorePosition))
+                .onFalse(scoreCommands.scoreAtPosition(()-> scorePosition));
 
         this.coController.x(teleopEventLoop).whileTrue(scoreCommands.intakeAlgaeFromGround());
 
