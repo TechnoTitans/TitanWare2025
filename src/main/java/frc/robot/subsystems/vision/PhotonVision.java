@@ -238,7 +238,7 @@ public class PhotonVision extends VirtualSubsystem {
         }
 
         double stdDev = stdDevFactor;
-        if (MathUtil.isNear(stdDevFactor, oppositeReefStdFactor, 1E-6)) {
+        if (!MathUtil.isNear(stdDevFactor, oppositeReefStdFactor, 1E-6)) {
             for (final PhotonTrackedTarget target : visionUpdate.targetsUsed()) {
                 if (oppositeReefTagIds.contains(target.getFiducialId())) {
                     stdDev = oppositeReefStdFactor;
