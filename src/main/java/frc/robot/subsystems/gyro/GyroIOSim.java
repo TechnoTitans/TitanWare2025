@@ -56,13 +56,13 @@ public class GyroIOSim implements GyroIO {
 
         this.deltaTime = new DeltaTime(true);
 
-        this.yaw = pigeon.getYaw();
-        this.pitch = pigeon.getPitch();
-        this.roll = pigeon.getRoll();
-        this.yawVelocity = pigeon.getAngularVelocityZWorld();
-        this.pitchVelocity = pigeon.getAngularVelocityXWorld();
-        this.rollVelocity = pigeon.getAngularVelocityYWorld();
-        this.faultHardware = pigeon.getFault_Hardware();
+        this.yaw = pigeon.getYaw(false);
+        this.pitch = pigeon.getPitch(false);
+        this.roll = pigeon.getRoll(false);
+        this.yawVelocity = pigeon.getAngularVelocityZWorld(false);
+        this.pitchVelocity = pigeon.getAngularVelocityXWorld(false);
+        this.rollVelocity = pigeon.getAngularVelocityYWorld(false);
+        this.faultHardware = pigeon.getFault_Hardware(false);
 
         this.timestampBuffer = odometryThreadRunner.makeTimestampBuffer();
         this.yawSignalBuffer = odometryThreadRunner.registerSignal(pigeon, this.yaw);

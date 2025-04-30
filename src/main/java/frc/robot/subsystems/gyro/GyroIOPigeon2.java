@@ -36,13 +36,13 @@ public class GyroIOPigeon2 implements GyroIO {
     ) {
         this.pigeon = new Pigeon2(gyroConstants.gyroId(), gyroConstants.CANBus());
 
-        this.yaw = pigeon.getYaw();
-        this.pitch = pigeon.getPitch();
-        this.roll = pigeon.getRoll();
-        this.yawVelocity = pigeon.getAngularVelocityZWorld();
-        this.pitchVelocity = pigeon.getAngularVelocityYWorld();
-        this.rollVelocity = pigeon.getAngularVelocityXWorld();
-        this.faultHardware = pigeon.getFault_Hardware();
+        this.yaw = pigeon.getYaw(false);
+        this.pitch = pigeon.getPitch(false);
+        this.roll = pigeon.getRoll(false);
+        this.yawVelocity = pigeon.getAngularVelocityZWorld(false);
+        this.pitchVelocity = pigeon.getAngularVelocityYWorld(false);
+        this.rollVelocity = pigeon.getAngularVelocityXWorld(false);
+        this.faultHardware = pigeon.getFault_Hardware(false);
 
         this.timestampBuffer = odometryThreadRunner.makeTimestampBuffer();
         this.yawSignalBuffer = odometryThreadRunner.registerSignal(pigeon, this.yaw);

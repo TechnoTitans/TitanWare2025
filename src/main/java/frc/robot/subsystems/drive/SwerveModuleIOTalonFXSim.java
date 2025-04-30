@@ -134,14 +134,14 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
 
         this.deltaTime = new DeltaTime(true);
 
-        this.drivePosition = driveMotor.getPosition();
-        this.driveVelocity = driveMotor.getVelocity();
-        this.driveTorqueCurrent = driveMotor.getTorqueCurrent();
-        this.driveDeviceTemp = driveMotor.getDeviceTemp();
-        this.turnPosition = turnEncoder.getAbsolutePosition();
-        this.turnVelocity = turnEncoder.getVelocity();
-        this.turnTorqueCurrent = turnMotor.getTorqueCurrent();
-        this.turnDeviceTemp = turnMotor.getDeviceTemp();
+        this.drivePosition = driveMotor.getPosition(false);
+        this.driveVelocity = driveMotor.getVelocity(false);
+        this.driveTorqueCurrent = driveMotor.getTorqueCurrent(false);
+        this.driveDeviceTemp = driveMotor.getDeviceTemp(false);
+        this.turnPosition = turnEncoder.getAbsolutePosition(false);
+        this.turnVelocity = turnEncoder.getVelocity(false);
+        this.turnTorqueCurrent = turnMotor.getTorqueCurrent(false);
+        this.turnDeviceTemp = turnMotor.getDeviceTemp(false);
 
         this.timestampBuffer = odometryThreadRunner.makeTimestampBuffer();
         this.drivePositionSignalBuffer = odometryThreadRunner.registerSignal(driveMotor, this.drivePosition);

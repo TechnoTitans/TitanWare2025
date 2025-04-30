@@ -99,16 +99,16 @@ public class ElevatorIOSim implements ElevatorIO {
         this.voltageOut = new VoltageOut(0);
         this.follower = new Follower(masterMotor.getDeviceID(), false);
 
-        this.masterPosition = masterMotor.getPosition();
-        this.masterVelocity = masterMotor.getVelocity();
-        this.masterVoltage = masterMotor.getMotorVoltage();
-        this.masterTorqueCurrent = masterMotor.getTorqueCurrent();
-        this.masterDeviceTemp = masterMotor.getDeviceTemp();
-        this.followerPosition = followerMotor.getPosition();
-        this.followerVelocity = followerMotor.getVelocity();
-        this.followerVoltage = followerMotor.getMotorVoltage();
-        this.followerTorqueCurrent = followerMotor.getTorqueCurrent();
-        this.followerDeviceTemp = followerMotor.getDeviceTemp();
+        this.masterPosition = masterMotor.getPosition(false);
+        this.masterVelocity = masterMotor.getVelocity(false);
+        this.masterVoltage = masterMotor.getMotorVoltage(false);
+        this.masterTorqueCurrent = masterMotor.getTorqueCurrent(false);
+        this.masterDeviceTemp = masterMotor.getDeviceTemp(false);
+        this.followerPosition = followerMotor.getPosition(false);
+        this.followerVelocity = followerMotor.getVelocity(false);
+        this.followerVoltage = followerMotor.getMotorVoltage(false);
+        this.followerTorqueCurrent = followerMotor.getTorqueCurrent(false);
+        this.followerDeviceTemp = followerMotor.getDeviceTemp(false);
 
         RefreshAll.add(
                 RefreshAll.CANBus.CANIVORE,

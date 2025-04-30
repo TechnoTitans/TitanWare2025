@@ -76,12 +76,12 @@ public class IntakeIOSim implements IntakeIO {
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
 
-        this.rollerPosition = rollerMotor.getPosition();
-        this.rollerVelocity = rollerMotor.getVelocity();
-        this.rollerVoltage = rollerMotor.getMotorVoltage();
-        this.rollerTorqueCurrent = rollerMotor.getTorqueCurrent();
-        this.rollerDeviceTemp = rollerMotor.getDeviceTemp();
-        this.rollerCANRangeDistance = coralCANRange.getDistance();
+        this.rollerPosition = rollerMotor.getPosition(false);
+        this.rollerVelocity = rollerMotor.getVelocity(false);
+        this.rollerVoltage = rollerMotor.getMotorVoltage(false);
+        this.rollerTorqueCurrent = rollerMotor.getTorqueCurrent(false);
+        this.rollerDeviceTemp = rollerMotor.getDeviceTemp(false);
+        this.rollerCANRangeDistance = coralCANRange.getDistance(false);
 
         RefreshAll.add(
                 RefreshAll.CANBus.RIO,

@@ -84,13 +84,13 @@ public class IntakeArmIOSim implements IntakeArmIO {
         this.positionVoltage = new PositionVoltage(0);
         this.voltageOut = new VoltageOut(0);
 
-        this.pivotPosition = pivotMotor.getPosition();
-        this.pivotVelocity = pivotMotor.getVelocity();
-        this.pivotVoltage = pivotMotor.getMotorVoltage();
-        this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent();
-        this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
-        this.encoderPosition = pivotEncoder.getPosition();
-        this.encoderVelocity = pivotEncoder.getVelocity();
+        this.pivotPosition = pivotMotor.getPosition(false);
+        this.pivotVelocity = pivotMotor.getVelocity(false);
+        this.pivotVoltage = pivotMotor.getMotorVoltage(false);
+        this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent(false);
+        this.pivotDeviceTemp = pivotMotor.getDeviceTemp(false);
+        this.encoderPosition = pivotEncoder.getPosition(false);
+        this.encoderVelocity = pivotEncoder.getVelocity(false);
 
         RefreshAll.add(
                 RefreshAll.CANBus.RIO,

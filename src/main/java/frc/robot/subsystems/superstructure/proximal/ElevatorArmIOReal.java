@@ -44,13 +44,13 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
 
-        this.pivotPosition = pivotMotor.getPosition();
-        this.pivotVelocity = pivotMotor.getVelocity();
-        this.pivotVoltage = pivotMotor.getMotorVoltage();
-        this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent();
-        this.pivotDeviceTemp = pivotMotor.getDeviceTemp();
-        this.pivotCANCoderPosition = pivotCANCoder.getPosition();
-        this.pivotCANCoderVelocity = pivotCANCoder.getVelocity();
+        this.pivotPosition = pivotMotor.getPosition(false);
+        this.pivotVelocity = pivotMotor.getVelocity(false);
+        this.pivotVoltage = pivotMotor.getMotorVoltage(false);
+        this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent(false);
+        this.pivotDeviceTemp = pivotMotor.getDeviceTemp(false);
+        this.pivotCANCoderPosition = pivotCANCoder.getPosition(false);
+        this.pivotCANCoderVelocity = pivotCANCoder.getVelocity(false);
 
         RefreshAll.add(
                 RefreshAll.CANBus.RIO,

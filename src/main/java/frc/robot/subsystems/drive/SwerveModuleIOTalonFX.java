@@ -83,14 +83,14 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         this.odometryThreadRunner.registerControlRequest(driveMotor, velocityTorqueCurrentFOC, driveMotor::setControl);
         this.odometryThreadRunner.registerControlRequest(turnMotor, positionVoltage, turnMotor::setControl);
 
-        this.drivePosition = driveMotor.getPosition();
-        this.driveVelocity = driveMotor.getVelocity();
-        this.driveTorqueCurrent = driveMotor.getTorqueCurrent();
-        this.driveDeviceTemp = driveMotor.getDeviceTemp();
-        this.turnPosition = turnMotor.getPosition();
-        this.turnVelocity = turnMotor.getVelocity();
-        this.turnTorqueCurrent = turnMotor.getTorqueCurrent();
-        this.turnDeviceTemp = turnMotor.getDeviceTemp();
+        this.drivePosition = driveMotor.getPosition(false);
+        this.driveVelocity = driveMotor.getVelocity(false);
+        this.driveTorqueCurrent = driveMotor.getTorqueCurrent(false);
+        this.driveDeviceTemp = driveMotor.getDeviceTemp(false);
+        this.turnPosition = turnMotor.getPosition(false);
+        this.turnVelocity = turnMotor.getVelocity(false);
+        this.turnTorqueCurrent = turnMotor.getTorqueCurrent(false);
+        this.turnDeviceTemp = turnMotor.getDeviceTemp(false);
 
         this.timestampBuffer = odometryThreadRunner.makeTimestampBuffer();
         this.drivePositionSignalBuffer = odometryThreadRunner.registerSignal(driveMotor, this.drivePosition);
