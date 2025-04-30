@@ -108,7 +108,7 @@ public class Robot extends LoggedRobot {
 
     public final ReefState reefState = new ReefState();
     public final GamepieceState gamePieceState = new GamepieceState(Constants.CURRENT_MODE, intake);
-    public final Visualizer visualizer = new Visualizer(swerve, superstructure, gamePieceState);
+    public final Visualizer visualizer = new Visualizer(swerve, intake, superstructure, gamePieceState);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
 
     public final Autos autos = new Autos(

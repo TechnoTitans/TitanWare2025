@@ -90,7 +90,7 @@ public class Swerve extends SubsystemBase {
     private boolean holonomicControllerActive = false;
     private Pose2d holonomicPoseTarget = Pose2d.kZero;
     private final HolonomicDriveController holonomicDriveController;
-    private final PIDController holdAxisPID = new PIDController(5, 0, 0);
+    private final PIDController holdAxisPID;
 
     private final HolonomicChoreoController choreoController;
 
@@ -165,7 +165,7 @@ public class Swerve extends SubsystemBase {
                 new PIDController(7, 0, 0.7),
                 new TrapezoidProfile.Constraints(
                         Units.feetToMeters(13),
-                        Units.feetToMeters(7)
+                        Units.feetToMeters(6)
                 ),
                 new TrapezoidProfile.Constraints(
                         3 * Math.PI,
@@ -189,6 +189,8 @@ public class Swerve extends SubsystemBase {
                 this::getPose,
                 () -> holonomicPoseTarget
         );
+
+       this.holdAxisPID = new PIDController(5, 0, 0.1);
 
         this.choreoController = new HolonomicChoreoController(
                 new PIDController(10, 0, 0.2),

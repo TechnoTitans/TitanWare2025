@@ -79,7 +79,7 @@ public class ElevatorArm extends SubsystemBase {
         PROCESSOR(Units.degreesToRotations(1)),
         UPPER_ALGAE(0.10303),
         LOWER_ALGAE(0.074219),
-        AUTO_L4(0.169434),
+        AUTO_L4(0.17),
         L4(0.1525),
         L3(0.12842),
         L2(0.1),

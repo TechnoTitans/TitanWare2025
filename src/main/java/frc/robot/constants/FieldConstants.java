@@ -16,13 +16,13 @@ public class FieldConstants {
     public static final Pose2d RED_ORIGIN = new Pose2d(FIELD_LENGTH_X_METERS, FIELD_WIDTH_Y_METERS, Rotation2d.k180deg);
 
     public static final Transform2d SCORING_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(26.5), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(25.5), 0, Rotation2d.kPi);
     public static final Transform2d AUTO_SCORING_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(7.5), 0, Rotation2d.kZero);
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.kPi);
     public static final Transform2d ALGAE_SAFE_REEF_OFFSET =
-            new Transform2d(-Units.inchesToMeters(12), 0, Rotation2d.kZero);
+            new Transform2d(-Units.inchesToMeters(18), 0, Rotation2d.kZero);
     public static final Transform2d PROCESSOR_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(32), 0, Rotation2d.kPi);
     public static final Transform2d ALIGN_PROCESSOR_DISTANCE_OFFSET =
@@ -31,7 +31,7 @@ public class FieldConstants {
             new Transform2d(Units.inchesToMeters(17.5), 0, Rotation2d.kPi);
     //TODO: Maybe move more back because it might hit barge tag
     public static final Transform2d SCORING_BARGE_OFFSET =
-            new Transform2d(-Units.inchesToMeters(33.5), 0, Rotation2d.kPi);
+            new Transform2d(-Units.inchesToMeters(36.5), 0, Rotation2d.kPi);
 
     public static class Processor {
         public static final Pose2d BLUE_CENTER_FACE =

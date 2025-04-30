@@ -24,6 +24,7 @@ import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.Container;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.ArrayList;
 import java.util.function.Supplier;
 
 public class Autos {
@@ -101,16 +102,16 @@ public class Autos {
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.3,
-                        Rotation2d.fromDegrees(8)
+                        Rotation2d.fromDegrees(7)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.4,
+                        0.25,
                         Math.PI
                 )
         );
 
         return Commands.sequence(
-                superstructure.toInstantGoal(Superstructure.Goal.ALIGN_L4),
+                superstructure.toInstantGoal(Superstructure.Goal.ALIGN_AUTO_L4),
                 Commands.waitUntil(atCloseReef),
                 superstructure.runGoal(goal)
         );
@@ -132,7 +133,7 @@ public class Autos {
         final Trigger atReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
-                        0.05,
+                        0.045,
                         Rotation2d.fromDegrees(4)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
@@ -145,10 +146,10 @@ public class Autos {
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.3,
-                        Rotation2d.fromDegrees(8)
+                        Rotation2d.fromDegrees(7)
                 ),
                 new HolonomicDriveController.VelocityTolerance(
-                        0.4,
+                        0.25,
                         Math.PI
                 )
         );
@@ -163,7 +164,7 @@ public class Autos {
                                 Commands.deadline(
                                         Commands.sequence(
                                                 Commands.waitUntil(superstructure.atSetpoint(goal))
-                                                        .withTimeout(1.9),
+                                                        .withTimeout(3),
                                                 Commands.waitUntil(atReef.or(wasEverAtReef::get)),
                                                 intake.scoreCoral(() -> Intake.ScoreMode.RUN_UNTIL_NO_CORAL).asProxy()
                                         ),
@@ -217,6 +218,64 @@ public class Autos {
         );
 
         return routine;
+    }
+
+    private Command descoreUpperAlgae() {
+        final Supplier<Pose2d> descorePoseSupplier = () -> swerve.getPose().
+                nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
+                .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
+
+        final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
+                .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
+
+        final Trigger safeFromReef = swerve.atPoseTrigger(
+                safeReefPoseSupplier,
+                new HolonomicDriveController.PositionTolerance(
+                        0.1,
+                        Rotation2d.fromDegrees(8)
+                )
+        );
+
+        return Commands.deadline(
+                Commands.sequence(
+                        swerve.runToPose(descorePoseSupplier)
+                                .until(gamepieceState.hasAlgae),
+                        Commands.waitSeconds(0.2),
+                        swerve.runToPose(safeReefPoseSupplier).until(safeFromReef)
+                                .withTimeout(0.35)
+                ),
+                superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
+                intake.intakeAlgae().asProxy()
+        ).withName("DescoreUpperAlgae");
+    }
+
+    private Command descoreLowerAlgae() {
+        final Supplier<Pose2d> descorePoseSupplier = () -> swerve.getPose().
+                nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
+                .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
+
+        final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
+                .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
+
+        final Trigger safeFromReef = swerve.atPoseTrigger(
+                safeReefPoseSupplier,
+                new HolonomicDriveController.PositionTolerance(
+                        0.1,
+                        Rotation2d.fromDegrees(8)
+                )
+        );
+
+        return Commands.deadline(
+                Commands.sequence(
+                        swerve.runToPose(descorePoseSupplier)
+                                .until(gamepieceState.hasAlgae),
+                        Commands.waitSeconds(0.2),
+                        swerve.runToPose(safeReefPoseSupplier).until(safeFromReef)
+                                .withTimeout(0.35)
+                ),
+                superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
+                intake.intakeAlgae().asProxy()
+        ).withName("DescoreLowerAlgae");
     }
 
     public AutoRoutine threePieceCage1() {
@@ -353,7 +412,7 @@ public class Autos {
         final ReefState.Branch oneRightL4 = new ReefState.Branch(Reef.Face.ONE, Reef.Side.RIGHT, Reef.Level.AUTO_L4);
         reef2ToLeftHP.done().onTrue(
                 Commands.sequence(
-                        driveIntoCoralStation(ScoreCommands.CoralStation.RIGHT),
+                        driveIntoCoralStation(ScoreCommands.CoralStation.LEFT),
                         Commands.parallel(
                                 leftHPToReef1Right.cmd(),
                                 Commands.sequence(
@@ -380,7 +439,7 @@ public class Autos {
         final ReefState.Branch oneLeftL4 = new ReefState.Branch(Reef.Face.ONE, Reef.Side.LEFT, Reef.Level.AUTO_L4);
         reef1ToLeftHP.done().onTrue(
                 Commands.sequence(
-                        driveIntoCoralStation(ScoreCommands.CoralStation.RIGHT),
+                        driveIntoCoralStation(ScoreCommands.CoralStation.LEFT),
                         Commands.parallel(
                                 leftHPToReef1Left.cmd(),
                                 Commands.sequence(
@@ -428,7 +487,7 @@ public class Autos {
                 Commands.sequence(
                         scoreAtLevel(threeRightL4)
                                 .onlyIf(gamepieceState.hasCoral),
-                        scoreCommands.descoreLowerAlgae(),
+                        descoreLowerAlgae(),
                         Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.STOW)),
                         reef3ToBarge.cmd()
                 )

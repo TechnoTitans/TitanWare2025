@@ -317,55 +317,6 @@ public class ScoreCommands {
                                         .withTimeout(2),
                                 intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy()
                         ),
-//                        Commands.sequence(
-//                                Commands.either(
-//                                        Commands.runOnce(setSuperstructureGoalToAlign),
-//                                        Commands.runOnce(setSuperstructureGoalToScore),
-//                                        shouldUseEarlyAlign
-//                                ),
-//                                Commands.select(
-//                                        Map.of(
-//                                                ExtendWhen.CLOSE, Commands.waitUntil(atCloseReef),
-//                                                ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
-//                                                ExtendWhen.ALWAYS, Commands.none()
-//                                        ),
-//                                        extendWhenSupplier
-//                                ),
-//                                Commands.runOnce(setSuperstructureGoalToScore),
-//                                Commands.waitUntil(atReef),
-//                                Commands.waitUntil(atSuperstructureSetpoint)
-//                                        .withTimeout(2),
-//                                intake.scoreCoral().asProxy()
-//                        )
-
-//                        Commands.sequence(
-//                                Commands.repeatingSequence(
-//                                        Commands.deadline(
-//                                                Commands.select(
-//                                                        Map.of(
-//                                                                ExtendWhen.CLOSE, Commands.waitUntil(atCloseReef),
-//                                                                ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
-//                                                                ExtendWhen.ALWAYS, Commands.none()
-//                                                        ),
-//                                                        extendWhenSupplier
-//                                                ),
-//                                                Commands.run(updateScorePosition),
-//                                                Commands.either(
-//                                                        Commands.runOnce(setSuperstructureGoalToAlign),
-//                                                        Commands.runOnce(setSuperstructureGoalToScore),
-//                                                        shouldUseEarlyAlign
-//                                                ).repeatedly()
-//                                        ),
-//                                        Commands.runOnce(setSuperstructureGoalToScore)
-//                                ).until(atCloseReef),
-//                                Commands.sequence(
-//                                        Commands.runOnce(setSuperstructureGoalToScore),
-//                                        Commands.waitUntil(atReef),
-//                                        Commands.waitUntil(atSuperstructureSetpoint)
-//                                                .withTimeout(2),
-//                                        intake.scoreCoral().asProxy()
-//                                )
-//                        ),
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
                                         .until(atReef),
@@ -389,23 +340,12 @@ public class ScoreCommands {
                 nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
                 .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
-        final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
-                .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
-
-        final Trigger safeFromReef = swerve.atPoseTrigger(
-                safeReefPoseSupplier,
-                new HolonomicDriveController.PositionTolerance(
-                        0.2,
-                        Rotation2d.fromDegrees(8)
-                )
-        );
-
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
                                 .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
-                        swerve.runToPose(safeReefPoseSupplier).until(safeFromReef)
+                        swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
                                 .withTimeout(0.35)
                 ),
                 superstructure.toGoal(Superstructure.Goal.UPPER_ALGAE),
@@ -418,23 +358,12 @@ public class ScoreCommands {
                 nearest(new ArrayList<>(FieldConstants.getReefCenterPoses().values()))
                 .plus(FieldConstants.ALGAE_DESCORE_DISTANCE_OFFSET);
 
-        final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
-                .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
-
-        final Trigger safeFromReef = swerve.atPoseTrigger(
-                safeReefPoseSupplier,
-                new HolonomicDriveController.PositionTolerance(
-                        0.2,
-                        Rotation2d.fromDegrees(8)
-                )
-        );
-
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
                                 .until(gamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
-                        swerve.runToPose(safeReefPoseSupplier).until(safeFromReef)
+                        swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
                                 .withTimeout(0.35)
                 ),
                 superstructure.toGoal(Superstructure.Goal.LOWER_ALGAE),
@@ -466,6 +395,15 @@ public class ScoreCommands {
 
         final DoubleSupplier axisTarget = () -> FieldConstants.getScoringBargeCenterCage().getX();
         final DoubleSupplier robotX = () -> swerve.getPose().getX();
+        final DoubleSupplier robotY = () -> swerve.getPose().getY();
+
+        final Trigger allowedToScore = new Trigger(() -> {
+            if (Robot.IsRedAlliance.getAsBoolean()) {
+                return robotY.getAsDouble() < FieldConstants.FIELD_WIDTH_Y_METERS / 2.0;
+            } else {
+                return robotY.getAsDouble() > FieldConstants.FIELD_WIDTH_Y_METERS / 2.0;
+            }
+        });
 
         return Commands.sequence(
                 superstructureGoal.set(Superstructure.Goal.STOW),
@@ -488,7 +426,9 @@ public class ScoreCommands {
                         ),
                         superstructure.toGoal(superstructureGoal)
                 )
-        ).withName("ScoreNetFlingFacingBarge");
+        )
+                .onlyIf(allowedToScore)
+                .withName("ScoreNetFlingFacingBarge");
     }
 
     public Command readyScoreProcessor() {

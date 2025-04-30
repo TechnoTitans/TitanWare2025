@@ -48,7 +48,6 @@ public class PhotonVision extends VirtualSubsystem {
     public static final AprilTagFieldLayout apriltagFieldLayout;
 
     static {
-        //TODO: Change apriltag layout depending on the field setup
         try {
             apriltagFieldLayout = new AprilTagFieldLayout(
                     Filesystem.getDeployDirectory().getPath() + "/2025-reefscape-reef.json");
@@ -239,7 +238,7 @@ public class PhotonVision extends VirtualSubsystem {
         }
 
         double stdDev = stdDevFactor;
-        if (MathUtil.isNear(stdDevFactor, oppositeReefStdFactor, 1E-6)) {
+        if (!MathUtil.isNear(stdDevFactor, oppositeReefStdFactor, 1E-6)) {
             for (final PhotonTrackedTarget target : visionUpdate.targetsUsed()) {
                 if (oppositeReefTagIds.contains(target.getFiducialId())) {
                     stdDev = oppositeReefStdFactor;

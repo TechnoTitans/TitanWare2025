@@ -83,9 +83,9 @@ public class Elevator extends SubsystemBase {
         PROCESSOR(0),
         UPPER_ALGAE(0.66330802),
         LOWER_ALGAE(0.302354),
-        AUTO_L4(0.94),
+        AUTO_L4(0.96),
         L4(0.9925853),
-        L3(0.438842),
+        L3(0.45),
         L2(0.12),
         L1(0.01),
         NET(0.995);
@@ -107,7 +107,8 @@ public class Elevator extends SubsystemBase {
             return desiredGoal == UPPER_ALGAE
                     || desiredGoal == LOWER_ALGAE
                     || currentGoal == UPPER_ALGAE
-                    || currentGoal == LOWER_ALGAE;
+                    || currentGoal == LOWER_ALGAE
+                    || desiredGoal == L3;
         }
     }
 
