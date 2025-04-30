@@ -24,7 +24,6 @@ public interface VisionIO {
         public String name = "";
         public boolean isConnected = false;
         public double stdDevFactor = 1.0;
-        public double oppositeReefStdFactor = 1.0;
         public Transform3d robotToCamera;
         public PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
 
@@ -41,7 +40,6 @@ public interface VisionIO {
             table.put("Name", name);
             table.put("IsConnected", isConnected);
             table.put("StdDevFactor", stdDevFactor);
-            table.put("OppositeReefStdFactor", oppositeReefStdFactor);
             table.put("RobotToCamera", robotToCamera);
             table.put("ConstrainedPnpParams", constrainedPnpParams);
 
@@ -59,10 +57,6 @@ public interface VisionIO {
             this.name = table.get("Name", "unknown");
             this.isConnected = table.get("IsConnected", false);
             this.stdDevFactor = table.get("StdDevFactor", Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR);
-            this.oppositeReefStdFactor = table.get(
-                    "OppositeReefStdFactor",
-                    Constants.Vision.VISION_CAMERA_DEFAULT_STD_DEV_FACTOR
-            );
             this.robotToCamera = table.get("RobotToCamera", Transform3d.kZero);
             this.constrainedPnpParams = table.get("ConstrainedPnpParams", DefaultConstrainedPnpParams);
 
