@@ -120,8 +120,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final ReefState reefState = new ReefState();
-    public final IntakeGamepieceState intakeGamepieceState = new IntakeGamepieceState(Constants.CURRENT_MODE, intake);
-    public final GroundIntakeGamepieceState groundIntakeGamepieceState = new GroundIntakeGamepieceState(Constants.CURRENT_MODE, groundIntake);
+    public final IntakeGamepieceState intakeGamepieceState = new IntakeGamepieceState(Constants.CURRENT_MODE, intake, groundIntake);
     public final Visualizer visualizer = new Visualizer(swerve, intake, groundIntake, superstructure, intakeGamepieceState, groundIntakeGamepieceState);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, groundIntake, intakeGamepieceState);
 

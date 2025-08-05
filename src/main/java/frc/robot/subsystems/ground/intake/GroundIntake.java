@@ -14,11 +14,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class GroundIntake extends SubsystemBase {
-
-    public enum Transfer_Mode {
-        TRANSFER_UNTIL_NO_CORAL,
-        TRANSFER_FOR_TIME
-    }
     protected static final String LogKey = "GroundIntake";
     private static final double NoCoralTOFReading = 0.4;
 
@@ -94,26 +89,10 @@ public class GroundIntake extends SubsystemBase {
                 .withName("HoldGroundCoral");
     }
 
-    public Command transferCoral(final Supplier<Transfer_Mode> transferModeSupplier, final Trigger isCoralTransferred) {
+    public Command transferCoral() {
         return Commands.sequence(
                 runOnce(() -> this.coralOuttaking = true),
-                Commands.select(
-                        Map.of(
-                                Transfer_Mode.TRANSFER_UNTIL_NO_CORAL,
-                                    Commands.sequence(
-                                            toInstantRollerVoltage(-9),
-                                            Commands.waitUntil(isCoralTransferred)
-                                                    .withTimeout(2)
-                                    ),
-                                Transfer_Mode.TRANSFER_FOR_TIME,
-                                    Commands.sequence(
-                                            toInstantRollerVoltage(-9),
-                                            Commands.waitSeconds(0.2)
-                                    )
-                        ),
-                        transferModeSupplier
-                ),
-                instantStopCommand()
+                toRollerVoltage(-9).withTimeout(5)
         )
                 .finallyDo(() -> this.coralOuttaking = false)
                 .withName("GroundTransferCoral");

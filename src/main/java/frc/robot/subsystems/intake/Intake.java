@@ -212,7 +212,7 @@ public class Intake extends SubsystemBase {
     public Command transferCoral() {
         return Commands.sequence(
                 runOnce(() -> this.coralIntaking = true),
-                toRollerVelocity(10)
+                toRollerVelocity(7)
         )
                 .finallyDo(() -> this.coralIntaking = false)
                 .withName("IntakeCoralTransferring");

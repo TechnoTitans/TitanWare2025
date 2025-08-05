@@ -100,6 +100,9 @@ public class ScoreCommands {
         this.intake = intake;
         this.groundIntake = groundIntake;
         this.intakeGamepieceState = intakeGamepieceState;
+
+        //TODO: does this need to be intakeGamepieceState.isCoralNone?
+        intakeGamepieceState.isGroundHolding.and(intake.isCoralPresent.negate).onTrue(transferCoral());
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -547,10 +550,11 @@ public class ScoreCommands {
     public Command transferCoral() {
         return Commands.deadline(
                 Commands.sequence(
-                    Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.TRANSFER_CORAL))
-                            .withTimeout(2)
-                            .andThen(intake.transferCoral().alongWith(groundIntake.transferCoral
-                                    (() -> GroundIntake.Transfer_Mode.TRANSFER_UNTIL_NO_CORAL, intake.isCoralPresent)))
+                    Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.TRANSFER_CORAL)).withTimeout(2),
+                    Commands.parallel(
+                        intake.transferCoral(),
+                        groundIntake.transferCoral()
+                    ).until(intake.isCoralPresent.and(groundIntake.isCoralPresent.negate())).withTimeout(3)
                 ),
                 superstructure.toGoal(Superstructure.Goal.TRANSFER_CORAL)
         ).withName("TransferCoral");
