@@ -11,8 +11,8 @@ import org.littletonrobotics.junction.Logger;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
-public class GamepieceState extends VirtualSubsystem {
-    protected static final String LogKey = "GamepieceState";
+public class IntakeGamepieceState extends VirtualSubsystem {
+    protected static final String LogKey = "IntakeGamepieceState";
 
     private final Intake intake;
 
@@ -39,7 +39,7 @@ public class GamepieceState extends VirtualSubsystem {
     public final Trigger hasCoral = isCoralHolding.or(isCoralScoring);
     public final Trigger hasAlgae = isAlgaeHolding.or(isAlgaeScoring);
 
-    public GamepieceState(final Constants.RobotMode mode, final Intake intake) {
+    public IntakeGamepieceState(final Constants.RobotMode mode, final Intake intake) {
         this.intake = intake;
 
         configureStateTriggers();

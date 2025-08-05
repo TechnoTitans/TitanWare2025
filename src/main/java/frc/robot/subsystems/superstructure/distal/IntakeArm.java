@@ -99,7 +99,8 @@ public class IntakeArm extends SubsystemBase {
         L4(-0.187012),
         L3(-0.16602),
         L2(-0.13),
-        L1(-0.052);
+        L1(-0.052),
+        TRANSFER_CORAL(-0.22);
 
         private final double pivotPositionGoalRots;
 

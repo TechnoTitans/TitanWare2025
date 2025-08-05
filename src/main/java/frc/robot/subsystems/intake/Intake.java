@@ -156,6 +156,7 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/RollerTorqueCurrentSetpoint", rollerTorqueCurrentSetpoint);
 
         Logger.recordOutput(LogKey + "/Trigger/IsCoralPresent", isCoralPresent);
+        Logger.recordOutput(LogKey + "/Trigger/IsCoralIntaking", isCoralIntaking);
         Logger.recordOutput(LogKey + "/Trigger/IsCoralOuttaking", isCoralOuttaking);
         Logger.recordOutput(LogKey + "/Trigger/IsCoralIntakeStopped", isCoralIntakeStopped);
 
@@ -206,6 +207,15 @@ public class Intake extends SubsystemBase {
         )
                 .finallyDo(() -> this.coralIntaking = false)
                 .withName("IntakeCoralHP");
+    }
+
+    public Command transferCoral() {
+        return Commands.sequence(
+                runOnce(() -> this.coralIntaking = true),
+                toRollerVelocity(10)
+        )
+                .finallyDo(() -> this.coralIntaking = false)
+                .withName("IntakeCoralTransferring");
     }
 
     public Command holdCoral() {

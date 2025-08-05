@@ -1,9 +1,6 @@
 package frc.robot.constants;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 
@@ -76,11 +73,31 @@ public interface SimConstants {
 
     interface Intake {
         double HEIGHT_METERS = Units.inchesToMeters(9.98);
+        double WIDTH_METERS = Units.inchesToMeters(15);
 
         Transform3d CORAL_OFFSET = new Transform3d(
                 Units.inchesToMeters(8),
                 0,
                 (Intake.HEIGHT_METERS / 2) - Units.inchesToMeters(0.75),
+                Rotation3d.kZero
+        );
+    }
+
+    interface GroundIntakeArm {
+        double LENGTH_METERS = Units.inchesToMeters(12.5);
+        double WIDTH_METERS = Units.inchesToMeters(18.45);
+
+        double RETRACTED_MOI_KG_M_SQUARED = 0.0176;
+
+        Translation3d ORIGIN = new Translation3d(.330, 0, .1844);
+        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(90);
+        Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(0)
+                .plus(ZEROED_POSITION_TO_HORIZONTAL);
+
+        Transform3d CORAL_OFFSET = new Transform3d(
+                WIDTH_METERS/2+Units.inchesToMeters(4.5),
+                0,
+                -0.152/2,
                 Rotation3d.kZero
         );
     }

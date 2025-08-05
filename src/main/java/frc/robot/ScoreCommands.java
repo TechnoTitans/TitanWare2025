@@ -9,13 +9,15 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants.Reef;
-import frc.robot.state.GamepieceState;
+import frc.robot.state.IntakeGamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.controllers.HolonomicDriveController;
+import frc.robot.subsystems.ground.intake.GroundIntake;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
@@ -83,18 +85,21 @@ public class ScoreCommands {
     private final Swerve swerve;
     private final Superstructure superstructure;
     private final Intake intake;
-    private final GamepieceState gamepieceState;
+    private final GroundIntake groundIntake;
+    private final IntakeGamepieceState intakeGamepieceState;
 
     public ScoreCommands(
             final Swerve swerve,
             final Superstructure superstructure,
             final Intake intake,
-            final GamepieceState gamepieceState
+            final GroundIntake groundIntake,
+            final IntakeGamepieceState intakeGamepieceState
     ) {
         this.swerve = swerve;
         this.superstructure = superstructure;
         this.intake = intake;
-        this.gamepieceState = gamepieceState;
+        this.groundIntake = groundIntake;
+        this.intakeGamepieceState = intakeGamepieceState;
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -153,7 +158,7 @@ public class ScoreCommands {
     public Pose2d offsetScoringPoseWithCoralPosition(final Pose2d targetPose) {
         final Transform2d coralDistanceOffset = new Transform2d(
                 0,
-                gamepieceState.hasCoral.getAsBoolean()
+                intakeGamepieceState.hasCoral.getAsBoolean()
                         ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
                         : 0,
                 Rotation2d.kZero
@@ -191,6 +196,14 @@ public class ScoreCommands {
                     case L2, L1 -> false;
                 }
         );
+
+        final Trigger shouldUseGroundIntake = new Trigger(() ->
+                switch (scorePositionContainer.value.level) {
+                    case AUTO_L4, L4, L3, L2 -> false;
+                    case L1 -> true;
+                }
+        );
+
         final Supplier<ExtendWhen> extendWhenSupplier = () ->
                 switch (scorePositionContainer.value.level) {
                     case AUTO_L4, L4 -> ExtendWhen.CLOSE;
@@ -315,7 +328,11 @@ public class ScoreCommands {
                                 Commands.waitUntil(atReef.or(wasEverAtReef::get)),
                                 Commands.waitUntil(atSuperstructureSetpoint)
                                         .withTimeout(2),
-                                intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy()
+//                                Commands.either(
+                                        intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy()
+//                                        groundIntake.scoreL1().asProxy(),
+//                                        shouldUseGroundIntake
+//                                ).asProxy()
                         ),
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
@@ -343,7 +360,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
-                                .until(gamepieceState.hasAlgae),
+                                .until(intakeGamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
                         swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
                                 .withTimeout(0.35)
@@ -361,7 +378,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
-                                .until(gamepieceState.hasAlgae),
+                                .until(intakeGamepieceState.hasAlgae),
                         Commands.waitSeconds(0.2),
                         swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
                                 .withTimeout(0.35)
@@ -525,5 +542,17 @@ public class ScoreCommands {
                 ),
                 superstructure.toInstantGoal(Superstructure.Goal.CLIMB_DOWN)
         ).withName("Climb");
+    }
+
+    public Command transferCoral() {
+        return Commands.deadline(
+                Commands.sequence(
+                    Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.TRANSFER_CORAL))
+                            .withTimeout(2)
+                            .andThen(intake.transferCoral().alongWith(groundIntake.transferCoral
+                                    (() -> GroundIntake.Transfer_Mode.TRANSFER_UNTIL_NO_CORAL, intake.isCoralPresent)))
+                ),
+                superstructure.toGoal(Superstructure.Goal.TRANSFER_CORAL)
+        ).withName("TransferCoral");
     }
 }

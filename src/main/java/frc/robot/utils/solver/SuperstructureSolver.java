@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.constants.SimConstants.Elevator;
 import frc.robot.constants.SimConstants.ElevatorArm;
 import frc.robot.constants.SimConstants.IntakeArm;
+import frc.robot.constants.SimConstants.GroundIntakeArm;
 
 public class SuperstructureSolver {
     private SuperstructureSolver() {}
@@ -14,7 +15,8 @@ public class SuperstructureSolver {
     public static Pose3d[] calculatePoses(
             final Rotation2d baseStageRotation,
             final double elevatorExtensionMeters,
-            final Rotation2d armPivotRotation
+            final Rotation2d armPivotRotation,
+            final Rotation2d groundArmPivotPosition
     ) {
         final Pose3d baseStagePose = new Pose3d(
                 ElevatorArm.ORIGIN,
@@ -68,6 +70,18 @@ public class SuperstructureSolver {
                         )
                 ));
 
-        return new Pose3d[] {baseStagePose, stage1Pose, stage2Pose, intakePose};
+        final Pose3d groundIntakePose = new Pose3d(
+                GroundIntakeArm.ORIGIN,
+                new Rotation3d(
+                        0,
+                        groundArmPivotPosition
+                                .unaryMinus()
+                                .minus(GroundIntakeArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                .getRadians(),
+                        0
+                )
+        );
+
+        return new Pose3d[] {baseStagePose, stage1Pose, stage2Pose, intakePose, groundIntakePose};
     }
 }

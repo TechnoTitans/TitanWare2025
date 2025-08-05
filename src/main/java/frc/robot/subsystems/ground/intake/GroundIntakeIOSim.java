@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.ground.intake;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -20,6 +20,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.MoreDCMotor;
 import frc.robot.utils.closeables.ToClose;
@@ -27,11 +28,11 @@ import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
-public class IntakeIOSim implements IntakeIO {
+public class GroundIntakeIOSim implements GroundIntakeIO {
     private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
 
     private final DeltaTime deltaTime;
-    private final HardwareConstants.IntakeConstants constants;
+    private final HardwareConstants.GroundIntakeConstants constants;
 
     private final TalonFX rollerMotor;
     private final CANrange coralCANRange;
@@ -49,19 +50,19 @@ public class IntakeIOSim implements IntakeIO {
     private final StatusSignal<Temperature> rollerDeviceTemp;
     private final StatusSignal<Distance> rollerCANRangeDistance;
 
-    public IntakeIOSim(final HardwareConstants.IntakeConstants constants) {
+    public GroundIntakeIOSim(final HardwareConstants.GroundIntakeConstants constants) {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
 
-        this.rollerMotor = new TalonFX(constants.rollerRollerMotorID(), constants.CANBus());
+        this.rollerMotor = new TalonFX(constants.rollerMotorID(), constants.CANBus());
         this.coralCANRange = new CANrange(constants.coralTOFID(), constants.CANBus());
 
         final DCMotorSim rollerMotorSim = new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(
-                    0.19557 / (2 * Math.PI),
-                    2.9856 / (2 * Math.PI)
-            ),
-            MoreDCMotor.getKrakenX44(1)
+                LinearSystemId.createDCMotorSystem(
+                        0.19557 / (2 * Math.PI),
+                        2.9856 / (2 * Math.PI)
+                ),
+                MoreDCMotor.getKrakenX44(1)
         );
         this.rollerTalonFXSim = new TalonFXSim(
                 rollerMotor,
@@ -94,7 +95,7 @@ public class IntakeIOSim implements IntakeIO {
         );
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
-        final double dt = deltaTime.get();
+            final double dt = deltaTime.get();
             rollerTalonFXSim.update(dt);
         });
         ToClose.add(simUpdateNotifier);
@@ -152,11 +153,11 @@ public class IntakeIOSim implements IntakeIO {
         );
 
         rollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-        coralCANRange.getSimState().setDistance(2);
+        coralCANRange.getSimState().setDistance(10);
     }
 
     @Override
-    public void updateInputs(IntakeIOInputs inputs) {
+    public void updateInputs(GroundIntakeIO.GroundIntakeIOInputs inputs) {
         inputs.rollerPositionRots = rollerPosition.getValueAsDouble();
         inputs.rollerVelocityRotsPerSec = rollerVelocity.getValueAsDouble();
         inputs.rollerVoltage = rollerVoltage.getValueAsDouble();

@@ -24,15 +24,18 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
-import frc.robot.state.GamepieceState;
+import frc.robot.state.GroundIntakeGamepieceState;
+import frc.robot.state.IntakeGamepieceState;
 import frc.robot.state.ReefState;
 import frc.robot.state.Visualizer;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
+import frc.robot.subsystems.ground.intake.GroundIntake;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
+import frc.robot.subsystems.superstructure.ground.GroundIntakeArm;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.Container;
@@ -99,17 +102,28 @@ public class Robot extends LoggedRobot {
             HardwareConstants.INTAKE_ARM
     );
 
-    public final Superstructure superstructure = new Superstructure(elevatorArm, elevator, intakeArm);
+    public final GroundIntakeArm groundIntakeArm = new GroundIntakeArm(
+            Constants.CURRENT_MODE,
+            HardwareConstants.GROUND_INTAKE_ARM
+    );
+
+    public final Superstructure superstructure = new Superstructure(elevatorArm, elevator, intakeArm, groundIntakeArm);
 
     public final Intake intake = new Intake(
             Constants.CURRENT_MODE,
             HardwareConstants.INTAKE
     );
 
+    public final GroundIntake groundIntake = new GroundIntake(
+            Constants.CURRENT_MODE,
+            HardwareConstants.GROUND_INTAKE
+    );
+
     public final ReefState reefState = new ReefState();
-    public final GamepieceState gamePieceState = new GamepieceState(Constants.CURRENT_MODE, intake);
-    public final Visualizer visualizer = new Visualizer(swerve, intake, superstructure, gamePieceState);
-    public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
+    public final IntakeGamepieceState intakeGamepieceState = new IntakeGamepieceState(Constants.CURRENT_MODE, intake);
+    public final GroundIntakeGamepieceState groundIntakeGamepieceState = new GroundIntakeGamepieceState(Constants.CURRENT_MODE, groundIntake);
+    public final Visualizer visualizer = new Visualizer(swerve, intake, groundIntake, superstructure, intakeGamepieceState, groundIntakeGamepieceState);
+    public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, groundIntake, intakeGamepieceState);
 
     public final Autos autos = new Autos(
             swerve,
@@ -117,7 +131,7 @@ public class Robot extends LoggedRobot {
             intake,
             photonVision,
             scoreCommands,
-            gamePieceState,
+            intakeGamepieceState,
             reefState
     );
     public final AutoChooser autoChooser = new AutoChooser(
@@ -154,7 +168,7 @@ public class Robot extends LoggedRobot {
     final Supplier<ScoreCommands.ScorePosition> rawScorePositionSupplier = branchSelector::getSelected;
     final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier = () -> {
             final ScoreCommands.ScorePosition rawScorePosition = rawScorePositionSupplier.get();
-            if (!gamePieceState.hasCoral.getAsBoolean()) {
+            if (!intakeGamepieceState.hasCoral.getAsBoolean()) {
                 return new ScoreCommands.ScorePosition(rawScorePosition.side(), ScoreCommands.Level.L1);
             }
             return rawScorePosition;
@@ -406,6 +420,10 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
+        groundIntake.isCoralPresent.onTrue(
+                scoreCommands.transferCoral()
+        );
+
         disabled.onTrue(swerve.stopCommand());
         teleopEnabled.onTrue(superstructure.forceGoal(Superstructure.Goal.STOW));
     }
@@ -499,6 +517,14 @@ public class Robot extends LoggedRobot {
                 .onFalse(scoreCommands.climb());
 
         this.driverController.start().whileTrue(scoreCommands.processor());
+
+        this.driverController.povDown()
+                .whileTrue(superstructure.toGoal(Superstructure.Goal.INTAKE_FROM_GROUND)
+                        .alongWith(groundIntake.intakeCoralGround())
+                );
+
+        this.driverController.povRight()
+                .whileTrue(scoreCommands.transferCoral());
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))

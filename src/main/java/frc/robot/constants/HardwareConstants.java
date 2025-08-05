@@ -86,4 +86,38 @@ public class HardwareConstants {
             23,
             10.0
     );
+
+    public record GroundIntakeConstants(
+            String CANBus,
+            int rollerMotorID,
+            int coralTOFID,
+            double rollerGearing
+    ) {}
+
+    public static final GroundIntakeConstants GROUND_INTAKE = new GroundIntakeConstants(
+            RobotMap.RioCANBus,
+            24,
+            25,
+            1.5
+    );
+
+    public record GroundIntakeArmConstants(
+            String CANBus,
+            int pivotMotorID,
+            int groundIntakePivotEncoderID,
+            double groundIntakePivotEncoderOffset,
+            double pivotGearing,
+            double pivotLowerLimitRots,
+            double pivotUpperLimitRots
+    ) {}
+
+    public static final GroundIntakeArmConstants GROUND_INTAKE_ARM = new GroundIntakeArmConstants(
+            RobotMap.RioCANBus,
+            26,
+            27,
+            0,
+            46.875,
+            -0.35,
+            .14
+    ); //TODO: Limits need to change
 }
