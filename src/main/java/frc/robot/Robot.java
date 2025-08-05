@@ -24,7 +24,6 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
-import frc.robot.state.GroundIntakeGamepieceState;
 import frc.robot.state.IntakeGamepieceState;
 import frc.robot.state.ReefState;
 import frc.robot.state.Visualizer;
@@ -121,7 +120,7 @@ public class Robot extends LoggedRobot {
 
     public final ReefState reefState = new ReefState();
     public final IntakeGamepieceState intakeGamepieceState = new IntakeGamepieceState(Constants.CURRENT_MODE, intake, groundIntake);
-    public final Visualizer visualizer = new Visualizer(swerve, intake, groundIntake, superstructure, intakeGamepieceState, groundIntakeGamepieceState);
+    public final Visualizer visualizer = new Visualizer(swerve, intake, groundIntake, superstructure, intakeGamepieceState);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, groundIntake, intakeGamepieceState);
 
     public final Autos autos = new Autos(
@@ -521,9 +520,6 @@ public class Robot extends LoggedRobot {
                 .whileTrue(superstructure.toGoal(Superstructure.Goal.INTAKE_FROM_GROUND)
                         .alongWith(groundIntake.intakeCoralGround())
                 );
-
-        this.driverController.povRight()
-                .whileTrue(scoreCommands.transferCoral());
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))

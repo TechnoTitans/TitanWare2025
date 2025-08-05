@@ -92,7 +92,7 @@ public class GroundIntake extends SubsystemBase {
     public Command transferCoral() {
         return Commands.sequence(
                 runOnce(() -> this.coralOuttaking = true),
-                toRollerVoltage(-9).withTimeout(5)
+                toInstantRollerVoltage(-9).withTimeout(5)
         )
                 .finallyDo(() -> this.coralOuttaking = false)
                 .withName("GroundTransferCoral");

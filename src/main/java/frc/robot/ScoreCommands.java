@@ -102,7 +102,7 @@ public class ScoreCommands {
         this.intakeGamepieceState = intakeGamepieceState;
 
         //TODO: does this need to be intakeGamepieceState.isCoralNone?
-        intakeGamepieceState.isGroundHolding.and(intake.isCoralPresent.negate).onTrue(transferCoral());
+        intakeGamepieceState.isGroundHolding.and(intake.isCoralPresent.negate()).onTrue(transferCoral());
     }
 
     @SuppressWarnings("SameParameterValue")

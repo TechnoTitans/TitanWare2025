@@ -18,22 +18,19 @@ public class Visualizer {
     private final GroundIntake groundIntake;
     private final Superstructure superstructure;
     private final IntakeGamepieceState intakeGamepieceState;
-    private final GroundIntakeGamepieceState groundIntakeGamepieceState;
 
     public Visualizer(
             final Swerve swerve,
             final Intake intake,
             final GroundIntake groundIntake,
             final Superstructure superstructure,
-            final IntakeGamepieceState intakeGamepieceState,
-            final GroundIntakeGamepieceState groundIntakeGamepieceState
+            final IntakeGamepieceState intakeGamepieceState
     ) {
         this.swerve = swerve;
         this.intake = intake;
         this.groundIntake = groundIntake;
         this.superstructure = superstructure;
         this.intakeGamepieceState = intakeGamepieceState;
-        this.groundIntakeGamepieceState = groundIntakeGamepieceState;
     }
 
     public void periodic() {
@@ -51,7 +48,7 @@ public class Visualizer {
                             0, -intake.coralDistanceIntakeCenterMeters.getAsDouble(), 0,
                             Rotation3d.kZero
                     ));
-        } else if ((intakeGamepieceState.isCoralIntaking.and(groundIntakeGamepieceState.isCoralTransferring)).getAsBoolean()) {
+        } else if ((intakeGamepieceState.isCoralIntaking.and(intakeGamepieceState.isGroundTransfering)).getAsBoolean()) {
             coralPose = pose
                     .plus(new Transform3d(intakeArmPose.getTranslation(), intakeArmPose.getRotation()))
                     .plus(SimConstants.Intake.CORAL_OFFSET)
@@ -59,7 +56,7 @@ public class Visualizer {
                             0, SimConstants.Intake.WIDTH_METERS/2,0,
                             Rotation3d.kZero
                     ));
-        } else if (groundIntakeGamepieceState.hasCoral.getAsBoolean()) {
+        } else if (intakeGamepieceState.hasGroundCoral.getAsBoolean()) {
             coralPose = pose
                     .plus(new Transform3d(groundIntakeArmPose.getTranslation(), groundIntakeArmPose.getRotation()))
                     .plus(SimConstants.GroundIntakeArm.CORAL_OFFSET);

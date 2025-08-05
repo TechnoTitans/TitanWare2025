@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
+import frc.robot.subsystems.ground.intake.GroundIntake;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
@@ -53,6 +54,7 @@ public class IntakeGamepieceState extends VirtualSubsystem {
     public final Trigger isGroundTransfering = isStateTrigger(() -> groundState, GroundState.TRANSFERRING);
 
     public final Trigger hasCoral = isCoralHolding.or(isCoralScoring);
+    public final Trigger hasGroundCoral = isGroundHolding.or(isGroundTransfering).or(isGroundScoring);
     public final Trigger hasAlgae = isAlgaeHolding.or(isAlgaeScoring);
 
     public IntakeGamepieceState(
@@ -72,6 +74,8 @@ public class IntakeGamepieceState extends VirtualSubsystem {
     @Override
     public void periodic() {
         Logger.recordOutput(LogKey + "/CoralState", coralState.toString());
+        Logger.recordOutput(LogKey + "/GroundCoralState", groundState.toString())
+        ;
         Logger.recordOutput(LogKey + "/AlgaeState", algaeState.toString());
 
         Logger.recordOutput(LogKey + "/IsCoralNone", isCoralNone.getAsBoolean());
@@ -94,13 +98,14 @@ public class IntakeGamepieceState extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/HasAlgae", hasAlgae.getAsBoolean());
     }
 
-    public Trigger isStateTrigger(final Supplier<IntakeState> currentState, final State state) {
+    public Trigger isStateTrigger(final Supplier<IntakeState> currentState, final IntakeState state) {
         return new Trigger(() -> currentState.get() == state);
     }
 
-    public Trigger isStateTrigger(final Supplier<GroundState> currentState, final State state) {
+    public Trigger isStateTrigger(final Supplier<GroundState> currentState, final GroundState state) {
         return new Trigger(() -> currentState.get() == state);
     }
+
 
     public Command setCoralState(final IntakeState coralState) {
         return Commands.runOnce(() -> this.coralState = coralState)
@@ -118,12 +123,12 @@ public class IntakeGamepieceState extends VirtualSubsystem {
     }
 
     @SuppressWarnings("unused")
-    public State getCoralState() {
+    public IntakeState getCoralIntake() {
         return coralState;
     }
 
     @SuppressWarnings("unused")
-    public State getAlgaeState() {
+    public IntakeState getAlgaeState() {
         return algaeState;
     }
 
@@ -162,15 +167,15 @@ public class IntakeGamepieceState extends VirtualSubsystem {
         isCoralNone.and(intake.isAlgaeOuttaking.negate()).and(isAlgaeScoring).and(intake.isCurrentAboveAlgaeThreshold)
                 .onTrue(setAlgaeState(IntakeState.HOLDING));
 
-        groundIntake.isCoralIntaking.and(groundIntake.isCoralPresent.negate()).onTrue(setGroundState(State.INTAKING));
-        groundIntake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setGroundState(State.NONE));
+        groundIntake.isCoralIntaking.and(groundIntake.isCoralPresent.negate()).onTrue(setGroundState(GroundState.INTAKING));
+        groundIntake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setGroundState(GroundState.NONE));
 
-        groundIntake.isCoralPresent.onTrue(setGroundState(State.HOLDING));
+        groundIntake.isCoralPresent.onTrue(setGroundState(GroundState.HOLDING));
 
         isGroundHolding.onTrue(groundIntake.holdCoral());
 
-        groundIntake.isCoralOuttaking.and(isCoralHolding).onTrue(setGroundState(State.TRANSFERRING));
-        groundIntake.isCoralPresent.negate().onTrue(setGroundState(State.NONE));
+        groundIntake.isCoralOuttaking.and(isCoralHolding).onTrue(setGroundState(GroundState.TRANSFERRING));
+        groundIntake.isCoralPresent.negate().onTrue(setGroundState(GroundState.NONE));
         // groundIntake.isCoralOuttaking.negate().and(isCoralTransferring).and(groundIntake.isCoralPresent)
                 // .onTrue(setGroundState(State.HOLDING));
     }
@@ -186,6 +191,10 @@ public class IntakeGamepieceState extends VirtualSubsystem {
 
     private Command setCANRangeDistanceCommand(final double gamepieceDistanceMeters) {
         return Commands.runOnce(() -> intake.setTOFDistance(gamepieceDistanceMeters));
+    }
+
+    private Command setGroundCANRangeDistanceCommand(final double gamepieceDistanceMeters) {
+        return Commands.runOnce(() -> groundIntake.setTOFDistance(gamepieceDistanceMeters));
     }
 
     public void configureSimStateTriggers() {
@@ -205,17 +214,17 @@ public class IntakeGamepieceState extends VirtualSubsystem {
                 )
         );
 
-        groundIntake.isCoralIntaking.and(hasCoral.negate()).whileTrue(
+        groundIntake.isCoralIntaking.and(hasGroundCoral.negate()).whileTrue(
                 Commands.sequence(
                         waitRand(random, 0.5, 0.75),
-                        setCANRangeDistanceCommand(0.1)
+                        setGroundCANRangeDistanceCommand(0.1)
                 )
         );
 
-        groundIntake.isCoralOuttaking.and(hasCoral).whileTrue(
+        groundIntake.isCoralOuttaking.and(hasGroundCoral).whileTrue(
                 Commands.sequence(
                         waitRand(random, 0.1, 0.25),
-                        setCANRangeDistanceCommand(0.5)
+                        setGroundCANRangeDistanceCommand(0.5)
                 )
         );
     }

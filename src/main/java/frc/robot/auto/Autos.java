@@ -203,7 +203,7 @@ public class Autos {
     private Command runStartingTrajectory(final AutoTrajectory startingTrajectory) {
         return Commands.sequence(
                 Commands.runOnce(() -> intake.setTOFDistance(Units.inchesToMeters(6))),
-                intakeGamepieceState.setCoralState(IntakeGamepieceState.State.HOLDING),
+                intakeGamepieceState.setCoralState(IntakeGamepieceState.IntakeState.HOLDING),
                 Commands.runOnce(reefState::reset),
                 startingTrajectory.resetOdometry(),
                 startingTrajectory.cmd()
