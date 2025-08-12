@@ -30,7 +30,7 @@ public class IntakeGamepieceState extends VirtualSubsystem {
         INTAKING,
         HOLDING,
         SCORING,
-        TRANSFERRING
+        HANDING_OFF
     }
 
     private IntakeState coralState = IntakeState.NONE;
@@ -51,10 +51,10 @@ public class IntakeGamepieceState extends VirtualSubsystem {
     public final Trigger isGroundIntaking = isStateTrigger(() -> groundState, GroundState.INTAKING);
     public final Trigger isGroundHolding = isStateTrigger(() -> groundState, GroundState.HOLDING);
     public final Trigger isGroundScoring = isStateTrigger(() -> groundState, GroundState.SCORING);
-    public final Trigger isGroundTransfering = isStateTrigger(() -> groundState, GroundState.TRANSFERRING);
+    public final Trigger isGroundHandingOff = isStateTrigger(() -> groundState, GroundState.HANDING_OFF);
 
     public final Trigger hasCoral = isCoralHolding.or(isCoralScoring);
-    public final Trigger hasGroundCoral = isGroundHolding.or(isGroundTransfering).or(isGroundScoring);
+    public final Trigger hasGroundCoral = isGroundHolding.or(isGroundHandingOff).or(isGroundScoring);
     public final Trigger hasAlgae = isAlgaeHolding.or(isAlgaeScoring);
 
     public IntakeGamepieceState(
@@ -74,8 +74,7 @@ public class IntakeGamepieceState extends VirtualSubsystem {
     @Override
     public void periodic() {
         Logger.recordOutput(LogKey + "/CoralState", coralState.toString());
-        Logger.recordOutput(LogKey + "/GroundCoralState", groundState.toString())
-        ;
+        Logger.recordOutput(LogKey + "/GroundCoralState", groundState.toString());
         Logger.recordOutput(LogKey + "/AlgaeState", algaeState.toString());
 
         Logger.recordOutput(LogKey + "/IsCoralNone", isCoralNone.getAsBoolean());
@@ -92,9 +91,10 @@ public class IntakeGamepieceState extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/IsGroundIntaking", isGroundIntaking.getAsBoolean());
         Logger.recordOutput(LogKey + "/IsGroundHeld", isGroundHolding.getAsBoolean());
         Logger.recordOutput(LogKey + "/IsGroundScoring", isGroundScoring.getAsBoolean());
-        Logger.recordOutput(LogKey + "/IsGroundScoring", isGroundTransfering.getAsBoolean());
+        Logger.recordOutput(LogKey + "/IsGroundHandingOff", isGroundHandingOff.getAsBoolean());
 
         Logger.recordOutput(LogKey + "/HasCoral", hasCoral.getAsBoolean());
+        Logger.recordOutput(LogKey + "/HasGroundCoral", hasGroundCoral.getAsBoolean());
         Logger.recordOutput(LogKey + "/HasAlgae", hasAlgae.getAsBoolean());
     }
 
@@ -168,13 +168,13 @@ public class IntakeGamepieceState extends VirtualSubsystem {
                 .onTrue(setAlgaeState(IntakeState.HOLDING));
 
         groundIntake.isCoralIntaking.and(groundIntake.isCoralPresent.negate()).onTrue(setGroundState(GroundState.INTAKING));
-        groundIntake.isCoralIntaking.negate().and(isCoralIntaking).onTrue(setGroundState(GroundState.NONE));
+        groundIntake.isCoralIntaking.negate().and(isGroundIntaking).onTrue(setGroundState(GroundState.NONE));
 
         groundIntake.isCoralPresent.onTrue(setGroundState(GroundState.HOLDING));
 
         isGroundHolding.onTrue(groundIntake.holdCoral());
 
-        groundIntake.isCoralOuttaking.and(isCoralHolding).onTrue(setGroundState(GroundState.TRANSFERRING));
+        groundIntake.isCoralOuttaking.and(isGroundHolding).onTrue(setGroundState(GroundState.HANDING_OFF));
         groundIntake.isCoralPresent.negate().onTrue(setGroundState(GroundState.NONE));
         // groundIntake.isCoralOuttaking.negate().and(isCoralTransferring).and(groundIntake.isCoralPresent)
                 // .onTrue(setGroundState(State.HOLDING));

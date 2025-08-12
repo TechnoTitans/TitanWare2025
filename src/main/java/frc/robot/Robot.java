@@ -419,7 +419,7 @@ public class Robot extends LoggedRobot {
         );
 
         groundIntake.isCoralPresent.onTrue(
-                scoreCommands.transferCoral()
+                scoreCommands.handoffCoral()
         );
 
         disabled.onTrue(swerve.stopCommand());
@@ -517,7 +517,7 @@ public class Robot extends LoggedRobot {
         this.driverController.start().whileTrue(scoreCommands.processor());
 
         this.driverController.povDown()
-                .whileTrue(superstructure.toGoal(Superstructure.Goal.INTAKE_FROM_GROUND)
+                .whileTrue(superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE)
                         .alongWith(groundIntake.intakeCoralGround())
                 );
 

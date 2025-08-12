@@ -48,7 +48,7 @@ public class Visualizer {
                             0, -intake.coralDistanceIntakeCenterMeters.getAsDouble(), 0,
                             Rotation3d.kZero
                     ));
-        } else if ((intakeGamepieceState.isCoralIntaking.and(intakeGamepieceState.isGroundTransfering)).getAsBoolean()) {
+        } else if ((intakeGamepieceState.isCoralIntaking.and(intakeGamepieceState.isGroundHandingOff)).getAsBoolean()) {
             coralPose = pose
                     .plus(new Transform3d(intakeArmPose.getTranslation(), intakeArmPose.getRotation()))
                     .plus(SimConstants.Intake.CORAL_OFFSET)

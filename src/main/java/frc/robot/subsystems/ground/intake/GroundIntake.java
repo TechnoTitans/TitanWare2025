@@ -1,6 +1,5 @@
 package frc.robot.subsystems.ground.intake;
 
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -8,10 +7,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import org.littletonrobotics.junction.Logger;
-
-import java.util.Map;
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 public class GroundIntake extends SubsystemBase {
     protected static final String LogKey = "GroundIntake";
@@ -89,13 +84,14 @@ public class GroundIntake extends SubsystemBase {
                 .withName("HoldGroundCoral");
     }
 
-    public Command transferCoral() {
+    public Command handoffCoral() {
         return Commands.sequence(
                 runOnce(() -> this.coralOuttaking = true),
-                toInstantRollerVoltage(-9).withTimeout(5)
+                runRollerVoltage(-9),
+                instantStopCommand()
         )
                 .finallyDo(() -> this.coralOuttaking = false)
-                .withName("GroundTransferCoral");
+                .withName("GroundHandoffCoral");
     }
 
     public Command scoreL1() {
@@ -139,6 +135,15 @@ public class GroundIntake extends SubsystemBase {
                     groundIntakeIO.toRollerVoltage(rollerVoltageSetpoint);
                 }
         ).withName("ToInstantRollerVoltage");
+    }
+
+    public Command runRollerVoltage(final double volts) {
+        return run(
+                () -> {
+                    this.rollerVoltageSetpoint = volts;
+                    groundIntakeIO.toRollerVoltage(rollerVoltageSetpoint);
+                }
+        ).withName("RunRollerVoltage");
     }
 
     public Command toInstantRollerTorqueCurrent(final double torqueCurrentAmps) {

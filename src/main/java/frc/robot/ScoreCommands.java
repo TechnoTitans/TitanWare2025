@@ -9,7 +9,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.FieldConstants;
@@ -102,7 +101,7 @@ public class ScoreCommands {
         this.intakeGamepieceState = intakeGamepieceState;
 
         //TODO: does this need to be intakeGamepieceState.isCoralNone?
-        intakeGamepieceState.isGroundHolding.and(intake.isCoralPresent.negate()).onTrue(transferCoral());
+        intakeGamepieceState.isGroundHolding.and(intake.isCoralPresent.negate()).onTrue(handoffCoral());
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -547,16 +546,16 @@ public class ScoreCommands {
         ).withName("Climb");
     }
 
-    public Command transferCoral() {
+    public Command handoffCoral() {
         return Commands.deadline(
                 Commands.sequence(
-                    Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.TRANSFER_CORAL)).withTimeout(2),
+                    Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.HANDOFF)).withTimeout(2),
                     Commands.parallel(
-                        intake.transferCoral(),
-                        groundIntake.transferCoral()
-                    ).until(intake.isCoralPresent.and(groundIntake.isCoralPresent.negate())).withTimeout(3)
+                        intake.handoffCoral(),
+                        groundIntake.handoffCoral()
+                    ).until(intake.isCoralPresent.and(groundIntake.isCoralPresent.negate()))
                 ),
-                superstructure.toGoal(Superstructure.Goal.TRANSFER_CORAL)
-        ).withName("TransferCoral");
+                superstructure.toGoal(Superstructure.Goal.HANDOFF)
+        ).withName("HandoffCoral");
     }
 }

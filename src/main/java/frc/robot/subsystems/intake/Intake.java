@@ -209,13 +209,13 @@ public class Intake extends SubsystemBase {
                 .withName("IntakeCoralHP");
     }
 
-    public Command transferCoral() {
+    public Command handoffCoral() {
         return Commands.sequence(
                 runOnce(() -> this.coralIntaking = true),
                 toRollerVelocity(7)
         )
                 .finallyDo(() -> this.coralIntaking = false)
-                .withName("IntakeCoralTransferring");
+                .withName("IntakeCoralHandoff");
     }
 
     public Command holdCoral() {
