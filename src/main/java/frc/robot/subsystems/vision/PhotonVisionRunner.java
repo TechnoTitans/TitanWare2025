@@ -3,6 +3,7 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.subsystems.vision.estimator.VisionResult;
+import frc.robot.subsystems.vision.result.CoralTrackingResult;
 
 import java.util.Map;
 import java.util.Optional;
@@ -16,7 +17,15 @@ public interface PhotonVisionRunner {
         return Map.of();
     }
 
+    default Map<? extends VisionIO, VisionIO.VisionIOInputs> getCoralTrackingVisionIOInputsMap() {
+        return Map.of();
+    }
+
     default VisionResult getVisionResult(final VisionIO visionIO) {
+        return null;
+    }
+
+    default CoralTrackingResult getCoralTrackingResult(final VisionIO visionIO){
         return null;
     }
 }

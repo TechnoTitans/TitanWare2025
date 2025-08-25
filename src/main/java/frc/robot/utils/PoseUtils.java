@@ -3,6 +3,8 @@ package frc.robot.utils;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import frc.robot.constants.Constants;
 import frc.robot.constants.FieldConstants;
 
 public class PoseUtils {
@@ -19,6 +21,13 @@ public class PoseUtils {
                 FieldConstants.FIELD_LENGTH_X_METERS - pose2d.getX(),
                 pose2d.getY(),
                 new Rotation2d(-rotation.getCos(), rotation.getSin())
+        );
+    }
+
+    public static Pose3d coral2dTo3d(final Pose2d pose2d) {
+        return new Pose3d(
+                pose2d.getX(), pose2d.getY(), Constants.Vision.Coral_HEIGHT_Z * 0.5,
+                new Rotation3d(0, 0, pose2d.getRotation().getRotations())
         );
     }
 

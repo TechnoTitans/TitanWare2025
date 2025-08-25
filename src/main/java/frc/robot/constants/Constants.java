@@ -2,9 +2,7 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 
@@ -56,5 +54,8 @@ public interface Constants {
         double VISION_CAMERA_DEFAULT_STD_DEV_FACTOR = 1.0;
         Vector<N3> VISION_STD_DEV_COEFFS = VecBuilder.fill(0.02, 0.02, 0.02);
         double MAX_ACCEPT_BEST_POSE_AMBIGUITY = 0.15;
+
+        Transform3d ROBOT_TO_REAR_CORAL = new Transform3d(Pose3d.kZero, Pose3d.kZero);
+        double Coral_HEIGHT_Z = 0;
     }
 }
