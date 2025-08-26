@@ -89,6 +89,9 @@ public class PhotonVision extends VirtualSubsystem {
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FR_APRILTAG),
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_BL_APRILTAG),
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
+                    ),
+                    PhotonVision.makeVisionIOInputsMap(
+                            new RealVisionRunner.VisionIOCoralTrackingReal(TitanCamera.PHOTON_FC_CORAL_TRACKING)
                     )
             );
             case SIM -> {

@@ -165,7 +165,60 @@ public enum TitanCamera {
                             3
                     ),
             false
-    );
+    ),
+    PHOTON_FC_CORAL_TRACKING(
+            "FL_BOTTOM_Apriltag",
+            Constants.Vision.ROBOT_TO_FL_BOTTOM_APRILTAG,
+            new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
+            CameraProperties.ARDUCAM_OV9281,
+            2,
+            true,
+            new TitanCameraCalibration()
+                    .withCalibration(
+                            CameraProperties.Resolution.R1280x720,
+                            MatBuilder.fill(
+                                    Nat.N3(),
+                                    Nat.N3(),
+                                    // intrinsic
+                                    913.8057298291733,
+                                    0.0,
+                                    639.4170623483981,
+                                    0.0,
+                                    913.3620266692185,
+                                    354.2383130253713,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                            ),
+                            VecBuilder.fill(
+                                    // distortion
+                                    0.047,
+                                    -0.069,
+                                    0.001,
+                                    0.001,
+                                    0.015,
+                                    -0.002,
+                                    0.006,
+                                    0.001
+                            )
+                    )
+                    .withCalibrationError(
+                            CameraProperties.Resolution.R1280x720,
+                            0.39,
+                            0.06
+                    )
+                    .withFPS(
+                            CameraProperties.Resolution.R1280x720,
+                            60
+                    )
+                    .withLatency(
+                            CameraProperties.Resolution.R1280x720,
+                            25,
+                            3
+                    ),
+            false
+    )
+    ;
 
     private final PhotonCamera photonCamera;
     private final Transform3d robotToCameraTransform;
