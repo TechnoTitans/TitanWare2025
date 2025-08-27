@@ -46,6 +46,10 @@ public interface Constants {
                 new Translation3d(Units.inchesToMeters(1.333), Units.inchesToMeters(11.136), Units.inchesToMeters(10.166)),
                 new Rotation3d(0, 0, Units.degreesToRadians(-30))
         );
+        Transform3d ROBOT_TO_FC_CORAL_TRACKING = new Transform3d(
+                new Translation3d(Units.inchesToMeters(0), Units.inchesToMeters(0), Units.inchesToMeters(0)),
+                new Rotation3d(0, 0, Units.degreesToRadians(0))
+        );
 
         /**
          * Standard deviations of the supplied pose estimate (before vision, likely to be solely wheel odometry)
@@ -55,7 +59,7 @@ public interface Constants {
         Vector<N3> VISION_STD_DEV_COEFFS = VecBuilder.fill(0.02, 0.02, 0.02);
         double MAX_ACCEPT_BEST_POSE_AMBIGUITY = 0.15;
 
-        Transform3d ROBOT_TO_REAR_CORAL = new Transform3d(Pose3d.kZero, Pose3d.kZero);
+        Transform3d ROBOT_TO_FORWARD_CORAL = new Transform3d(Pose3d.kZero, Pose3d.kZero);
         double Coral_HEIGHT_Z = 0;
     }
 }

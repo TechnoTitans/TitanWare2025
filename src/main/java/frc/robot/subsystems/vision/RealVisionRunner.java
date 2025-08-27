@@ -220,12 +220,12 @@ public class RealVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public CoralTrackingResult getCoralTrackingResult(VisionIO visionIO) {
-        return coralTrackingResultMap.get(visionIO);
+    public VisionResult getVisionResult(final VisionIO visionIO) {
+        return visionResults.get(visionIO);
     }
 
     @Override
-    public VisionResult getVisionResult(final VisionIO visionIO) {
-        return visionResults.get(visionIO);
+    public CoralTrackingResult getCoralTrackingResult(VisionIO visionIO) {
+        return coralTrackingResultMap.get(visionIO);
     }
 }

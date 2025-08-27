@@ -116,6 +116,11 @@ public class PhotonVision extends VirtualSubsystem {
                                 new SimVisionRunner.VisionIOApriltagsSim(
                                         TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
                                 )
+                        ),
+                        PhotonVision.makeVisionIOInputsMap(
+                                new SimVisionRunner.VisionIOCoralTrackingSim(
+                                        TitanCamera.PHOTON_FC_CORAL_TRACKING, visionSystemSim
+                                )
                         )
                 );
             }
@@ -309,7 +314,7 @@ public class PhotonVision extends VirtualSubsystem {
 
             Logger.recordOutput(
                     logKey + "/CameraPose",
-                    new Pose3d(swerve.getPose()).transformBy(Constants.Vision.ROBOT_TO_REAR_CORAL)
+                    new Pose3d(swerve.getPose()).transformBy(Constants.Vision.ROBOT_TO_FORWARD_CORAL)
             );
 
             final CoralTrackingResult coralTrackingResult = runner.getCoralTrackingResult(visionIO);
