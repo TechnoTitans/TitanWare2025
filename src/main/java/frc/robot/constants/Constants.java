@@ -47,7 +47,7 @@ public interface Constants {
                 new Rotation3d(0, 0, Units.degreesToRadians(-30))
         );
         Transform3d ROBOT_TO_FC_CORAL_TRACKING = new Transform3d(
-                new Translation3d(Units.inchesToMeters(0), Units.inchesToMeters(0), Units.inchesToMeters(0)),
+                new Translation3d(Units.inchesToMeters(7.34), Units.inchesToMeters(10.192), Units.inchesToMeters(9.593)),
                 new Rotation3d(0, 0, Units.degreesToRadians(0))
         );
 
@@ -59,7 +59,7 @@ public interface Constants {
         Vector<N3> VISION_STD_DEV_COEFFS = VecBuilder.fill(0.02, 0.02, 0.02);
         double MAX_ACCEPT_BEST_POSE_AMBIGUITY = 0.15;
 
-        Transform3d ROBOT_TO_FORWARD_CORAL = new Transform3d(Pose3d.kZero, Pose3d.kZero);
+        Transform3d ROBOT_TO_FRONT_CORAL = new Transform3d(Pose3d.kZero, Pose3d.kZero);
         double Coral_HEIGHT_Z = 0;
     }
 }

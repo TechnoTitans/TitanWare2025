@@ -69,7 +69,7 @@ public class PhotonVision extends VirtualSubsystem {
 
     private final PhotonVisionRunner runner;
     private final Map<? extends VisionIO, VisionIO.VisionIOInputs> aprilTagVisionIOInputsMap;
-    private final Map<? extends VisionIO, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMaps;
+    private final Map<? extends VisionIO, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap;
 
     private final Swerve swerve;
     private final SwerveDrivePoseEstimator poseEstimator;
@@ -138,7 +138,7 @@ public class PhotonVision extends VirtualSubsystem {
         this.swerve = swerve;
         this.poseEstimator = poseEstimator;
         this.aprilTagVisionIOInputsMap = runner.getApriltagVisionIOInputsMap();
-        this.coralTrackingVisionIOInputsMaps = runner.getCoralTrackingVisionIOInputsMap();
+        this.coralTrackingVisionIOInputsMap = runner.getCoralTrackingVisionIOInputsMap();
 
         this.lastVisionUpdateMap = new HashMap<>();
         final Pose2d estimatedPose = poseEstimator.getEstimatedPosition();
@@ -306,7 +306,7 @@ public class PhotonVision extends VirtualSubsystem {
 
         for (
                 final Map.Entry<? extends VisionIO, VisionIO.VisionIOInputs>
-                    visionIOInputsEntry : coralTrackingVisionIOInputsMaps.entrySet()
+                    visionIOInputsEntry : coralTrackingVisionIOInputsMap.entrySet()
         ) {
             final VisionIO visionIO = visionIOInputsEntry.getKey();
             final VisionIO.VisionIOInputs inputs = visionIOInputsEntry.getValue();
@@ -314,7 +314,7 @@ public class PhotonVision extends VirtualSubsystem {
 
             Logger.recordOutput(
                     logKey + "/CameraPose",
-                    new Pose3d(swerve.getPose()).transformBy(Constants.Vision.ROBOT_TO_FORWARD_CORAL)
+                    new Pose3d(swerve.getPose()).transformBy(Constants.Vision.ROBOT_TO_FRONT_CORAL)
             );
 
             final CoralTrackingResult coralTrackingResult = runner.getCoralTrackingResult(visionIO);
@@ -430,7 +430,7 @@ public class PhotonVision extends VirtualSubsystem {
 
     public List<Pose2d> getCoralPoses() {
         final List<Pose2d> coralPoses = new ArrayList<>();
-        for (final VisionIO visionIO : coralTrackingVisionIOInputsMaps.keySet()) {
+        for (final VisionIO visionIO : coralTrackingVisionIOInputsMap.keySet()) {
             final CoralTrackingResult coralTrackingResult = runner.getCoralTrackingResult(visionIO);
             if (coralTrackingResult != null) {
                 coralPoses.addAll(Arrays.asList(coralTrackingResult
@@ -444,7 +444,7 @@ public class PhotonVision extends VirtualSubsystem {
     public Optional<Pose2d> getBestCoral(final Supplier<Pose2d> robotPoseSupplier) {
         final List<Pose2d> coralPoses = new ArrayList<>();
 
-        for (final VisionIO visionIO : coralTrackingVisionIOInputsMaps.keySet()) {
+        for (final VisionIO visionIO : coralTrackingVisionIOInputsMap.keySet()) {
             final CoralTrackingResult coralTrackingResult = runner.getCoralTrackingResult(visionIO);
             if (coralTrackingResult != null) {
                 final Optional<Pose2d> optionalBestCoralPose = coralTrackingResult
