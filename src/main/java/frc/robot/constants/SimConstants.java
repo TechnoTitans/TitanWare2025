@@ -2,7 +2,9 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Unit;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
+import org.photonvision.estimation.TargetModel;
 
 public interface SimConstants {
     // Assume 2mOhm resistance for voltage drop calculation
@@ -100,5 +102,10 @@ public interface SimConstants {
                 -0.152/2,
                 Rotation3d.kZero
         );
+    }
+
+    interface Vision {
+        TargetModel CORAL_TRACKING_MODEL =
+                new TargetModel(Units.inchesToMeters(4), Units.inchesToMeters(4), Units.inchesToMeters(7));
     }
 }

@@ -9,10 +9,7 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -47,6 +44,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -511,6 +510,115 @@ public class Swerve extends SubsystemBase {
                     invertYaw.getAsBoolean()
             );
         }).withName("TeleopDrive");
+    }
+
+    public Command teleopDriveAndAssistLineup(
+            final DoubleSupplier xSpeedSupplier,
+            final DoubleSupplier ySpeedSupplier,
+            final DoubleSupplier rotSupplier,
+            final BooleanSupplier invertYaw,
+            final Supplier<Optional<Pose2d>> optionalLineupPoseSupplier
+    ) {
+        final AtomicBoolean continuousTracking = new AtomicBoolean(true);
+        final AtomicReference<Pose2d> steadyCoralPose = new AtomicReference<>();
+
+        return Commands.sequence(
+                runOnce(() -> {
+                    continuousTracking.set(true);
+                    steadyCoralPose.set(new Pose2d());
+                }),
+                run(() -> {
+                    final SwerveSpeed.Speeds swerveSpeed = SwerveSpeed.getSwerveSpeed();
+
+                    final Translation2d translationInput = ControllerUtils.calculateLinearVelocity(
+                            -xSpeedSupplier.getAsDouble(),
+                            -ySpeedSupplier.getAsDouble(),
+                            0.01
+                    );
+
+                    final double rotationInput = ControllerUtils.getStickSquaredInput(
+                            -rotSupplier.getAsDouble(),
+                            0.01
+                    );
+
+                    final Optional<Pose2d> optionalLineupPose = optionalLineupPoseSupplier.get();
+                    if (optionalLineupPose.isPresent()) {
+                        final Pose2d robotPose = getPose();
+                        final Pose2d lineupPose;
+                        if (continuousTracking.get()) {
+                            lineupPose = optionalLineupPose.get();
+                        } else {
+                            lineupPose = steadyCoralPose.get();
+                        }
+
+                        Logger.recordOutput(LogKey + "/CoralLineUp/LastLineupPose", lineupPose);
+
+                        final double coralDistance = robotPose.minus(lineupPose).getTranslation().getNorm();
+                        if (continuousTracking.get() && coralDistance < 0.5) {
+                            continuousTracking.set(false);
+                            steadyCoralPose.set(lineupPose);
+                        }
+                        Logger.recordOutput(LogKey + "/CoralLineUp/CoralDistance", coralDistance);
+
+                        final Pose2d robotRelativeLineupPose = lineupPose.relativeTo(robotPose);
+                        final Translation2d robotRelativeLineupTranslation = lineupPose.getTranslation();
+
+                        final Translation2d robotRelativeJoysticks = translationInput
+                                .rotateBy(
+                                        robotPose
+                                                .getRotation()
+                                                .rotateBy(Rotation2d.fromDegrees(invertYaw.getAsBoolean() ? 180 : 0))
+                                                .unaryMinus()
+                                );
+                        final Translation2d joyStickUnitVector = robotRelativeJoysticks.div(robotRelativeJoysticks.getNorm());
+                        final Translation2d lineupUnitVector = robotRelativeLineupTranslation
+                                .div(robotRelativeLineupTranslation.getNorm());
+                        final double dotProduct = joyStickUnitVector.getX() * lineupUnitVector.getX()
+                                + joyStickUnitVector.getY() * lineupUnitVector.getY();
+
+                        Logger.recordOutput(LogKey + "/CoralLineUp/JoyStickUnitVector", robotPose.transformBy(
+                                new Transform2d(joyStickUnitVector, Rotation2d.fromDegrees(0))
+                        ));
+                        Logger.recordOutput(LogKey + "/CoralLineUp/LineupUnitVector", robotPose.transformBy(
+                                new Transform2d(lineupUnitVector, Rotation2d.fromDegrees(0))
+                        ));
+                        Logger.recordOutput(LogKey + "/CoralLineUp/DotProduct", dotProduct);
+
+                        final Translation2d assistedSpeeds = joyStickUnitVector
+                                .interpolate(lineupUnitVector, dotProduct)
+                                .times(robotRelativeJoysticks.getNorm())
+                                .rotateBy(
+                                        robotPose
+                                                .getRotation()
+                                                .rotateBy(Rotation2d.fromDegrees(invertYaw.getAsBoolean() ? 180 : 0))
+                                );
+
+                        Logger.recordOutput(LogKey + "/CoralLineUp/AssistedSpeeds", assistedSpeeds);
+
+                        drive(
+                                assistedSpeeds.getX()
+                                        * swerveSpeed.getTranslationSpeed(),
+                                assistedSpeeds.getY()
+                                        * swerveSpeed.getTranslationSpeed(),
+                                rotationInput
+                                        * swerveSpeed.getRotationSpeed(),
+                                true,
+                                invertYaw.getAsBoolean()
+                        );
+                    }
+
+                    drive(
+                            translationInput.getX()
+                                    * swerveSpeed.getTranslationSpeed(),
+                            translationInput.getY()
+                                    * swerveSpeed.getTranslationSpeed(),
+                            rotationInput
+                                    * swerveSpeed.getRotationSpeed(),
+                            true,
+                            invertYaw.getAsBoolean()
+                    );
+                })
+        );
     }
 
     public Command teleopFacingAngle(

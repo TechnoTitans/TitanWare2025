@@ -167,7 +167,7 @@ public enum TitanCamera {
             false
     ),
     PHOTON_FC_CORAL_TRACKING(
-            "FL_BOTTOM_Apriltag",
+            "FC_CORAL",
             Constants.Vision.ROBOT_TO_FC_CORAL_TRACKING,
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.ARDUCAM_OV9281,

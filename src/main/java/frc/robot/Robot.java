@@ -517,9 +517,16 @@ public class Robot extends LoggedRobot {
         this.driverController.start().whileTrue(scoreCommands.processor());
 
         this.driverController.povDown()
-                .whileTrue(superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE)
-                        .alongWith(groundIntake.intakeCoralGround())
-                );
+                .whileTrue(Commands.parallel(
+                        groundIntake.intakeCoralGround().asProxy(),
+                        swerve.teleopDriveAndAssistLineup(
+                                driverController::getLeftY,
+                                driverController::getLeftX,
+                                driverController::getRightX,
+                                IsRedAlliance,
+                                () -> photonVision.getBestCoralPose(swerve::getPose)
+                        )
+                ));
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))

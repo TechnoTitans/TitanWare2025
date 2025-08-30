@@ -4,10 +4,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -15,6 +12,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
@@ -106,6 +104,13 @@ public class PhotonVision extends VirtualSubsystem {
                         ),
                         PhotonVision.apriltagFieldLayout,
                         visionSystemSim,
+                        new Pose2d[] {
+                                new Pose2d(3, 4, Rotation2d.fromDegrees(0)),
+                                new Pose2d(8, 6, Rotation2d.fromDegrees(12)),
+                                new Pose2d(10, 5, Rotation2d.fromDegrees(24)),
+                                new Pose2d(1, 3, Rotation2d.fromDegrees(90)),
+                                new Pose2d(0, 12, Rotation2d.fromDegrees(1)),
+                        },
                         PhotonVision.makeVisionIOInputsMap(
                                 new SimVisionRunner.VisionIOApriltagsSim(
                                         TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
@@ -314,7 +319,7 @@ public class PhotonVision extends VirtualSubsystem {
 
             Logger.recordOutput(
                     logKey + "/CameraPose",
-                    new Pose3d(swerve.getPose()).transformBy(Constants.Vision.ROBOT_TO_FRONT_CORAL)
+                    new Pose3d(swerve.getPose()).transformBy(inputs.robotToCamera)
             );
 
             final CoralTrackingResult coralTrackingResult = runner.getCoralTrackingResult(visionIO);
@@ -441,7 +446,7 @@ public class PhotonVision extends VirtualSubsystem {
         return coralPoses;
     }
 
-    public Optional<Pose2d> getBestCoral(final Supplier<Pose2d> robotPoseSupplier) {
+    public Optional<Pose2d> getBestCoralPose(final Supplier<Pose2d> robotPoseSupplier) {
         final List<Pose2d> coralPoses = new ArrayList<>();
 
         for (final VisionIO visionIO : coralTrackingVisionIOInputsMap.keySet()) {

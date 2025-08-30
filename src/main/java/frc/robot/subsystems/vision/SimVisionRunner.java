@@ -6,20 +6,22 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.vision.cameras.CameraProperties;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
 import frc.robot.subsystems.vision.estimator.VisionResult;
 import frc.robot.subsystems.vision.result.CoralTrackingResult;
+import frc.robot.utils.PoseUtils;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.gyro.GyroUtils;
 import org.littletonrobotics.junction.Logger;
-import org.opencv.ml.EM;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.simulation.VisionTargetSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import java.util.HashMap;
@@ -148,6 +150,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
             final SwerveDriveOdometry visionIndependentOdometry,
             final AprilTagFieldLayout aprilTagFieldLayout,
             final VisionSystemSim visionSystemSim,
+            final Pose2d[] simCoralPoses,
             final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap,
             final Map<VisionIOCoralTrackingSim, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap
     ) {
@@ -155,6 +158,12 @@ public class SimVisionRunner implements PhotonVisionRunner {
         this.visionIndependentOdometry = visionIndependentOdometry;
         this.visionSystemSim = visionSystemSim;
         this.visionSystemSim.addAprilTags(aprilTagFieldLayout);
+
+        for (final Pose2d simCoralPose : simCoralPoses) {
+            this.visionSystemSim.addVisionTargets("coral", new VisionTargetSim(
+                    PoseUtils.coral2dTo3d(simCoralPose), SimConstants.Vision.CORAL_TRACKING_MODEL
+            ));
+        }
 
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
