@@ -154,7 +154,9 @@ public class Superstructure extends VirtualSubsystem {
             final Translation2d currentTranslation = getCurrentTranslation();
             final Translation2d desiredTranslation = Superstructure.Goal.GoalTranslations.get(desiredGoal);
 
-            return desiredTranslation.getY() >= currentTranslation.getY();
+            return (desiredTranslation.getY() >= currentTranslation.getY()
+                    || desiredGoal == Goal.L1)
+                    && !(runningGoal == Goal.L1 && desiredGoal == Goal.STOW);
         });
         this.desiresDownwardsMotion = desiresUpwardsMotion.negate();
 
@@ -360,6 +362,10 @@ public class Superstructure extends VirtualSubsystem {
                 elevator.getExtensionMeters(),
                 elevatorArm.getPivotPosition()
         );
+    }
+
+    public Goal getDesiredGoal() {
+        return this.desiredGoal;
     }
 
     @SuppressWarnings("unused")
