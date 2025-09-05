@@ -561,7 +561,7 @@ public class Swerve extends SubsystemBase {
                         Logger.recordOutput(LogKey + "/CoralLineUp/CoralDistance", coralDistance);
 
                         final Pose2d robotRelativeLineupPose = lineupPose.relativeTo(robotPose);
-                        final Translation2d robotRelativeLineupTranslation = lineupPose.getTranslation();
+                        final Translation2d robotRelativeLineupTranslation = robotRelativeLineupPose.getTranslation();
 
                         final Translation2d robotRelativeJoysticks = translationInput
                                 .rotateBy(
@@ -605,18 +605,18 @@ public class Swerve extends SubsystemBase {
                                 true,
                                 invertYaw.getAsBoolean()
                         );
+                    } else {
+                        drive(
+                                translationInput.getX()
+                                        * swerveSpeed.getTranslationSpeed(),
+                                translationInput.getY()
+                                        * swerveSpeed.getTranslationSpeed(),
+                                rotationInput
+                                        * swerveSpeed.getRotationSpeed(),
+                                true,
+                                invertYaw.getAsBoolean()
+                        );
                     }
-
-                    drive(
-                            translationInput.getX()
-                                    * swerveSpeed.getTranslationSpeed(),
-                            translationInput.getY()
-                                    * swerveSpeed.getTranslationSpeed(),
-                            rotationInput
-                                    * swerveSpeed.getRotationSpeed(),
-                            true,
-                            invertYaw.getAsBoolean()
-                    );
                 })
         );
     }

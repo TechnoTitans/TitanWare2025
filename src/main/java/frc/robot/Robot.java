@@ -497,8 +497,21 @@ public class Robot extends LoggedRobot {
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ).withName("SwerveSpeedSlow"));
 
-        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
+        this.driverController.x().whileTrue(
                 scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+        );
+
+        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
+                Commands.parallel(
+                        groundIntake.intakeCoralGround(),
+                        swerve.teleopDriveAndAssistLineup(
+                                driverController::getLeftY,
+                                driverController::getLeftX,
+                                driverController::getRightX,
+                                IsRedAlliance,
+                                () -> photonVision.getBestCoralPose(swerve::getPose)
+                        )
+                )
         );
 
         this.driverController.rightTrigger(0.5, teleopEventLoop)
@@ -508,7 +521,7 @@ public class Robot extends LoggedRobot {
 
         this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
-        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreBarge());
+        this.driverController.povUp().whileTrue(scoreCommands.scoreBarge());
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
@@ -516,17 +529,6 @@ public class Robot extends LoggedRobot {
 
         this.driverController.start().whileTrue(scoreCommands.processor());
 
-        this.driverController.povDown()
-                .whileTrue(Commands.parallel(
-                        groundIntake.intakeCoralGround().asProxy(),
-                        swerve.teleopDriveAndAssistLineup(
-                                driverController::getLeftY,
-                                driverController::getLeftX,
-                                driverController::getRightX,
-                                IsRedAlliance,
-                                () -> photonVision.getBestCoralPose(swerve::getPose)
-                        )
-                ));
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))
