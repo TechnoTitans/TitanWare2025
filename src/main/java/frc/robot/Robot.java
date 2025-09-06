@@ -301,6 +301,8 @@ public class Robot extends LoggedRobot {
         LoggedCommandScheduler.periodic();
         visualizer.periodic();
 
+        Logger.recordOutput("GroundIntakePose", Pose3d.kZero);
+
         Logger.recordOutput("RawScorePosition", rawScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
 

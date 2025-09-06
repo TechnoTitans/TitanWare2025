@@ -112,15 +112,15 @@ public class PhotonVision extends VirtualSubsystem {
                                 new Pose2d(0, 12, Rotation2d.fromDegrees(1)),
                         },
                         PhotonVision.makeVisionIOInputsMap(
-                                new SimVisionRunner.VisionIOApriltagsSim(
-                                        TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
-                                ),
-                                new SimVisionRunner.VisionIOApriltagsSim(
-                                        TitanCamera.PHOTON_BL_APRILTAG, visionSystemSim
-                                ),
-                                new SimVisionRunner.VisionIOApriltagsSim(
-                                        TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
-                                )
+//                                new SimVisionRunner.VisionIOApriltagsSim(
+//                                        TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
+//                                ),
+//                                new SimVisionRunner.VisionIOApriltagsSim(
+//                                        TitanCamera.PHOTON_BL_APRILTAG, visionSystemSim
+//                                ),
+//                                new SimVisionRunner.VisionIOApriltagsSim(
+//                                        TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
+//                                )
                         ),
                         PhotonVision.makeVisionIOInputsMap(
                                 new SimVisionRunner.VisionIOCoralTrackingSim(
@@ -449,6 +449,7 @@ public class PhotonVision extends VirtualSubsystem {
         return coralPoses;
     }
 
+    //TODO: Removing sorting and find min
     public Optional<Pose2d> getBestCoralPose(final Supplier<Pose2d> robotPoseSupplier) {
         final List<Pose2d> coralPoses = new ArrayList<>();
 

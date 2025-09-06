@@ -117,7 +117,7 @@ public class FieldConstants {
             L4(Units.inchesToMeters(72), -90, Transform2d.kZero),
             L3(Units.inchesToMeters(47.625), -35, Transform2d.kZero),
             L2(Units.inchesToMeters(31.875), -35, Transform2d.kZero),
-            L1(Units.inchesToMeters(18), 0, new Transform2d(-Units.inchesToMeters(2), 0, Rotation2d.kZero));
+            L1(Units.inchesToMeters(18), 0, new Transform2d(-Units.inchesToMeters(8), 0, Rotation2d.kZero));
 
             public final double heightMeters;
             public final double pitchDegrees;

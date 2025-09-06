@@ -29,8 +29,6 @@ public class GroundIntakeArm extends SubsystemBase {
     private final PositionSetpoint pivotUpperLimit;
 
     public final Trigger atSetpoint = new Trigger(this::atPivotPositionSetpoint);
-    public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
-    public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
 
     public static class PositionSetpoint {
         public double pivotPositionRots = 0;
@@ -56,8 +54,8 @@ public class GroundIntakeArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        STOW(0.09),
-        UPRIGHT(0),
+        STOW(0),
+        UPRIGHT(-0.09),
         INTAKE_FROM_GROUND(-0.265),
         TRANSFER_CORAL(0.03),
         SCORE_L1(-0.1),
@@ -119,14 +117,6 @@ public class GroundIntakeArm extends SubsystemBase {
         }
     }
 
-    public boolean atGoal(final Goal goal) {
-        return PositionSetpoint.atSetpoint(
-                goal.getPivotPositionGoalRots(),
-                inputs.pivotPositionRots,
-                inputs.pivotVelocityRotsPerSec
-        );
-    }
-
     private boolean atPivotPositionSetpoint() {
         return setpoint.atSetpoint(inputs.pivotPositionRots, inputs.pivotVelocityRotsPerSec)
                 && currentGoal == desiredGoal;
@@ -147,13 +137,5 @@ public class GroundIntakeArm extends SubsystemBase {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
-    }
-
-    public Command runPositionCommand(final DoubleSupplier positionRots) {
-        return run(() -> {
-            this.desiredGoal = Goal.DYNAMIC;
-            setpoint.pivotPositionRots = positionRots.getAsDouble();
-            groundIntakeArmIO.toPivotPosition(setpoint.pivotPositionRots);
-        });
     }
 }

@@ -91,13 +91,13 @@ public interface SimConstants {
 
         double RETRACTED_MOI_KG_M_SQUARED = 0.0176;
 
-        Translation3d ORIGIN = new Translation3d(.330, 0, .1844);
-        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(90);
+        Translation3d ORIGIN = new Translation3d(0.356, 0, 0.178);
+        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(115.842);
         Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(0)
                 .plus(ZEROED_POSITION_TO_HORIZONTAL);
 
         Transform3d CORAL_OFFSET = new Transform3d(
-                WIDTH_METERS/2+Units.inchesToMeters(4.5),
+                WIDTH_METERS/2 + Units.inchesToMeters(4.5),
                 0,
                 -0.152/2,
                 Rotation3d.kZero
