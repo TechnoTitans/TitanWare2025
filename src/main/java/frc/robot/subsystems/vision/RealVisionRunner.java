@@ -100,7 +100,7 @@ public class RealVisionRunner implements PhotonVisionRunner {
     private final AprilTagFieldLayout aprilTagFieldLayout;
     private final Map<VisionIOApriltagReal, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
 
-    private final Map<VisionIO, VisionResult> visionResults;
+    private final Map<VisionIO, VisionResult[]> visionResultsByVisionIO;
 
     public RealVisionRunner(
             final AprilTagFieldLayout aprilTagFieldLayout,
@@ -108,7 +108,7 @@ public class RealVisionRunner implements PhotonVisionRunner {
     ) {
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
-        this.visionResults = new HashMap<>();
+        this.visionResultsByVisionIO = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -134,7 +134,11 @@ public class RealVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
+            final int nPipelineResults = pipelineResults.length;
+            final VisionResult[] visionResults = new VisionResult[pipelineResults.length];
+
+            for (int i = 0; i < nPipelineResults; i++) {
+                final PhotonPipelineResult pipelineResult = pipelineResults[i];
                 final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
@@ -142,11 +146,14 @@ public class RealVisionRunner implements PhotonVisionRunner {
                         pipelineResult
                 );
 
-                visionResults.put(
-                        visionIO,
-                        visionResult
-                );
+                visionResults[i] = visionResult;
             }
+
+            // TODO does this actually fix anything?
+            visionResultsByVisionIO.put(
+                    visionIO,
+                    visionResults
+            );
         }
     }
 
@@ -163,7 +170,7 @@ public class RealVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public VisionResult getVisionResult(final VisionIO visionIO) {
-        return visionResults.get(visionIO);
+    public VisionResult[] getVisionResults(final VisionIO visionIO) {
+        return visionResultsByVisionIO.get(visionIO);
     }
 }

@@ -4,10 +4,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Twist2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -104,7 +101,7 @@ public class PhotonVision extends VirtualSubsystem {
                                 new SimVisionRunner.VisionIOApriltagsSim(
                                         TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
                                 ),
-                                new SimVisionRunner.VisionIOApriltagsSim(
+                               new SimVisionRunner.VisionIOApriltagsSim(
                                         TitanCamera.PHOTON_BL_APRILTAG, visionSystemSim
                                 ),
                                 new SimVisionRunner.VisionIOApriltagsSim(
@@ -253,18 +250,19 @@ public class PhotonVision extends VirtualSubsystem {
                     new Pose3d(swerve.getPose()).transformBy(inputs.robotToCamera)
             );
 
-            final VisionResult visionResult = runner.getVisionResult(visionIO);
-            if (visionResult != null) {
+            final VisionResult[] visionResults = runner.getVisionResults(visionIO);
+            for (final VisionResult result : visionResults) {
                 final VisionResult lastVisionResult = lastVisionUpdateMap.get(visionIO);
                 final RejectionReason rejectionReason =
-                        shouldReject(visionResult, lastVisionResult);
+                        shouldReject(result, lastVisionResult);
                 final boolean rejected = rejectionReason.wasRejected();
 
+                // TODO does not differentiate log key per result
                 Logger.recordOutput(logKey + "/Rejected", rejected);
                 Logger.recordOutput(logKey + "/RejectionReason", rejectionReason);
-                Logger.recordOutput(logKey + "/VisionResult", visionResult.result());
+                Logger.recordOutput(logKey + "/VisionResult", result.result());
 
-                final Optional<VisionResult.VisionUpdate> maybeVisionUpdate = visionResult.visionUpdate();
+                final Optional<VisionResult.VisionUpdate> maybeVisionUpdate = result.visionUpdate();
                 if (maybeVisionUpdate.isEmpty()) {
                     continue;
                 }
@@ -283,7 +281,7 @@ public class PhotonVision extends VirtualSubsystem {
                 );
                 Logger.recordOutput(logKey + "/StdDevs", stdDevs.getData());
 
-                lastVisionUpdateMap.put(visionIO, visionResult);
+                lastVisionUpdateMap.put(visionIO, result);
                 poseEstimator.addVisionMeasurement(
                         visionUpdate.estimatedPose().toPose2d(),
                         visionUpdateTimestamp,

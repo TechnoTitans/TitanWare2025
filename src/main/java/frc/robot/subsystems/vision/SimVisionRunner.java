@@ -20,9 +20,7 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public class SimVisionRunner implements PhotonVisionRunner {
@@ -87,7 +85,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
     private final AprilTagFieldLayout aprilTagFieldLayout;
     private final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
 
-    private final Map<VisionIO, VisionResult> visionResults;
+    private final Map<VisionIO, VisionResult[]> visionResultsByVisionIO;
 
     public SimVisionRunner(
             final Swerve swerve,
@@ -104,7 +102,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
 
-        this.visionResults = new HashMap<>();
+        this.visionResultsByVisionIO = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -144,7 +142,11 @@ public class SimVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
+            final int nPipelineResults = pipelineResults.length;
+            final VisionResult[] visionResults = new VisionResult[pipelineResults.length];
+
+            for (int i = 0; i < nPipelineResults; i++) {
+                final PhotonPipelineResult pipelineResult = pipelineResults[i];
                 final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
@@ -152,11 +154,13 @@ public class SimVisionRunner implements PhotonVisionRunner {
                         pipelineResult
                 );
 
-                visionResults.put(
-                        visionIO,
-                        visionResult
-                );
+                visionResults[i] = visionResult;
             }
+
+            visionResultsByVisionIO.put(
+                    visionIO,
+                    visionResults
+            );
         }
     }
 
@@ -180,7 +184,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public VisionResult getVisionResult(final VisionIO visionIO) {
-        return visionResults.get(visionIO);
+    public VisionResult[] getVisionResults(final VisionIO visionIO) {
+        return visionResultsByVisionIO.get(visionIO);
     }
 }
