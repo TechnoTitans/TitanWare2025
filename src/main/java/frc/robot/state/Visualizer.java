@@ -5,7 +5,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.drive.Swerve;
-import frc.robot.subsystems.ground.intake.GroundIntake;
+import frc.robot.subsystems.ground.GroundIntake;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import org.littletonrobotics.junction.Logger;

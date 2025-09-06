@@ -29,7 +29,7 @@ import frc.robot.state.ReefState;
 import frc.robot.state.Visualizer;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
-import frc.robot.subsystems.ground.intake.GroundIntake;
+import frc.robot.subsystems.ground.GroundIntake;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.distal.IntakeArm;

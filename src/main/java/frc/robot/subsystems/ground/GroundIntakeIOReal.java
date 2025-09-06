@@ -1,4 +1,4 @@
-package frc.robot.subsystems.ground.intake;
+package frc.robot.subsystems.ground;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -15,33 +15,15 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.UpdateModeValue;
-import com.ctre.phoenix6.sim.ChassisReference;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.HardwareConstants;
-import frc.robot.utils.MoreDCMotor;
-import frc.robot.utils.closeables.ToClose;
-import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.RefreshAll;
-import frc.robot.utils.sim.motors.TalonFXSim;
 
-public class GroundIntakeIOSim implements GroundIntakeIO {
-    private static final double SIM_UPDATE_PERIOD_SEC = 0.005;
-
-    private final DeltaTime deltaTime;
+public class GroundIntakeIOReal implements GroundIntakeIO {
     private final HardwareConstants.GroundIntakeConstants constants;
 
     private final TalonFX rollerMotor;
     private final CANrange coralCANRange;
-
-    private final TalonFXSim rollerTalonFXSim;
-
-    private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC;
-    private final TorqueCurrentFOC torqueCurrentFOC;
-    private final VoltageOut voltageOut;
 
     private final StatusSignal<Angle> rollerPosition;
     private final StatusSignal<AngularVelocity> rollerVelocity;
@@ -50,32 +32,15 @@ public class GroundIntakeIOSim implements GroundIntakeIO {
     private final StatusSignal<Temperature> rollerDeviceTemp;
     private final StatusSignal<Distance> rollerCANRangeDistance;
 
-    public GroundIntakeIOSim(final HardwareConstants.GroundIntakeConstants constants) {
-        this.deltaTime = new DeltaTime(true);
+    private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC;
+    private final TorqueCurrentFOC torqueCurrentFOC;
+    private final VoltageOut voltageOut;
+
+    public GroundIntakeIOReal(final HardwareConstants.GroundIntakeConstants constants) {
         this.constants = constants;
 
         this.rollerMotor = new TalonFX(constants.rollerMotorID(), constants.CANBus());
         this.coralCANRange = new CANrange(constants.coralTOFID(), constants.CANBus());
-
-        final DCMotorSim rollerMotorSim = new DCMotorSim(
-                LinearSystemId.createDCMotorSystem(
-                        0.19557 / (2 * Math.PI),
-                        2.9856 / (2 * Math.PI)
-                ),
-                MoreDCMotor.getKrakenX44(1)
-        );
-        this.rollerTalonFXSim = new TalonFXSim(
-                rollerMotor,
-                constants.rollerGearing(),
-                rollerMotorSim::update,
-                rollerMotorSim::setInputVoltage,
-                rollerMotorSim::getAngularPositionRad,
-                rollerMotorSim::getAngularVelocityRadPerSec
-        );
-
-        this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
-        this.torqueCurrentFOC = new TorqueCurrentFOC(0);
-        this.voltageOut = new VoltageOut(0);
 
         this.rollerPosition = rollerMotor.getPosition(false);
         this.rollerVelocity = rollerMotor.getVelocity(false);
@@ -83,6 +48,10 @@ public class GroundIntakeIOSim implements GroundIntakeIO {
         this.rollerTorqueCurrent = rollerMotor.getTorqueCurrent(false);
         this.rollerDeviceTemp = rollerMotor.getDeviceTemp(false);
         this.rollerCANRangeDistance = coralCANRange.getDistance(false);
+
+        this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
+        this.torqueCurrentFOC = new TorqueCurrentFOC(0);
+        this.voltageOut = new VoltageOut(0);
 
         RefreshAll.add(
                 RefreshAll.CANBus.RIO,
@@ -93,17 +62,6 @@ public class GroundIntakeIOSim implements GroundIntakeIO {
                 rollerDeviceTemp,
                 rollerCANRangeDistance
         );
-
-        final Notifier simUpdateNotifier = new Notifier(() -> {
-            final double dt = deltaTime.get();
-            rollerTalonFXSim.update(dt);
-        });
-        ToClose.add(simUpdateNotifier);
-        simUpdateNotifier.setName(String.format(
-                "SimUpdate(%d)",
-                rollerMotor.getDeviceID()
-        ));
-        simUpdateNotifier.startPeriodic(SIM_UPDATE_PERIOD_SEC);
     }
 
     @Override
@@ -115,22 +73,23 @@ public class GroundIntakeIOSim implements GroundIntakeIO {
         CANRangeConfiguration.FovParams.FOVRangeY = 7;
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
-        final InvertedValue coralRollerInvertedValue = InvertedValue.CounterClockwise_Positive;
-        final TalonFXConfiguration coralConfiguration = new TalonFXConfiguration();
-        coralConfiguration.Slot0 = new Slot0Configs()
-                .withKS(3.3326)
-                .withKV(0.15104)
-                .withKA(0.2004)
-                .withKP(10.746);
-        coralConfiguration.TorqueCurrent.PeakForwardTorqueCurrent = 60;
-        coralConfiguration.TorqueCurrent.PeakReverseTorqueCurrent = -60;
-        coralConfiguration.CurrentLimits.StatorCurrentLimit = 60;
-        coralConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        coralConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        coralConfiguration.MotorOutput.Inverted = coralRollerInvertedValue;
-        coralConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
-        coralConfiguration.Feedback.SensorToMechanismRatio = constants.rollerGearing();
-        rollerMotor.getConfigurator().apply(coralConfiguration);
+        final TalonFXConfiguration rollerConfiguration = new TalonFXConfiguration();
+        rollerConfiguration.Slot0 = new Slot0Configs()
+                .withKS(4.0212)
+                .withKV(0.40767)
+                .withKA(0.22711)
+                .withKP(30);
+        rollerConfiguration.CurrentLimits.StatorCurrentLimit = 40;
+        rollerConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
+        rollerConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
+        rollerConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        rollerConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
+        rollerConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
+        rollerConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        rollerConfiguration.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        rollerConfiguration.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+        rollerConfiguration.Feedback.SensorToMechanismRatio = constants.rollerGearing();
+        rollerMotor.getConfigurator().apply(rollerConfiguration);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
@@ -151,13 +110,10 @@ public class GroundIntakeIOSim implements GroundIntakeIO {
                 rollerMotor,
                 coralCANRange
         );
-
-        rollerMotor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-        coralCANRange.getSimState().setDistance(10);
     }
 
     @Override
-    public void updateInputs(GroundIntakeIO.GroundIntakeIOInputs inputs) {
+    public void updateInputs(final GroundIntakeIO.GroundIntakeIOInputs inputs) {
         inputs.rollerPositionRots = rollerPosition.getValueAsDouble();
         inputs.rollerVelocityRotsPerSec = rollerVelocity.getValueAsDouble();
         inputs.rollerVoltage = rollerVoltage.getValueAsDouble();
@@ -172,17 +128,12 @@ public class GroundIntakeIOSim implements GroundIntakeIO {
     }
 
     @Override
-    public void toRollerVoltage(final double volts) {
-        rollerMotor.setControl(voltageOut.withOutput(volts));
-    }
-
-    @Override
-    public void toRollerTorqueCurrent(final double torqueCurrentAmps) {
+    public void toRollerTorqueCurrent(double torqueCurrentAmps) {
         rollerMotor.setControl(torqueCurrentFOC.withOutput(torqueCurrentAmps));
     }
 
     @Override
-    public void setTOFDistance(final double distanceMeters) {
-        coralCANRange.getSimState().setDistance(distanceMeters);
+    public void toRollerVoltage(double volts) {
+        rollerMotor.setControl(voltageOut.withOutput(volts));
     }
 }
