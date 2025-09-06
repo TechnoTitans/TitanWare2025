@@ -199,13 +199,6 @@ public class ScoreCommands {
                 }
         );
 
-        final Trigger shouldUseGroundIntake = new Trigger(() ->
-                switch (scorePositionContainer.value.level) {
-                    case AUTO_L4, L4, L3, L2 -> false;
-                    case L1 -> true;
-                }
-        );
-
         final Supplier<ExtendWhen> extendWhenSupplier = () ->
                 switch (scorePositionContainer.value.level) {
                     case AUTO_L4, L4 -> ExtendWhen.CLOSE;
@@ -330,11 +323,7 @@ public class ScoreCommands {
                                 Commands.waitUntil(atReef.or(wasEverAtReef::get)),
                                 Commands.waitUntil(atSuperstructureSetpoint)
                                         .withTimeout(2),
-//                                Commands.either(
-                                        intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy()
-//                                        groundIntake.scoreL1().asProxy(),
-//                                        shouldUseGroundIntake
-//                                ).asProxy()
+                                intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy()
                         ),
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
