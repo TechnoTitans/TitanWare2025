@@ -503,6 +503,7 @@ public class Robot extends LoggedRobot {
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
                 Commands.parallel(
+                        superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE),
                         groundIntake.intakeCoralGround(),
                         swerve.teleopDriveAndAssistLineup(
                                 driverController::getLeftY,
