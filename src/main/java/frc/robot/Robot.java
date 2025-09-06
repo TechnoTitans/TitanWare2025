@@ -518,7 +518,7 @@ public class Robot extends LoggedRobot {
                                 driverController::getLeftX,
                                 driverController::getRightX,
                                 IsRedAlliance,
-                                () -> photonVision.getBestCoralPose(swerve::getPose)
+                                () -> photonVision.getBestCoralPose(swerve::getPose, swerve::getPose)
                         )
                 )
         );
