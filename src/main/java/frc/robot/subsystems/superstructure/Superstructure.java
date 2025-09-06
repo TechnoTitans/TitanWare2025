@@ -364,10 +364,6 @@ public class Superstructure extends VirtualSubsystem {
         );
     }
 
-    public Goal getDesiredGoal() {
-        return this.desiredGoal;
-    }
-
     @SuppressWarnings("unused")
     public Optional<Goal> getClosestGoal(final Set<Goal> goalWhitelist) {
         final Translation2d currentTranslation = getCurrentTranslation();

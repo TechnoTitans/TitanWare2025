@@ -83,7 +83,7 @@ public class ElevatorArm extends SubsystemBase {
         L4(0.1525),
         L3(0.12842),
         L2(0.1),
-        L1(0.0214),
+        L1(0.0260),
         CLIMB(0.184),
         CLIMB_DOWN(-6),
         TRANSFER_CORAL(0.1);
