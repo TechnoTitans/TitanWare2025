@@ -21,11 +21,11 @@ public interface PhotonVisionRunner {
         return Map.of();
     }
 
-    default VisionResult getVisionResult(final VisionIO visionIO) {
+    default VisionResult[] getVisionResults(final VisionIO visionIO) {
         return null;
     }
 
-    default CoralTrackingResult getCoralTrackingResult(final VisionIO visionIO){
+    default CoralTrackingResult[] getCoralTrackingResults(final VisionIO visionIO){
         return null;
     }
 }

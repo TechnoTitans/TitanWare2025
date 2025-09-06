@@ -2,7 +2,6 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Unit;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import org.photonvision.estimation.TargetModel;
 
@@ -105,7 +104,7 @@ public interface SimConstants {
     }
 
     interface Vision {
-        TargetModel CORAL_TRACKING_MODEL =
+        TargetModel CORAL_TARGET_MODEL =
                 new TargetModel(Units.inchesToMeters(4), Units.inchesToMeters(4), Units.inchesToMeters(7));
     }
 }

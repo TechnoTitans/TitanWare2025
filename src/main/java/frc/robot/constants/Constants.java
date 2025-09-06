@@ -59,6 +59,6 @@ public interface Constants {
         Vector<N3> VISION_STD_DEV_COEFFS = VecBuilder.fill(0.02, 0.02, 0.02);
         double MAX_ACCEPT_BEST_POSE_AMBIGUITY = 0.15;
 
-        double Coral_HEIGHT_Z = Units.inchesToMeters(4);
+        double CORAL_Z_POSITION = Units.inchesToMeters(2);
     }
 }

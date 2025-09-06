@@ -2,10 +2,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -65,6 +62,15 @@ public class Robot extends LoggedRobot {
     public static final BooleanSupplier IsRedAlliance = () -> {
         final Optional<DriverStation.Alliance> alliance = DriverStation.getAlliance();
         return alliance.isPresent() && alliance.get() == DriverStation.Alliance.Red;
+    };
+
+    // TODO temp
+    public static final Pose3d[] SimCoralPoses = new Pose3d[] {
+            new Pose3d(3, 4, Constants.Vision.CORAL_Z_POSITION, new Rotation3d(0, Units.degreesToRadians(90), 0)),
+            new Pose3d(8, 6, Constants.Vision.CORAL_Z_POSITION, new Rotation3d(0, Units.degreesToRadians(90), 0)),
+            new Pose3d(10, 5, Constants.Vision.CORAL_Z_POSITION, new Rotation3d(0, Units.degreesToRadians(90), 0)),
+            new Pose3d(1, 3, Constants.Vision.CORAL_Z_POSITION, new Rotation3d(0, Units.degreesToRadians(90), 0)),
+            new Pose3d(0, 12, Constants.Vision.CORAL_Z_POSITION, new Rotation3d(0, Units.degreesToRadians(90), 0)),
     };
 
     public final PowerDistribution powerDistribution = new PowerDistribution(
@@ -301,7 +307,7 @@ public class Robot extends LoggedRobot {
         LoggedCommandScheduler.periodic();
         visualizer.periodic();
 
-        Logger.recordOutput("GroundIntakePose", Pose3d.kZero);
+        Logger.recordOutput("SimCoralPoses", SimCoralPoses);
 
         Logger.recordOutput("RawScorePosition", rawScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());

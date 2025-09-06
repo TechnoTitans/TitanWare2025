@@ -123,8 +123,8 @@ public class RealVisionRunner implements PhotonVisionRunner {
     private final Map<VisionIOApriltagReal, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
     private final Map<VisionIOCoralTrackingReal, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap;
 
-    private final Map<VisionIO, VisionResult> visionResults;
-    private final Map<VisionIO, CoralTrackingResult> coralTrackingResultMap;
+    private final Map<VisionIO, VisionResult[]> visionResultsByVisionIO;
+    private final Map<VisionIO, CoralTrackingResult[]> coralTrackingResultsByVisionIO;
 
     public RealVisionRunner(
             final AprilTagFieldLayout aprilTagFieldLayout,
@@ -134,8 +134,8 @@ public class RealVisionRunner implements PhotonVisionRunner {
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
         this.coralTrackingVisionIOInputsMap = coralTrackingVisionIOInputsMap;
-        this.visionResults = new HashMap<>();
-        this.coralTrackingResultMap = new HashMap<>();
+        this.visionResultsByVisionIO = new HashMap<>();
+        this.coralTrackingResultsByVisionIO = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -161,7 +161,11 @@ public class RealVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
+            final int nPipelineResults = pipelineResults.length;
+            final VisionResult[] visionResults = new VisionResult[pipelineResults.length];
+
+            for (int i = 0; i < nPipelineResults; i++) {
+                final PhotonPipelineResult pipelineResult = pipelineResults[i];
                 final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
@@ -169,11 +173,14 @@ public class RealVisionRunner implements PhotonVisionRunner {
                         pipelineResult
                 );
 
-                visionResults.put(
-                        visionIO,
-                        visionResult
-                );
+                visionResults[i] = visionResult;
             }
+
+            // TODO does this actually fix anything?
+            visionResultsByVisionIO.put(
+                    visionIO,
+                    visionResults
+            );
         }
 
         for (
@@ -192,13 +199,20 @@ public class RealVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
+            final int nPipelineResults = pipelineResults.length;
+            final CoralTrackingResult[] coralTrackingResults = new CoralTrackingResult[nPipelineResults];
+
+            for (int i = 0; i < nPipelineResults; i++) {
+                final PhotonPipelineResult pipelineResult = pipelineResults[i];
                 final CoralTrackingResult coralTrackingResult = new CoralTrackingResult(
-                        inputs.robotToCamera, pipelineResult
+                        inputs.robotToCamera,
+                        pipelineResult
                 );
 
-                coralTrackingResultMap.put(visionIO, coralTrackingResult);
+                coralTrackingResults[i] = coralTrackingResult;
             }
+
+            coralTrackingResultsByVisionIO.put(visionIO, coralTrackingResults);
         }
     }
 
@@ -220,12 +234,12 @@ public class RealVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public VisionResult getVisionResult(final VisionIO visionIO) {
-        return visionResults.get(visionIO);
+    public VisionResult[] getVisionResults(final VisionIO visionIO) {
+        return visionResultsByVisionIO.get(visionIO);
     }
 
     @Override
-    public CoralTrackingResult getCoralTrackingResult(VisionIO visionIO) {
-        return coralTrackingResultMap.get(visionIO);
+    public CoralTrackingResult[] getCoralTrackingResults(final VisionIO visionIO) {
+        return coralTrackingResultsByVisionIO.get(visionIO);
     }
 }

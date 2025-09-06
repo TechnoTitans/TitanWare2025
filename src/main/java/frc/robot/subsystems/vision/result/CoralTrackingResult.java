@@ -92,7 +92,7 @@ public class CoralTrackingResult {
     public static double getCoralDistance(final Transform3d robotToCamera, final PhotonTrackedTarget trackedTarget) {
         return PhotonUtils.calculateDistanceToTargetMeters(
                 robotToCamera.getZ(),
-                Constants.Vision.Coral_HEIGHT_Z,
+                Constants.Vision.CORAL_Z_POSITION,
                 -robotToCamera.getRotation().getY(), //Convert CCW+ to CW+
                 Units.degreesToRadians(trackedTarget.getPitch())
         ) / Math.cos(Units.degreesToRadians(trackedTarget.getYaw())) + DistanceOffsetMeters;

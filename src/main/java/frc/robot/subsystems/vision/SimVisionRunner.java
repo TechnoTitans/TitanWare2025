@@ -13,7 +13,6 @@ import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
 import frc.robot.subsystems.vision.estimator.VisionResult;
 import frc.robot.subsystems.vision.result.CoralTrackingResult;
-import frc.robot.utils.PoseUtils;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.gyro.GyroUtils;
 import org.littletonrobotics.junction.Logger;
@@ -23,10 +22,9 @@ import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.simulation.VisionTargetSim;
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public class SimVisionRunner implements PhotonVisionRunner {
@@ -130,7 +128,22 @@ public class SimVisionRunner implements PhotonVisionRunner {
             inputs.cameraMatrix = photonCamera.getCameraMatrix().orElse(EmptyCameraMatrix);
             inputs.distortionCoeffs = photonCamera.getDistCoeffs().orElse(EmptyDistortionCoeffs);
 
-            inputs.pipelineResults = photonCamera.getAllUnreadResults().toArray(new PhotonPipelineResult[0]);
+            // TODO kinda a nasty fix
+            final List<PhotonPipelineResult> pipelineResults = photonCamera.getAllUnreadResults();
+            final List<PhotonPipelineResult> filteredPipelineResults = new ArrayList<>();
+            for (final PhotonPipelineResult result : pipelineResults) {
+                final List<PhotonTrackedTarget> filteredTargets = result.targets.stream()
+                        .filter(target -> target.fiducialId == -1)
+                        .toList();
+
+                filteredPipelineResults.add(new PhotonPipelineResult(
+                        result.metadata,
+                        filteredTargets,
+                        result.multitagResult
+                ));
+            }
+
+            inputs.pipelineResults = filteredPipelineResults.toArray(PhotonPipelineResult[]::new);
         }
     }
 
@@ -142,15 +155,15 @@ public class SimVisionRunner implements PhotonVisionRunner {
     private final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
     private final Map<VisionIOCoralTrackingSim, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap;
 
-    private final Map<VisionIO, VisionResult> visionResults;
-    private final Map<VisionIO, CoralTrackingResult> coralTrackingResults;
+    private final Map<VisionIO, VisionResult[]> visionResultsByVisionIO;
+    private final Map<VisionIO, CoralTrackingResult[]> coralTrackingResultsByVisionIO;
 
     public SimVisionRunner(
             final Swerve swerve,
             final SwerveDriveOdometry visionIndependentOdometry,
             final AprilTagFieldLayout aprilTagFieldLayout,
             final VisionSystemSim visionSystemSim,
-            final Pose2d[] simCoralPoses,
+            final Pose3d[] simCoralPoses,
             final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap,
             final Map<VisionIOCoralTrackingSim, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap
     ) {
@@ -159,9 +172,10 @@ public class SimVisionRunner implements PhotonVisionRunner {
         this.visionSystemSim = visionSystemSim;
         this.visionSystemSim.addAprilTags(aprilTagFieldLayout);
 
-        for (final Pose2d simCoralPose : simCoralPoses) {
+        for (final Pose3d simCoralPose : simCoralPoses) {
             this.visionSystemSim.addVisionTargets("coral", new VisionTargetSim(
-                    PoseUtils.coral2dTo3d(simCoralPose), SimConstants.Vision.CORAL_TRACKING_MODEL
+                    simCoralPose,
+                    SimConstants.Vision.CORAL_TARGET_MODEL
             ));
         }
 
@@ -169,8 +183,8 @@ public class SimVisionRunner implements PhotonVisionRunner {
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
         this.coralTrackingVisionIOInputsMap = coralTrackingVisionIOInputsMap;
 
-        this.visionResults = new HashMap<>();
-        this.coralTrackingResults = new HashMap<>();
+        this.visionResultsByVisionIO = new HashMap<>();
+        this.coralTrackingResultsByVisionIO = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -210,7 +224,11 @@ public class SimVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
+            final int nPipelineResults = pipelineResults.length;
+            final VisionResult[] visionResults = new VisionResult[pipelineResults.length];
+
+            for (int i = 0; i < nPipelineResults; i++) {
+                final PhotonPipelineResult pipelineResult = pipelineResults[i];
                 final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
@@ -218,11 +236,13 @@ public class SimVisionRunner implements PhotonVisionRunner {
                         pipelineResult
                 );
 
-                visionResults.put(
-                        visionIO,
-                        visionResult
-                );
+                visionResults[i] = visionResult;
             }
+
+            visionResultsByVisionIO.put(
+                    visionIO,
+                    visionResults
+            );
         }
 
         for (
@@ -241,16 +261,20 @@ public class SimVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
+            final int nPipelineResults = pipelineResults.length;
+            final CoralTrackingResult[] coralTrackingResults = new CoralTrackingResult[nPipelineResults];
 
-            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
-                final CoralTrackingResult coralTrackingResult =
-                        new CoralTrackingResult(inputs.robotToCamera, pipelineResult);
-
-                coralTrackingResults.put(
-                        visionIO,
-                        coralTrackingResult
+            for (int i = 0; i < nPipelineResults; i++) {
+                final PhotonPipelineResult pipelineResult = pipelineResults[i];
+                final CoralTrackingResult coralTrackingResult = new CoralTrackingResult(
+                        inputs.robotToCamera,
+                        pipelineResult
                 );
+
+                coralTrackingResults[i] = coralTrackingResult;
             }
+
+            coralTrackingResultsByVisionIO.put(visionIO, coralTrackingResults);
         }
     }
 
@@ -279,12 +303,12 @@ public class SimVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public CoralTrackingResult getCoralTrackingResult(VisionIO visionIO) {
-        return coralTrackingResults.get(visionIO);
+    public VisionResult[] getVisionResults(final VisionIO visionIO) {
+        return visionResultsByVisionIO.get(visionIO);
     }
 
     @Override
-    public VisionResult getVisionResult(final VisionIO visionIO) {
-        return visionResults.get(visionIO);
+    public CoralTrackingResult[] getCoralTrackingResults(final VisionIO visionIO) {
+        return coralTrackingResultsByVisionIO.get(visionIO);
     }
 }

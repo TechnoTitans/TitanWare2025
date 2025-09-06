@@ -26,7 +26,7 @@ public class PoseUtils {
 
     public static Pose3d coral2dTo3d(final Pose2d pose2d) {
         return new Pose3d(
-                pose2d.getX(), pose2d.getY(), Constants.Vision.Coral_HEIGHT_Z * 0.5,
+                pose2d.getX(), pose2d.getY(), Constants.Vision.CORAL_Z_POSITION,
                 new Rotation3d(0, 0, pose2d.getRotation().getRotations())
         );
     }
