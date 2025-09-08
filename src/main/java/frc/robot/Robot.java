@@ -538,6 +538,14 @@ public class Robot extends LoggedRobot {
 
         this.driverController.start().whileTrue(scoreCommands.processor());
 
+        this.driverController.povRight().whileTrue(
+                scoreCommands.scoreAtFixedPosition( () ->
+                        new ScoreCommands.ScorePosition(
+                                scorePositionSupplier.get().side(),
+                                ScoreCommands.Level.GROUND_L1)
+                )
+        );
+
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))

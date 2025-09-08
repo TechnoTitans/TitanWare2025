@@ -50,6 +50,7 @@ public class ScoreCommands {
     }
 
     public enum Level {
+        GROUND_L1(Reef.Level.L1, Superstructure.Goal.GROUND_L1),
         L1(Reef.Level.L1, Superstructure.Goal.L1),
         L2(Reef.Level.L2, Superstructure.Goal.L2),
         L3(Reef.Level.L3, Superstructure.Goal.L3),
@@ -195,7 +196,7 @@ public class ScoreCommands {
         final Trigger shouldUseEarlyAlign = new Trigger(() ->
                 switch (scorePositionContainer.value.level) {
                     case AUTO_L4, L4, L3 -> true;
-                    case L2, L1 -> false;
+                    case L2, L1, GROUND_L1-> false;
                 }
         );
 
@@ -203,7 +204,7 @@ public class ScoreCommands {
                 switch (scorePositionContainer.value.level) {
                     case AUTO_L4, L4 -> ExtendWhen.CLOSE;
                     case L3 -> ExtendWhen.ROTATION_CLOSE;
-                    case L2, L1 -> ExtendWhen.ALWAYS;
+                    case L2, L1, GROUND_L1 -> ExtendWhen.ALWAYS;
                 };
 
         final Supplier<Map<Reef.Side, Map<Reef.Level, Pose2d>>> scoringPoseMap = () -> {
