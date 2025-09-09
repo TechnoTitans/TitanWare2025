@@ -50,7 +50,7 @@ public class ScoreCommands {
     }
 
     public enum Level {
-        GROUND_L1(Reef.Level.L1, Superstructure.Goal.GROUND_L1),
+        GROUND_L1(Reef.Level.GROUND_L1, Superstructure.Goal.GROUND_L1),
         L1(Reef.Level.L1, Superstructure.Goal.L1),
         L2(Reef.Level.L2, Superstructure.Goal.L2),
         L3(Reef.Level.L3, Superstructure.Goal.L3),
@@ -125,7 +125,7 @@ public class ScoreCommands {
     private Supplier<Intake.ScoreMode> scoreModeFromScorePosition(final Supplier<ScorePosition> scorePositionSupplier) {
         return () -> switch (scorePositionSupplier.get().level.level) {
             case AUTO_L4, L4, L3, L2 -> Intake.ScoreMode.RUN_UNTIL_NO_CORAL;
-            case L1 -> Intake.ScoreMode.RUN_FOR_TIME;
+            case L1, GROUND_L1 -> Intake.ScoreMode.RUN_FOR_TIME;
         };
     }
 

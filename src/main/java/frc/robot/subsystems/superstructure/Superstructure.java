@@ -49,7 +49,7 @@ public class Superstructure extends VirtualSubsystem {
         FLING_NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.ALGAE_FLING, GroundIntakeArm.Goal.STOW),
         GROUND_INTAKE(Elevator.Goal.TRANSFER_CORAL, ElevatorArm.Goal.TRANSFER_CORAL, IntakeArm.Goal.TRANSFER_CORAL, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         HANDOFF(Elevator.Goal.TRANSFER_CORAL, ElevatorArm.Goal.TRANSFER_CORAL, IntakeArm.Goal.TRANSFER_CORAL, GroundIntakeArm.Goal.TRANSFER_CORAL),
-        GROUND_L1(Elevator.Goal.STOW, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.STOW, GroundIntakeArm.Goal.SCORE_L1),
+        GROUND_L1(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW, GroundIntakeArm.Goal.SCORE_L1),
 
         SAFE(Elevator.Goal.L3, ElevatorArm.Goal.L4, IntakeArm.Goal.STOW, GroundIntakeArm.Goal.STOW);
 
