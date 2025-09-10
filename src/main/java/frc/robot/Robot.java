@@ -168,12 +168,17 @@ public class Robot extends LoggedRobot {
     private final Trigger endgameTrigger = new Trigger(() -> DriverStation.getMatchTime() <= 20)
             .and(DriverStation::isFMSAttached)
             .and(RobotModeTriggers.teleop());
+    private boolean shouldScoreL1Ground = false;
 
     final Supplier<ScoreCommands.ScorePosition> rawScorePositionSupplier = branchSelector::getSelected;
     final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier = () -> {
             final ScoreCommands.ScorePosition rawScorePosition = rawScorePositionSupplier.get();
             if (!intakeGamepieceState.hasCoral.getAsBoolean()) {
                 return new ScoreCommands.ScorePosition(rawScorePosition.side(), ScoreCommands.Level.L1);
+            }
+
+            if (rawScorePosition.level() == ScoreCommands.Level.L1 && shouldScoreL1Ground) {
+                return new ScoreCommands.ScorePosition(rawScorePosition.side(), ScoreCommands.Level.GROUND_L1);
             }
             return rawScorePosition;
     };
@@ -311,6 +316,7 @@ public class Robot extends LoggedRobot {
 
         Logger.recordOutput("RawScorePosition", rawScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
+        Logger.recordOutput("Should Score L1 Ground", shouldScoreL1Ground);
 
         Threads.setCurrentThreadPriority(false, 10);
     }
@@ -544,6 +550,10 @@ public class Robot extends LoggedRobot {
                                 scorePositionSupplier.get().side(),
                                 ScoreCommands.Level.GROUND_L1)
                 )
+        );
+
+        this.driverController.povRight().onTrue(
+                Commands.runOnce(() -> this.shouldScoreL1Ground = !this.shouldScoreL1Ground)
         );
 
 
