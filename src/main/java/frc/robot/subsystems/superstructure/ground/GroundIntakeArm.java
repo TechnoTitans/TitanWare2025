@@ -56,10 +56,10 @@ public class GroundIntakeArm extends SubsystemBase {
         DYNAMIC(0),
         STOW(0),
         UPRIGHT(-0.09),
-        INTAKE_FROM_GROUND(-0.265),
-        TRANSFER_CORAL(0.03),
+        INTAKE_FROM_GROUND(-0.315),
+        TRANSFER_CORAL(-0.06),
         SCORE_L1(-0.15),
-        CLIMB(-.5);
+        CLIMB(-.627);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {
