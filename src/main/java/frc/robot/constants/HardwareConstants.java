@@ -55,9 +55,9 @@ public class HardwareConstants {
 
     public record IntakeArmConstants(
             String CANBus,
-            int intakePivotMotorID,
-            int intakePivotCANCoderId,
-            double intakePivotCANCoderOffset,
+            int pivotMotorID,
+            int pivotCANCoderId,
+            double pivotCANCoderOffset,
             double pivotGearing,
             double pivotLowerLimitRots,
             double pivotUpperLimitRots
@@ -85,5 +85,30 @@ public class HardwareConstants {
             21,
             23,
             10.0
+    );
+
+    public record GroundIntakeArmConstants(
+            String CANBus,
+            int pivotMotorID,
+            int pivotCANCoderId,
+            double pivotCANCoderOffset,
+            double pivotGearing,
+            double pivotLowerLimitRots,
+            double pivotUpperLimitRots,
+            double lengthMeters,
+            double heightMeters
+    ) {}
+
+    // TODO change
+    public static final GroundIntakeArmConstants GROUND_INTAKE_ARM = new GroundIntakeArmConstants(
+            RobotMap.RioCANBus,
+            24,
+            25,
+            0,
+            75,
+            Units.degreesToRotations(-130),
+            0,
+            Units.inchesToMeters(17.561254),
+            Units.inchesToMeters(9.77)
     );
 }

@@ -1,25 +1,25 @@
-package frc.robot.subsystems.superstructure.distal;
+package frc.robot.subsystems.superstructure.ground;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXSConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
-import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.*;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.ctre.RefreshAll;
 
-public class IntakeArmIOReal implements IntakeArmIO {
-    private final HardwareConstants.IntakeArmConstants constants;
+public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
+    private final HardwareConstants.GroundIntakeArmConstants constants;
 
-    private final TalonFXS pivotMotor;
+    private final TalonFX pivotMotor;
     private final CANcoder pivotEncoder;
 
     private final MotionMagicExpoVoltage motionMagicExpoVoltage;
@@ -31,13 +31,13 @@ public class IntakeArmIOReal implements IntakeArmIO {
     private final StatusSignal<Voltage> pivotVoltage;
     private final StatusSignal<Current> pivotTorqueCurrent;
     private final StatusSignal<Temperature> pivotDeviceTemp;
-    private final StatusSignal<Angle> encoderPosition;
-    private final StatusSignal<AngularVelocity> encoderVelocity;
+    private final StatusSignal<Angle> pivotEncoderPosition;
+    private final StatusSignal<AngularVelocity> pivotEncoderVelocity;
 
-    public IntakeArmIOReal(final HardwareConstants.IntakeArmConstants constants) {
+    public GroundIntakeArmIOReal(final HardwareConstants.GroundIntakeArmConstants constants) {
         this.constants = constants;
 
-        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), constants.CANBus());
+        this.pivotMotor = new TalonFX(constants.pivotMotorID(), constants.CANBus());
         this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), constants.CANBus());
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
@@ -49,8 +49,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
         this.pivotVoltage = pivotMotor.getMotorVoltage(false);
         this.pivotTorqueCurrent = pivotMotor.getTorqueCurrent(false);
         this.pivotDeviceTemp = pivotMotor.getDeviceTemp(false);
-        this.encoderPosition = pivotEncoder.getPosition(false);
-        this.encoderVelocity = pivotEncoder.getVelocity(false);
+        this.pivotEncoderPosition = pivotEncoder.getPosition(false);
+        this.pivotEncoderVelocity = pivotEncoder.getVelocity(false);
 
         RefreshAll.add(
                 RefreshAll.CANBus.RIO,
@@ -59,8 +59,8 @@ public class IntakeArmIOReal implements IntakeArmIO {
                 pivotVoltage,
                 pivotTorqueCurrent,
                 pivotDeviceTemp,
-                encoderPosition,
-                encoderVelocity
+                pivotEncoderPosition,
+                pivotEncoderVelocity
         );
     }
 
@@ -71,37 +71,38 @@ public class IntakeArmIOReal implements IntakeArmIO {
         encoderConfiguration.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         pivotEncoder.getConfigurator().apply(encoderConfiguration);
 
-        final TalonFXSConfiguration pivotConfiguration = new TalonFXSConfiguration();
-        pivotConfiguration.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
-        pivotConfiguration.Commutation.AdvancedHallSupport = AdvancedHallSupportValue.Enabled;
-        pivotConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.38224)
-                .withKG(0.1053)
-                .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(4.0382)
-                .withKA(0.21825)
-                .withKP(100)
-                .withKD(5);
-        pivotConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kV = 4.0382;
-        pivotConfiguration.MotionMagic.MotionMagicExpo_kA = 0.5;
-        pivotConfiguration.CurrentLimits.StatorCurrentLimit = 60;
-        pivotConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        pivotConfiguration.CurrentLimits.SupplyCurrentLimit = 50;
-        pivotConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        pivotConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
-        pivotConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;
-        pivotConfiguration.ExternalFeedback.ExternalFeedbackSensorSource = ExternalFeedbackSensorSourceValue.FusedCANcoder;
-        pivotConfiguration.ExternalFeedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
-        pivotConfiguration.ExternalFeedback.RotorToSensorRatio = constants.pivotGearing();
-        pivotConfiguration.ExternalFeedback.SensorToMechanismRatio = 1;
-        pivotConfiguration.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        pivotConfiguration.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();
-        pivotConfiguration.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        pivotConfiguration.SoftwareLimitSwitch.ReverseSoftLimitThreshold = constants.pivotLowerLimitRots();
-        pivotConfiguration.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        pivotMotor.getConfigurator().apply(pivotConfiguration);
+        // TODO gains + config
+        final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
+        pivotMotorConfig.Slot0 = new Slot0Configs()
+                .withKS(0)
+                .withKG(0.25)
+                .withGravityType(GravityTypeValue.Arm_Cosine)
+                .withKV(9.56)
+                .withKA(0.08)
+                .withKP(86.19)
+                .withKD(1.47);
+        pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 40;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 10;
+        pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 60;
+        pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -60;
+        pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 60;
+        pivotMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        pivotMotorConfig.CurrentLimits.SupplyCurrentLimit = 50;
+        pivotMotorConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        pivotMotorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
+        pivotMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        pivotMotorConfig.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
+        pivotMotorConfig.Feedback.SensorToMechanismRatio = 1;
+        pivotMotorConfig.Feedback.RotorToSensorRatio = constants.pivotGearing();
+        pivotMotorConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();
+        pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+        pivotMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = constants.pivotLowerLimitRots();
+        pivotMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        pivotMotor.getConfigurator().apply(pivotMotorConfig);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
@@ -109,15 +110,13 @@ public class IntakeArmIOReal implements IntakeArmIO {
                 pivotVelocity,
                 pivotVoltage,
                 pivotTorqueCurrent,
-                encoderPosition,
-                encoderVelocity
+                pivotEncoderPosition,
+                pivotEncoderVelocity
         );
-
         BaseStatusSignal.setUpdateFrequencyForAll(
                 4,
                 pivotDeviceTemp
         );
-
         ParentDevice.optimizeBusUtilizationForAll(
                 4,
                 pivotMotor,
@@ -126,14 +125,14 @@ public class IntakeArmIOReal implements IntakeArmIO {
     }
 
     @Override
-    public void updateInputs(final IntakeArmIOInputs inputs) {
+    public void updateInputs(final GroundIntakeArmIO.GroundIntakeArmIOInputs inputs) {
         inputs.pivotPositionRots = pivotPosition.getValueAsDouble();
         inputs.pivotVelocityRotsPerSec = pivotVelocity.getValueAsDouble();
         inputs.pivotVoltage = pivotVoltage.getValueAsDouble();
         inputs.pivotTorqueCurrentAmps = pivotTorqueCurrent.getValueAsDouble();
         inputs.pivotTempCelsius = pivotDeviceTemp.getValueAsDouble();
-        inputs.encoderPositionRots = encoderPosition.getValueAsDouble();
-        inputs.encoderVelocityRotsPerSec = encoderVelocity.getValueAsDouble();
+        inputs.encoderPositionRots = pivotEncoderPosition.getValueAsDouble();
+        inputs.encoderVelocityRotsPerSec = pivotEncoderVelocity.getValueAsDouble();
     }
 
     @Override

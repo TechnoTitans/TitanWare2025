@@ -114,7 +114,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         );
 
         final Notifier simUpdateNotifier = new Notifier(() -> {
-        final double dt = deltaTime.get();
+            final double dt = deltaTime.get();
             pivotMotorSim.update(dt);
         });
         ToClose.add(simUpdateNotifier);

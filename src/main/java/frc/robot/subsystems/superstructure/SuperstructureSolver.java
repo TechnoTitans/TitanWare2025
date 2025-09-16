@@ -1,20 +1,42 @@
-package frc.robot.utils.solver;
+package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.*;
+import frc.robot.constants.SimConstants;
 import frc.robot.constants.SimConstants.Elevator;
 import frc.robot.constants.SimConstants.ElevatorArm;
+import frc.robot.constants.SimConstants.GroundIntakeArm;
 import frc.robot.constants.SimConstants.IntakeArm;
 
 public class SuperstructureSolver {
     private SuperstructureSolver() {}
 
+    public static Translation2d getElevatorArmPivotOrigin2d() {
+        final Translation3d origin3d = SimConstants.ElevatorArm.ORIGIN;
+        return new Translation2d(
+                origin3d.getX(),
+                origin3d.getZ()
+        );
+    }
+
+    public static Pose3d getGroundIntakePose(final Rotation2d groundIntakePivotRotation) {
+        return new Pose3d(
+                GroundIntakeArm.ORIGIN,
+                new Rotation3d(
+                        0,
+                        groundIntakePivotRotation
+                                .unaryMinus()
+                                .plus(GroundIntakeArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                .getRadians(),
+                        0
+                )
+        );
+    }
+
     public static Pose3d[] calculatePoses(
             final Rotation2d baseStageRotation,
             final double elevatorExtensionMeters,
-            final Rotation2d armPivotRotation
+            final Rotation2d intakePivotRotation,
+            final Rotation2d groundIntakePivotRotation
     ) {
         final Pose3d baseStagePose = new Pose3d(
                 ElevatorArm.ORIGIN,
@@ -60,14 +82,22 @@ public class SuperstructureSolver {
                         Elevator.STAGE_2_TO_INTAKE,
                         new Rotation3d(
                                 0,
-                                armPivotRotation
+                                intakePivotRotation
                                         .unaryMinus()
-                                        .minus(IntakeArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                        .plus(IntakeArm.ZEROED_POSITION_TO_HORIZONTAL)
                                         .getRadians(),
                                 0
                         )
                 ));
 
-        return new Pose3d[] {baseStagePose, stage1Pose, stage2Pose, intakePose};
+        final Pose3d groundIntakePose = getGroundIntakePose(groundIntakePivotRotation);
+
+        return new Pose3d[] {
+                baseStagePose,
+                stage1Pose,
+                stage2Pose,
+                intakePose,
+                groundIntakePose
+        };
     }
 }

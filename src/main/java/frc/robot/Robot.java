@@ -2,10 +2,7 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -33,6 +30,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
+import frc.robot.subsystems.superstructure.ground.GroundIntakeArm;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.Container;
@@ -79,7 +77,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final PhotonVision photonVision = new PhotonVision(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             swerve,
             swerve.getPoseEstimator()
     );
@@ -99,7 +97,12 @@ public class Robot extends LoggedRobot {
             HardwareConstants.INTAKE_ARM
     );
 
-    public final Superstructure superstructure = new Superstructure(elevatorArm, elevator, intakeArm);
+    public final GroundIntakeArm groundIntakeArm = new GroundIntakeArm(
+            Constants.CURRENT_MODE,
+            HardwareConstants.GROUND_INTAKE_ARM
+    );
+
+    public final Superstructure superstructure = new Superstructure(elevatorArm, elevator, intakeArm, groundIntakeArm);
 
     public final Intake intake = new Intake(
             Constants.CURRENT_MODE,
@@ -481,24 +484,32 @@ public class Robot extends LoggedRobot {
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ).withName("SwerveSpeedSlow"));
 
-        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
-                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+        this.driverController.a(teleopEventLoop).whileTrue(
+//                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+                Commands.repeatingSequence(
+                        superstructure.runGoal(Superstructure.Goal.HANDOFF)
+                                .until(superstructure.atSetpoint(Superstructure.Goal.HANDOFF)),
+                        Commands.waitSeconds(0.2),
+                        superstructure.runGoal(Superstructure.Goal.GROUND_INTAKE)
+                                .until(superstructure.atSetpoint(Superstructure.Goal.GROUND_INTAKE)),
+                        Commands.waitSeconds(0.2)
+                )
         );
 
-        this.driverController.rightTrigger(0.5, teleopEventLoop)
+        this.driverController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
 
-        this.driverController.y(teleopEventLoop).whileTrue(scoreCommands.descoreUpperAlgae());
+//        this.driverController.y(teleopEventLoop).whileTrue(scoreCommands.descoreUpperAlgae());
+//
+//        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
-        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
+//        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreBarge());
 
-        this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreBarge());
+//        this.driverController.b(teleopEventLoop)
+//                .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
+//                .onFalse(scoreCommands.climb());
 
-        this.driverController.b(teleopEventLoop)
-                .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
-                .onFalse(scoreCommands.climb());
-
-        this.driverController.start().whileTrue(scoreCommands.processor());
+//        this.driverController.start().whileTrue(scoreCommands.processor());
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))

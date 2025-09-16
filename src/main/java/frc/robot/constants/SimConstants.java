@@ -41,7 +41,7 @@ public interface SimConstants {
         double EXTENDED_MOI_KG_M_SQUARED = 18.505581775;
 
         Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(-18);
-        Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(49.284);
+        Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(56.834);
     }
 
     interface Elevator {
@@ -69,9 +69,9 @@ public interface SimConstants {
         );
 
         double LENGTH_METERS = Units.inchesToMeters(11.865);
-        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(62.838);
+        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(-62.838);
         Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(0)
-                .plus(ZEROED_POSITION_TO_HORIZONTAL);
+                .minus(ZEROED_POSITION_TO_HORIZONTAL);
     }
 
     interface Intake {
@@ -83,5 +83,13 @@ public interface SimConstants {
                 (Intake.HEIGHT_METERS / 2) - Units.inchesToMeters(0.75),
                 Rotation3d.kZero
         );
+    }
+
+    interface GroundIntakeArm {
+        Translation3d ORIGIN = new Translation3d(0.356, 0, 0.178);
+
+        Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(-115.842);
+        Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(0)
+                .minus(ZEROED_POSITION_TO_HORIZONTAL);
     }
 }

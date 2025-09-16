@@ -1,9 +1,9 @@
-package frc.robot.subsystems.superstructure.distal;
+package frc.robot.subsystems.superstructure.ground;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Velocity;
@@ -16,43 +16,33 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
-import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Consumer;
 
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Volts;
 
-public class IntakeArm extends SubsystemBase {
-    protected static final String LogKey = "IntakeArm";
+public class GroundIntakeArm extends SubsystemBase {
+    protected static final String LogKey = "GroundIntakeArm";
     private static final double PositionToleranceRots = 0.031;
     private static final double VelocityToleranceRotsPerSec = 0.26;
 
-    private enum Mode {
-        NORMAL,
-        ALGAE_SLOW
-    }
+    private final HardwareConstants.GroundIntakeArmConstants constants;
+    private final Translation2d boundingBoxSize;
 
-    private final IntakeArmIO intakeArmIO;
-    private final IntakeArmIOInputsAutoLogged inputs;
+    private final GroundIntakeArmIO groundIntakeArmIO;
+    private final GroundIntakeArmIOInputsAutoLogged inputs;
 
     private final SysIdRoutine pivotVoltageSysIdRoutine;
 
-    private Mode mode = Mode.NORMAL;
-    private Goal desiredGoal = Goal.STOW;
-    private Goal currentGoal = desiredGoal;
+    private GroundIntakeArm.Goal desiredGoal = GroundIntakeArm.Goal.STOW;
+    private GroundIntakeArm.Goal currentGoal = desiredGoal;
 
-    private final PositionSetpoint positionSetpoint;
-    private final PositionSetpoint pivotLowerLimit;
-    private final PositionSetpoint pivotUpperLimit;
-
-    private final DeltaTime deltaTime;
-    private final TrapezoidProfile algaeSlowProfile = new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(4, 1.3)
-    );
-    private final TrapezoidProfile.State algaeSlowGoal = new TrapezoidProfile.State(0, 0);
-    private TrapezoidProfile.State algaeSlowSetpoint = new TrapezoidProfile.State(0, 0);
+    private final GroundIntakeArm.PositionSetpoint positionSetpoint;
+    private final GroundIntakeArm.PositionSetpoint pivotLowerLimit;
+    private final GroundIntakeArm.PositionSetpoint pivotUpperLimit;
 
     public final Trigger atSetpoint = new Trigger(this::atPivotPositionSetpoint);
     public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
@@ -61,7 +51,7 @@ public class IntakeArm extends SubsystemBase {
     public static class PositionSetpoint {
         public double pivotPositionRots = 0.0;
 
-        public PositionSetpoint withPivotPositionRots(final double pivotPositionRots) {
+        public GroundIntakeArm.PositionSetpoint withPivotPositionRots(final double pivotPositionRots) {
             this.pivotPositionRots = pivotPositionRots;
             return this;
         }
@@ -76,7 +66,7 @@ public class IntakeArm extends SubsystemBase {
         }
 
         public boolean atSetpoint(final double pivotPositionRots, final double pivotVelocityRotsPerSec) {
-            return PositionSetpoint.atSetpoint(
+            return GroundIntakeArm.PositionSetpoint.atSetpoint(
                     this.pivotPositionRots,
                     pivotPositionRots,
                     pivotVelocityRotsPerSec
@@ -85,22 +75,10 @@ public class IntakeArm extends SubsystemBase {
     }
 
     public enum Goal {
-        STOW(0),
-        HP(0),
-        HANDOFF(-0.29),
-        ALGAE_GROUND(-0.349),
-        ALGAE_FLING(-0.349),
-        UPPER_ALGAE(-0.35596),
-        LOWER_ALGAE(-0.32129),
-        PROCESSOR(-0.24),
-        CLIMB(-0.348),
-        CLIMB_DOWN(-0.235),
-        NET(-0.24),
-        AUTO_L4(-0.21),
-        L4(-0.187012),
-        L3(-0.16602),
-        L2(-0.13),
-        L1(-0.052);
+        ZERO(0),
+        STOW(-0.0243),
+        HANDOFF(-0.0243),
+        INTAKE(-0.324);
 
         private final double pivotPositionGoalRots;
 
@@ -111,75 +89,49 @@ public class IntakeArm extends SubsystemBase {
         public double getPivotPositionGoalRots() {
             return pivotPositionGoalRots;
         }
-
-        public static boolean shouldUseSlowAlgaeNext(final Goal desiredGoal, final Goal currentGoal) {
-            return currentGoal == Goal.ALGAE_GROUND
-                    || currentGoal == Goal.LOWER_ALGAE
-                    || currentGoal == Goal.UPPER_ALGAE
-                    || desiredGoal == Goal.PROCESSOR
-                    || desiredGoal == Goal.NET;
-        }
     }
 
-    public IntakeArm(final Constants.RobotMode mode, final HardwareConstants.IntakeArmConstants constants) {
-        this.intakeArmIO = switch (mode) {
-            case REAL -> new IntakeArmIOReal(constants);
-            case SIM -> new IntakeArmIOSim(constants);
-            case REPLAY, DISABLED -> new IntakeArmIO() {};
+    public GroundIntakeArm(final Constants.RobotMode mode, final HardwareConstants.GroundIntakeArmConstants constants) {
+        this.constants = constants;
+        this.boundingBoxSize = new Translation2d(constants.lengthMeters(), constants.heightMeters());
+        this.groundIntakeArmIO = switch (mode) {
+            case REAL -> new GroundIntakeArmIOReal(constants);
+            case SIM -> new GroundIntakeArmIOSim(constants);
+            case REPLAY, DISABLED -> new GroundIntakeArmIO() {};
         };
 
-        this.inputs = new IntakeArmIOInputsAutoLogged();
+        this.inputs = new GroundIntakeArmIOInputsAutoLogged();
 
         this.pivotVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(0.2).per(Second),
                 Volts.of(2),
                 Seconds.of(10),
-                intakeArmIO::toPivotVoltage
+                groundIntakeArmIO::toPivotVoltage
         );
 
-        this.deltaTime = new DeltaTime();
-
-        this.positionSetpoint = new PositionSetpoint()
+        this.positionSetpoint = new GroundIntakeArm.PositionSetpoint()
                 .withPivotPositionRots(desiredGoal.getPivotPositionGoalRots());
-        this.pivotLowerLimit = new PositionSetpoint().withPivotPositionRots(constants.pivotLowerLimitRots());
-        this.pivotUpperLimit = new PositionSetpoint().withPivotPositionRots(constants.pivotUpperLimitRots());
+        this.pivotLowerLimit = new GroundIntakeArm.PositionSetpoint()
+                .withPivotPositionRots(constants.pivotLowerLimitRots());
+        this.pivotUpperLimit = new GroundIntakeArm.PositionSetpoint()
+                .withPivotPositionRots(constants.pivotUpperLimitRots());
 
-        this.intakeArmIO.config();
-        this.intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
+        this.groundIntakeArmIO.config();
+        this.groundIntakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
     }
 
     @Override
     public void periodic() {
-        final double deltaTimeSeconds = deltaTime.get();
         final double intakePeriodicUpdateStart = RobotController.getFPGATime();
 
-        intakeArmIO.updateInputs(inputs);
+        groundIntakeArmIO.updateInputs(inputs);
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
             positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
-            if (Goal.shouldUseSlowAlgaeNext(desiredGoal, currentGoal)) {
-                algaeSlowSetpoint.position = inputs.pivotPositionRots;
-                algaeSlowSetpoint.velocity = inputs.pivotVelocityRotsPerSec;
-
-                algaeSlowGoal.position = positionSetpoint.pivotPositionRots;
-                algaeSlowGoal.velocity = 0;
-
-                mode = Mode.ALGAE_SLOW;
-            } else {
-                intakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
-                mode = Mode.NORMAL;
-            }
+            groundIntakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
 
             this.currentGoal = desiredGoal;
-        }
-
-        if (mode == Mode.ALGAE_SLOW) {
-            algaeSlowSetpoint = algaeSlowProfile.calculate(deltaTimeSeconds, algaeSlowSetpoint, algaeSlowGoal);
-            intakeArmIO.toPivotPositionUnprofiled(
-                    algaeSlowSetpoint.position,
-                    algaeSlowSetpoint.velocity
-            );
         }
 
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
@@ -191,7 +143,6 @@ public class IntakeArm extends SubsystemBase {
         Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPivotPositionSetpoint());
         Logger.recordOutput(LogKey + "/AtLowerLimit", atPivotLowerLimit());
         Logger.recordOutput(LogKey + "/AtUpperLimit", atPivotUpperLimit());
-        Logger.recordOutput(LogKey + "/Mode", mode);
 
         Logger.recordOutput(
                 LogKey + "/PeriodicIOPeriodMs",
@@ -199,8 +150,8 @@ public class IntakeArm extends SubsystemBase {
         );
     }
 
-    public boolean atGoal(final Goal goal) {
-        return PositionSetpoint.atSetpoint(
+    public boolean atGoal(final GroundIntakeArm.Goal goal) {
+        return GroundIntakeArm.PositionSetpoint.atSetpoint(
                 goal.getPivotPositionGoalRots(),
                 inputs.pivotPositionRots,
                 inputs.pivotVelocityRotsPerSec
@@ -224,13 +175,17 @@ public class IntakeArm extends SubsystemBase {
         return Rotation2d.fromRotations(inputs.pivotPositionRots);
     }
 
-    public void setGoal(final Goal goal) {
+    public Translation2d getBoundingBoxSize() {
+        return boundingBoxSize;
+    }
+
+    public void setGoal(final GroundIntakeArm.Goal goal) {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentPivotGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredPivotGoal", desiredGoal.toString());
     }
 
-    public Command runPivotGoalCommand(final Goal goal) {
+    public Command runPivotGoalCommand(final GroundIntakeArm.Goal goal) {
         return Commands.run(() -> setGoal(goal));
     }
 
