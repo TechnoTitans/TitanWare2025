@@ -86,7 +86,7 @@ public class ElevatorArm extends SubsystemBase {
         L1(0.0260),
         CLIMB(0.184),
         CLIMB_DOWN(-5),
-        TRANSFER_CORAL(0.1);
+        TRANSFER_CORAL(0.113);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {

@@ -53,7 +53,7 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                RefreshAll.CANBus.CANIVORE,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,
@@ -73,12 +73,12 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
 
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig.Slot0 = new Slot0Configs();
-//                .withKS(0.27721)
-//                .withKG(0.4366)
+//                .withKS(0.3)
+//                .withKG(0.2)
 //                .withGravityType(GravityTypeValue.Arm_Cosine)
-//                .withKV(39.374)
-//                .withKA(0.55684)
-//                .withKP(61.772)
+//                .withKV(8.61)
+//                .withKA(0.2)
+//                .withKP(100)
 //                .withKD(0);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 39.374;
@@ -91,16 +91,17 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
         pivotMotorConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder; //CHANGE FOR SYSID
-        pivotMotorConfig.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
-        pivotMotorConfig.Feedback.SensorToMechanismRatio = 1;
-        pivotMotorConfig.Feedback.RotorToSensorRatio = constants.pivotGearing();
+        pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+//        pivotMotorConfig.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
+        pivotMotorConfig.Feedback.SensorToMechanismRatio = 112.84;
+        pivotMotorConfig.Feedback.RotorToSensorRatio = 1;
         pivotMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();
         pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
         pivotMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = constants.pivotLowerLimitRots();
         pivotMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+        pivotMotor.setPosition(0);
         pivotMotor.getConfigurator().apply(pivotMotorConfig);
 
         BaseStatusSignal.setUpdateFrequencyForAll(

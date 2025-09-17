@@ -114,8 +114,8 @@ public enum TitanCamera {
                     ),
             false
     ),
-    PHOTON_FL_BOTTOM_APRILTAG(
-            "FL_BOTTOM_Apriltag",
+    PHOTON_FL_APRILTAG(
+            "FL_Apriltag",
             Constants.Vision.ROBOT_TO_FL_APRILTAG,
             new PhotonPoseEstimator.ConstrainedSolvepnpParams(false, 1),
             CameraProperties.ARDUCAM_OV9281,

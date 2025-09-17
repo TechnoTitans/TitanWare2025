@@ -87,10 +87,10 @@ public class PhotonVision extends VirtualSubsystem {
                     PhotonVision.makeVisionIOInputsMap(
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FR_APRILTAG),
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_BL_APRILTAG),
-                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
+                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_APRILTAG)
                     ),
                     PhotonVision.makeVisionIOInputsMap(
-                            new RealVisionRunner.VisionIOCoralTrackingReal(TitanCamera.PHOTON_FC_CORAL_TRACKING)
+//                            new RealVisionRunner.VisionIOCoralTrackingReal(TitanCamera.PHOTON_FC_CORAL_TRACKING)
                     )
             );
             case SIM -> {
@@ -114,7 +114,7 @@ public class PhotonVision extends VirtualSubsystem {
                                         TitanCamera.PHOTON_BL_APRILTAG, visionSystemSim
                                 ),
                                 new SimVisionRunner.VisionIOApriltagsSim(
-                                        TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
+                                        TitanCamera.PHOTON_FL_APRILTAG, visionSystemSim
                                 )
                         ),
                         PhotonVision.makeVisionIOInputsMap(
@@ -129,7 +129,7 @@ public class PhotonVision extends VirtualSubsystem {
                     PhotonVision.makeVisionIOInputsMap(
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FR_APRILTAG),
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_BL_APRILTAG),
-                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
+                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_APRILTAG)
                     ),
                     PhotonVision.makeVisionIOInputsMap(
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FC_CORAL_TRACKING)
