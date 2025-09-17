@@ -186,6 +186,23 @@ public class ScoreCommands {
         ).withName("IntakeFromClosestCoralStation");
     }
 
+    final Command groundIntakeFacingClosestCoralStation(
+            final DoubleSupplier leftStickYInput,
+            final DoubleSupplier leftStickXInput
+    ) {
+        return Commands.parallel(
+                Commands.sequence(
+                    swerve.teleopFacingAngle(
+                            leftStickYInput,
+                            leftStickXInput,
+                            () -> swerve.getPose().nearest(FieldConstants.getHPPickupPoses()).getRotation()
+                    ).onlyIf(superstructure.unsafeToDrive.negate()),
+                    superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE)
+                ),
+                groundIntake.intakeCoralGround()
+        );
+    }
+
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
         final Container<ScorePosition> scorePositionContainer = Container.of(scorePositionSupplier.get());
 
