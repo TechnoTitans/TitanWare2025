@@ -376,6 +376,17 @@ public class Robot extends LoggedRobot {
                         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
         );
 
+        driverController.povRight().whileTrue(
+                groundIntakeArm.voltageSysIdCommand()
+                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+        );
+
+        driverController.povLeft().whileTrue(
+                groundIntake.coralVoltageSysIdCommand()
+                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+        );
+
+
 //        driverController.y(testEventLoop).whileTrue(
 //                swerve.angularVoltageSysIdQuasistaticCommand(SysIdRoutine.Direction.kForward)
 //        );

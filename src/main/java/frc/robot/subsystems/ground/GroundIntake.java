@@ -1,12 +1,27 @@
 package frc.robot.subsystems.ground;
 
+import com.ctre.phoenix6.SignalLogger;
+import edu.wpi.first.units.CurrentUnit;
+import edu.wpi.first.units.VoltageUnit;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Velocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.function.Consumer;
+
+import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Amp;
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Seconds;
 
 public class GroundIntake extends SubsystemBase {
     protected static final String LogKey = "GroundIntake";
@@ -14,6 +29,9 @@ public class GroundIntake extends SubsystemBase {
 
     private final GroundIntakeIO groundIntakeIO;
     private final GroundIntakeIOInputsAutoLogged inputs;
+
+    private final SysIdRoutine rollerVoltageSysIdRoutine;
+    private final SysIdRoutine rollerTorqueCurrentSysIdRoutine;
 
     private boolean coralIntaking = false;
     private boolean coralOuttaking = false;
@@ -36,6 +54,19 @@ public class GroundIntake extends SubsystemBase {
         };
 
         this.inputs = new GroundIntakeIOInputsAutoLogged();
+
+        this.rollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
+                Volts.of(2).per(Second),
+                Volts.of(10),
+                Seconds.of(10),
+                groundIntakeIO::toRollerVoltage
+        );
+        this.rollerTorqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
+                Amps.of(4).per(Second),
+                Amp.of(40),
+                Seconds.of(10),
+                groundIntakeIO::toRollerTorqueCurrent
+        );
 
         this.isCoralIntaking = new Trigger(() -> coralIntaking);
         this.isCoralOuttaking = new Trigger(() -> coralOuttaking);
@@ -168,6 +199,68 @@ public class GroundIntake extends SubsystemBase {
 
     public void setTOFDistance(final double distanceMeters) {
         groundIntakeIO.setTOFDistance(distanceMeters);
+    }
+
+    private SysIdRoutine makeVoltageSysIdRoutine(
+            final Velocity<VoltageUnit> voltageRampRate,
+            final Voltage stepVoltage,
+            final Time timeout,
+            final Consumer<Double> voltageConsumer
+    ) {
+        return new SysIdRoutine(
+                new SysIdRoutine.Config(
+                        voltageRampRate,
+                        stepVoltage,
+                        timeout,
+                        state -> SignalLogger.writeString(String.format("%s-state", LogKey), state.toString())
+                ),
+                new SysIdRoutine.Mechanism(
+                        voltageMeasure -> voltageConsumer.accept(voltageMeasure.in(Volts)),
+                        null,
+                        this
+                )
+        );
+    }
+
+    private SysIdRoutine makeTorqueCurrentSysIdRoutine(
+            final Velocity<CurrentUnit> currentRampRate,
+            final Current stepCurrent,
+            final Time timeout,
+            final Consumer<Double> torqueCurrentConsumer
+    ) {
+        return new SysIdRoutine(
+                new SysIdRoutine.Config(
+                        Volts.per(Second).of(currentRampRate.baseUnitMagnitude()),
+                        Volts.of(stepCurrent.baseUnitMagnitude()),
+                        timeout,
+                        state -> SignalLogger.writeString(String.format("%s-state", LogKey), state.toString())
+                ),
+                new SysIdRoutine.Mechanism(
+                        voltageMeasure -> torqueCurrentConsumer.accept(voltageMeasure.in(Volts)),
+                        null,
+                        this
+                )
+        );
+    }
+
+    private Command makeRollerSysIdCommand(final SysIdRoutine sysIdRoutine) {
+        return Commands.sequence(
+                sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward),
+                Commands.waitSeconds(1),
+                sysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse),
+                Commands.waitSeconds(1),
+                sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward),
+                Commands.waitSeconds(1),
+                sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse)
+        );
+    }
+
+    public Command coralVoltageSysIdCommand() {
+        return makeRollerSysIdCommand(rollerVoltageSysIdRoutine);
+    }
+
+    public Command coralTorqueCurrentSysIdCommand() {
+        return makeRollerSysIdCommand(rollerTorqueCurrentSysIdRoutine);
     }
 
 }

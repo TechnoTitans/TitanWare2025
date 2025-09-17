@@ -1,17 +1,28 @@
 package frc.robot.subsystems.superstructure.ground;
 
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.CurrentUnit;
+import edu.wpi.first.units.VoltageUnit;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Velocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
+
+import static edu.wpi.first.units.Units.*;
 
 public class GroundIntakeArm extends SubsystemBase {
     protected static final String LogKey = "GroundIntakeArm";
@@ -21,6 +32,9 @@ public class GroundIntakeArm extends SubsystemBase {
     private final GroundIntakeArmIO groundIntakeArmIO;
     private final GroundIntakeArmIOInputsAutoLogged inputs;
 
+    private final SysIdRoutine voltageSysIdRoutine;
+    private final SysIdRoutine torqueCurrentSysIdRoutine;
+
     private Goal desiredGoal = Goal.STOW;
     private Goal currentGoal = desiredGoal;
 
@@ -29,6 +43,8 @@ public class GroundIntakeArm extends SubsystemBase {
     private final PositionSetpoint pivotUpperLimit;
 
     public final Trigger atSetpoint = new Trigger(this::atPivotPositionSetpoint);
+    public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
+    public final Trigger atPivotUpperLimit = new Trigger(this::atPivotLowerLimit);
 
     public static class PositionSetpoint {
         public double pivotPositionRots = 0;
@@ -79,6 +95,18 @@ public class GroundIntakeArm extends SubsystemBase {
         };
 
         this.inputs = new GroundIntakeArmIOInputsAutoLogged();
+
+        this.voltageSysIdRoutine = makeVoltageSysIdRoutine(
+                Volts.of(2).per(Second),
+                Volts.of(3),
+                Seconds.of(6)
+        );
+
+        this.torqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
+                Amps.of(2).per(Second),
+                Amps.of(8),
+                Seconds.of(6)
+        );
 
         this.setpoint = new PositionSetpoint().withPivotPositionRots(desiredGoal.getPivotPositionGoalRots());
         this.pivotLowerLimit = new PositionSetpoint().withPivotPositionRots(constants.pivotLowerLimitRots());
@@ -137,5 +165,69 @@ public class GroundIntakeArm extends SubsystemBase {
         this.desiredGoal = goal;
         Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
+    }
+
+    private SysIdRoutine makeVoltageSysIdRoutine(
+            final Velocity<VoltageUnit> voltageRampRate,
+            final Voltage stepVoltage,
+            final Time timeout
+    ) {
+        return new SysIdRoutine(
+                new SysIdRoutine.Config(
+                        voltageRampRate,
+                        stepVoltage,
+                        timeout,
+                        state -> SignalLogger.writeString(String.format("%s-state", LogKey), state.toString())
+                ),
+                new SysIdRoutine.Mechanism(
+                        voltageMeasure -> groundIntakeArmIO.toPivotVoltage(
+                                voltageMeasure.in(Volts)
+                        ),
+                        null,
+                        this
+                )
+        );
+    }
+
+    private SysIdRoutine makeTorqueCurrentSysIdRoutine(
+            final Velocity<CurrentUnit> currentRampRate,
+            final Current stepCurrent,
+            final Time timeout
+    ) {
+        return new SysIdRoutine(
+                new SysIdRoutine.Config(
+                        Volts.per(Second).of(currentRampRate.baseUnitMagnitude()),
+                        Volts.of(stepCurrent.baseUnitMagnitude()),
+                        timeout,
+                        state -> SignalLogger.writeString(String.format("%s-state", LogKey), state.toString())
+                ),
+                new SysIdRoutine.Mechanism(
+                        voltageMeasure -> groundIntakeArmIO.toPivotTorqueCurrent(
+                                voltageMeasure.in(Volts)
+                        ),
+                        null,
+                        this
+                )
+        );
+    }
+
+    private Command makeSysIdCommand(final SysIdRoutine sysIdRoutine) {
+        return Commands.sequence(
+                sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).until(atPivotUpperLimit),
+                Commands.waitSeconds(1),
+                sysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse).until(atPivotLowerLimit),
+                Commands.waitSeconds(1),
+                sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).until(atPivotUpperLimit),
+                Commands.waitSeconds(1),
+                sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).until(atPivotLowerLimit)
+        );
+    }
+
+    public Command voltageSysIdCommand() {
+        return makeSysIdCommand(voltageSysIdRoutine);
+    }
+
+    public Command torqueCurrentSysIdCommand() {
+        return makeSysIdCommand(torqueCurrentSysIdRoutine);
     }
 }
