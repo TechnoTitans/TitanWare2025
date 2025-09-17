@@ -168,7 +168,7 @@ public class Robot extends LoggedRobot {
     private final Trigger endgameTrigger = new Trigger(() -> DriverStation.getMatchTime() <= 20)
             .and(DriverStation::isFMSAttached)
             .and(RobotModeTriggers.teleop());
-    private boolean shouldScoreL1Ground = false;
+    private boolean shouldScoreL1Ground = true;
 
     final Supplier<ScoreCommands.ScorePosition> rawScorePositionSupplier = branchSelector::getSelected;
     final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier = () -> {
@@ -443,7 +443,7 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
-        groundIntake.isCoralPresent.onTrue(
+        groundIntake.isCoralPresent.and(() -> scorePositionSupplier.get().level() != ScoreCommands.Level.GROUND_L1).onTrue(
                 scoreCommands.handoffCoral()
         );
 
@@ -555,19 +555,6 @@ public class Robot extends LoggedRobot {
 
         this.driverController.start().whileTrue(scoreCommands.processor());
 
-        this.driverController.povRight().whileTrue(
-                scoreCommands.scoreAtFixedPosition( () ->
-                        new ScoreCommands.ScorePosition(
-                                scorePositionSupplier.get().side(),
-                                ScoreCommands.Level.GROUND_L1)
-                )
-        );
-
-        this.driverController.povRight().onTrue(
-                Commands.runOnce(() -> this.shouldScoreL1Ground = !this.shouldScoreL1Ground)
-        );
-
-
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))
                 .onFalse(superstructure.toInstantGoal(Superstructure.Goal.CLIMB_DOWN));
@@ -601,5 +588,13 @@ public class Robot extends LoggedRobot {
         this.coController.y(teleopEventLoop).whileTrue(scoreCommands.intakeUpperAlgae());
 
         this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
+
+        this.coController.povLeft().onTrue(
+                Commands.runOnce(() -> this.shouldScoreL1Ground = false)
+        );
+
+        this.coController.povRight().onTrue(
+                Commands.runOnce(() -> this.shouldScoreL1Ground = true)
+        );
     }
 }
