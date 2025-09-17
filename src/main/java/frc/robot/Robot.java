@@ -316,7 +316,7 @@ public class Robot extends LoggedRobot {
 
         Logger.recordOutput("RawScorePosition", rawScorePositionSupplier.get());
         Logger.recordOutput("ScorePosition", scorePositionSupplier.get());
-        Logger.recordOutput("Should Score L1 Ground", shouldScoreL1Ground);
+        Logger.recordOutput("ShouldScoreL1Ground", shouldScoreL1Ground);
 
         Threads.setCurrentThreadPriority(false, 10);
     }
@@ -579,11 +579,11 @@ public class Robot extends LoggedRobot {
 
         this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
 
-        this.coController.povLeft().onTrue(
+        this.driverController.povLeft().onTrue(
                 Commands.runOnce(() -> this.shouldScoreL1Ground = false)
         );
 
-        this.coController.povRight().onTrue(
+        this.driverController.povRight().onTrue(
                 Commands.runOnce(() -> this.shouldScoreL1Ground = true)
         );
     }

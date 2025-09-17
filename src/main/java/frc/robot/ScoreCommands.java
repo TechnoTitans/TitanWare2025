@@ -30,6 +30,9 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class ScoreCommands {
+
+    private static final double AllowableDistanceFromREEFToGroundAlign = 0.5;
+
     public enum ExtendWhen {
         CLOSE,
         ROTATION_CLOSE,
@@ -190,6 +193,14 @@ public class ScoreCommands {
             final DoubleSupplier leftStickYInput,
             final DoubleSupplier leftStickXInput
     ) {
+
+        Trigger farEnoughFromReef = new Trigger(() -> {
+           final Pose2d swervePose = swerve.getPose();
+           final Pose2d closestReefFace = swervePose.nearest(FieldConstants.getReefCenterPoses().values().stream().toList());
+
+           return swervePose.getTranslation()
+                   .getDistance(closestReefFace.getTranslation()) >= AllowableDistanceFromREEFToGroundAlign;
+        });
         return Commands.parallel(
                 Commands.sequence(
                     swerve.teleopFacingAngle(
@@ -198,7 +209,7 @@ public class ScoreCommands {
                             () -> swerve.getPose().nearest(FieldConstants.getHPPickupPoses()).getRotation()
                     ).onlyIf(superstructure.unsafeToDrive.negate()),
                     superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE)
-                ),
+                ).onlyIf(farEnoughFromReef),
                 groundIntake.intakeCoralGround()
         );
     }
