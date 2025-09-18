@@ -107,15 +107,15 @@ public class PhotonVision extends VirtualSubsystem {
                         visionSystemSim,
                         Robot.SimCoralPoses,
                         PhotonVision.makeVisionIOInputsMap(
-//                                new SimVisionRunner.VisionIOApriltagsSim(
-//                                        TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
-//                                ),
-//                                new SimVisionRunner.VisionIOApriltagsSim(
-//                                        TitanCamera.PHOTON_BL_APRILTAG, visionSystemSim
-//                                ),
-//                                new SimVisionRunner.VisionIOApriltagsSim(
-//                                        TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
-//                                )
+                                new SimVisionRunner.VisionIOApriltagsSim(
+                                        TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
+                                ),
+                                new SimVisionRunner.VisionIOApriltagsSim(
+                                        TitanCamera.PHOTON_BL_APRILTAG, visionSystemSim
+                                ),
+                                new SimVisionRunner.VisionIOApriltagsSim(
+                                        TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
+                                )
                         ),
                         PhotonVision.makeVisionIOInputsMap(
                                 new SimVisionRunner.VisionIOCoralTrackingSim(
