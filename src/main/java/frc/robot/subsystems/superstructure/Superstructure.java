@@ -42,7 +42,7 @@ public class Superstructure extends VirtualSubsystem {
         L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
         ALIGN_AUTO_L4(Elevator.Goal.L2, ElevatorArm.Goal.AUTO_L4, IntakeArm.Goal.AUTO_L4),
         AUTO_L4(Elevator.Goal.AUTO_L4, ElevatorArm.Goal.AUTO_L4, IntakeArm.Goal.AUTO_L4),
-        ALIGN_L4(Elevator.Goal.L2, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
+        ALIGN_L4(Elevator.Goal.L3, ElevatorArm.Goal.L4, IntakeArm.Goal.L4),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
         ALIGN_NET(Elevator.Goal.STOW, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.NET),
         FLING_NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.ALGAE_FLING),
