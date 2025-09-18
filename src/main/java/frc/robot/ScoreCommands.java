@@ -352,7 +352,11 @@ public class ScoreCommands {
                                 Commands.waitUntil(atReef.or(wasEverAtReef::get)),
                                 Commands.waitUntil(atSuperstructureSetpoint)
                                         .withTimeout(2),
-                                intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy()
+                                Commands.either(
+                                        intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy(),
+                                        groundIntake.scoreL1(),
+                                        () -> scorePositionSupplier.get().level == Level.GROUND_L1
+                                )
                         ),
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
