@@ -1,5 +1,14 @@
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,17 +30,8 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-
 public class ScoreCommands {
-
-    private static final double AllowableDistanceFromREEFToGroundAlign = 0.5;
+    private static final double AllowableDistanceFromREEFToGroundAlign = 1;
 
     public enum ExtendWhen {
         CLOSE,
@@ -189,29 +189,44 @@ public class ScoreCommands {
         ).withName("IntakeFromClosestCoralStation");
     }
 
-    final Command groundIntakeFacingClosestCoralStation(
+    final Command groundIntake(
             final DoubleSupplier leftStickYInput,
-            final DoubleSupplier leftStickXInput
+            final DoubleSupplier leftStickXInput,
+            final DoubleSupplier rightStickXInput,
+            final BooleanSupplier isRedAlliance,
+            final Supplier<Optional<Pose2d>> optionalLineupPoseSupplier
     ) {
 
-        Trigger farEnoughFromReef = new Trigger(() -> {
-           final Pose2d swervePose = swerve.getPose();
-           final Pose2d closestReefFace = swervePose.nearest(FieldConstants.getReefCenterPoses().values().stream().toList());
+        final BooleanSupplier safeToIntake = new Trigger(() -> {
+            final Pose2d swervePose = swerve.getPose();
+            final Pose2d closestReefFace = swervePose.nearest(
+                    new ArrayList<>(FieldConstants.getReefCenterPoses().values())
+            );
 
-           return swervePose.getTranslation()
-                   .getDistance(closestReefFace.getTranslation()) >= AllowableDistanceFromREEFToGroundAlign;
+            final boolean atSafeDistance = swervePose.getTranslation()
+                    .getDistance(closestReefFace.getTranslation()) >= AllowableDistanceFromREEFToGroundAlign;
+
+            final double rotationOfReefRelativeToRobot =
+                    closestReefFace.relativeTo(swervePose).getRotation().plus(Rotation2d.fromRadians(Math.PI)).getRadians();
+
+            final boolean facingReef = rotationOfReefRelativeToRobot < Math.PI/2
+                    && rotationOfReefRelativeToRobot > -Math.PI/2;
+
+            return (atSafeDistance) || (!atSafeDistance && !facingReef);
         });
+
         return Commands.parallel(
-                Commands.sequence(
-                    swerve.teleopFacingAngle(
-                            leftStickYInput,
-                            leftStickXInput,
-                            () -> swerve.getPose().nearest(FieldConstants.getHPPickupPoses()).getRotation()
-                    ).onlyIf(superstructure.unsafeToDrive.negate()),
-                    superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE)
-                ).onlyIf(farEnoughFromReef),
-                groundIntake.intakeCoralGround()
-        );
+                superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE)
+                        .onlyIf(superstructure.unsafeToDrive.negate()),
+                groundIntake.intakeCoralGround(),
+                swerve.teleopDriveAndAssistLineup(
+                        leftStickYInput,
+                        leftStickXInput,
+                        rightStickXInput,
+                        isRedAlliance,
+                        optionalLineupPoseSupplier
+                )
+        ).onlyWhile(safeToIntake);
     }
 
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
@@ -353,8 +368,8 @@ public class ScoreCommands {
                                 Commands.waitUntil(atSuperstructureSetpoint)
                                         .withTimeout(2),
                                 Commands.either(
-                                        intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy(),
                                         groundIntake.scoreL1(),
+                                        intake.scoreCoral(scoreModeFromScorePosition(scorePositionSupplier)).asProxy(),
                                         () -> scorePositionSupplier.get().level == Level.GROUND_L1
                                 )
                         ),

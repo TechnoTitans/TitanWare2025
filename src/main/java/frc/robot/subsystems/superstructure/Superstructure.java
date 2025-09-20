@@ -34,7 +34,7 @@ public class Superstructure extends VirtualSubsystem {
         LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.LOWER_ALGAE, GroundIntakeArm.Goal.ALGAE),
         HP(Elevator.Goal.HP, ElevatorArm.Goal.HP, IntakeArm.Goal.HP, GroundIntakeArm.Goal.UPRIGHT),
         PROCESSOR(Elevator.Goal.PROCESSOR, ElevatorArm.Goal.PROCESSOR, IntakeArm.Goal.PROCESSOR, GroundIntakeArm.Goal.STOW),
-        L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
+        L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.L1),
         ALIGN_L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.STOW),
         L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2, GroundIntakeArm.Goal.UPRIGHT),
         ALIGN_L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2, GroundIntakeArm.Goal.UPRIGHT),
@@ -49,7 +49,7 @@ public class Superstructure extends VirtualSubsystem {
         FLING_NET(Elevator.Goal.NET, ElevatorArm.Goal.UPRIGHT, IntakeArm.Goal.ALGAE_FLING, GroundIntakeArm.Goal.STOW),
         GROUND_INTAKE(Elevator.Goal.TRANSFER_CORAL, ElevatorArm.Goal.TRANSFER_CORAL, IntakeArm.Goal.TRANSFER_CORAL, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         HANDOFF(Elevator.Goal.TRANSFER_CORAL, ElevatorArm.Goal.TRANSFER_CORAL, IntakeArm.Goal.TRANSFER_CORAL, GroundIntakeArm.Goal.TRANSFER_CORAL),
-        GROUND_L1(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW, GroundIntakeArm.Goal.SCORE_L1),
+        GROUND_L1(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW, GroundIntakeArm.Goal.GROUND_L1),
 
         SAFE(Elevator.Goal.L3, ElevatorArm.Goal.L4, IntakeArm.Goal.STOW, GroundIntakeArm.Goal.STOW);
 

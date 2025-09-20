@@ -20,8 +20,6 @@ import frc.robot.constants.HardwareConstants;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.function.DoubleSupplier;
-
 import static edu.wpi.first.units.Units.*;
 
 public class GroundIntakeArm extends SubsystemBase {
@@ -75,7 +73,8 @@ public class GroundIntakeArm extends SubsystemBase {
         INTAKE_FROM_GROUND(-0.315),
         TRANSFER_CORAL(-0.06),
         ALGAE(-0.20),
-        SCORE_L1(-0.15),
+        GROUND_L1(-0.15),
+        L1(-0.22),
         CLIMB(-.627);
 
         private final double pivotPositionGoalRots;

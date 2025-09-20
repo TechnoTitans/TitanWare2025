@@ -527,7 +527,13 @@ public class Robot extends LoggedRobot {
         );
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
-                scoreCommands.groundIntakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+                scoreCommands.groundIntake(
+                        driverController::getLeftY,
+                        driverController::getLeftX,
+                        driverController::getRightX,
+                        IsRedAlliance,
+                        () -> photonVision.getBestCoralPose(swerve::getPose, swerve::getPose)
+                )
         );
 
         this.driverController.rightTrigger(0.5, teleopEventLoop)
