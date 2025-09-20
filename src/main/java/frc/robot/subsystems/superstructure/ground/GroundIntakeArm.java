@@ -74,6 +74,7 @@ public class GroundIntakeArm extends SubsystemBase {
         UPRIGHT(-0.09),
         INTAKE_FROM_GROUND(-0.315),
         TRANSFER_CORAL(-0.06),
+        ALGAE(-0.20),
         SCORE_L1(-0.15),
         CLIMB(-.627);
 

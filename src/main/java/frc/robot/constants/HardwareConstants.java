@@ -98,7 +98,7 @@ public class HardwareConstants {
             RobotMap.RioCANBus,
             24,
             25,
-            1.5
+            3
     );
 
     public record GroundIntakeArmConstants(
@@ -116,7 +116,7 @@ public class HardwareConstants {
             26,
             27,
             0,
-            46.875,
+            133,
             -0.35,
             .14
     ); //TODO: Limits need to change

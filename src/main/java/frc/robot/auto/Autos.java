@@ -29,7 +29,6 @@ import java.util.function.Supplier;
 
 public class Autos {
     public static final String LogKey = "Auto";
-
     private static final double AllowableDistanceFromHPForEarlyAlign = 0.75;
 
     private final Swerve swerve;
