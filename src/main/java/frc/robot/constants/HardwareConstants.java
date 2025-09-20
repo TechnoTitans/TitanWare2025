@@ -98,7 +98,7 @@ public class HardwareConstants {
             RobotMap.RioCANBus,
             24,
             25,
-            3
+            2
     );
 
     public record GroundIntakeArmConstants(
