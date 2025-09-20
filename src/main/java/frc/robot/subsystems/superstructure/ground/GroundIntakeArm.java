@@ -75,9 +75,11 @@ public class GroundIntakeArm extends SubsystemBase {
     }
 
     public enum Goal {
+        STOP(0),
         ZERO(0),
         STOW(-0.0243),
         HANDOFF(-0.0243),
+        ALGAE_SAFE(-0.2),
         INTAKE(-0.324);
 
         private final double pivotPositionGoalRots;
@@ -128,7 +130,12 @@ public class GroundIntakeArm extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
-            positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+            if (desiredGoal == Goal.STOP) {
+                positionSetpoint.pivotPositionRots = inputs.pivotPositionRots;
+            } else {
+                positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+            }
+
             groundIntakeArmIO.toPivotPosition(positionSetpoint.pivotPositionRots);
 
             this.currentGoal = desiredGoal;

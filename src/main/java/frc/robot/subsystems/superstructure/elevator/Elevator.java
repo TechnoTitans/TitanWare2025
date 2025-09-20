@@ -76,6 +76,7 @@ public class Elevator extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
+        STOP(0),
         STOW(0.01),
         HANDOFF(0.01),
         CLIMB_DOWN(0.08925),
@@ -158,7 +159,11 @@ public class Elevator extends SubsystemBase {
 
         if (desiredGoal != currentGoal) {
             if (desiredGoal != Goal.DYNAMIC) {
-                setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
+                if (desiredGoal == Goal.STOP) {
+                    setpoint.elevatorPositionRots = inputs.masterPositionRots;
+                } else {
+                    setpoint.elevatorPositionRots = desiredGoal.getPositionGoalRots(constants);
+                }
 
                 if (Goal.shouldUseSlowAlgaeNext(desiredGoal, currentGoal)) {
                     elevatorIO.toPosition(

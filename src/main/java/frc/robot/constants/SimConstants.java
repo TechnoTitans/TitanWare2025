@@ -35,7 +35,7 @@ public interface SimConstants {
     interface ElevatorArm {
         Translation3d ORIGIN = new Translation3d(-0.267, 0, 0.153);
 
-        double LENGTH_METERS = Units.inchesToMeters(31.876);
+        double LENGTH_METERS = Elevator.BASE_LENGTH_METERS;
 
         double RETRACTED_MOI_KG_M_SQUARED = 5.07674197;
         double EXTENDED_MOI_KG_M_SQUARED = 18.505581775;
@@ -46,6 +46,7 @@ public interface SimConstants {
 
     interface Elevator {
         double MASS_KG = Units.lbsToKilograms(19.15);
+        double BASE_LENGTH_METERS = Units.inchesToMeters(31.876);
 
         double ORIGIN_OFFSET = Units.inchesToMeters(1.125);
         // from base stage bottom plate to bottom plate on stage 1

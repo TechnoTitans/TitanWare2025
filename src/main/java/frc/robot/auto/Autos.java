@@ -157,7 +157,7 @@ public class Autos {
         final Container<Boolean> wasEverAtReef = Container.of(false);
 
         return Commands.sequence(
-                wasEverAtReef.set(false),
+                wasEverAtReef.setCommand(false),
                 Commands.deadline(
                         Commands.sequence(
                                 Commands.waitUntil(atCloseReef),
@@ -174,7 +174,7 @@ public class Autos {
                         Commands.sequence(
                                 swerve.runToPose(scoringPoseSupplier)
                                         .until(atReef),
-                                wasEverAtReef.set(true),
+                                wasEverAtReef.setCommand(true),
                                 swerve.runWheelXCommand()
                         )
                 )

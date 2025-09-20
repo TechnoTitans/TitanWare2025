@@ -16,7 +16,8 @@ public class Ellipse2dHelpers {
      * @param center The center of the ellipse.
      * @param xSemiAxis The X semi-axis of the ellipse.
      * @param ySemiAxis The Y semi-axis of the ellipse.
-     * @param point The point to solve for.
+     * @param px The X coordinate of the point to solve for.
+     * @param py The X coordinate of the point to solve for.
      * @return < 1.0 if the point lies inside the ellipse, == 1.0 if a point lies on the ellipse, and
      *     > 1.0 if the point lies outsides the ellipse.
      */

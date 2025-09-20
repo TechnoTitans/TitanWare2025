@@ -335,11 +335,11 @@ public class Robot extends LoggedRobot {
         final Container<Pose2d> pose2dContainer = Container.empty();
         driverController.x(testEventLoop).whileTrue(
                 Commands.sequence(
-                        pose2dContainer.set(() -> swerve.getPose().transformBy(
+                        pose2dContainer.setCommand(() -> swerve.getPose().transformBy(
                                 new Transform2d(Units.feetToMeters(15), 0, Rotation2d.kZero)
                         )),
                         Commands.parallel(
-                                Commands.run(() -> Logger.recordOutput("NewDist", pose2dContainer.value.getTranslation().getNorm())),
+                                Commands.run(() -> Logger.recordOutput("NewDist", pose2dContainer.get().getTranslation().getNorm())),
                                 Commands.run(() -> Logger.recordOutput("Robot", swerve.getPose().getTranslation().getNorm())),
                                 swerve.runToPose(pose2dContainer)
                         )
@@ -484,17 +484,7 @@ public class Robot extends LoggedRobot {
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ).withName("SwerveSpeedSlow"));
 
-        this.driverController.a(teleopEventLoop).whileTrue(
-//                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
-                Commands.repeatingSequence(
-                        superstructure.runGoal(Superstructure.Goal.HANDOFF)
-                                .until(superstructure.atSetpoint(Superstructure.Goal.HANDOFF)),
-                        Commands.waitSeconds(0.2),
-                        superstructure.runGoal(Superstructure.Goal.GROUND_INTAKE)
-                                .until(superstructure.atSetpoint(Superstructure.Goal.GROUND_INTAKE)),
-                        Commands.waitSeconds(0.2)
-                )
-        );
+        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
         this.driverController.x(teleopEventLoop)
                 .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));

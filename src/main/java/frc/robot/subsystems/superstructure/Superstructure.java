@@ -1,6 +1,5 @@
 package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -12,7 +11,9 @@ import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.superstructure.ground.GroundIntakeArm;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
-import frc.robot.utils.geometry.Ellipse2dHelpers;
+import frc.robot.utils.Container;
+import frc.robot.utils.commands.FastCommands;
+import frc.robot.utils.geometry.MutableEllipse2d;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
@@ -34,14 +35,14 @@ public class Superstructure extends VirtualSubsystem {
         CLIMB_DOWN(Elevator.Goal.CLIMB_DOWN, ElevatorArm.Goal.CLIMB_DOWN, IntakeArm.Goal.CLIMB_DOWN, GroundIntakeArm.Goal.STOW),
 
         ALGAE_GROUND(Elevator.Goal.ALGAE_GROUND, ElevatorArm.Goal.ALGAE_GROUND, IntakeArm.Goal.ALGAE_GROUND, GroundIntakeArm.Goal.STOW),
-        UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.Goal.UPPER_ALGAE, GroundIntakeArm.Goal.STOW),
-        LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.LOWER_ALGAE, GroundIntakeArm.Goal.STOW),
+        UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.Goal.UPPER_ALGAE, GroundIntakeArm.Goal.ALGAE_SAFE),
+        LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.LOWER_ALGAE, GroundIntakeArm.Goal.ALGAE_SAFE),
 
         HP(Elevator.Goal.HP, ElevatorArm.Goal.HP, IntakeArm.Goal.HP, GroundIntakeArm.Goal.STOW),
         GROUND_INTAKE(Elevator.Goal.HANDOFF, ElevatorArm.Goal.HANDOFF, IntakeArm.Goal.HANDOFF, GroundIntakeArm.Goal.INTAKE),
         PROCESSOR(Elevator.Goal.PROCESSOR, ElevatorArm.Goal.PROCESSOR, IntakeArm.Goal.PROCESSOR, GroundIntakeArm.Goal.STOW),
 
-        L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.STOW),
+        L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.INTAKE),
         ALIGN_L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.STOW),
         L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2, GroundIntakeArm.Goal.STOW),
         ALIGN_L2(Elevator.Goal.L2, ElevatorArm.Goal.L2, IntakeArm.Goal.L2, GroundIntakeArm.Goal.STOW),
@@ -61,7 +62,7 @@ public class Superstructure extends VirtualSubsystem {
         private static final Map<Goal, Translation2d> GoalTranslations = new HashMap<>();
 
         static {
-            for (final Goal goal : Superstructure.Goal.values()) {
+            for (final Goal goal : Goal.values()) {
                 final Translation2d goalTranslation = new Translation2d(
                         goal.elevatorGoal.getPositionGoalMeters(),
                         Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots())
@@ -98,13 +99,35 @@ public class Superstructure extends VirtualSubsystem {
         }
     }
 
+    private enum CollisionDetectionOrder {
+        PIVOT_UP_MOVE_ELEVATOR_ARM_FIRST,
+        PIVOT_DOWN_MOVE_GROUND_INTAKE_FIRST;
+
+        public static CollisionDetectionOrder select(
+                final double currentAngleRots,
+                final double desiredAngleRots
+        ) {
+            return desiredAngleRots >= currentAngleRots
+                    ? CollisionDetectionOrder.PIVOT_UP_MOVE_ELEVATOR_ARM_FIRST
+                    : CollisionDetectionOrder.PIVOT_DOWN_MOVE_GROUND_INTAKE_FIRST;
+        }
+    }
+
+    private enum CollisionAvoidanceOrder {
+        MOVE_BOTH,
+        MOVE_NOTHING,
+        MOVE_ONLY_ELEVATOR_ARM,
+        MOVE_ELEVATOR_ARM_FIRST,
+        MOVE_GROUND_INTAKE_FIRST
+    }
+
     protected static final String LogKey = "Superstructure";
     public static final double AllowableExtensionForDrivingMeters =
             Goal.GoalTranslations.get(Goal.SAFE).getNorm();
 
     public static final Translation2d GroundIntakeArmCollisionZoneSize = new Translation2d(
-            Units.inchesToMeters(17.561254),
-            Units.inchesToMeters(9.77)
+            Units.inchesToMeters(17.561254 + 5),
+            Units.inchesToMeters(9.77 + 2.5)
     );
 
     private final Elevator elevator;
@@ -116,7 +139,8 @@ public class Superstructure extends VirtualSubsystem {
     private Goal runningGoal = desiredGoal;
     private Goal atGoal = desiredGoal;
 
-    private final Ellipse2d groundIntakeCollisionZone;
+    private final MutableEllipse2d groundIntakeCurrentCollisionZone;
+    private final MutableEllipse2d groundIntakeDesiredCollisionZone;
 
     private final EventLoop eventLoop;
 
@@ -147,10 +171,21 @@ public class Superstructure extends VirtualSubsystem {
         this.groundIntakeArm = groundIntakeArm;
 
         final Translation2d groundIntakeArmBoundingBoxSize = groundIntakeArm.getBoundingBoxSize();
-        this.groundIntakeCollisionZone = new Ellipse2d(
+        this.groundIntakeCurrentCollisionZone = new MutableEllipse2d(
                 getGroundIntakeArmCenterPose(),
-                Math.max(GroundIntakeArmCollisionZoneSize.getX(), groundIntakeArmBoundingBoxSize.getX()),
-                Math.max(GroundIntakeArmCollisionZoneSize.getY(), groundIntakeArmBoundingBoxSize.getY())
+                Math.max(
+                        GroundIntakeArmCollisionZoneSize.getX(),
+                        groundIntakeArmBoundingBoxSize.getX()
+                ) / 2,
+                Math.max(
+                        GroundIntakeArmCollisionZoneSize.getY(),
+                        groundIntakeArmBoundingBoxSize.getY()
+                ) / 2
+        );
+        this.groundIntakeDesiredCollisionZone = new MutableEllipse2d(
+                getGroundIntakeArmCenterPose(desiredGoal),
+                groundIntakeCurrentCollisionZone.getXSemiAxis(),
+                groundIntakeCurrentCollisionZone.getYSemiAxis()
         );
 
         this.eventLoop = new EventLoop();
@@ -170,8 +205,8 @@ public class Superstructure extends VirtualSubsystem {
         this.allowedToChangeGoal = desiredGoalIsDynamic.negate()
                 .and((desiredGoalIsAtGoal.and(atSuperstructureSetpoint)).negate());
         this.desiresUpwardsMotion = new Trigger(eventLoop, () -> {
-            final Translation2d currentTranslation = getElevatorTranslation();
-            final Translation2d desiredTranslation = Superstructure.Goal.GoalTranslations.get(desiredGoal);
+            final Translation2d currentTranslation = getElevatorExtensionTranslation();
+            final Translation2d desiredTranslation = Goal.GoalTranslations.get(desiredGoal);
 
             return desiredTranslation.getY() >= currentTranslation.getY();
         });
@@ -197,59 +232,203 @@ public class Superstructure extends VirtualSubsystem {
     }
 
     private Command upwardsGoalChange() {
-        return Commands.sequence(
+        final Container<CollisionDetectionOrder> detectionOrderContainer = Container.empty();
+        final Container<CollisionAvoidanceOrder> avoidanceOrderContainer = Container.empty();
+        return FastCommands.sequence(
                 Commands.runOnce(() -> {
                     this.atGoal = Goal.NONE;
                     this.runningGoal = desiredGoal;
 
-                    elevatorArm.setGoal(runningGoal.elevatorArmGoal);
-                    intakeArm.setGoal(runningGoal.intakeArmGoal);
+                    final CollisionDetectionOrder detectionOrder = CollisionDetectionOrder.select(
+                            elevatorArm.getPivotPosition().getRotations(),
+                            runningGoal.elevatorArmGoal.getPivotPositionGoalRots()
+                    );
+                    final CollisionAvoidanceOrder avoidanceOrder =
+                            getCollisionAvoidanceStrategy(detectionOrder);
 
-                    if (!checkGroundIntakeCollision()) {
-                        groundIntakeArm.setGoal(runningGoal.groundIntakeArmGoal);
+                    Logger.recordOutput(LogKey + "/CollisionDetectionOrder", detectionOrder);
+                    Logger.recordOutput(LogKey + "/CollisionAvoidanceOrder", avoidanceOrder);
+
+                    detectionOrderContainer.set(detectionOrder);
+                    avoidanceOrderContainer.set(avoidanceOrder);
+
+                    switch (avoidanceOrder) {
+                        case MOVE_BOTH -> {
+                            elevator.setGoal(Elevator.Goal.STOP);
+
+                            elevatorArm.setGoal(runningGoal.elevatorArmGoal);
+                            intakeArm.setGoal(runningGoal.intakeArmGoal);
+                            groundIntakeArm.setGoal(runningGoal.groundIntakeArmGoal);
+                        }
+                        case MOVE_ONLY_ELEVATOR_ARM, MOVE_ELEVATOR_ARM_FIRST -> {
+                            elevator.setGoal(Elevator.Goal.STOP);
+                            groundIntakeArm.setGoal(GroundIntakeArm.Goal.STOP);
+
+                            elevatorArm.setGoal(runningGoal.elevatorArmGoal);
+                            intakeArm.setGoal(runningGoal.intakeArmGoal);
+                        }
+                        case MOVE_GROUND_INTAKE_FIRST -> {
+                            elevatorArm.setGoal(ElevatorArm.Goal.STOP);
+                            elevator.setGoal(Elevator.Goal.STOP);
+                            intakeArm.setGoal(IntakeArm.Goal.STOP);
+
+                            groundIntakeArm.setGoal(runningGoal.groundIntakeArmGoal);
+                        }
+                        case MOVE_NOTHING -> {
+                            elevatorArm.setGoal(ElevatorArm.Goal.STOP);
+                            elevator.setGoal(Elevator.Goal.STOP);
+                            intakeArm.setGoal(IntakeArm.Goal.STOP);
+                            groundIntakeArm.setGoal(GroundIntakeArm.Goal.STOP);
+                        }
                     }
                 }),
 
-                Commands.waitUntil(elevatorArm.atSetpoint.and(intakeArm.atSetpoint))
-                        .withTimeout(4),
-                Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal)),
+                Commands.waitUntil(() -> switch (avoidanceOrderContainer.get()) {
+                    case MOVE_BOTH, MOVE_ONLY_ELEVATOR_ARM, MOVE_ELEVATOR_ARM_FIRST ->
+                            elevatorArm.atSetpoint.getAsBoolean()
+                                    && intakeArm.atSetpoint.getAsBoolean();
+                    case MOVE_GROUND_INTAKE_FIRST -> groundIntakeArm.atSetpoint.getAsBoolean();
+                    case MOVE_NOTHING -> true;
+                }).withTimeout(4),
 
-                Commands.waitUntil(
-                        elevatorArm.atSetpoint
-                                .and(elevator.atSetpoint)
-                                .and(intakeArm.atSetpoint)
-                                .and(groundIntakeArm.atSetpoint)
-                ).withTimeout(4),
-                Commands.runOnce(() -> this.atGoal = runningGoal)
+                Commands.runOnce(() -> {
+                    final CollisionAvoidanceOrder currentAvoidanceOrder =
+                            getCollisionAvoidanceStrategy(detectionOrderContainer.get());
+                    Logger.recordOutput(LogKey + "/CollisionAvoidanceOrder", currentAvoidanceOrder);
+
+                    if (currentAvoidanceOrder == CollisionAvoidanceOrder.MOVE_BOTH) {
+                        final CollisionAvoidanceOrder originalAvoidanceOrder = avoidanceOrderContainer.get();
+                        switch (originalAvoidanceOrder) {
+                            case MOVE_BOTH, MOVE_ONLY_ELEVATOR_ARM, MOVE_ELEVATOR_ARM_FIRST -> {
+                                groundIntakeArm.setGoal(runningGoal.groundIntakeArmGoal);
+                                elevator.setGoal(runningGoal.elevatorGoal);
+                            }
+                            case MOVE_GROUND_INTAKE_FIRST -> {
+                                elevatorArm.setGoal(runningGoal.elevatorArmGoal);
+                                intakeArm.setGoal(runningGoal.intakeArmGoal);
+                            }
+                            case MOVE_NOTHING -> {}
+                        }
+                    }
+                }),
+
+                FastCommands.sequence(
+                        Commands.waitUntil(elevatorArm.atSetpoint.and(intakeArm.atSetpoint)),
+                        Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal))
+                )
+                        .onlyIf(() -> switch (avoidanceOrderContainer.get()) {
+                            case MOVE_GROUND_INTAKE_FIRST -> true;
+                            case MOVE_BOTH, MOVE_ONLY_ELEVATOR_ARM, MOVE_ELEVATOR_ARM_FIRST, MOVE_NOTHING -> false;
+                        })
+                        .withTimeout(4),
+
+                FastCommands.sequence(
+                        Commands.waitUntil(
+                                elevatorArm.atSetpoint
+                                        .and(elevator.atSetpoint)
+                                        .and(intakeArm.atSetpoint)
+                                        .and(groundIntakeArm.atSetpoint)
+                        ),
+                        Commands.runOnce(() -> this.atGoal = runningGoal)
+                ).withTimeout(4)
         )
                 .onlyWhile(() -> desiredGoal == runningGoal)
                 .withName("UpwardsGoalChange");
     }
 
     private Command downwardsGoalChange() {
-        return Commands.sequence(
+        final Container<CollisionDetectionOrder> detectionOrderContainer = Container.empty();
+        final Container<CollisionAvoidanceOrder> avoidanceOrderContainer = Container.empty();
+        return FastCommands.sequence(
                 Commands.runOnce(() -> {
                     this.atGoal = Goal.NONE;
                     this.runningGoal = desiredGoal;
 
-                    intakeArm.setGoal(runningGoal.intakeArmGoal);
-                    elevator.setGoal(runningGoal.elevatorGoal);
-                    groundIntakeArm.setGoal(runningGoal.groundIntakeArmGoal);
+                    final CollisionDetectionOrder detectionOrder = CollisionDetectionOrder.select(
+                            elevatorArm.getPivotPosition().getRotations(),
+                            runningGoal.elevatorArmGoal.getPivotPositionGoalRots()
+                    );
+                    final CollisionAvoidanceOrder avoidanceOrder =
+                            getCollisionAvoidanceStrategy(detectionOrder);
+
+                    Logger.recordOutput(LogKey + "/CollisionDetectionOrder", detectionOrder);
+                    Logger.recordOutput(LogKey + "/CollisionAvoidanceOrder", avoidanceOrder);
+
+                    detectionOrderContainer.set(detectionOrder);
+                    avoidanceOrderContainer.set(avoidanceOrder);
+
+                    switch (avoidanceOrder) {
+                        case MOVE_BOTH, MOVE_GROUND_INTAKE_FIRST -> {
+                            elevatorArm.setGoal(ElevatorArm.Goal.STOP);
+
+                            elevator.setGoal(runningGoal.elevatorGoal);
+                            intakeArm.setGoal(runningGoal.intakeArmGoal);
+                            groundIntakeArm.setGoal(runningGoal.groundIntakeArmGoal);
+                        }
+                        case MOVE_ONLY_ELEVATOR_ARM, MOVE_ELEVATOR_ARM_FIRST -> {
+                            elevatorArm.setGoal(ElevatorArm.Goal.STOP);
+                            groundIntakeArm.setGoal(GroundIntakeArm.Goal.STOP);
+
+                            elevator.setGoal(runningGoal.elevatorGoal);
+                            intakeArm.setGoal(runningGoal.intakeArmGoal);
+                        }
+                        case MOVE_NOTHING -> {
+                            elevatorArm.setGoal(ElevatorArm.Goal.STOP);
+                            elevator.setGoal(Elevator.Goal.STOP);
+                            intakeArm.setGoal(IntakeArm.Goal.STOP);
+                            groundIntakeArm.setGoal(GroundIntakeArm.Goal.STOP);
+                        }
+                    }
                 }),
 
-                Commands.waitUntil(
-                        elevator.atSetpoint
-                                .and(intakeArm.atSetpoint)
-                ).withTimeout(4),
-                Commands.runOnce(() -> elevatorArm.setGoal(runningGoal.elevatorArmGoal)),
+                Commands.waitUntil(() -> switch (avoidanceOrderContainer.get()) {
+                    case MOVE_BOTH, MOVE_ONLY_ELEVATOR_ARM, MOVE_ELEVATOR_ARM_FIRST ->
+                            elevator.atSetpoint.getAsBoolean()
+                                    && intakeArm.atSetpoint.getAsBoolean();
+                    case MOVE_GROUND_INTAKE_FIRST ->
+                            elevator.atSetpoint.getAsBoolean()
+                                    && intakeArm.atSetpoint.getAsBoolean()
+                                    && groundIntakeArm.atSetpoint.getAsBoolean();
+                    case MOVE_NOTHING -> true;
+                }).withTimeout(4),
 
-                Commands.waitUntil(
-                        elevatorArm.atSetpoint
-                                .and(elevator.atSetpoint)
-                                .and(intakeArm.atSetpoint)
-                                .and(groundIntakeArm.atSetpoint)
-                ).withTimeout(4),
-                Commands.runOnce(() -> this.atGoal = runningGoal)
+                Commands.runOnce(() -> {
+                    final CollisionAvoidanceOrder currentAvoidanceOrder =
+                            getCollisionAvoidanceStrategy(detectionOrderContainer.get());
+                    Logger.recordOutput(LogKey + "/CollisionAvoidanceOrder", currentAvoidanceOrder);
+
+                    if (currentAvoidanceOrder != CollisionAvoidanceOrder.MOVE_GROUND_INTAKE_FIRST) {
+                        final CollisionAvoidanceOrder originalAvoidanceOrder = avoidanceOrderContainer.get();
+                        switch (originalAvoidanceOrder) {
+                            case MOVE_BOTH,
+                                 MOVE_ONLY_ELEVATOR_ARM,
+                                 MOVE_ELEVATOR_ARM_FIRST,
+                                 MOVE_GROUND_INTAKE_FIRST ->
+                                    elevatorArm.setGoal(runningGoal.elevatorArmGoal);
+                            case MOVE_NOTHING -> {}
+                        }
+                    }
+                }),
+
+                FastCommands.sequence(
+                        Commands.waitUntil(elevatorArm.atSetpoint),
+                        Commands.runOnce(() -> groundIntakeArm.setGoal(runningGoal.groundIntakeArmGoal))
+                )
+                        .onlyIf(() -> switch (avoidanceOrderContainer.get()) {
+                            case MOVE_ELEVATOR_ARM_FIRST -> true;
+                            case MOVE_BOTH, MOVE_ONLY_ELEVATOR_ARM, MOVE_GROUND_INTAKE_FIRST, MOVE_NOTHING -> false;
+                        })
+                        .withTimeout(4),
+
+                FastCommands.sequence(
+                        Commands.waitUntil(
+                                elevatorArm.atSetpoint
+                                        .and(elevator.atSetpoint)
+                                        .and(intakeArm.atSetpoint)
+                                        .and(groundIntakeArm.atSetpoint)
+                        ),
+                        Commands.runOnce(() -> this.atGoal = runningGoal)
+                ).withTimeout(4)
         )
                 .onlyWhile(() -> desiredGoal == runningGoal)
                 .withName("DownwardsGoalChange");
@@ -301,7 +480,7 @@ public class Superstructure extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/AtSetpoint", atSuperstructureSetpoint);
         Logger.recordOutput(LogKey + "/UnsafeToDrive", unsafeToDrive);
 
-        Logger.recordOutput(LogKey + "/ExtensionDistanceMeters", getElevatorTranslation().getNorm());
+        Logger.recordOutput(LogKey + "/ExtensionDistanceMeters", getElevatorExtensionTranslation().getNorm());
         Logger.recordOutput(LogKey + "/AllowableExtensionForDrivingMeters", AllowableExtensionForDrivingMeters);
 
         Logger.recordOutput(LogKey + "/Triggers/DesiredGoalIsRunningGoal", desiredGoalIsRunningGoal);
@@ -324,16 +503,16 @@ public class Superstructure extends VirtualSubsystem {
         );
     }
 
-    public Trigger atSetpoint(final Supplier<Superstructure.Goal> goalSupplier) {
+    public Trigger atSetpoint(final Supplier<Goal> goalSupplier) {
         return atSuperstructureSetpoint.and(() -> atGoal == goalSupplier.get());
     }
 
-    public Trigger atSetpoint(final Superstructure.Goal goal) {
+    public Trigger atSetpoint(final Goal goal) {
         return atSetpoint(() -> goal);
     }
 
     public Trigger extendedBeyond(final double distance) {
-        return new Trigger(eventLoop, () -> getElevatorTranslation().getNorm() > distance);
+        return new Trigger(eventLoop, () -> getElevatorExtensionTranslation().getNorm() > distance);
     }
 
     public Command forceGoal(final Goal goal) {
@@ -375,41 +554,80 @@ public class Superstructure extends VirtualSubsystem {
         return Set.of(elevator, elevatorArm, intakeArm);
     }
 
-    private Translation2d getElevatorTranslation() {
+    private Translation2d getElevatorExtensionTranslation(
+            final double elevatorExtensionMeters,
+            final Rotation2d elevatorArmPivotPosition
+    ) {
         return new Translation2d(
+                elevatorExtensionMeters,
+                elevatorArmPivotPosition
+        );
+    }
+
+    private Translation2d getElevatorExtensionTranslation() {
+        return getElevatorExtensionTranslation(
                 elevator.getExtensionMeters(),
                 elevatorArm.getPivotPosition()
+        );
+    }
+
+    private Translation2d getElevatorExtensionTranslation(final Goal goal) {
+        return getElevatorExtensionTranslation(
+                goal.elevatorGoal.getPositionGoalMeters(),
+                Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots())
         );
     }
 
     private Translation2d getElevatorCollisionLine() {
         return SuperstructureSolver
                 .getElevatorArmPivotOrigin2d()
-                .plus(getElevatorTranslation());
+                .plus(SuperstructureSolver.getElevatorBaseStageTranslation(elevatorArm.getPivotPosition()))
+                .plus(getElevatorExtensionTranslation());
+    }
+
+    private Translation2d getElevatorCollisionLine(final Goal goal) {
+        return SuperstructureSolver
+                .getElevatorArmPivotOrigin2d()
+                .plus(SuperstructureSolver.getElevatorBaseStageTranslation(
+                        Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots())))
+                .plus(getElevatorExtensionTranslation(goal));
+    }
+
+    private Pose2d getGroundIntakeArmCenterPose(
+            final Rotation2d pivotPosition,
+            final Translation2d boundingBoxSize
+    ) {
+        final Pose2d groundIntakePivotPose = SuperstructureSolver
+                .getGroundIntakePivotPose2d(pivotPosition);
+
+        final Rotation2d pivotAngle = groundIntakePivotPose.getRotation();
+        final double halfLength = boundingBoxSize.getX() / 2;
+        return new Pose2d(
+                groundIntakePivotPose.getX() + (halfLength * pivotAngle.getCos()),
+                groundIntakePivotPose.getY() + (halfLength * pivotAngle.getSin()),
+                pivotAngle
+        );
     }
 
     private Pose2d getGroundIntakeArmCenterPose() {
-        final Rotation2d pivotPosition = groundIntakeArm.getPivotPosition();
-        final Pose3d armPose3d = SuperstructureSolver
-                .getGroundIntakePose(pivotPosition);
+        return getGroundIntakeArmCenterPose(groundIntakeArm.getPivotPosition(), groundIntakeArm.getBoundingBoxSize());
+    }
 
-        final Translation2d boundingBoxSize = groundIntakeArm.getBoundingBoxSize();
-        final double halfLength = boundingBoxSize.getX() / 2;
-        return new Pose2d(
-                armPose3d.getX() + (halfLength * pivotPosition.getCos()),
-                armPose3d.getZ() + (halfLength * pivotPosition.getSin()),
-                pivotPosition
+    private Pose2d getGroundIntakeArmCenterPose(final Goal goal) {
+        return getGroundIntakeArmCenterPose(
+                Rotation2d.fromRotations(goal.groundIntakeArmGoal.getPivotPositionGoalRots()),
+                groundIntakeArm.getBoundingBoxSize()
         );
     }
 
     @SuppressWarnings("unused")
     public Optional<Goal> getClosestGoal(final Set<Goal> goalWhitelist) {
-        final Translation2d currentTranslation = getElevatorTranslation();
+        final Translation2d currentTranslation = getElevatorExtensionTranslation();
 
         Goal closestGoal = null;
         double minDistance = Double.MAX_VALUE;
         for (final Map.Entry<Goal, Translation2d> goalTranslationEntry
-                : Superstructure.Goal.GoalTranslations.entrySet()
+                : Goal.GoalTranslations.entrySet()
         ) {
             final Goal goal = goalTranslationEntry.getKey();
             if (!goalWhitelist.contains(goal)) {
@@ -428,107 +646,112 @@ public class Superstructure extends VirtualSubsystem {
         return Optional.ofNullable(closestGoal);
     }
 
-    private static Translation2d getClosestPointOnLineToPoint(
-            final Translation2d origin,
-            final Translation2d line,
-            final Translation2d point
-    ) {
-        final Translation2d originToPoint = point.minus(origin);
-        final Translation2d originToLine = line.minus(origin);
-        final double lineX = originToLine.getX();
-        final double lineY = originToLine.getY();
-        final double magSquared = (lineX * lineX) + (lineY * lineY);
-        final double dot = (originToPoint.getX() * lineX)
-                + (originToPoint.getY() * lineY);
+    private CollisionAvoidanceOrder getCollisionAvoidanceStrategy(final CollisionDetectionOrder order) {
+        final Translation2d elevatorArmOrigin = SuperstructureSolver.getElevatorArmPivotOrigin2d();
+        final Translation2d elevatorDesiredCollisionLine = getElevatorCollisionLine(desiredGoal);
+        final Translation2d elevatorCheckCollisionLine = switch(order) {
+            case PIVOT_UP_MOVE_ELEVATOR_ARM_FIRST -> getElevatorCollisionLine();
+            case PIVOT_DOWN_MOVE_GROUND_INTAKE_FIRST -> elevatorDesiredCollisionLine;
+        };
 
-        final double t = MathUtil.clamp(dot / magSquared, 0, 1);
-        if (t <= 0) {
-            return origin;
-        } else if (t >= 1) {
-            return origin.plus(line);
+        // TODO move/duplicate to periodic for logging
+        groundIntakeCurrentCollisionZone.setCenter(getGroundIntakeArmCenterPose());
+        groundIntakeDesiredCollisionZone.setCenter(getGroundIntakeArmCenterPose(desiredGoal));
+
+        final boolean illegalDesiredState = checkLineEllipseIntersection(
+                elevatorArmOrigin,
+                elevatorDesiredCollisionLine,
+                groundIntakeDesiredCollisionZone
+        );
+
+        if (illegalDesiredState) {
+            final boolean canStillMoveElevatorArm = checkLineEllipseIntersection(
+                    elevatorArmOrigin,
+                    elevatorDesiredCollisionLine,
+                    groundIntakeCurrentCollisionZone
+            );
+
+            return canStillMoveElevatorArm
+                    ? CollisionAvoidanceOrder.MOVE_ONLY_ELEVATOR_ARM
+                    : CollisionAvoidanceOrder.MOVE_NOTHING;
+        }
+
+        final boolean waitUntilSafe = checkLineEllipseIntersection(
+                elevatorArmOrigin,
+                elevatorCheckCollisionLine,
+                switch (order) {
+                    case PIVOT_UP_MOVE_ELEVATOR_ARM_FIRST -> groundIntakeDesiredCollisionZone;
+                    case PIVOT_DOWN_MOVE_GROUND_INTAKE_FIRST -> groundIntakeCurrentCollisionZone;
+                }
+        );
+
+        if (waitUntilSafe) {
+            return switch (order) {
+                case PIVOT_UP_MOVE_ELEVATOR_ARM_FIRST -> CollisionAvoidanceOrder.MOVE_ELEVATOR_ARM_FIRST;
+                case PIVOT_DOWN_MOVE_GROUND_INTAKE_FIRST -> CollisionAvoidanceOrder.MOVE_GROUND_INTAKE_FIRST;
+            };
         } else {
-            return origin.plus(line.times(t));
+            return CollisionAvoidanceOrder.MOVE_BOTH;
         }
     }
 
-    private boolean checkGroundIntakeCollision() {
-        final Translation2d elevatorArmOrigin = SuperstructureSolver.getElevatorArmPivotOrigin2d();
-        final Translation2d elevatorCollisionLine = getElevatorCollisionLine();
+    private static boolean checkLineEllipseIntersection(
+            final Translation2d origin,
+            final Translation2d line,
+            final MutableEllipse2d ellipse
+    ) {
+        final double x0 = origin.getX();
+        final double y0 = origin.getY();
+        final double dx = line.getX() - x0;
+        final double dy = line.getY() - y0;
 
-        final Pose2d groundIntakeCollisionZoneCenter = groundIntakeCollisionZone.getCenter();
-        final double groundIntakeCollisionZoneXSemiAxis = groundIntakeCollisionZone.getXSemiAxis();
-        final double groundIntakeCollisionZoneYSemiAxis = groundIntakeCollisionZone.getYSemiAxis();
+        final Pose2d center = ellipse.getCenter();
+        final double h = center.getX();
+        final double k = center.getY();
+        final Rotation2d theta = center.getRotation();
 
-        final Translation2d startPoint = getClosestPointOnLineToPoint(
-                elevatorArmOrigin,
-                elevatorCollisionLine,
-                groundIntakeCollisionZoneCenter.getTranslation()
-        );
+        final double a = ellipse.getXSemiAxis();
+        final double b = ellipse.getYSemiAxis();
 
-        final int _MAX_ITERATIONS = 50;
-        final double distanceToStart = startPoint.getDistance(elevatorArmOrigin);
-        final double distanceToEnd = startPoint.getDistance(elevatorCollisionLine);
+        final double cos = theta.getCos();
+        final double sin = theta.getSin();
 
-        final double distancePerIterToStart = distanceToStart / _MAX_ITERATIONS;
-        final double distancePerIterToEnd = distanceToEnd / _MAX_ITERATIONS;
-        final double distanceIter0 = Math.min(distancePerIterToStart, distancePerIterToEnd);
+        final double dxCos = dx * cos + dy * sin;
+        final double dxSin = dx * sin - dy * cos;
+        final double x0hCos = (x0 - h) * cos + (y0 - k) * sin;
+        final double x0hSin = (x0 - h) * sin - (y0 - k) * cos;
 
-        final Translation2d offsetPerIter;
-        {
-            final Rotation2d theta = elevatorCollisionLine
-                    .minus(elevatorArmOrigin)
-                    .getAngle();
-            final Translation2d offset = new Translation2d(distanceIter0, theta);
-            final Translation2d toStart = startPoint.minus(offset);
-            final Translation2d toEnd = startPoint.plus(offset);
+        final double aSquared = a * a;
+        final double bSquared = b * b;
 
-            final double startDistanceToZone = groundIntakeCollisionZone.getDistance(toStart);
-            final double endDistanceToZone = groundIntakeCollisionZone.getDistance(toEnd);
+        final double A = ((dxCos * dxCos) / aSquared) + ((dxSin * dxSin) / bSquared);
+        final double B = 2 * (((x0hCos * dxCos) / aSquared) + ((x0hSin * dxSin) / bSquared));
+        final double C = ((x0hCos * x0hCos) / aSquared + (x0hSin * x0hSin) / bSquared) - 1;
 
-            if (MathUtil.isNear(startDistanceToZone, endDistanceToZone, 1e-4)) {
-                return Ellipse2dHelpers.contains(
-                        groundIntakeCollisionZoneCenter,
-                        groundIntakeCollisionZoneXSemiAxis,
-                        groundIntakeCollisionZoneYSemiAxis,
-                        startPoint
-                );
-            } else if (startDistanceToZone < endDistanceToZone) {
-                offsetPerIter = new Translation2d(-distancePerIterToStart, theta);
-            } else if (endDistanceToZone < startDistanceToZone) {
-                offsetPerIter = new Translation2d(distancePerIterToEnd, theta);
-            } else {
-                // should never get here
-                return Ellipse2dHelpers.contains(
-                        groundIntakeCollisionZoneCenter,
-                        groundIntakeCollisionZoneXSemiAxis,
-                        groundIntakeCollisionZoneYSemiAxis,
-                        startPoint
-                );
-            }
-        }
+        final double discriminant = (B * B) - (4 * A * C);
 
-        final double offsetX = offsetPerIter.getX();
-        final double offsetY = offsetPerIter.getY();
+        return discriminant >= 0;
 
-        double x = startPoint.getX() + offsetX;
-        double y = startPoint.getY() + offsetY;
-        for (int i = 0; i < _MAX_ITERATIONS; i++) {
-            final boolean contains = Ellipse2dHelpers.contains(
-                    groundIntakeCollisionZoneCenter,
-                    groundIntakeCollisionZoneXSemiAxis,
-                    groundIntakeCollisionZoneYSemiAxis,
-                    x,
-                    y
-            );
-
-            if (contains) {
-                return true;
-            }
-
-            x += offsetX;
-            y += offsetY;
-        }
-
-        return false;
+//        if (discriminant < 0) {
+//            return new Translation2d[0];
+//        }
+//
+//        final double sqrtDiscriminant = Math.sqrt(discriminant);
+//        final double t1 = (-B + sqrtDiscriminant) / (2 * A);
+//        final double t2 = (-B - sqrtDiscriminant) / (2 * A);
+//
+//        final boolean t1Exists = t1 >= 0 && t1 <= 1;
+//        final boolean t2Exists = discriminant > 0 && t2 >= 0 && t2 <= 1;
+//
+//        if (t1Exists && t2Exists) {
+//            return new Translation2d[] {
+//                    new Translation2d(x0 + t1 * dx, y0 + t1 * dx),
+//                    new Translation2d(x0 + t2 * dx, y0 + t2 * dx)
+//            };
+//        } else if (t1Exists) {
+//            return new Translation2d[] {new Translation2d(x0 + t1 * dx, y0 + t1 * dx)};
+//        } else {
+//            return new Translation2d[0];
+//        }
     }
 }

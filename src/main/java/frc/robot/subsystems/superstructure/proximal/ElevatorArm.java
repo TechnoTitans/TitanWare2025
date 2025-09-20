@@ -72,6 +72,7 @@ public class ElevatorArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
+        STOP(0),
         STOW(0.12),
         HANDOFF(0.11578),
         UPRIGHT(0.1844),
@@ -86,7 +87,7 @@ public class ElevatorArm extends SubsystemBase {
         L2(0.1),
         L1(0.0214),
         CLIMB(0.184),
-        CLIMB_DOWN(-6);
+        CLIMB_DOWN(0);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {
@@ -134,13 +135,18 @@ public class ElevatorArm extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
-            if (desiredGoal != Goal.DYNAMIC && desiredGoal != Goal.CLIMB_DOWN) {
-                setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
-                elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
-            }
-            if (desiredGoal == Goal.CLIMB_DOWN) {
-                setpoint.pivotPositionRots = 0;
-                elevatorArmIO.toPivotVoltage(desiredGoal.pivotPositionGoalRots);
+            if (desiredGoal != Goal.DYNAMIC) {
+                if (desiredGoal == Goal.STOP) {
+                    setpoint.pivotPositionRots = inputs.pivotPositionRots;
+                } else {
+                    setpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+                }
+
+                if (desiredGoal == Goal.CLIMB_DOWN) {
+                    elevatorArmIO.toPivotVoltage(-6);
+                } else {
+                    elevatorArmIO.toPivotPosition(setpoint.pivotPositionRots);
+                }
             }
 
             this.currentGoal = desiredGoal;

@@ -85,6 +85,7 @@ public class IntakeArm extends SubsystemBase {
     }
 
     public enum Goal {
+        STOP(0),
         STOW(0),
         HP(0),
         HANDOFF(-0.29),
@@ -157,7 +158,12 @@ public class IntakeArm extends SubsystemBase {
         Logger.processInputs(LogKey, inputs);
 
         if (desiredGoal != currentGoal) {
-            positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+            if (desiredGoal == Goal.STOP) {
+                positionSetpoint.pivotPositionRots = inputs.pivotPositionRots;
+            } else {
+                positionSetpoint.pivotPositionRots = desiredGoal.getPivotPositionGoalRots();
+            }
+
             if (Goal.shouldUseSlowAlgaeNext(desiredGoal, currentGoal)) {
                 algaeSlowSetpoint.position = inputs.pivotPositionRots;
                 algaeSlowSetpoint.velocity = inputs.pivotVelocityRotsPerSec;
