@@ -68,7 +68,7 @@ public class GroundIntakeArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        STOW(0),
+        STOW(-0.02),
         UPRIGHT(-0.09),
         INTAKE_FROM_GROUND(-0.315),
         TRANSFER_CORAL(-0.06),
