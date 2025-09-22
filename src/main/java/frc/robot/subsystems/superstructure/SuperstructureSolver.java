@@ -46,7 +46,7 @@ public class SuperstructureSolver {
         );
     }
 
-    public static Translation2d getElevatorExtensionToLowestEnd(
+    public static Translation2d getLowestPointOnGroundIntake(
             final Rotation2d elevatorArmPosition,
             final Rotation2d intakeArmPosition,
             final Translation2d elevatorExtensionLine

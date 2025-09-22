@@ -589,7 +589,7 @@ public class Superstructure extends VirtualSubsystem {
                 .plus(SuperstructureSolver.getElevatorBaseStageTranslation(elevatorArmPosition))
                 .plus(getElevatorExtensionTranslation());
 
-        return SuperstructureSolver.getElevatorExtensionToLowestEnd(
+        return SuperstructureSolver.getLowestPointOnGroundIntake(
                 elevatorArmPosition,
                 intakeArm.getPivotPosition(),
                 elevatorExtensionLine
@@ -604,7 +604,7 @@ public class Superstructure extends VirtualSubsystem {
                 .plus(SuperstructureSolver.getElevatorBaseStageTranslation(elevatorArmPosition))
                 .plus(Superstructure.getElevatorExtensionTranslation(goal));
 
-        return SuperstructureSolver.getElevatorExtensionToLowestEnd(
+        return SuperstructureSolver.getLowestPointOnGroundIntake(
                 elevatorArmPosition,
                 Rotation2d.fromRotations(goal.intakeArmGoal.getPivotPositionGoalRots()),
                 elevatorExtensionLine
