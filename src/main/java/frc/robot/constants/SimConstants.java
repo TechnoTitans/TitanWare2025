@@ -1,9 +1,6 @@
 package frc.robot.constants;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 
@@ -35,7 +32,7 @@ public interface SimConstants {
     interface ElevatorArm {
         Translation3d ORIGIN = new Translation3d(-0.267, 0, 0.153);
 
-        double LENGTH_METERS = Elevator.BASE_LENGTH_METERS;
+        double LENGTH_METERS = Elevator.BASE_LENGTH_PIVOT_TO_END_METERS;
 
         double RETRACTED_MOI_KG_M_SQUARED = 5.07674197;
         double EXTENDED_MOI_KG_M_SQUARED = 18.505581775;
@@ -46,7 +43,8 @@ public interface SimConstants {
 
     interface Elevator {
         double MASS_KG = Units.lbsToKilograms(19.15);
-        double BASE_LENGTH_METERS = Units.inchesToMeters(31.876);
+        double BASE_LENGTH_PIVOT_TO_END_METERS = Units.inchesToMeters(31.876);
+        double BASE_LENGTH_PIVOT_TO_PIVOT_METERS = Units.inchesToMeters(30.875);
 
         double ORIGIN_OFFSET = Units.inchesToMeters(1.125);
         // from base stage bottom plate to bottom plate on stage 1
@@ -73,6 +71,18 @@ public interface SimConstants {
         Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(-62.838);
         Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(0)
                 .minus(ZEROED_POSITION_TO_HORIZONTAL);
+
+        Transform2d PIVOT_TO_TOP_ROLLER = new Transform2d(
+                Units.inchesToMeters(6.285),
+                Units.inchesToMeters(9.283),
+                Rotation2d.kZero
+        );
+
+        Transform2d PIVOT_TO_BOTTOM_ROLLER = new Transform2d(
+                Units.inchesToMeters(5.697),
+                Units.inchesToMeters(1.328),
+                Rotation2d.kZero
+        );
     }
 
     interface Intake {

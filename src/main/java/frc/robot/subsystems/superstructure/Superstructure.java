@@ -63,11 +63,7 @@ public class Superstructure extends VirtualSubsystem {
 
         static {
             for (final Goal goal : Goal.values()) {
-                final Translation2d goalTranslation = new Translation2d(
-                        goal.elevatorGoal.getPositionGoalMeters(),
-                        Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots())
-                );
-                GoalTranslations.put(goal, goalTranslation);
+                GoalTranslations.put(goal, Superstructure.getElevatorExtensionTranslation(goal));
             }
         }
 
@@ -285,9 +281,9 @@ public class Superstructure extends VirtualSubsystem {
 
                 Commands.waitUntil(() -> switch (avoidanceOrderContainer.get()) {
                     case MOVE_BOTH, MOVE_ONLY_ELEVATOR_ARM, MOVE_ELEVATOR_ARM_FIRST ->
-                            elevatorArm.atSetpoint.getAsBoolean()
-                                    && intakeArm.atSetpoint.getAsBoolean();
-                    case MOVE_GROUND_INTAKE_FIRST -> groundIntakeArm.atSetpoint.getAsBoolean();
+                            elevatorArm.atGoal(runningGoal.elevatorArmGoal)
+                                && intakeArm.atGoal(runningGoal.intakeArmGoal);
+                    case MOVE_GROUND_INTAKE_FIRST -> groundIntakeArm.atGoal(runningGoal.groundIntakeArmGoal);
                     case MOVE_NOTHING -> true;
                 }).withTimeout(4),
 
@@ -313,7 +309,9 @@ public class Superstructure extends VirtualSubsystem {
                 }),
 
                 FastCommands.sequence(
-                        Commands.waitUntil(elevatorArm.atSetpoint.and(intakeArm.atSetpoint)),
+                        Commands.waitUntil(() ->
+                                elevatorArm.atGoal(runningGoal.elevatorArmGoal)
+                                        && intakeArm.atGoal(runningGoal.intakeArmGoal)),
                         Commands.runOnce(() -> elevator.setGoal(runningGoal.elevatorGoal))
                 )
                         .onlyIf(() -> switch (avoidanceOrderContainer.get()) {
@@ -383,12 +381,12 @@ public class Superstructure extends VirtualSubsystem {
 
                 Commands.waitUntil(() -> switch (avoidanceOrderContainer.get()) {
                     case MOVE_BOTH, MOVE_ONLY_ELEVATOR_ARM, MOVE_ELEVATOR_ARM_FIRST ->
-                            elevator.atSetpoint.getAsBoolean()
-                                    && intakeArm.atSetpoint.getAsBoolean();
+                            elevator.atGoal(runningGoal.elevatorGoal)
+                                    && intakeArm.atGoal(runningGoal.intakeArmGoal);
                     case MOVE_GROUND_INTAKE_FIRST ->
-                            elevator.atSetpoint.getAsBoolean()
-                                    && intakeArm.atSetpoint.getAsBoolean()
-                                    && groundIntakeArm.atSetpoint.getAsBoolean();
+                            elevator.atGoal(runningGoal.elevatorGoal)
+                                    && intakeArm.atGoal(runningGoal.intakeArmGoal)
+                                    && groundIntakeArm.atGoal(runningGoal.groundIntakeArmGoal);
                     case MOVE_NOTHING -> true;
                 }).withTimeout(4),
 
@@ -411,7 +409,7 @@ public class Superstructure extends VirtualSubsystem {
                 }),
 
                 FastCommands.sequence(
-                        Commands.waitUntil(elevatorArm.atSetpoint),
+                        Commands.waitUntil(() -> elevatorArm.atGoal(runningGoal.elevatorArmGoal)),
                         Commands.runOnce(() -> groundIntakeArm.setGoal(runningGoal.groundIntakeArmGoal))
                 )
                         .onlyIf(() -> switch (avoidanceOrderContainer.get()) {
@@ -471,6 +469,21 @@ public class Superstructure extends VirtualSubsystem {
     @Override
     public void periodic() {
         eventLoop.poll();
+
+        final Translation2d collisionLine = getCollisionLine();
+        Logger.recordOutput(LogKey + "/CollisionLine", new Pose3d(
+                collisionLine.getX(),
+                0,
+                collisionLine.getY(),
+                new Rotation3d(
+                        0,
+                        collisionLine
+                                .getAngle()
+                                .unaryMinus()
+                                .getRadians(),
+                        0
+                )
+        ));
 
         Logger.recordOutput(LogKey + "/RunningGoal", runningGoal.toString());
         Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
@@ -550,47 +563,52 @@ public class Superstructure extends VirtualSubsystem {
                 .withName("RunGoal");
     }
 
+    @SuppressWarnings("unused")
     public Set<Subsystem> getRequirements() {
         return Set.of(elevator, elevatorArm, intakeArm);
     }
 
-    private Translation2d getElevatorExtensionTranslation(
-            final double elevatorExtensionMeters,
-            final Rotation2d elevatorArmPivotPosition
-    ) {
-        return new Translation2d(
-                elevatorExtensionMeters,
-                elevatorArmPivotPosition
-        );
-    }
-
     private Translation2d getElevatorExtensionTranslation() {
-        return getElevatorExtensionTranslation(
+        return SuperstructureSolver.getElevatorExtensionTranslation(
                 elevator.getExtensionMeters(),
                 elevatorArm.getPivotPosition()
         );
     }
 
-    private Translation2d getElevatorExtensionTranslation(final Goal goal) {
-        return getElevatorExtensionTranslation(
+    private static Translation2d getElevatorExtensionTranslation(final Goal goal) {
+        return SuperstructureSolver.getElevatorExtensionTranslation(
                 goal.elevatorGoal.getPositionGoalMeters(),
                 Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots())
         );
     }
 
-    private Translation2d getElevatorCollisionLine() {
-        return SuperstructureSolver
+    private Translation2d getCollisionLine() {
+        final Rotation2d elevatorArmPosition = elevatorArm.getPivotPosition();
+        final Translation2d elevatorExtensionLine = SuperstructureSolver
                 .getElevatorArmPivotOrigin2d()
-                .plus(SuperstructureSolver.getElevatorBaseStageTranslation(elevatorArm.getPivotPosition()))
+                .plus(SuperstructureSolver.getElevatorBaseStageTranslation(elevatorArmPosition))
                 .plus(getElevatorExtensionTranslation());
+
+        return SuperstructureSolver.getElevatorExtensionToLowestEnd(
+                elevatorArmPosition,
+                intakeArm.getPivotPosition(),
+                elevatorExtensionLine
+        );
     }
 
-    private Translation2d getElevatorCollisionLine(final Goal goal) {
-        return SuperstructureSolver
+    private Translation2d getCollisionLine(final Goal goal) {
+        final Rotation2d elevatorArmPosition =
+                Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots());
+        final Translation2d elevatorExtensionLine = SuperstructureSolver
                 .getElevatorArmPivotOrigin2d()
-                .plus(SuperstructureSolver.getElevatorBaseStageTranslation(
-                        Rotation2d.fromRotations(goal.elevatorArmGoal.getPivotPositionGoalRots())))
-                .plus(getElevatorExtensionTranslation(goal));
+                .plus(SuperstructureSolver.getElevatorBaseStageTranslation(elevatorArmPosition))
+                .plus(Superstructure.getElevatorExtensionTranslation(goal));
+
+        return SuperstructureSolver.getElevatorExtensionToLowestEnd(
+                elevatorArmPosition,
+                Rotation2d.fromRotations(goal.intakeArmGoal.getPivotPositionGoalRots()),
+                elevatorExtensionLine
+        );
     }
 
     private Pose2d getGroundIntakeArmCenterPose(
@@ -648,10 +666,10 @@ public class Superstructure extends VirtualSubsystem {
 
     private CollisionAvoidanceOrder getCollisionAvoidanceStrategy(final CollisionDetectionOrder order) {
         final Translation2d elevatorArmOrigin = SuperstructureSolver.getElevatorArmPivotOrigin2d();
-        final Translation2d elevatorDesiredCollisionLine = getElevatorCollisionLine(desiredGoal);
-        final Translation2d elevatorCheckCollisionLine = switch(order) {
-            case PIVOT_UP_MOVE_ELEVATOR_ARM_FIRST -> getElevatorCollisionLine();
-            case PIVOT_DOWN_MOVE_GROUND_INTAKE_FIRST -> elevatorDesiredCollisionLine;
+        final Translation2d desiredCollisionLine = getCollisionLine(desiredGoal);
+        final Translation2d checkCollisionLine = switch(order) {
+            case PIVOT_UP_MOVE_ELEVATOR_ARM_FIRST -> getCollisionLine();
+            case PIVOT_DOWN_MOVE_GROUND_INTAKE_FIRST -> desiredCollisionLine;
         };
 
         // TODO move/duplicate to periodic for logging
@@ -660,14 +678,14 @@ public class Superstructure extends VirtualSubsystem {
 
         final boolean illegalDesiredState = checkLineEllipseIntersection(
                 elevatorArmOrigin,
-                elevatorDesiredCollisionLine,
+                desiredCollisionLine,
                 groundIntakeDesiredCollisionZone
         );
 
         if (illegalDesiredState) {
             final boolean canStillMoveElevatorArm = checkLineEllipseIntersection(
                     elevatorArmOrigin,
-                    elevatorDesiredCollisionLine,
+                    desiredCollisionLine,
                     groundIntakeCurrentCollisionZone
             );
 
@@ -678,7 +696,7 @@ public class Superstructure extends VirtualSubsystem {
 
         final boolean waitUntilSafe = checkLineEllipseIntersection(
                 elevatorArmOrigin,
-                elevatorCheckCollisionLine,
+                checkCollisionLine,
                 switch (order) {
                     case PIVOT_UP_MOVE_ELEVATOR_ARM_FIRST -> groundIntakeDesiredCollisionZone;
                     case PIVOT_DOWN_MOVE_GROUND_INTAKE_FIRST -> groundIntakeCurrentCollisionZone;

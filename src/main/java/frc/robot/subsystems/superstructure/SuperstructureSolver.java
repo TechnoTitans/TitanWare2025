@@ -5,6 +5,7 @@ import frc.robot.constants.SimConstants.Elevator;
 import frc.robot.constants.SimConstants.ElevatorArm;
 import frc.robot.constants.SimConstants.GroundIntakeArm;
 import frc.robot.constants.SimConstants.IntakeArm;
+import org.littletonrobotics.junction.Logger;
 
 public class SuperstructureSolver {
     private SuperstructureSolver() {}
@@ -17,12 +18,86 @@ public class SuperstructureSolver {
         );
     }
 
-    public static Translation2d getElevatorBaseStageTranslation(final Rotation2d elevatorArmPosition) {
+    private static Translation2d getElevatorTranslation(
+            final double lengthMeters,
+            final Rotation2d elevatorArmPosition
+    ) {
         return new Translation2d(
-                Elevator.BASE_LENGTH_METERS,
+                lengthMeters,
                 elevatorArmPosition
                         .minus(ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
         );
+    }
+
+    public static Translation2d getElevatorBaseStageTranslation(final Rotation2d elevatorArmPosition) {
+        return SuperstructureSolver.getElevatorTranslation(
+                Elevator.BASE_LENGTH_PIVOT_TO_PIVOT_METERS,
+                elevatorArmPosition
+        );
+    }
+
+    public static Translation2d getElevatorExtensionTranslation(
+            final double elevatorExtensionMeters,
+            final Rotation2d elevatorArmPivotPosition
+    ) {
+        return SuperstructureSolver.getElevatorTranslation(
+                elevatorExtensionMeters,
+                elevatorArmPivotPosition
+        );
+    }
+
+    public static Translation2d getElevatorExtensionToLowestEnd(
+            final Rotation2d elevatorArmPosition,
+            final Rotation2d intakeArmPosition,
+            final Translation2d elevatorExtensionLine
+    ) {
+        final Pose2d intakePose = new Pose2d(
+                elevatorExtensionLine
+                        .plus(new Translation2d(
+                                IntakeArm.ORIGIN_OFFSET.getX(),
+                                IntakeArm.ORIGIN_OFFSET.getZ()
+                        )),
+                Rotation2d.fromRadians(
+                        elevatorArmPosition.getRadians()
+                                - Rotation2d.kCCW_Pi_2.getRadians()
+                                - ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL.getRadians()
+                                + intakeArmPosition.getRadians()
+                                - IntakeArm.ZEROED_POSITION_TO_HORIZONTAL.getRadians()
+                )
+        );
+
+        Logger.recordOutput("Incoming", new Pose3d(
+                elevatorExtensionLine.getX(),
+                0,
+                elevatorExtensionLine.getY(),
+                Rotation3d.kZero
+        ));
+        Logger.recordOutput("Center", new Pose3d(
+                intakePose.getX(),
+                0,
+                intakePose.getY(),
+                new Rotation3d(
+                        0,
+                        -intakePose
+                                .getRotation()
+                                .getRadians(),
+                        0
+                )
+        ));
+
+        final Transform2d pivotToTopRoller = IntakeArm.PIVOT_TO_TOP_ROLLER;
+        final Transform2d pivotToBottomRoller = IntakeArm.PIVOT_TO_BOTTOM_ROLLER;
+
+        final Pose2d topRollerPose = intakePose.plus(pivotToTopRoller);
+        final Pose2d bottomRollerPose = intakePose.plus(pivotToBottomRoller);
+
+        final double topY = topRollerPose.getY();
+        final double bottomY = bottomRollerPose.getY();
+        final boolean topIsLower = topY <= bottomY;
+
+        return topIsLower
+                ? topRollerPose.getTranslation()
+                : bottomRollerPose.getTranslation();
     }
 
     private static Rotation2d getGroundIntakePivotAngle(final Rotation2d groundIntakePivotPosition) {
@@ -35,7 +110,8 @@ public class SuperstructureSolver {
                 GroundIntakeArm.ORIGIN,
                 new Rotation3d(
                         0,
-                        getGroundIntakePivotAngle(groundIntakePivotPosition)
+                        SuperstructureSolver
+                                .getGroundIntakePivotAngle(groundIntakePivotPosition)
                                 .getRadians(),
                         0
                 )
@@ -47,7 +123,8 @@ public class SuperstructureSolver {
         return new Pose2d(
                 groundIntakePose.getX(),
                 groundIntakePose.getZ(),
-                getGroundIntakePivotAngle(groundIntakePivotPosition)
+                SuperstructureSolver
+                        .getGroundIntakePivotAngle(groundIntakePivotPosition)
                         .unaryMinus()
         );
     }
@@ -55,7 +132,7 @@ public class SuperstructureSolver {
     public static Pose3d[] calculatePoses(
             final Rotation2d elevatorArmPosition,
             final double elevatorExtensionMeters,
-            final Rotation2d intakePivotPosition,
+            final Rotation2d intakeArmPosition,
             final Rotation2d groundIntakePivotPosition
     ) {
         final Pose3d baseStagePose = new Pose3d(
@@ -64,9 +141,8 @@ public class SuperstructureSolver {
                         0,
                         elevatorArmPosition
                                 .unaryMinus()
-                                .plus(
-                                        Rotation2d.kCCW_Pi_2
-                                                .plus(ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
+                                .plus(Rotation2d.kCCW_Pi_2
+                                        .plus(ElevatorArm.ZEROED_POSITION_TO_HORIZONTAL)
                                 ).getRadians(),
                         0
                 )
@@ -102,7 +178,7 @@ public class SuperstructureSolver {
                         Elevator.STAGE_2_TO_INTAKE,
                         new Rotation3d(
                                 0,
-                                intakePivotPosition
+                                intakeArmPosition
                                         .unaryMinus()
                                         .plus(IntakeArm.ZEROED_POSITION_TO_HORIZONTAL)
                                         .getRadians(),
@@ -110,7 +186,8 @@ public class SuperstructureSolver {
                         )
                 ));
 
-        final Pose3d groundIntakePose = getGroundIntakePose(groundIntakePivotPosition);
+        final Pose3d groundIntakePose = SuperstructureSolver
+                .getGroundIntakePose(groundIntakePivotPosition);
 
         return new Pose3d[] {
                 baseStagePose,
