@@ -4,7 +4,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import frc.robot.constants.Constants;
-import frc.robot.constants.RobotMap;
+import frc.robot.constants.HardwareConstants;
 import frc.robot.subsystems.drive.OdometryThreadRunner;
 import frc.robot.subsystems.drive.SwerveModule;
 
@@ -26,7 +26,7 @@ public class SwerveConstants {
 
     public static final SwerveModuleConstants FrontLeftModule = new SwerveModuleConstants(
             "FrontLeft",
-            RobotMap.CanivoreCANBus,
+            HardwareConstants.CANBus.CANIVORE,
             new Translation2d(Config.wheelBaseMeters / 2, Config.trackWidthMeters / 2),
             1,
             2,
@@ -37,7 +37,7 @@ public class SwerveConstants {
 
     public static final SwerveModuleConstants FrontRightModule = new SwerveModuleConstants(
             "FrontRight",
-            RobotMap.CanivoreCANBus,
+            HardwareConstants.CANBus.CANIVORE,
             new Translation2d(Config.wheelBaseMeters / 2, -Config.trackWidthMeters / 2),
             4,
             5,
@@ -48,7 +48,7 @@ public class SwerveConstants {
 
     public static final SwerveModuleConstants BackLeftModule = new SwerveModuleConstants(
             "BackLeft",
-            RobotMap.CanivoreCANBus,
+            HardwareConstants.CANBus.CANIVORE,
             new Translation2d(-Config.wheelBaseMeters / 2, Config.trackWidthMeters / 2),
             7,
             8,
@@ -59,7 +59,7 @@ public class SwerveConstants {
 
     public static final SwerveModuleConstants BackRightModule = new SwerveModuleConstants(
             "BackRight",
-            RobotMap.CanivoreCANBus,
+            HardwareConstants.CANBus.CANIVORE,
             new Translation2d(-Config.wheelBaseMeters / 2, -Config.trackWidthMeters / 2),
             10,
             11,
@@ -91,7 +91,7 @@ public class SwerveConstants {
 
     public record SwerveModuleConstants(
             String name,
-            String moduleCANBus,
+            HardwareConstants.CANBus moduleCANBus,
             Translation2d translationOffset,
             int driveMotorId,
             int turnMotorId,

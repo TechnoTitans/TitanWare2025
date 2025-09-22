@@ -39,8 +39,9 @@ public class IntakeIOReal implements IntakeIO {
     public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
         this.constants = constants;
 
-        this.rollerMotor = new TalonFX(constants.rollerRollerMotorID(), constants.CANBus());
-        this.coralCANRange = new CANrange(constants.coralTOFID(), constants.CANBus());
+        final HardwareConstants.CANBus CANBus = constants.CANBus();
+        this.rollerMotor = new TalonFX(constants.rollerRollerMotorID(), CANBus.name);
+        this.coralCANRange = new CANrange(constants.coralTOFID(), CANBus.name);
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -54,7 +55,7 @@ public class IntakeIOReal implements IntakeIO {
         this.rollerCANRangeDistance = coralCANRange.getDistance(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                CANBus,
                 rollerPosition,
                 rollerVelocity,
                 rollerVoltage,

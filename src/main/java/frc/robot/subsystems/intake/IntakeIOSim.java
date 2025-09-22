@@ -53,8 +53,9 @@ public class IntakeIOSim implements IntakeIO {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
 
-        this.rollerMotor = new TalonFX(constants.rollerRollerMotorID(), constants.CANBus());
-        this.coralCANRange = new CANrange(constants.coralTOFID(), constants.CANBus());
+        final HardwareConstants.CANBus CANBus = constants.CANBus();
+        this.rollerMotor = new TalonFX(constants.rollerRollerMotorID(), CANBus.name);
+        this.coralCANRange = new CANrange(constants.coralTOFID(), CANBus.name);
 
         final DCMotorSim rollerMotorSim = new DCMotorSim(
             LinearSystemId.createDCMotorSystem(
@@ -84,7 +85,7 @@ public class IntakeIOSim implements IntakeIO {
         this.rollerCANRangeDistance = coralCANRange.getDistance(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                CANBus,
                 rollerPosition,
                 rollerVelocity,
                 rollerVoltage,

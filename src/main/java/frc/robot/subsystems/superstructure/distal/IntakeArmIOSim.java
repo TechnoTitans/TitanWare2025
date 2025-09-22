@@ -68,8 +68,9 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 SimConstants.IntakeArm.STARTING_ANGLE.getRadians()
         );
 
-        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), constants.CANBus());
-        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), constants.CANBus());
+        final HardwareConstants.CANBus CANBus = constants.CANBus();
+        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), CANBus.name);
+        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), CANBus.name);
 
         this.pivotTalonFXSSim = new TalonFXSSim(
                 pivotMotor,
@@ -93,7 +94,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         this.encoderVelocity = pivotEncoder.getVelocity(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                CANBus,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

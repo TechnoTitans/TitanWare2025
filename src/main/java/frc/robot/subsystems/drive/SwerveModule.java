@@ -186,7 +186,7 @@ public class SwerveModule {
     /**
      * Scales a {@link SwerveModuleState} by the cosine of the error between the {@link SwerveModuleState#angle} and
      * the measured angle (wheel rotation) by mutating its {@link SwerveModuleState#speedMetersPerSecond}.
-     * <p> This should be called <b>AFTER</b> {@link SwerveModuleState#optimize(SwerveModuleState, Rotation2d)}</p>
+     * <p> This should be called <b>AFTER</b> {@link SwerveModuleState#optimize(Rotation2d)}</p>
      *
      * @param state         the {@link SwerveModuleState} to scale (this is mutated!)
      * @param wheelRotation the measured wheel {@link Rotation2d}

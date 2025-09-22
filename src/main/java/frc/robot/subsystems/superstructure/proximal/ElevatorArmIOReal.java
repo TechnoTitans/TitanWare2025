@@ -37,8 +37,9 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
     public ElevatorArmIOReal(final HardwareConstants.ElevatorArmConstants constants) {
         this.constants = constants;
 
-        this.pivotMotor = new TalonFX(constants.motorId(), constants.CANBus());
-        this.pivotCANCoder = new CANcoder(constants.CANCoderId(), constants.CANBus());
+        final HardwareConstants.CANBus CANBus = constants.CANBus();
+        this.pivotMotor = new TalonFX(constants.motorId(), CANBus.name);
+        this.pivotCANCoder = new CANcoder(constants.CANCoderId(), CANBus.name);
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -53,7 +54,7 @@ public class ElevatorArmIOReal implements ElevatorArmIO {
         this.pivotCANCoderVelocity = pivotCANCoder.getVelocity(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                CANBus,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

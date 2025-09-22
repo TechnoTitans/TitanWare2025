@@ -81,8 +81,9 @@ public class ElevatorIOSim implements ElevatorIO {
                 lowerLimitMeters
         );
 
-        this.masterMotor = new TalonFX(constants.rightMotorId(), constants.CANBus());
-        this.followerMotor = new TalonFX(constants.leftMotorId(), constants.CANBus());
+        final HardwareConstants.CANBus CANBus = constants.CANBus();
+        this.masterMotor = new TalonFX(constants.rightMotorId(), CANBus.name);
+        this.followerMotor = new TalonFX(constants.leftMotorId(), CANBus.name);
 
         this.motorsSim = new TalonFXSim(
                 List.of(masterMotor, followerMotor),
@@ -111,7 +112,7 @@ public class ElevatorIOSim implements ElevatorIO {
         this.followerDeviceTemp = followerMotor.getDeviceTemp(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.CANIVORE,
+                CANBus,
                 masterPosition,
                 masterVelocity,
                 masterVoltage,

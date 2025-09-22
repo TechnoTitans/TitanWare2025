@@ -23,6 +23,7 @@ import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.utils.closeables.ToClose;
@@ -78,8 +79,9 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
             final SwerveConstants.SwerveModuleConstants constants,
             final OdometryThreadRunner odometryThreadRunner
     ) {
-        this.driveMotor = new TalonFX(constants.driveMotorId(), constants.moduleCANBus());
-        this.turnMotor = new TalonFX(constants.turnMotorId(), constants.moduleCANBus());
+        final HardwareConstants.CANBus CANBus = constants.moduleCANBus();
+        this.driveMotor = new TalonFX(constants.driveMotorId(), CANBus.name);
+        this.turnMotor = new TalonFX(constants.turnMotorId(), CANBus.name);
 
         final DCMotor driveDCMotor = DCMotor.getKrakenX60Foc(1);
         final DCMotorSim driveDCMotorSim = new DCMotorSim(
@@ -112,7 +114,7 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
                 turnDCMotor
         );
 
-        this.turnEncoder = new CANcoder(constants.turnEncoderId(), constants.moduleCANBus());
+        this.turnEncoder = new CANcoder(constants.turnEncoderId(), CANBus.name);
         this.magnetOffset = constants.turnEncoderOffsetRots();
         this.turnSim = new TalonFXSim(
                 turnMotor,
@@ -148,7 +150,7 @@ public class SwerveModuleIOTalonFXSim implements SwerveModuleIO {
         this.turnPositionSignalBuffer = odometryThreadRunner.registerSignal(turnMotor, this.turnPosition);
 
         RefreshAll.add(
-                RefreshAll.CANBus.CANIVORE,
+                CANBus,
                 drivePosition,
                 driveVelocity,
                 driveTorqueCurrent,

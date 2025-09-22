@@ -34,7 +34,8 @@ public class GyroIOPigeon2 implements GyroIO {
             final HardwareConstants.GyroConstants gyroConstants,
             final OdometryThreadRunner odometryThreadRunner
     ) {
-        this.pigeon = new Pigeon2(gyroConstants.gyroId(), gyroConstants.CANBus());
+        final HardwareConstants.CANBus CANBus = gyroConstants.CANBus();
+        this.pigeon = new Pigeon2(gyroConstants.gyroId(), CANBus.name);
 
         this.yaw = pigeon.getYaw(false);
         this.pitch = pigeon.getPitch(false);
@@ -48,7 +49,7 @@ public class GyroIOPigeon2 implements GyroIO {
         this.yawSignalBuffer = odometryThreadRunner.registerSignal(pigeon, this.yaw);
 
         RefreshAll.add(
-                RefreshAll.CANBus.CANIVORE,
+                CANBus,
                 yaw,
                 pitch,
                 roll,

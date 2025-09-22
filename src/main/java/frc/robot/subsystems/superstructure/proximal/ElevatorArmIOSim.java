@@ -78,8 +78,9 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
                 SimConstants.ElevatorArm.STARTING_ANGLE.getRadians()
         );
 
-        this.pivotMotor = new TalonFX(constants.motorId(), constants.CANBus());
-        this.pivotCANCoder = new CANcoder(constants.CANCoderId(), constants.CANBus());
+        final HardwareConstants.CANBus CANBus = constants.CANBus();
+        this.pivotMotor = new TalonFX(constants.motorId(), CANBus.name);
+        this.pivotCANCoder = new CANcoder(constants.CANCoderId(), CANBus.name);
 
         this.pivotMotorSim = new TalonFXSim(
                 pivotMotor,
@@ -104,7 +105,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         this.pivotCANCoderVelocity = pivotCANCoder.getVelocity(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                CANBus,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

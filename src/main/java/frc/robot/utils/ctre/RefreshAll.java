@@ -1,17 +1,13 @@
 package frc.robot.utils.ctre;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import frc.robot.constants.HardwareConstants;
 
 public class RefreshAll {
-    public enum CANBus {
-        RIO,
-        CANIVORE
-    }
-
     private static BaseStatusSignal[] rioSignals = new BaseStatusSignal[0];
     private static BaseStatusSignal[] canivoreSignals = new BaseStatusSignal[0];
 
-    public static void add(final CANBus bus, final BaseStatusSignal... signals) {
+    public static void add(final HardwareConstants.CANBus bus, final BaseStatusSignal... signals) {
         final BaseStatusSignal[] existingSignals = switch (bus) {
             case RIO -> rioSignals;
             case CANIVORE -> canivoreSignals;
@@ -30,7 +26,7 @@ public class RefreshAll {
         }
     }
 
-    public static void refreshAll(final CANBus bus) {
+    public static void refreshAll(final HardwareConstants.CANBus bus) {
         final BaseStatusSignal[] signals = switch (bus) {
             case RIO -> rioSignals;
             case CANIVORE -> canivoreSignals;
@@ -42,7 +38,7 @@ public class RefreshAll {
     }
 
     public static void refreshAll() {
-        refreshAll(CANBus.RIO);
-        refreshAll(CANBus.CANIVORE);
+        refreshAll(HardwareConstants.CANBus.RIO);
+        refreshAll(HardwareConstants.CANBus.CANIVORE);
     }
 }

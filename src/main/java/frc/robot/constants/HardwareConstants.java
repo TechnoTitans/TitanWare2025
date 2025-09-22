@@ -3,18 +3,28 @@ package frc.robot.constants;
 import edu.wpi.first.math.util.Units;
 
 public class HardwareConstants {
+    public enum CANBus {
+        RIO("rio"),
+        CANIVORE("CANivore");
+
+        public final String name;
+        CANBus(final String name) {
+            this.name = name;
+        }
+    }
+
     public record GyroConstants(
-            String CANBus,
+            CANBus CANBus,
             int gyroId
     ) {}
 
     public static final GyroConstants GYRO = new GyroConstants(
-            RobotMap.CanivoreCANBus,
+            CANBus.CANIVORE,
             13
     );
 
     public record ElevatorConstants(
-            String CANBus,
+            CANBus CANBus,
             int rightMotorId,
             int leftMotorId,
             double gearing,
@@ -24,7 +34,7 @@ public class HardwareConstants {
     ) {}
 
     public static final ElevatorConstants ELEVATOR = new ElevatorConstants(
-            RobotMap.CanivoreCANBus,
+            CANBus.CANIVORE,
             14,
             15,
             4,
@@ -34,7 +44,7 @@ public class HardwareConstants {
     );
 
     public record ElevatorArmConstants(
-            String CANBus,
+            CANBus CANBus,
             int motorId,
             int CANCoderId,
             double gearing,
@@ -44,7 +54,7 @@ public class HardwareConstants {
     ) {}
 
     public static final ElevatorArmConstants ELEVATOR_ARM = new ElevatorArmConstants(
-            RobotMap.RioCANBus,
+            CANBus.RIO,
             17,
             18,
             324,
@@ -54,7 +64,7 @@ public class HardwareConstants {
     );
 
     public record IntakeArmConstants(
-            String CANBus,
+            CANBus CANBus,
             int pivotMotorID,
             int pivotCANCoderId,
             double pivotCANCoderOffset,
@@ -64,7 +74,7 @@ public class HardwareConstants {
     ) {}
 
     public static final IntakeArmConstants INTAKE_ARM = new IntakeArmConstants(
-            RobotMap.RioCANBus,
+            CANBus.RIO,
             19,
             20,
             0.62939453125,
@@ -74,21 +84,21 @@ public class HardwareConstants {
     );
 
     public record IntakeConstants(
-            String CANBus,
+            CANBus CANBus,
             int rollerRollerMotorID,
             int coralTOFID,
             double rollerGearing
     ) {}
 
     public static final IntakeConstants INTAKE = new IntakeConstants(
-            RobotMap.RioCANBus,
+            CANBus.RIO,
             21,
             23,
             10.0
     );
 
     public record GroundIntakeArmConstants(
-            String CANBus,
+            CANBus CANBus,
             int pivotMotorID,
             int pivotCANCoderId,
             double pivotCANCoderOffset,
@@ -101,7 +111,7 @@ public class HardwareConstants {
 
     // TODO change
     public static final GroundIntakeArmConstants GROUND_INTAKE_ARM = new GroundIntakeArmConstants(
-            RobotMap.RioCANBus,
+            CANBus.RIO,
             24,
             25,
             0,

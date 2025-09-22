@@ -37,8 +37,9 @@ public class IntakeArmIOReal implements IntakeArmIO {
     public IntakeArmIOReal(final HardwareConstants.IntakeArmConstants constants) {
         this.constants = constants;
 
-        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), constants.CANBus());
-        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), constants.CANBus());
+        final HardwareConstants.CANBus CANBus = constants.CANBus();
+        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), CANBus.name);
+        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), CANBus.name);
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.positionVoltage = new PositionVoltage(0);
@@ -53,7 +54,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
         this.encoderVelocity = pivotEncoder.getVelocity(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                CANBus,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

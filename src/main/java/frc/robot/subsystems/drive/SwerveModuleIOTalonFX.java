@@ -23,6 +23,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.util.DoubleCircularBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.constants.HardwareConstants;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.utils.ctre.Phoenix6Utils;
 import frc.robot.utils.ctre.RefreshAll;
@@ -68,10 +69,11 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
             final SwerveConstants.SwerveModuleConstants constants,
             final OdometryThreadRunner odometryThreadRunner
     ) {
-        this.driveMotor = new TalonFX(constants.driveMotorId(), constants.moduleCANBus());
-        this.turnMotor = new TalonFX(constants.turnMotorId(), constants.moduleCANBus());
+        final HardwareConstants.CANBus CANBus = constants.moduleCANBus();
+        this.driveMotor = new TalonFX(constants.driveMotorId(), CANBus.name);
+        this.turnMotor = new TalonFX(constants.turnMotorId(), CANBus.name);
 
-        this.turnEncoder = new CANcoder(constants.turnEncoderId(), constants.moduleCANBus());
+        this.turnEncoder = new CANcoder(constants.turnEncoderId(), CANBus.name);
         this.magnetOffset = constants.turnEncoderOffsetRots();
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
@@ -97,7 +99,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         this.turnPositionSignalBuffer = odometryThreadRunner.registerSignal(turnMotor, this.turnPosition);
 
         RefreshAll.add(
-                RefreshAll.CANBus.CANIVORE,
+                CANBus,
                 drivePosition,
                 driveVelocity,
                 driveTorqueCurrent,

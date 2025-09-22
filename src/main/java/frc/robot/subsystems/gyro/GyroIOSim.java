@@ -49,7 +49,9 @@ public class GyroIOSim implements GyroIO {
             final SwerveDriveKinematics kinematics,
             final SwerveModule[] swerveModules
     ) {
-        this.pigeon = new Pigeon2(gyroConstants.gyroId(), gyroConstants.CANBus());
+        final HardwareConstants.CANBus CANBus = gyroConstants.CANBus();
+        this.pigeon = new Pigeon2(gyroConstants.gyroId(), CANBus.name);
+
         this.pigeonSimState = pigeon.getSimState();
         this.kinematics = kinematics;
         this.swerveModules = swerveModules;
@@ -72,7 +74,7 @@ public class GyroIOSim implements GyroIO {
         pigeonSimState.setRoll(USE_SIMULATED_ROLL);
 
         RefreshAll.add(
-                RefreshAll.CANBus.CANIVORE,
+                CANBus,
                 yaw,
                 pitch,
                 roll,

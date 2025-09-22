@@ -42,8 +42,9 @@ public class ElevatorIOReal implements ElevatorIO {
     public ElevatorIOReal(final HardwareConstants.ElevatorConstants constants) {
         this.constants = constants;
 
-        this.masterMotor = new TalonFX(constants.rightMotorId(), constants.CANBus());
-        this.followerMotor = new TalonFX(constants.leftMotorId(), constants.CANBus());
+        final HardwareConstants.CANBus CANBus = constants.CANBus();
+        this.masterMotor = new TalonFX(constants.rightMotorId(), CANBus.name);
+        this.followerMotor = new TalonFX(constants.leftMotorId(), CANBus.name);
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.dynamicMotionMagicVoltage = new DynamicMotionMagicVoltage(0, 0, 0, 0);
@@ -63,7 +64,7 @@ public class ElevatorIOReal implements ElevatorIO {
         this.followerDeviceTemp = followerMotor.getDeviceTemp(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.CANIVORE,
+                CANBus,
                 masterPosition,
                 masterVelocity,
                 masterVoltage,
