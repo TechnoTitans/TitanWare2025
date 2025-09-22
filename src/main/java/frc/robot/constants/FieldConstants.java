@@ -202,7 +202,7 @@ public class FieldConstants {
                             Rotation2d.fromDegrees(-120))
             );
 
-            final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);;
+            final Pose3d RED_ORIGIN_POSE3D = new Pose3d(RED_ORIGIN);
             for (final Map.Entry<Face, Pose2d> entry : BLUE_CENTER_FACES.entrySet()) {
                 RED_CENTER_FACES.put(entry.getKey(), entry.getValue().relativeTo(RED_ORIGIN));
                 BLUE_CENTER_SCORING_FACES.put(entry.getKey(), entry.getValue().transformBy(SCORING_DISTANCE_OFFSET));

@@ -27,7 +27,7 @@ public class PivotingElevatorSim extends LinearSystemSim<N2, N1, N2> {
     // Whether the simulator should simulate gravity.
     private final boolean simulateGravity;
 
-    private DoubleSupplier angleRadsFromHorizontalSupplier;
+    private final DoubleSupplier angleRadsFromHorizontalSupplier;
 
     /**
      * Creates a simulated elevator mechanism.
