@@ -72,14 +72,14 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
         pivotEncoder.getConfigurator().apply(pivotCANCoderConfig);
 
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
-        pivotMotorConfig.Slot0 = new Slot0Configs()
-                .withKS(0.27721)
-                .withKG(0.4366)
-                .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(39.374)
-                .withKA(0.55684)
-                .withKP(61.772)
-                .withKD(0);
+        pivotMotorConfig.Slot0 = new Slot0Configs();
+//                .withKS(0.27721)
+//                .withKG(0.4366)
+//                .withGravityType(GravityTypeValue.Arm_Cosine)
+//                .withKV(39.374)
+//                .withKA(0.55684)
+//                .withKP(61.772)
+//                .withKD(0);
         pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
         pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 39.374;
         pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 10;
