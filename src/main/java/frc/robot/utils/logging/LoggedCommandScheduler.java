@@ -1,22 +1,73 @@
 package frc.robot.utils.logging;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.constants.Constants;
+import frc.robot.utils.commands.LoggedTrigger;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.DoubleSupplier;
 
 public class LoggedCommandScheduler {
+    private static class DelayedBuffer<T> implements Iterable<T> {
+        private final DoubleSupplier timeSource;
+        private final NavigableMap<Double, T> input = new TreeMap<>();
+        private final List<T> buffer = new ArrayList<>();
+
+        public DelayedBuffer(final DoubleSupplier timeSource) {
+            this.timeSource = timeSource;
+        }
+
+        /**
+         * Add an item to the buffer.
+         *
+         * @param item The item to add.
+         * @param delaySeconds The delay before adding the item.
+         */
+        public void add(final T item, final double delaySeconds) {
+            final double now = timeSource.getAsDouble();
+            input.put(now + delaySeconds, item);
+            process(now);
+        }
+
+        public int size() {
+            return buffer.size();
+        }
+
+        @Override
+        public Iterator<T> iterator() {
+            process(timeSource.getAsDouble());
+            return buffer.iterator();
+        }
+
+        private void process(final double now) {
+            while (!input.isEmpty()) {
+                final Map.Entry<Double, T> entry = input.firstEntry();
+                final double delayTill = entry.getKey();
+                if (delayTill >= now) {
+                    buffer.add(entry.getValue());
+                } else {
+                    return;
+                }
+            }
+        }
+    }
+
     private static final String LogKey = "Commands";
     private static final String AlertType = "Alerts";
 
     private static final Set<Command> runningNonInterrupters = new HashSet<>();
     private static final Map<Command, Command> runningInterrupters = new HashMap<>();
     private static final Map<Subsystem, Command> requiredSubsystems = new HashMap<>();
+
+    private static final DelayedBuffer<Command> headerTimestamps =
+            new DelayedBuffer<>(Timer::getTimestamp);
+
+    private static final Map<Command, LoggedTrigger> scheduledBy = new HashMap<>();
+    private static final Map<Command, LoggedTrigger> cancelledCausedBy = new HashMap<>();
 
     private LoggedCommandScheduler() {
     }
@@ -50,6 +101,10 @@ public class LoggedCommandScheduler {
         });
     }
 
+    public static void scheduledBy(final Command scheduled, final LoggedTrigger by) {
+        scheduledBy.put(scheduled, by);
+    }
+
     private static void logRunningCommands() {
         Logger.recordOutput(LogKey + "/Running/.type", AlertType);
 
@@ -59,10 +114,34 @@ public class LoggedCommandScheduler {
             int i = 0;
             for (final Command command : runningNonInterrupters) {
                 running[i] = command.getName();
+                if (scheduledBy.containsKey(command)) {
+                    headerTimestamps.add(
+                            command,
+                            12 * Constants.LOOP_PERIOD_SECONDS
+                    );
+                }
                 i++;
             }
         }
         Logger.recordOutput(LogKey + "/Running/warnings", running);
+
+        final int nAnnotations = 2;
+        final String[] annotations = new String[nAnnotations * headerTimestamps.size()];
+        {
+            int i = 0;
+            for (final Iterator<Command> it = headerTimestamps.iterator(); it.hasNext(); ) {
+                final Command command = it.next();
+                final LoggedTrigger trigger = scheduledBy.get(command);
+                scheduledBy.remove(command);
+
+                annotations[i] = "scheduled by: " + trigger.getName();
+                annotations[i + 1] = String.valueOf(trigger.getAsBoolean());
+
+                i += nAnnotations;
+                it.remove();
+            }
+        }
+        Logger.recordOutput(LogKey + "/Running/infos", annotations);
 
         final Map<Command, Command> runningInterrupters = LoggedCommandScheduler.runningInterrupters;
         final String[] interrupters = new String[runningInterrupters.size()];
