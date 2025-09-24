@@ -85,7 +85,7 @@ public class HardwareConstants {
 
     public record IntakeConstants(
             CANBus CANBus,
-            int rollerRollerMotorID,
+            int rollerMotorID,
             int coralTOFID,
             double rollerGearing
     ) {}
@@ -120,5 +120,19 @@ public class HardwareConstants {
             0,
             Units.inchesToMeters(17.561254),
             Units.inchesToMeters(9.77)
+    );
+
+    public record GroundIntakeConstants(
+            CANBus CANBus,
+            int wheelMotorID,
+            int coralCANRangeID,
+            double wheelGearing
+    ) {}
+
+    public static final GroundIntakeConstants GROUND_INTAKE = new GroundIntakeConstants(
+            CANBus.RIO,
+            26,
+            27,
+            3
     );
 }

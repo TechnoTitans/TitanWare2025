@@ -213,14 +213,14 @@ public class Superstructure extends VirtualSubsystem {
                 .onTrue(Commands.runOnce(() -> {
                     upwardsGoalChange.cancel();
                     upwardsGoalChange.schedule();
-                }));
+                }).withName("ScheduleUpwardsGoalChange"));
 
         final Command downwardsGoalChange = downwardsGoalChange();
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresDownwardsMotion)
                 .onTrue(Commands.runOnce(() -> {
                     downwardsGoalChange.cancel();
                     downwardsGoalChange.schedule();
-                }));
+                }).withName("ScheduleDownwardsGoalChange"));
 
         elevatorArm.setGoal(desiredGoal.elevatorArmGoal);
         elevator.setGoal(desiredGoal.elevatorGoal);

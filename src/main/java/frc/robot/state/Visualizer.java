@@ -5,7 +5,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.drive.Swerve;
-import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.endeffector.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import org.littletonrobotics.junction.Logger;
 
@@ -32,10 +32,10 @@ public class Visualizer {
     public void periodic() {
         final Pose3d pose = new Pose3d(swerve.getPose());
         final Pose3d[] superstructurePoses = superstructure.getComponentPoses();
-        final Pose3d intakeArmPose = superstructurePoses[3];
 
         final Pose3d coralPose;
-        if (gamepieceState.hasCoral.getAsBoolean()) {
+        if (gamepieceState.intakeHasCoral.getAsBoolean()) {
+            final Pose3d intakeArmPose = superstructurePoses[3];
             coralPose = pose
                     .plus(new Transform3d(intakeArmPose.getTranslation(), intakeArmPose.getRotation()))
                     .plus(SimConstants.Intake.CORAL_OFFSET)
@@ -43,6 +43,11 @@ public class Visualizer {
                             0, -intake.coralDistanceIntakeCenterMeters.getAsDouble(), 0,
                             Rotation3d.kZero
                     ));
+        } else if (gamepieceState.groundHasCoral.getAsBoolean()) {
+            final Pose3d groundIntakeArmPose = superstructurePoses[4];
+            coralPose = pose
+                    .plus(new Transform3d(groundIntakeArmPose.getTranslation(), groundIntakeArmPose.getRotation()))
+                    .plus(SimConstants.GroundIntakeArm.CORAL_OFFSET);
         } else {
             coralPose = Pose3d.kZero;
         }

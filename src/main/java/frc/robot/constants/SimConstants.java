@@ -99,6 +99,13 @@ public interface SimConstants {
     interface GroundIntakeArm {
         Translation3d ORIGIN = new Translation3d(0.356, 0, 0.178);
 
+        Transform3d CORAL_OFFSET = new Transform3d(
+                Units.inchesToMeters(9) + Units.inchesToMeters(6),
+                0,
+                Units.inchesToMeters(-2.688) + Units.inchesToMeters(-1.25),
+                Rotation3d.kZero
+        );
+
         Rotation2d ZEROED_POSITION_TO_HORIZONTAL = Rotation2d.fromDegrees(-115.842);
         Rotation2d STARTING_ANGLE = Rotation2d.fromDegrees(0)
                 .minus(ZEROED_POSITION_TO_HORIZONTAL);

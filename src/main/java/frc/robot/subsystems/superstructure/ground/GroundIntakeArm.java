@@ -22,7 +22,6 @@ import org.littletonrobotics.junction.Logger;
 import java.util.function.Consumer;
 
 import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.units.Units.Volts;
 
 public class GroundIntakeArm extends SubsystemBase {
     protected static final String LogKey = "GroundIntakeArm";

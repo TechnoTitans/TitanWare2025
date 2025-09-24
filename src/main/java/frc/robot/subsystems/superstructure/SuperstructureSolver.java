@@ -5,7 +5,6 @@ import frc.robot.constants.SimConstants.Elevator;
 import frc.robot.constants.SimConstants.ElevatorArm;
 import frc.robot.constants.SimConstants.GroundIntakeArm;
 import frc.robot.constants.SimConstants.IntakeArm;
-import org.littletonrobotics.junction.Logger;
 
 public class SuperstructureSolver {
     private SuperstructureSolver() {}
@@ -65,25 +64,6 @@ public class SuperstructureSolver {
                                 - IntakeArm.ZEROED_POSITION_TO_HORIZONTAL.getRadians()
                 )
         );
-
-        Logger.recordOutput("Incoming", new Pose3d(
-                elevatorExtensionLine.getX(),
-                0,
-                elevatorExtensionLine.getY(),
-                Rotation3d.kZero
-        ));
-        Logger.recordOutput("Center", new Pose3d(
-                intakePose.getX(),
-                0,
-                intakePose.getY(),
-                new Rotation3d(
-                        0,
-                        -intakePose
-                                .getRotation()
-                                .getRadians(),
-                        0
-                )
-        ));
 
         final Transform2d pivotToTopRoller = IntakeArm.PIVOT_TO_TOP_ROLLER;
         final Transform2d pivotToBottomRoller = IntakeArm.PIVOT_TO_BOTTOM_ROLLER;

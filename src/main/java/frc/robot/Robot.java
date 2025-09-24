@@ -2,7 +2,10 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.hal.AllianceStationID;
-import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.event.EventLoop;
@@ -18,6 +21,7 @@ import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.RobotMap;
 import frc.robot.selector.BranchSelector;
@@ -26,7 +30,8 @@ import frc.robot.state.ReefState;
 import frc.robot.state.Visualizer;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
-import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.endeffector.Intake;
+import frc.robot.subsystems.intake.ground.GroundIntake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
@@ -109,10 +114,20 @@ public class Robot extends LoggedRobot {
             HardwareConstants.INTAKE
     );
 
+    public final GroundIntake groundIntake = new GroundIntake(
+            Constants.CURRENT_MODE,
+            HardwareConstants.GROUND_INTAKE
+    );
+
     public final ReefState reefState = new ReefState();
-    public final GamepieceState gamePieceState = new GamepieceState(Constants.CURRENT_MODE, intake);
+    public final GamepieceState gamePieceState = new GamepieceState(
+            Constants.CURRENT_MODE,
+            superstructure,
+            intake,
+            groundIntake
+    );
     public final Visualizer visualizer = new Visualizer(swerve, intake, superstructure, gamePieceState);
-    public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, gamePieceState);
+    public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, groundIntake, gamePieceState);
 
     public final Autos autos = new Autos(
             swerve,
@@ -157,7 +172,7 @@ public class Robot extends LoggedRobot {
     final Supplier<ScoreCommands.ScorePosition> rawScorePositionSupplier = branchSelector::getSelected;
     final Supplier<ScoreCommands.ScorePosition> scorePositionSupplier = () -> {
             final ScoreCommands.ScorePosition rawScorePosition = rawScorePositionSupplier.get();
-            if (!gamePieceState.hasCoral.getAsBoolean()) {
+            if (!gamePieceState.intakeHasCoral.getAsBoolean()) {
                 return new ScoreCommands.ScorePosition(rawScorePosition.side(), ScoreCommands.Level.L1);
             }
             return rawScorePosition;
@@ -484,12 +499,24 @@ public class Robot extends LoggedRobot {
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ).withName("SwerveSpeedSlow"));
 
-        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
+//        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
+//                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+//        );
 
-        this.driverController.x(teleopEventLoop)
-                .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
+        this.driverController.a(teleopEventLoop)
+                .whileTrue(scoreCommands.groundIntake())
+                .whileFalse(scoreCommands.stowIfNoGroundCoral());
 
-//        this.driverController.y(teleopEventLoop).whileTrue(scoreCommands.descoreUpperAlgae());
+//        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
+
+//        this.driverController.x(teleopEventLoop)
+//                .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
+
+        final ScoreCommands.ScorePosition quickScore =
+                new ScoreCommands.ScorePosition(FieldConstants.Reef.Side.LEFT, ScoreCommands.Level.L2);
+        this.driverController.b(teleopEventLoop).whileTrue(
+                scoreCommands.scoreAtPosition(() -> quickScore)
+        );
 //
 //        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 

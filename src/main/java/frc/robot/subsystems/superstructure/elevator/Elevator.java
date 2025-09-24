@@ -78,7 +78,7 @@ public class Elevator extends SubsystemBase {
         DYNAMIC(0),
         STOP(0),
         STOW(0.01),
-        HANDOFF(0.01),
+        HANDOFF(0.02),
         CLIMB_DOWN(0.08925),
         HP(0.065),
         ALGAE_GROUND(0),

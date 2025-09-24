@@ -16,7 +16,8 @@ import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.controllers.HolonomicDriveController;
-import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.endeffector.Intake;
+import frc.robot.subsystems.intake.ground.GroundIntake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
 
@@ -83,17 +84,20 @@ public class ScoreCommands {
     private final Swerve swerve;
     private final Superstructure superstructure;
     private final Intake intake;
+    private final GroundIntake groundIntake;
     private final GamepieceState gamepieceState;
 
     public ScoreCommands(
             final Swerve swerve,
             final Superstructure superstructure,
             final Intake intake,
+            final GroundIntake groundIntake,
             final GamepieceState gamepieceState
     ) {
         this.swerve = swerve;
         this.superstructure = superstructure;
         this.intake = intake;
+        this.groundIntake = groundIntake;
         this.gamepieceState = gamepieceState;
     }
 
@@ -153,7 +157,7 @@ public class ScoreCommands {
     public Pose2d offsetScoringPoseWithCoralPosition(final Pose2d targetPose) {
         final Transform2d coralDistanceOffset = new Transform2d(
                 0,
-                gamepieceState.hasCoral.getAsBoolean()
+                gamepieceState.intakeHasCoral.getAsBoolean()
                         ? intake.coralDistanceIntakeCenterMeters.getAsDouble()
                         : 0,
                 Rotation2d.kZero
@@ -176,6 +180,22 @@ public class ScoreCommands {
                 superstructure.toGoal(Superstructure.Goal.HP),
                 intake.intakeCoralHP()
         ).withName("IntakeFromClosestCoralStation");
+    }
+
+    public Command groundIntake() {
+        return Commands.parallel(
+                superstructure.runGoal(Superstructure.Goal.GROUND_INTAKE),
+                groundIntake.intake()
+        )
+                .onlyIf(intake.isCoralPresent.negate())
+                .withName("GroundIntake");
+    }
+
+    public Command stowIfNoGroundCoral() {
+        return superstructure.toInstantGoal(Superstructure.Goal.STOW)
+                .onlyIf(groundIntake.isCoralPresent.negate()
+                .and(superstructure.atSetpoint(Superstructure.Goal.GROUND_INTAKE)))
+                .withName("StowIfNoGroundCoral");
     }
 
     public Command scoreAtFixedPosition(final Supplier<ScorePosition> scorePositionSupplier) {
@@ -341,7 +361,7 @@ public class ScoreCommands {
         return Commands.deadline(
                 Commands.sequence(
                         swerve.runToPose(descorePoseSupplier)
-                                .until(gamepieceState.hasAlgae),
+                                .until(gamepieceState.intakeHasAlgae),
                         Commands.waitSeconds(0.2),
                         swerve.drive(() -> -0.8, () -> 0, () -> 0, false, false)
                                 .withTimeout(0.35)
