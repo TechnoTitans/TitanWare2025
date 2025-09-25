@@ -15,10 +15,10 @@ import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
+import frc.robot.utils.commands.LoggedTrigger;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
@@ -88,17 +88,18 @@ public class Intake extends SubsystemBase {
     private double rollerTorqueCurrentSetpoint = 0.0;
 
     private final EventLoop eventLoop;
+    public final LoggedTrigger.Group group;
 
-    public final Trigger isCoralIntaking;
-    public final Trigger isCoralOuttaking;
-    public final Trigger isCoralIntakeStopped;
-    public final Trigger isAlgaeIntaking;
-    public final Trigger isAlgaeOuttaking;
-    public final Trigger isAlgaeIntakeStopped;
-    public final Trigger isCoralHandingOff;
+    public final LoggedTrigger isCoralIntaking;
+    public final LoggedTrigger isCoralOuttaking;
+    public final LoggedTrigger isCoralIntakeStopped;
+    public final LoggedTrigger isAlgaeIntaking;
+    public final LoggedTrigger isAlgaeOuttaking;
+    public final LoggedTrigger isAlgaeIntakeStopped;
+    public final LoggedTrigger isCoralHandingOff;
 
-    public final Trigger isCoralPresent;
-    public final Trigger isCurrentAboveAlgaeThreshold;
+    public final LoggedTrigger isCoralPresent;
+    public final LoggedTrigger isCurrentAboveAlgaeThreshold;
 
     public final DoubleSupplier coralDistanceMeters = this::getCoralDistanceMeters;
     public final LinearFilter coralDistanceFilter = LinearFilter.movingAverage(25);
@@ -116,19 +117,23 @@ public class Intake extends SubsystemBase {
         this.inputs = new IntakeIOInputsAutoLogged();
 
         this.eventLoop = new EventLoop();
+        this.group = LoggedTrigger.Group.from(LogKey, eventLoop);
 
-        this.isCoralIntaking = new Trigger(eventLoop, () -> coralIntaking);
-        this.isCoralOuttaking = new Trigger(eventLoop, () -> coralOuttaking);
+        this.isCoralIntaking = group.t("isCoralIntaking", () -> coralIntaking);
+        this.isCoralOuttaking = group.t("isCoralOuttaking", () -> coralOuttaking);
         this.isCoralIntakeStopped = isCoralIntaking.negate().and(isCoralOuttaking.negate());
 
-        this.isAlgaeIntaking = new Trigger(eventLoop, () -> algaeIntaking);
-        this.isAlgaeOuttaking = new Trigger(eventLoop, () -> algaeOuttaking);
+        this.isAlgaeIntaking = group.t("isAlgaeIntaking", () -> algaeIntaking);
+        this.isAlgaeOuttaking = group.t("isAlgaeOuttaking", () -> algaeOuttaking);
         this.isAlgaeIntakeStopped = isAlgaeIntaking.negate().and(isAlgaeOuttaking.negate());
 
-        this.isCoralHandingOff = new Trigger(eventLoop, () -> coralHandoff);
+        this.isCoralHandingOff = group.t("isCoralHandingOff", () -> coralHandoff);
 
-        this.isCoralPresent = new Trigger(eventLoop, this::isCoralPresent).debounce(0.25);
-        this.isCurrentAboveAlgaeThreshold = new Trigger(eventLoop, this::isCurrentAboveAboveAlgaeThreshold).debounce(0.25);
+        this.isCoralPresent = group.t("isCoralPresent", this::isCoralPresent).debounce(0.25);
+        this.isCurrentAboveAlgaeThreshold = group.t(
+                "isCurrentAboveAlgaeThreshold",
+                this::isCurrentAboveAboveAlgaeThreshold
+        ).debounce(0.25);
 
         this.rollerVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),
@@ -159,15 +164,15 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput(LogKey + "/RollerVoltageSetpoint", rollerVoltageSetpoint);
         Logger.recordOutput(LogKey + "/RollerTorqueCurrentSetpoint", rollerTorqueCurrentSetpoint);
 
-        Logger.recordOutput(LogKey + "/Trigger/IsCoralPresent", isCoralPresent);
-        Logger.recordOutput(LogKey + "/Trigger/IsCoralOuttaking", isCoralOuttaking);
-        Logger.recordOutput(LogKey + "/Trigger/IsCoralIntakeStopped", isCoralIntakeStopped);
+        Logger.recordOutput(LogKey + "/LoggedTrigger/IsCoralPresent", isCoralPresent);
+        Logger.recordOutput(LogKey + "/LoggedTrigger/IsCoralOuttaking", isCoralOuttaking);
+        Logger.recordOutput(LogKey + "/LoggedTrigger/IsCoralIntakeStopped", isCoralIntakeStopped);
 
-        Logger.recordOutput(LogKey + "/Trigger/IsCurrentAboveAlgaeThreshold", isCurrentAboveAlgaeThreshold);
-        Logger.recordOutput(LogKey + "/Trigger/IsAlgaeOuttaking", isAlgaeOuttaking);
-        Logger.recordOutput(LogKey + "/Trigger/IsAlgaeIntakeStopped", isAlgaeIntakeStopped);
+        Logger.recordOutput(LogKey + "/LoggedTrigger/IsCurrentAboveAlgaeThreshold", isCurrentAboveAlgaeThreshold);
+        Logger.recordOutput(LogKey + "/LoggedTrigger/IsAlgaeOuttaking", isAlgaeOuttaking);
+        Logger.recordOutput(LogKey + "/LoggedTrigger/IsAlgaeIntakeStopped", isAlgaeIntakeStopped);
 
-        Logger.recordOutput(LogKey + "/Trigger/IsCoralHandingOff", isCoralHandingOff);
+        Logger.recordOutput(LogKey + "/LoggedTrigger/IsCoralHandingOff", isCoralHandingOff);
 
         Logger.recordOutput(LogKey + "/FilteredCoralDistanceMeters", getFilteredCoralDistanceMeters());
         Logger.recordOutput(LogKey + "/TreemapCoralDistanceMeters", getCoralDistanceMeters());
@@ -404,10 +409,12 @@ public class Intake extends SubsystemBase {
         );
     }
 
+    @SuppressWarnings("unused")
     public Command coralVoltageSysIdCommand() {
         return makeRollerSysIdCommand(rollerVoltageSysIdRoutine);
     }
 
+    @SuppressWarnings("unused")
     public Command coralTorqueCurrentSysIdCommand() {
         return makeRollerSysIdCommand(rollerTorqueCurrentSysIdRoutine);
     }

@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.auto.AutoChooser;
 import frc.robot.auto.AutoOption;
 import frc.robot.auto.Autos;
@@ -40,6 +39,8 @@ import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.Container;
 import frc.robot.utils.closeables.ToClose;
+import frc.robot.utils.commands.LoggedTrigger;
+import frc.robot.utils.commands.RobotModeLoggedTriggers;
 import frc.robot.utils.ctre.RefreshAll;
 import frc.robot.utils.logging.LoggedCommandScheduler;
 import frc.robot.utils.subsystems.VirtualSubsystem;
@@ -60,6 +61,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 public class Robot extends LoggedRobot {
+    protected static final String LogKey = "Robot";
     private static final String AKitLogPath = "/U/logs";
     private static final String HootLogPath = "/U/logs";
 
@@ -162,10 +164,12 @@ public class Robot extends LoggedRobot {
     private final EventLoop teleopEventLoop = new EventLoop();
     private final EventLoop testEventLoop = new EventLoop();
 
-    private final Trigger disabled = RobotModeTriggers.disabled();
-    private final Trigger teleopEnabled = RobotModeTriggers.teleop();
-    private final Trigger autonomousEnabled = RobotModeTriggers.autonomous();
-    private final Trigger endgameTrigger = new Trigger(() -> DriverStation.getMatchTime() <= 20)
+    private final LoggedTrigger.Group group = LoggedTrigger.Group.from(LogKey);
+
+    private final LoggedTrigger disabled = RobotModeLoggedTriggers.disabled(group);
+    private final LoggedTrigger teleopEnabled = RobotModeLoggedTriggers.teleop(group);
+    private final LoggedTrigger autonomousEnabled = RobotModeLoggedTriggers.autonomous(group);
+    private final LoggedTrigger endgameTrigger = group.t("endgame", () -> DriverStation.getMatchTime() <= 20)
             .and(DriverStation::isFMSAttached)
             .and(RobotModeTriggers.teleop());
 
@@ -502,6 +506,9 @@ public class Robot extends LoggedRobot {
 //        this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
 //                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
 //        );
+
+//        this.driverController.a(teleopEventLoop)
+//                .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
 
         this.driverController.a(teleopEventLoop)
                 .whileTrue(scoreCommands.groundIntake())

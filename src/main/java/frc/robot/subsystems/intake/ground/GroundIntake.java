@@ -12,10 +12,10 @@ import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
+import frc.robot.utils.commands.LoggedTrigger;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
@@ -40,10 +40,11 @@ public class GroundIntake extends SubsystemBase {
     private double wheelTorqueCurrentSetpoint = 0.0;
 
     private final EventLoop eventLoop;
+    public final LoggedTrigger.Group group;
 
-    public final Trigger isIntaking;
-    public final Trigger isOuttaking;
-    public final Trigger isCoralPresent;
+    public final LoggedTrigger isIntaking;
+    public final LoggedTrigger isOuttaking;
+    public final LoggedTrigger isCoralPresent;
 
     public GroundIntake(final Constants.RobotMode mode, final HardwareConstants.GroundIntakeConstants constants) {
         this.groundIntakeIO = switch (mode) {
@@ -55,10 +56,11 @@ public class GroundIntake extends SubsystemBase {
         this.inputs = new GroundIntakeIOInputsAutoLogged();
 
         this.eventLoop = new EventLoop();
+        this.group = LoggedTrigger.Group.from(LogKey, eventLoop);
 
-        this.isIntaking = new Trigger(eventLoop, () -> intaking);
-        this.isOuttaking = new Trigger(eventLoop, () -> outtaking);
-        this.isCoralPresent = new Trigger(eventLoop, () -> inputs.coralDetected);
+        this.isIntaking = group.t("isIntaking", () -> intaking);
+        this.isOuttaking = group.t("isOuttaking", () -> outtaking);
+        this.isCoralPresent = group.t("isCoralPresent", () -> inputs.coralDetected);
 
         this.wheelVoltageSysIdRoutine = makeVoltageSysIdRoutine(
                 Volts.of(2).per(Second),

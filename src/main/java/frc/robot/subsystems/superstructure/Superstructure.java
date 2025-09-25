@@ -6,13 +6,13 @@ import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.superstructure.ground.GroundIntakeArm;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
 import frc.robot.utils.Container;
 import frc.robot.utils.commands.FastCommands;
+import frc.robot.utils.commands.LoggedTrigger;
 import frc.robot.utils.geometry.MutableEllipse2d;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
@@ -140,20 +140,21 @@ public class Superstructure extends VirtualSubsystem {
 
     private final EventLoop eventLoop;
 
-    private final Trigger desiredGoalIsRunningGoal;
-    private final Trigger desiredGoalIsAtGoal;
-    private final Trigger desiredGoalIsDynamic;
+    private final LoggedTrigger.Group group;
+    private final LoggedTrigger desiredGoalIsRunningGoal;
+    private final LoggedTrigger desiredGoalIsAtGoal;
+    private final LoggedTrigger desiredGoalIsDynamic;
 
-    private final Trigger allowedToChangeGoal;
+    private final LoggedTrigger allowedToChangeGoal;
 
-    private final Trigger desiresUpwardsMotion;
-    private final Trigger desiresDownwardsMotion;
-    private final Trigger desiredGoalChanged;
+    private final LoggedTrigger desiresUpwardsMotion;
+    private final LoggedTrigger desiresDownwardsMotion;
+    private final LoggedTrigger desiredGoalChanged;
 
-    private final Trigger desiredGoalNotStow;
-    private final Trigger atSuperstructureSetpoint;
+    private final LoggedTrigger desiredGoalNotStow;
+    private final LoggedTrigger atSuperstructureSetpoint;
 
-    public final Trigger unsafeToDrive;
+    public final LoggedTrigger unsafeToDrive;
 
     public Superstructure(
             final ElevatorArm elevatorArm,
@@ -186,11 +187,12 @@ public class Superstructure extends VirtualSubsystem {
 
         this.eventLoop = new EventLoop();
 
-        this.desiredGoalIsRunningGoal = new Trigger(eventLoop, () -> desiredGoal == runningGoal);
-        this.desiredGoalChanged = new Trigger(eventLoop, () -> desiredGoal != runningGoal);
-        this.desiredGoalIsAtGoal = new Trigger(eventLoop, () -> desiredGoal == atGoal);
-        this.desiredGoalIsDynamic = new Trigger(eventLoop, () -> desiredGoal == Goal.DYNAMIC);
-        this.desiredGoalNotStow = new Trigger(eventLoop, () -> desiredGoal != Goal.STOW);
+        this.group = LoggedTrigger.Group.from(LogKey, eventLoop);
+        this.desiredGoalIsRunningGoal = group.t("desiredGoalIsRunningGoal", () -> desiredGoal == runningGoal);
+        this.desiredGoalChanged = group.t("desiredGoalChanged", () -> desiredGoal != runningGoal);
+        this.desiredGoalIsAtGoal = group.t("desiredGoalIsAtGoal", () -> desiredGoal == atGoal);
+        this.desiredGoalIsDynamic = group.t("desiredGoalIsDynamic", () -> desiredGoal == Goal.DYNAMIC);
+        this.desiredGoalNotStow = group.t("desiredGoalNotStow", () -> desiredGoal != Goal.STOW);
         this.atSuperstructureSetpoint = elevator.atSetpoint
                 .and(elevatorArm.atSetpoint)
                 .and(intakeArm.atSetpoint)
@@ -200,7 +202,7 @@ public class Superstructure extends VirtualSubsystem {
 
         this.allowedToChangeGoal = desiredGoalIsDynamic.negate()
                 .and((desiredGoalIsAtGoal.and(atSuperstructureSetpoint)).negate());
-        this.desiresUpwardsMotion = new Trigger(eventLoop, () -> {
+        this.desiresUpwardsMotion = group.t("desiresUpwardsMotion", () -> {
             final Translation2d currentTranslation = getElevatorExtensionTranslation();
             final Translation2d desiredTranslation = Goal.GoalTranslations.get(desiredGoal);
 
@@ -516,16 +518,16 @@ public class Superstructure extends VirtualSubsystem {
         );
     }
 
-    public Trigger atSetpoint(final Supplier<Goal> goalSupplier) {
-        return atSuperstructureSetpoint.and(() -> atGoal == goalSupplier.get());
+    public LoggedTrigger atSetpoint(final Supplier<Goal> goalSupplier) {
+        return atSuperstructureSetpoint.and(group.t("atGoal", () -> atGoal == goalSupplier.get()));
     }
 
-    public Trigger atSetpoint(final Goal goal) {
+    public LoggedTrigger atSetpoint(final Goal goal) {
         return atSetpoint(() -> goal);
     }
 
-    public Trigger extendedBeyond(final double distance) {
-        return new Trigger(eventLoop, () -> getElevatorExtensionTranslation().getNorm() > distance);
+    public LoggedTrigger extendedBeyond(final double distance) {
+        return group.t("extendedBeyond", () -> getElevatorExtensionTranslation().getNorm() > distance);
     }
 
     public Command forceGoal(final Goal goal) {

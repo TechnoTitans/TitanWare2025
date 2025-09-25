@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Robot;
 import frc.robot.auto.Autos;
@@ -36,6 +35,7 @@ import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.drive.controllers.HolonomicChoreoController;
 import frc.robot.subsystems.drive.controllers.HolonomicDriveController;
 import frc.robot.subsystems.gyro.Gyro;
+import frc.robot.utils.commands.LoggedTrigger;
 import frc.robot.utils.gyro.GyroUtils;
 import frc.robot.utils.logging.LogUtils;
 import frc.robot.utils.teleop.ControllerUtils;
@@ -66,6 +66,7 @@ public class Swerve extends SubsystemBase {
     );
 
     private final Constants.RobotMode mode;
+    private final LoggedTrigger.Group group;
 
     private Gyro gyro;
     private final HardwareConstants.GyroConstants gyroConstants;
@@ -80,13 +81,13 @@ public class Swerve extends SubsystemBase {
 
     private final double maxLinearVelocity = Config.maxLinearVelocityMeterPerSec();
 
-    public final Trigger atHeadingSetpoint;
+    public final LoggedTrigger atHeadingSetpoint;
     private boolean headingControllerActive = false;
     private Rotation2d headingTarget = new Rotation2d();
     private final PIDController headingController;
 
-    public final Trigger atHolonomicDrivePose;
-    public final Trigger atHolonomicDrivePoseStopped;
+    public final LoggedTrigger atHolonomicDrivePose;
+    public final LoggedTrigger atHolonomicDrivePoseStopped;
     private boolean holonomicControllerActive = false;
     private Pose2d holonomicPoseTarget = Pose2d.kZero;
     private final HolonomicDriveController holonomicDriveController;
@@ -115,6 +116,7 @@ public class Swerve extends SubsystemBase {
             final SwerveConstants.SwerveModuleConstants backRightConstants
     ) {
         this.mode = mode;
+        this.group = LoggedTrigger.Group.from(LogKey);
         this.gyroConstants = gyroConstants;
         this.odometryThreadRunner = new OdometryThreadRunner(signalQueueReadWriteLock);
 
@@ -145,7 +147,8 @@ public class Swerve extends SubsystemBase {
         this.headingController = new PIDController(4, 0, 0);
         this.headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.headingController.setTolerance(Units.degreesToRadians(4), Units.degreesToRadians(6));
-        this.atHeadingSetpoint = new Trigger(
+        this.atHeadingSetpoint = group.t(
+                "atHeadingSetpoint",
                 () -> headingControllerActive &&
                         MathUtil.isNear(
                                 headingTarget.getRadians(),
@@ -708,7 +711,7 @@ public class Swerve extends SubsystemBase {
             final DriveAxis holdAxis,
             final Supplier<Rotation2d> headingTarget
     ) {
-        final Trigger atAxis = atAxisTrigger(
+        final LoggedTrigger atAxis = atAxisTrigger(
                 holdPosition,
                 holdAxis == DriveAxis.X
                         ? () -> getPose().getX()
@@ -817,45 +820,46 @@ public class Swerve extends SubsystemBase {
                 .withName("RunWheelX");
     }
 
-    public Trigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
+    public LoggedTrigger atPoseTrigger(final Supplier<Pose2d> targetPoseSupplier) {
         return holonomicDriveController.atPose(this::getPose, targetPoseSupplier);
     }
 
-    public Trigger atPoseTrigger(
+    public LoggedTrigger atPoseTrigger(
             final Supplier<Pose2d> targetPoseSupplier,
             final HolonomicDriveController.PositionTolerance tolerance
     ) {
-        return HolonomicDriveController.atPose(this::getPose, targetPoseSupplier, tolerance);
+        return HolonomicDriveController.atPose(group, this::getPose, targetPoseSupplier, tolerance);
     }
 
-    public Trigger atPoseTrigger(
+    public LoggedTrigger atPoseTrigger(
             final Supplier<Pose2d> targetPoseSupplier,
             final HolonomicDriveController.PositionTolerance positionTolerance,
             final HolonomicDriveController.VelocityTolerance velocityTolerance
     ) {
         return HolonomicDriveController.atPoseAndStopped(
+                group,
                 this::getPose,
                 this::getFieldRelativeSpeeds,
                 targetPoseSupplier,
                 positionTolerance,
-                velocityTolerance
-        );
+                velocityTolerance);
     }
 
-    public Trigger atPoseAndStoppedTrigger(final Supplier<Pose2d> targetPoseSupplier) {
+    public LoggedTrigger atPoseAndStoppedTrigger(final Supplier<Pose2d> targetPoseSupplier) {
         return holonomicDriveController.atPoseAndStopped(
                 this::getPose,
                 targetPoseSupplier
         );
     }
 
-    public Trigger atAxisTrigger(final DoubleSupplier target, final DoubleSupplier measurement) {
+    public LoggedTrigger atAxisTrigger(final DoubleSupplier target, final DoubleSupplier measurement) {
         final DoubleSupplier linearSpeedSupplier = () -> {
             final ChassisSpeeds speeds = getFieldRelativeSpeeds();
             return Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond);
         };
 
-        return new Trigger(
+        return group.t(
+                "atAxis",
                 () -> MathUtil.isNear(
                         target.getAsDouble(),
                         measurement.getAsDouble(),
@@ -884,6 +888,7 @@ public class Swerve extends SubsystemBase {
         final Pose2d currentPose = getPose();
         final ChassisSpeeds speeds = choreoController.calculate(currentPose, swerveSample);
 
+        //noinspection MismatchedQueryAndUpdateOfCollection
         final List<Vector<N2>> moduleForceVectors = new ArrayList<>();
         final double[] moduleForcesX = swerveSample.moduleForcesX();
         final double[] moduleForcesY = swerveSample.moduleForcesY();
@@ -911,6 +916,7 @@ public class Swerve extends SubsystemBase {
         );
 
         //TODO: Torque FF doesn't work well
+//        drive(speeds, moduleForceVectors);
         drive(speeds);
     }
 

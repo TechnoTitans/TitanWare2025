@@ -2,12 +2,12 @@ package frc.robot.state;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.CoordinationCommands;
 import frc.robot.constants.Constants;
 import frc.robot.subsystems.intake.endeffector.Intake;
 import frc.robot.subsystems.intake.ground.GroundIntake;
 import frc.robot.subsystems.superstructure.Superstructure;
+import frc.robot.utils.commands.LoggedTrigger;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
@@ -38,23 +38,25 @@ public class GamepieceState extends VirtualSubsystem {
     private IntakeState algaeState = IntakeState.NONE;
     private GroundIntakeState groundState = GroundIntakeState.NONE;
 
-    public final Trigger isCoralNone = isStateTrigger(() -> coralState, IntakeState.NONE);
-    public final Trigger isCoralIntaking = isStateTrigger(() -> coralState, IntakeState.INTAKING);
-    public final Trigger isCoralHolding = isStateTrigger(() -> coralState, IntakeState.HOLDING);
-    public final Trigger isCoralScoring = isStateTrigger(() -> coralState, IntakeState.SCORING);
+    private final LoggedTrigger.Group group = LoggedTrigger.Group.from(LogKey);
 
-    public final Trigger isAlgaeNone = isStateTrigger(() -> algaeState, IntakeState.NONE);
-    public final Trigger isAlgaeIntaking = isStateTrigger(() -> algaeState, IntakeState.INTAKING);
-    public final Trigger isAlgaeHolding = isStateTrigger(() -> algaeState, IntakeState.HOLDING);
-    public final Trigger isAlgaeScoring = isStateTrigger(() -> algaeState, IntakeState.SCORING);
+    public final LoggedTrigger isCoralNone = isStateTrigger(() -> coralState, IntakeState.NONE);
+    public final LoggedTrigger isCoralIntaking = isStateTrigger(() -> coralState, IntakeState.INTAKING);
+    public final LoggedTrigger isCoralHolding = isStateTrigger(() -> coralState, IntakeState.HOLDING);
+    public final LoggedTrigger isCoralScoring = isStateTrigger(() -> coralState, IntakeState.SCORING);
 
-    public final Trigger isGroundNone = isStateTrigger(() -> groundState, GroundIntakeState.NONE);
-    public final Trigger isGroundIntaking = isStateTrigger(() -> groundState, GroundIntakeState.INTAKING);
-    public final Trigger isGroundHandingOff = isStateTrigger(() -> groundState, GroundIntakeState.HANDING_OFF);
+    public final LoggedTrigger isAlgaeNone = isStateTrigger(() -> algaeState, IntakeState.NONE);
+    public final LoggedTrigger isAlgaeIntaking = isStateTrigger(() -> algaeState, IntakeState.INTAKING);
+    public final LoggedTrigger isAlgaeHolding = isStateTrigger(() -> algaeState, IntakeState.HOLDING);
+    public final LoggedTrigger isAlgaeScoring = isStateTrigger(() -> algaeState, IntakeState.SCORING);
 
-    public final Trigger intakeHasCoral = isCoralHolding.or(isCoralScoring);
-    public final Trigger intakeHasAlgae = isAlgaeHolding.or(isAlgaeScoring);
-    public final Trigger groundHasCoral = isGroundHandingOff;
+    public final LoggedTrigger isGroundNone = isStateTrigger(() -> groundState, GroundIntakeState.NONE);
+    public final LoggedTrigger isGroundIntaking = isStateTrigger(() -> groundState, GroundIntakeState.INTAKING);
+    public final LoggedTrigger isGroundHandingOff = isStateTrigger(() -> groundState, GroundIntakeState.HANDING_OFF);
+
+    public final LoggedTrigger intakeHasCoral = isCoralHolding.or(isCoralScoring);
+    public final LoggedTrigger intakeHasAlgae = isAlgaeHolding.or(isAlgaeScoring);
+    public final LoggedTrigger groundHasCoral = isGroundHandingOff;
 
     public GamepieceState(
             final Constants.RobotMode mode,
@@ -97,12 +99,12 @@ public class GamepieceState extends VirtualSubsystem {
         Logger.recordOutput(LogKey + "/IntakeHasAlgae", groundHasCoral.getAsBoolean());
     }
 
-    public Trigger isStateTrigger(final Supplier<IntakeState> currentState, final IntakeState state) {
-        return new Trigger(() -> currentState.get() == state);
+    public LoggedTrigger isStateTrigger(final Supplier<IntakeState> currentState, final IntakeState state) {
+        return group.t(String.format("isState(%s)", state), () -> currentState.get() == state);
     }
 
-    public Trigger isStateTrigger(final Supplier<GroundIntakeState> currentState, final GroundIntakeState state) {
-        return new Trigger(() -> currentState.get() == state);
+    public LoggedTrigger isStateTrigger(final Supplier<GroundIntakeState> currentState, final GroundIntakeState state) {
+        return group.t(String.format("isState(%s)", state), () -> currentState.get() == state);
     }
 
     public Command setCoralState(final IntakeState coralState) {

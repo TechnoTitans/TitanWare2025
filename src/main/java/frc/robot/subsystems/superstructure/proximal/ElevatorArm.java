@@ -14,11 +14,11 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
+import frc.robot.utils.commands.LoggedTrigger;
 import frc.robot.utils.logging.LogUtils;
 import org.littletonrobotics.junction.Logger;
 
@@ -44,9 +44,10 @@ public class ElevatorArm extends SubsystemBase {
     private final PositionSetpoint pivotLowerSetpoint;
     private final PositionSetpoint pivotUpperSetpoint;
 
-    public final Trigger atSetpoint = new Trigger(this::atPositionSetpoint);
-    public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
-    public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
+    private final LoggedTrigger.Group group = LoggedTrigger.Group.from(LogKey);
+    public final LoggedTrigger atSetpoint = group.t("atSetpoint", this::atPositionSetpoint);
+    public final LoggedTrigger atPivotLowerLimit = group.t("atPivotLowerLimit", this::atPivotLowerLimit);
+    public final LoggedTrigger atPivotUpperLimit = group.t("atPivotUpperLimit", this::atPivotLowerLimit);
 
     public static class PositionSetpoint {
         public double pivotPositionRots = 0;

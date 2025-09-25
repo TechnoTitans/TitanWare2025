@@ -10,7 +10,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.FieldConstants.Reef;
 import frc.robot.state.GamepieceState;
@@ -20,6 +19,7 @@ import frc.robot.subsystems.intake.endeffector.Intake;
 import frc.robot.subsystems.intake.ground.GroundIntake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.utils.Container;
+import frc.robot.utils.commands.LoggedTrigger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +30,8 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class ScoreCommands {
+    protected static final String LogKey = "ScoreCommands";
+    
     public enum ExtendWhen {
         CLOSE,
         ROTATION_CLOSE,
@@ -81,6 +83,8 @@ public class ScoreCommands {
             Level level
     ) {}
 
+    private final LoggedTrigger.Group group;
+    
     private final Swerve swerve;
     private final Superstructure superstructure;
     private final Intake intake;
@@ -94,6 +98,8 @@ public class ScoreCommands {
             final GroundIntake groundIntake,
             final GamepieceState gamepieceState
     ) {
+        this.group = LoggedTrigger.Group.from(LogKey);
+        
         this.swerve = swerve;
         this.superstructure = superstructure;
         this.intake = intake;
@@ -102,12 +108,12 @@ public class ScoreCommands {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private Trigger atRotationTrigger(
+    private LoggedTrigger atRotationTrigger(
             final Supplier<Pose2d> scoringPoseSupplier,
             final Rotation2d rotationTolerance,
             final double rotationVelocityToleranceRadsPerSec
     ) {
-        return new Trigger(() -> {
+        return group.t("atRotationTrigger", () -> {
             final Transform2d delta = swerve.getPose().minus(scoringPoseSupplier.get());
             final ChassisSpeeds speeds = swerve.getFieldRelativeSpeeds();
 
@@ -205,7 +211,7 @@ public class ScoreCommands {
         final Container<ScorePosition> runningScorePositionContainer = Container.empty();
 
 
-        final Trigger shouldUseEarlyAlign = new Trigger(() ->
+        final LoggedTrigger shouldUseEarlyAlign = group.t("shouldUseEarlyAlign", () ->
                 switch (scorePositionContainer.get().level) {
                     case AUTO_L4, L4, L3 -> true;
                     case L2, L1 -> false;
@@ -251,8 +257,8 @@ public class ScoreCommands {
             return offsetScoringPoseWithCoralPosition(scoringPose);
         };
 
-        final Trigger atReef = swerve.atPoseAndStoppedTrigger(scoringPoseSupplier);
-        final Trigger atCloseReef = swerve.atPoseTrigger(
+        final LoggedTrigger atReef = swerve.atPoseAndStoppedTrigger(scoringPoseSupplier);
+        final LoggedTrigger atCloseReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.5,
@@ -263,12 +269,12 @@ public class ScoreCommands {
                         Math.PI / 2
                 )
         );
-        final Trigger atRotationCloseReef = atRotationTrigger(
+        final LoggedTrigger atRotationCloseReef = atRotationTrigger(
                 scoringPoseSupplier,
                 Rotation2d.fromDegrees(25),
                 Math.PI / 3
         );
-        final Trigger always = new Trigger(() -> true);
+        final LoggedTrigger always = group.t("always", () -> true);
 
         final Container<Boolean> wasEverAtReef = Container.of(false);
 
@@ -277,7 +283,7 @@ public class ScoreCommands {
                 ExtendWhen.ROTATION_CLOSE, Commands.waitUntil(atRotationCloseReef),
                 ExtendWhen.ALWAYS, Commands.none()
         );
-        final Supplier<Trigger> extendWhenTriggerSupplier = () ->
+        final Supplier<LoggedTrigger> extendWhenTriggerSupplier = () ->
                 switch (extendWhenSupplier.get()) {
                     case CLOSE -> atCloseReef;
                     case ROTATION_CLOSE -> atRotationCloseReef;
@@ -286,7 +292,7 @@ public class ScoreCommands {
         final BooleanSupplier willWaitToExtend = () ->
                 !extendWhenTriggerSupplier.get().getAsBoolean();
 
-        final Trigger atSuperstructureSetpoint = superstructure
+        final LoggedTrigger atSuperstructureSetpoint = superstructure
                 .atSetpoint(() -> scorePositionContainer.get().level.goal);
 
         final Container<Superstructure.Goal> superstructureGoalContainer = Container.empty();
@@ -416,7 +422,7 @@ public class ScoreCommands {
         final DoubleSupplier robotX = () -> swerve.getPose().getX();
         final DoubleSupplier robotY = () -> swerve.getPose().getY();
 
-        final Trigger allowedToScore = new Trigger(() -> {
+        final LoggedTrigger allowedToScore = group.t("allowedToScore", () -> {
             if (Robot.IsRedAlliance.getAsBoolean()) {
                 return robotY.getAsDouble() < FieldConstants.FIELD_WIDTH_Y_METERS / 2.0;
             } else {
@@ -492,7 +498,7 @@ public class ScoreCommands {
     public Command processor() {
         final Supplier<Pose2d> alignPoseSupplier = FieldConstants::getProcessorAlignPose;
 
-        final Trigger atAlignProcessor = swerve.atPoseTrigger(
+        final LoggedTrigger atAlignProcessor = swerve.atPoseTrigger(
                 alignPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.2,

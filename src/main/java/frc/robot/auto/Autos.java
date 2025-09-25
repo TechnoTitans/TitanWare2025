@@ -9,7 +9,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
 import frc.robot.ScoreCommands;
 import frc.robot.constants.FieldConstants;
@@ -22,6 +21,7 @@ import frc.robot.subsystems.intake.endeffector.Intake;
 import frc.robot.subsystems.superstructure.Superstructure;
 import frc.robot.subsystems.vision.PhotonVision;
 import frc.robot.utils.Container;
+import frc.robot.utils.commands.LoggedTrigger;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.ArrayList;
@@ -29,8 +29,9 @@ import java.util.function.Supplier;
 
 public class Autos {
     public static final String LogKey = "Auto";
-
     private static final double AllowableDistanceFromHPForEarlyAlign = 0.75;
+
+    private final LoggedTrigger.Group group;
 
     private final Swerve swerve;
     private final Superstructure superstructure;
@@ -51,6 +52,8 @@ public class Autos {
             final GamepieceState gamepieceState,
             final ReefState reefState
     ) {
+        this.group = LoggedTrigger.Group.from(LogKey);
+
         this.swerve = swerve;
         this.superstructure = superstructure;
         this.intake = intake;
@@ -98,7 +101,7 @@ public class Autos {
 
         final Superstructure.Goal goal = ScoreCommands.Level.LevelMap.get(branch.level());
 
-        final Trigger atCloseReef = swerve.atPoseTrigger(
+        final LoggedTrigger atCloseReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.3,
@@ -130,7 +133,7 @@ public class Autos {
         };
 
         final Superstructure.Goal goal = ScoreCommands.Level.LevelMap.get(branch.level());
-        final Trigger atReef = swerve.atPoseTrigger(
+        final LoggedTrigger atReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.045,
@@ -142,7 +145,7 @@ public class Autos {
                 )
         );
 
-        final Trigger atCloseReef = swerve.atPoseTrigger(
+        final LoggedTrigger atCloseReef = swerve.atPoseTrigger(
                 scoringPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.3,
@@ -228,7 +231,7 @@ public class Autos {
         final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
                 .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
 
-        final Trigger safeFromReef = swerve.atPoseTrigger(
+        final LoggedTrigger safeFromReef = swerve.atPoseTrigger(
                 safeReefPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.1,
@@ -257,7 +260,7 @@ public class Autos {
         final Supplier<Pose2d> safeReefPoseSupplier = () -> descorePoseSupplier.get()
                 .transformBy(FieldConstants.ALGAE_SAFE_REEF_OFFSET);
 
-        final Trigger safeFromReef = swerve.atPoseTrigger(
+        final LoggedTrigger safeFromReef = swerve.atPoseTrigger(
                 safeReefPoseSupplier,
                 new HolonomicDriveController.PositionTolerance(
                         0.1,
@@ -287,7 +290,7 @@ public class Autos {
         final AutoTrajectory secondRightHPToReef5 = routine.trajectory("RightHPToReef5Left");
         final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef5ToRightHP");
 
-        final Trigger farEnoughAwayFromHP = new Trigger(() -> {
+        final LoggedTrigger farEnoughAwayFromHP = group.t("farEnoughAwayFromHP", () -> {
             final Pose2d pose = swerve.getPose();
             final Pose2d closestHPPose = pose.nearest(FieldConstants.getHPPickupPoses());
 
@@ -382,7 +385,7 @@ public class Autos {
         final AutoTrajectory leftHPToReef1Left = routine.trajectory("LeftHPToReef1Left");
         final AutoTrajectory moveEndOfAuto = routine.trajectory("Reef1ToLeftHP");
 
-        final Trigger farEnoughAwayFromHP = new Trigger(() -> {
+        final LoggedTrigger farEnoughAwayFromHP = group.t("farEnoughAwayFromHP", () -> {
             final Pose2d pose = swerve.getPose();
             final Pose2d closestHPPose = pose.nearest(FieldConstants.getHPPickupPoses());
 
