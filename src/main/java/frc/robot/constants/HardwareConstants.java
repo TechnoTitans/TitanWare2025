@@ -95,7 +95,7 @@ public class HardwareConstants {
     ) {}
 
     public static final GroundIntakeConstants GROUND_INTAKE = new GroundIntakeConstants(
-            RobotMap.RioCANBus,
+            RobotMap.CanivoreCANBus,
             24,
             25,
             1.5
@@ -112,12 +112,13 @@ public class HardwareConstants {
     ) {}
 
     public static final GroundIntakeArmConstants GROUND_INTAKE_ARM = new GroundIntakeArmConstants(
-            RobotMap.RioCANBus,
+            RobotMap.CanivoreCANBus,
             26,
             27,
-            0,
-            46.875,
-            -0.35,
-            .14
-    ); //TODO: Limits need to change
+            -0.534,
+            112.84,
+            -0.300,
+            -0.05
+
+    ); //TODO: Limits need to change -0.521
 }

@@ -104,7 +104,7 @@ public class GroundIntake extends SubsystemBase {
     public Command intakeCoralGround() {
         return Commands.sequence(
                 runOnce(() -> this.coralIntaking = true),
-                toRollerVelocity(10.0) //TODO: Change Number,
+                toRollerVelocity(20) //TODO: Change Number,
         )
                 .finallyDo(() -> this.coralIntaking = false)
                 .withName("IntakeCoralGround");
@@ -139,7 +139,7 @@ public class GroundIntake extends SubsystemBase {
     public Command ejectCoral() {
         return Commands.sequence(
                 runOnce(() -> this.coralOuttaking = true),
-                toInstantRollerVoltage(-10) //TODO: Change Number
+                toInstantRollerVoltage(-8) //TODO: Change Number
 
         )
                 .finallyDo(() -> this.coralOuttaking = false)

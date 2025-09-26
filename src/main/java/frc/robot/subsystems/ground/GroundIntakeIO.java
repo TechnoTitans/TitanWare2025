@@ -5,7 +5,7 @@ import org.littletonrobotics.junction.AutoLog;
 public interface GroundIntakeIO {
 
     @AutoLog
-    public class GroundIntakeIOInputs {
+    class GroundIntakeIOInputs {
         public double rollerPositionRots = 0.0;
         public double rollerVelocityRotsPerSec = 0.0;
         public double rollerVoltage = 0.0;

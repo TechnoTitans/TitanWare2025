@@ -44,7 +44,7 @@ public class GroundIntakeArm extends SubsystemBase {
 
     public final Trigger atSetpoint = new Trigger(this::atPivotPositionSetpoint);
     public final Trigger atPivotLowerLimit = new Trigger(this::atPivotLowerLimit);
-    public final Trigger atPivotUpperLimit = new Trigger(this::atPivotLowerLimit);
+    public final Trigger atPivotUpperLimit = new Trigger(this::atPivotUpperLimit);
 
     public static class PositionSetpoint {
         public double pivotPositionRots = 0;
@@ -70,12 +70,11 @@ public class GroundIntakeArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        STOW(0),
+        STOW(-0.05),
         UPRIGHT(-0.09),
         INTAKE_FROM_GROUND(-0.315),
         TRANSFER_CORAL(-0.06),
-        SCORE_L1(-0.15),
-        CLIMB(-.627);
+        SCORE_L1(-0.15);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {
@@ -97,9 +96,9 @@ public class GroundIntakeArm extends SubsystemBase {
         this.inputs = new GroundIntakeArmIOInputsAutoLogged();
 
         this.voltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(2).per(Second),
-                Volts.of(3),
-                Seconds.of(6)
+                Volts.of(1).per(Second),
+                Volts.of(1),
+                Seconds.of(8)
         );
 
         this.torqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(
@@ -130,19 +129,19 @@ public class GroundIntakeArm extends SubsystemBase {
             }
 
             this.currentGoal = desiredGoal;
-
-            Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
-            Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
-            Logger.recordOutput(LogKey + "/PositionSetpoint/PivotPositionRots", setpoint.pivotPositionRots);
-            Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPivotPositionSetpoint());
-            Logger.recordOutput(LogKey + "/AtPivotLowerLimit", atPivotLowerLimit());
-            Logger.recordOutput(LogKey + "/AtPivotUpperLimit", atPivotUpperLimit());
-
-            Logger.recordOutput(
-                    LogKey + "/PeriodicIOPeriodMs",
-                    LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - groundArmPeriodicUpdateStart)
-            );
         }
+
+        Logger.recordOutput(LogKey + "/CurrentGoal", currentGoal.toString());
+        Logger.recordOutput(LogKey + "/DesiredGoal", desiredGoal.toString());
+        Logger.recordOutput(LogKey + "/PositionSetpoint/PivotPositionRots", setpoint.pivotPositionRots);
+        Logger.recordOutput(LogKey + "/AtPositionSetpoint", atPivotPositionSetpoint());
+        Logger.recordOutput(LogKey + "/AtPivotLowerLimit", atPivotLowerLimit());
+        Logger.recordOutput(LogKey + "/AtPivotUpperLimit", atPivotUpperLimit());
+
+        Logger.recordOutput(
+                LogKey + "/PeriodicIOPeriodMs",
+                LogUtils.microsecondsToMilliseconds(RobotController.getFPGATime() - groundArmPeriodicUpdateStart)
+        );
     }
 
     private boolean atPivotPositionSetpoint() {

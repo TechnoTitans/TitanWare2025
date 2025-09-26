@@ -54,7 +54,7 @@ public class GroundIntakeIOReal implements GroundIntakeIO {
         this.voltageOut = new VoltageOut(0);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                RefreshAll.CANBus.CANIVORE,
                 rollerPosition,
                 rollerVelocity,
                 rollerVoltage,
@@ -74,11 +74,11 @@ public class GroundIntakeIOReal implements GroundIntakeIO {
         coralCANRange.getConfigurator().apply(CANRangeConfiguration);
 
         final TalonFXConfiguration rollerConfiguration = new TalonFXConfiguration();
-        rollerConfiguration.Slot0 = new Slot0Configs();
+        rollerConfiguration.Slot0 = new Slot0Configs()
 //                .withKS(4.0212)
-//                .withKV(0.40767)
+                .withKV(1.5);
 //                .withKA(0.22711)
-//                .withKP(30);
+//                .withKP(100);
         rollerConfiguration.CurrentLimits.StatorCurrentLimit = 40;
         rollerConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
         rollerConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
