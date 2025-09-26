@@ -125,7 +125,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final ReefState reefState = new ReefState();
-    public final IntakeGamepieceState intakeGamepieceState = new IntakeGamepieceState(Constants.CURRENT_MODE, intake, groundIntake);
+    public final IntakeGamepieceState intakeGamepieceState = new IntakeGamepieceState(Constants.CURRENT_MODE, intake, groundIntake, groundIntakeArm);
     public final Visualizer visualizer = new Visualizer(swerve, intake, groundIntake, superstructure, intakeGamepieceState);
     public final ScoreCommands scoreCommands = new ScoreCommands(swerve, superstructure, intake, groundIntake, intakeGamepieceState);
 
@@ -522,12 +522,14 @@ public class Robot extends LoggedRobot {
                         () -> SwerveSpeed.setSwerveSpeed(SwerveSpeed.Speeds.NORMAL)
                 ).withName("SwerveSpeedSlow"));
 
-        this.driverController.x().whileTrue(
-                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
-        );
-
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
-                scoreCommands.groundIntakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+                scoreCommands.groundIntake(
+                        driverController::getLeftY,
+                        driverController::getLeftX,
+                        driverController::getRightX,
+                        IsRedAlliance,
+                        () -> photonVision.getBestCoralPose(swerve::getPose, swerve::getPose)
+                )
         );
 
         this.driverController.rightTrigger(0.5, teleopEventLoop)
@@ -537,7 +539,7 @@ public class Robot extends LoggedRobot {
 
         this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 
-        this.driverController.povUp().whileTrue(scoreCommands.scoreBarge());
+        this.driverController.x().whileTrue(scoreCommands.scoreBarge());
 
         this.driverController.b(teleopEventLoop)
                 .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
@@ -564,7 +566,11 @@ public class Robot extends LoggedRobot {
                 .whileTrue(scoreCommands.readyScoreProcessor())
                 .onFalse(scoreCommands.scoreProcessor());
 
-        this.coController.leftTrigger(0.5, teleopEventLoop)
+        this.coController.leftTrigger(0.5, teleopEventLoop).whileTrue(
+                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
+        );
+
+        this.coController.povRight()
                 .whileTrue(superstructure.toGoal(Superstructure.Goal.HP)
                         .alongWith(intake.intakeCoralHP())
                 );

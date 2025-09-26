@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.Constants;
 import frc.robot.subsystems.ground.GroundIntake;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.superstructure.ground.GroundIntakeArm;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
 
@@ -17,6 +18,7 @@ public class IntakeGamepieceState extends VirtualSubsystem {
 
     private final Intake intake;
     private final GroundIntake groundIntake;
+    private final GroundIntakeArm groundIntakeArm;
 
     public enum IntakeState {
         NONE,
@@ -60,10 +62,12 @@ public class IntakeGamepieceState extends VirtualSubsystem {
     public IntakeGamepieceState(
         final Constants.RobotMode mode,
         final Intake intake,
-        final GroundIntake groundIntake
+        final GroundIntake groundIntake,
+        final GroundIntakeArm groundIntakeArm
     ) {
         this.intake = intake;
         this.groundIntake = groundIntake;
+        this.groundIntakeArm = groundIntakeArm;
 
         configureStateTriggers();
         if (mode != Constants.RobotMode.REAL) {
@@ -221,7 +225,7 @@ public class IntakeGamepieceState extends VirtualSubsystem {
                 )
         );
 
-        groundIntake.isCoralOuttaking.and(hasGroundCoral).whileTrue(
+        groundIntake.isCoralOuttaking.and(hasGroundCoral).and(groundIntakeArm.atSetpoint).whileTrue(
                 Commands.sequence(
                         waitRand(random, 0.1, 0.25),
                         setGroundCANRangeDistanceCommand(0.5)

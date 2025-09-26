@@ -91,7 +91,7 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
         pivotMotorConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder; //CHANGE FOR SYSID
         pivotMotorConfig.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
         pivotMotorConfig.Feedback.SensorToMechanismRatio = 1;
         pivotMotorConfig.Feedback.RotorToSensorRatio = constants.pivotGearing();
