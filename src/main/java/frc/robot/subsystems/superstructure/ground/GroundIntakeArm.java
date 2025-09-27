@@ -68,15 +68,14 @@ public class GroundIntakeArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        STOW(-0.05),
-        UPRIGHT(-0.09),
-        INTAKE_FROM_GROUND(-0.315),
-        TRANSFER_CORAL(-0.06),
+        STOW(0.00),
+        INTAKE_FROM_GROUND(-0.345),
+        TRANSFER_CORAL(-0.01),
         SCORE_L1(-0.15),
         ALGAE(-0.20),
         GROUND_L1(-0.15),
         L1(-0.22),
-        CLIMB(-.627);
+        CLIMB(-0.340);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {
@@ -98,9 +97,9 @@ public class GroundIntakeArm extends SubsystemBase {
         this.inputs = new GroundIntakeArmIOInputsAutoLogged();
 
         this.voltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(1).per(Second),
-                Volts.of(1),
-                Seconds.of(8)
+                Volts.of(2).per(Second),
+                Volts.of(2),
+                Seconds.of(10)
         );
 
         this.torqueCurrentSysIdRoutine = makeTorqueCurrentSysIdRoutine(

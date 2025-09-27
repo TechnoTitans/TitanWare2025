@@ -25,7 +25,7 @@ import static edu.wpi.first.units.Units.Seconds;
 
 public class GroundIntake extends SubsystemBase {
     protected static final String LogKey = "GroundIntake";
-    private static final double NoCoralTOFReading = 0.4;
+    private static final double NoCoralTOFReading = 0.12;
 
     private final GroundIntakeIO groundIntakeIO;
     private final GroundIntakeIOInputsAutoLogged inputs;

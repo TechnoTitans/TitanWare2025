@@ -11,13 +11,11 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Robot;
 import frc.robot.constants.Constants;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.drive.constants.SwerveConstants;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionResult;
-import frc.robot.subsystems.vision.result.CoralTrackingResult;
 import frc.robot.utils.PoseUtils;
 import frc.robot.utils.gyro.GyroUtils;
 import frc.robot.utils.logging.LogUtils;
@@ -28,8 +26,6 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
@@ -68,7 +64,6 @@ public class PhotonVision extends VirtualSubsystem {
 
     private final PhotonVisionRunner runner;
     private final Map<? extends VisionIO, VisionIO.VisionIOInputs> aprilTagVisionIOInputsMap;
-    private final Map<? extends VisionIO, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap;
 
     private final Swerve swerve;
     private final SwerveDrivePoseEstimator poseEstimator;
@@ -88,9 +83,6 @@ public class PhotonVision extends VirtualSubsystem {
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FR_APRILTAG),
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_BL_APRILTAG),
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_APRILTAG)
-                    ),
-                    PhotonVision.makeVisionIOInputsMap(
-//                            new RealVisionRunner.VisionIOCoralTrackingReal(TitanCamera.PHOTON_FC_CORAL_TRACKING)
                     )
             );
             case SIM -> {
@@ -105,7 +97,6 @@ public class PhotonVision extends VirtualSubsystem {
                         ),
                         PhotonVision.apriltagFieldLayout,
                         visionSystemSim,
-                        Robot.SimCoralPoses,
                         PhotonVision.makeVisionIOInputsMap(
                                 new SimVisionRunner.VisionIOApriltagsSim(
                                         TitanCamera.PHOTON_FR_APRILTAG, visionSystemSim
@@ -116,11 +107,6 @@ public class PhotonVision extends VirtualSubsystem {
                                 new SimVisionRunner.VisionIOApriltagsSim(
                                         TitanCamera.PHOTON_FL_APRILTAG, visionSystemSim
                                 )
-                        ),
-                        PhotonVision.makeVisionIOInputsMap(
-                                new SimVisionRunner.VisionIOCoralTrackingSim(
-                                        TitanCamera.PHOTON_FC_CORAL_TRACKING, visionSystemSim
-                                )
                         )
                 );
             }
@@ -130,9 +116,6 @@ public class PhotonVision extends VirtualSubsystem {
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FR_APRILTAG),
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_BL_APRILTAG),
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_APRILTAG)
-                    ),
-                    PhotonVision.makeVisionIOInputsMap(
-                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FC_CORAL_TRACKING)
                     )
             );
             case DISABLED -> new PhotonVisionRunner() {};
@@ -141,7 +124,6 @@ public class PhotonVision extends VirtualSubsystem {
         this.swerve = swerve;
         this.poseEstimator = poseEstimator;
         this.aprilTagVisionIOInputsMap = runner.getApriltagVisionIOInputsMap();
-        this.coralTrackingVisionIOInputsMap = runner.getCoralTrackingVisionIOInputsMap();
 
         this.lastVisionUpdateMap = new HashMap<>();
         final Pose2d estimatedPose = poseEstimator.getEstimatedPosition();
@@ -307,44 +289,6 @@ public class PhotonVision extends VirtualSubsystem {
                 );
             }
         }
-
-        for (
-                final Map.Entry<? extends VisionIO, VisionIO.VisionIOInputs>
-                    visionIOInputsEntry : coralTrackingVisionIOInputsMap.entrySet()
-        ) {
-            final VisionIO visionIO = visionIOInputsEntry.getKey();
-            final VisionIO.VisionIOInputs inputs = visionIOInputsEntry.getValue();
-            final String logKey = PhotonLogKey + "/" + inputs.name;
-
-            Logger.recordOutput(
-                    logKey + "/CameraPose",
-                    new Pose3d(swerve.getPose()).transformBy(inputs.robotToCamera)
-            );
-
-            final CoralTrackingResult[] coralTrackingResults = runner.getCoralTrackingResults(visionIO);
-            for (final CoralTrackingResult result : coralTrackingResults) {
-                // TODO does not differentiate log key per result
-                Logger.recordOutput(logKey + "/HasTargets", result.hasTargets);
-                final Optional<Pose2d> optionalBestCoralPose = result
-                        .getBestCoralPose(swerve::getPose);
-
-                Logger.recordOutput(logKey + "/HasBestCoralPose", optionalBestCoralPose.isPresent());
-                Logger.recordOutput(
-                        logKey + "/BestCoralPose",
-                        new Pose3d(optionalBestCoralPose.orElseGet(Pose2d::new))
-                );
-
-                final Pose2d[] coralPose2ds = result
-                        .getCoralPoses(swerve::getPose);
-
-                final Pose3d[] coralPoses3ds = new Pose3d[coralPose2ds.length];
-                for (int i = 0; i < coralPoses3ds.length; i++) {
-                    coralPoses3ds[i] = PoseUtils.coral2dTo3d(coralPose2ds[i]);
-                }
-
-                Logger.recordOutput(logKey + "/CoralPoses", coralPoses3ds);
-            }
-        }
     }
 
     public void updateOutputs() {
@@ -394,11 +338,6 @@ public class PhotonVision extends VirtualSubsystem {
             Logger.recordOutput(logKey + "/TagPose3ds", apriltagPose3ds);
             Logger.recordOutput(logKey + "/TagPose2ds", apriltagPose2ds);
         }
-
-        // TODO temp
-        Logger.recordOutput(PhotonLogKey + "/CoralPosesV2", getCoralPoses().stream()
-                .map(PoseUtils::coral2dTo3d)
-                .toArray(Pose3d[]::new));
     }
 
     @Override
@@ -433,38 +372,5 @@ public class PhotonVision extends VirtualSubsystem {
     @SuppressWarnings("unused")
     public Command resetPoseCommand(final Pose2d robotPose) {
         return runOnce(() -> resetPose(robotPose));
-    }
-
-    public List<Pose2d> getCoralPoses() {
-        final List<Pose2d> coralPoses = new ArrayList<>();
-        for (final VisionIO visionIO : coralTrackingVisionIOInputsMap.keySet()) {
-            final CoralTrackingResult[] coralTrackingResults = runner.getCoralTrackingResults(visionIO);
-            for (final CoralTrackingResult result : coralTrackingResults) {
-                Collections.addAll(coralPoses, result.getCoralPoses(swerve::getPose));
-            }
-        }
-
-        return coralPoses;
-    }
-
-    //TODO: Removing sorting and find min
-    public Optional<Pose2d> getBestCoralPose(
-            final Function<Double, Optional<Pose2d>> robotPoseAtTime,
-            final Supplier<Pose2d> robotPoseNow
-    ) {
-        final List<Pose2d> coralPoses = new ArrayList<>();
-
-        for (final VisionIO visionIO : coralTrackingVisionIOInputsMap.keySet()) {
-            final CoralTrackingResult[] coralTrackingResults = runner.getCoralTrackingResults(visionIO);
-            for (final CoralTrackingResult result : coralTrackingResults) {
-                result.getBestCoralPose(robotPoseAtTime).ifPresent(coralPoses::add);
-            }
-        }
-
-        // TODO temp
-        return coralPoses.stream()
-                .min(Comparator.comparingDouble(pose -> robotPoseNow.get()
-                        .getTranslation()
-                        .getDistance(pose.getTranslation())));
     }
 }

@@ -77,8 +77,8 @@ public class ElevatorArm extends SubsystemBase {
         HP(Units.degreesToRotations(33)),
         ALGAE_GROUND(0),
         PROCESSOR(Units.degreesToRotations(1)),
-        UPPER_ALGAE(0.10303),
-        LOWER_ALGAE(0.074219),
+        UPPER_ALGAE(0.083),
+        LOWER_ALGAE(0.045),
         AUTO_L4(0.17),
         L4(0.1525),
         L3(0.12842),
@@ -86,7 +86,7 @@ public class ElevatorArm extends SubsystemBase {
         L1(0.0260),
         CLIMB(0.184),
         CLIMB_DOWN(-5),
-        TRANSFER_CORAL(0.113);
+        TRANSFER_CORAL(0.145);
 
         private final double pivotPositionGoalRots;
         Goal(final double pivotPositionGoalRots) {

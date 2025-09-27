@@ -30,8 +30,8 @@ public class Superstructure extends VirtualSubsystem {
         CLIMB(Elevator.Goal.STOW, ElevatorArm.Goal.CLIMB, IntakeArm.Goal.CLIMB, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         CLIMB_DOWN(Elevator.Goal.CLIMB_DOWN, ElevatorArm.Goal.CLIMB_DOWN, IntakeArm.Goal.CLIMB_DOWN, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         ALGAE_GROUND(Elevator.Goal.ALGAE_GROUND, ElevatorArm.Goal.ALGAE_GROUND, IntakeArm.Goal.ALGAE_GROUND, GroundIntakeArm.Goal.CLIMB),
-        UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.Goal.UPPER_ALGAE, GroundIntakeArm.Goal.ALGAE),
-        LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.LOWER_ALGAE, GroundIntakeArm.Goal.ALGAE),
+        UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.Goal.UPPER_ALGAE, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
+        LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.LOWER_ALGAE, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         HP(Elevator.Goal.HP, ElevatorArm.Goal.HP, IntakeArm.Goal.HP, GroundIntakeArm.Goal.STOW),
         PROCESSOR(Elevator.Goal.PROCESSOR, ElevatorArm.Goal.PROCESSOR, IntakeArm.Goal.PROCESSOR, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.L1),
@@ -155,7 +155,9 @@ public class Superstructure extends VirtualSubsystem {
             final Translation2d desiredTranslation = Superstructure.Goal.GoalTranslations.get(desiredGoal);
 
             return (desiredTranslation.getY() >= currentTranslation.getY()
-                    || desiredGoal == Goal.L1)
+                    || desiredGoal == Goal.L1
+                    || desiredGoal == Goal.GROUND_INTAKE
+                    || desiredGoal == Goal.STOW && runningGoal == Goal.CLIMB_DOWN)
                     && !(runningGoal == Goal.L1 && desiredGoal == Goal.STOW);
         });
         this.desiresDownwardsMotion = desiresUpwardsMotion.negate();

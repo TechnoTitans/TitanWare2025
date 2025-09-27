@@ -217,8 +217,7 @@ public enum TitanCamera {
                             3
                     ),
             false
-    )
-    ;
+    );
 
     private final PhotonCamera photonCamera;
     private final Transform3d robotToCameraTransform;

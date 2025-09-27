@@ -89,8 +89,8 @@ public class IntakeArm extends SubsystemBase {
         HP(0),
         ALGAE_GROUND(-0.349),
         ALGAE_FLING(-0.349),
-        UPPER_ALGAE(-0.35596),
-        LOWER_ALGAE(-0.32129),
+        UPPER_ALGAE(-0.254),
+        LOWER_ALGAE(-0.238),
         PROCESSOR(-0.24),
         CLIMB(-0.348),
         CLIMB_DOWN(-0.235),
@@ -100,7 +100,7 @@ public class IntakeArm extends SubsystemBase {
         L3(-0.16602),
         L2(-0.13),
         L1(-0.052),
-        TRANSFER_CORAL(-0.229);
+        TRANSFER_CORAL(-0.334);
 
         private final double pivotPositionGoalRots;
 

@@ -12,7 +12,6 @@ import frc.robot.subsystems.vision.cameras.CameraProperties;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
 import frc.robot.subsystems.vision.estimator.VisionResult;
-import frc.robot.subsystems.vision.result.CoralTrackingResult;
 import frc.robot.utils.closeables.ToClose;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
@@ -98,44 +97,18 @@ public class RealVisionRunner implements PhotonVisionRunner {
         }
     }
 
-    public static class VisionIOCoralTrackingReal implements VisionIO {
-        private final PhotonCamera photonCamera;
-        private final String cameraName;
-
-        private final Transform3d robotToCamera;
-
-        public VisionIOCoralTrackingReal(final TitanCamera titanCamera) {
-            this.photonCamera = titanCamera.getPhotonCamera();
-            this.cameraName = photonCamera.getName();
-            this.robotToCamera = titanCamera.getRobotToCameraTransform();
-        }
-
-        @Override
-        public void updateInputs(VisionIOInputs inputs) {
-            inputs.name = cameraName;
-            inputs.stdDevFactor = -1;
-            inputs.robotToCamera = robotToCamera;
-            inputs.pipelineResults = photonCamera.getAllUnreadResults().toArray(new PhotonPipelineResult[0]);
-        }
-    }
-
     private final AprilTagFieldLayout aprilTagFieldLayout;
     private final Map<VisionIOApriltagReal, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
-    private final Map<VisionIOCoralTrackingReal, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap;
 
     private final Map<VisionIO, VisionResult[]> visionResultsByVisionIO;
-    private final Map<VisionIO, CoralTrackingResult[]> coralTrackingResultsByVisionIO;
 
     public RealVisionRunner(
             final AprilTagFieldLayout aprilTagFieldLayout,
-            final Map<VisionIOApriltagReal, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap,
-            final Map<VisionIOCoralTrackingReal, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap
+            final Map<VisionIOApriltagReal, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap
     ) {
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
-        this.coralTrackingVisionIOInputsMap = coralTrackingVisionIOInputsMap;
         this.visionResultsByVisionIO = new HashMap<>();
-        this.coralTrackingResultsByVisionIO = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -182,38 +155,6 @@ public class RealVisionRunner implements PhotonVisionRunner {
                     visionResults
             );
         }
-
-        for (
-                final Map.Entry<VisionIOCoralTrackingReal, VisionIO.VisionIOInputs>
-                    visionIOInputsEntry : coralTrackingVisionIOInputsMap.entrySet()
-        ) {
-            final VisionIOCoralTrackingReal visionIO = visionIOInputsEntry.getKey();
-            final VisionIO.VisionIOInputs inputs = visionIOInputsEntry.getValue();
-
-            visionIO.periodic();
-            visionIO.updateInputs(inputs);
-
-            Logger.processInputs(
-                    String.format("%s/%s", PhotonVision.PhotonLogKey, inputs.name),
-                    inputs
-            );
-
-            final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            final int nPipelineResults = pipelineResults.length;
-            final CoralTrackingResult[] coralTrackingResults = new CoralTrackingResult[nPipelineResults];
-
-            for (int i = 0; i < nPipelineResults; i++) {
-                final PhotonPipelineResult pipelineResult = pipelineResults[i];
-                final CoralTrackingResult coralTrackingResult = new CoralTrackingResult(
-                        inputs.robotToCamera,
-                        pipelineResult
-                );
-
-                coralTrackingResults[i] = coralTrackingResult;
-            }
-
-            coralTrackingResultsByVisionIO.put(visionIO, coralTrackingResults);
-        }
     }
 
     /**
@@ -229,17 +170,7 @@ public class RealVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public Map<VisionIOCoralTrackingReal, VisionIO.VisionIOInputs> getCoralTrackingVisionIOInputsMap() {
-        return coralTrackingVisionIOInputsMap;
-    }
-
-    @Override
     public VisionResult[] getVisionResults(final VisionIO visionIO) {
         return visionResultsByVisionIO.get(visionIO);
-    }
-
-    @Override
-    public CoralTrackingResult[] getCoralTrackingResults(final VisionIO visionIO) {
-        return coralTrackingResultsByVisionIO.get(visionIO);
     }
 }

@@ -6,13 +6,11 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
-import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.drive.Swerve;
 import frc.robot.subsystems.vision.cameras.CameraProperties;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
 import frc.robot.subsystems.vision.estimator.VisionResult;
-import frc.robot.subsystems.vision.result.CoralTrackingResult;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.gyro.GyroUtils;
 import org.littletonrobotics.junction.Logger;
@@ -20,9 +18,7 @@ import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
-import org.photonvision.simulation.VisionTargetSim;
 import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
 
 import java.util.*;
 import java.util.function.Function;
@@ -82,109 +78,31 @@ public class SimVisionRunner implements PhotonVisionRunner {
         }
     }
 
-    public static class VisionIOCoralTrackingSim implements VisionIO {
-        public final PhotonCamera photonCamera;
-        public final String cameraName;
-
-        public final double stdDevFactor;
-        public final Transform3d robotToCamera;
-
-        private final int resolutionWidthPx;
-        private final int resolutionHeightPx;
-
-        public VisionIOCoralTrackingSim(final TitanCamera titanCamera, final VisionSystemSim visionSystemSim) {
-            this.photonCamera = titanCamera.getPhotonCamera();
-            this.cameraName = photonCamera.getName();
-
-            this.stdDevFactor = titanCamera.getStdDevFactor();
-            this.robotToCamera = titanCamera.getRobotToCameraTransform();
-            final CameraProperties.Resolution resolution = titanCamera
-                    .getCameraProperties()
-                    .getFirstResolution();
-            this.resolutionWidthPx = resolution.getWidth();
-            this.resolutionHeightPx = resolution.getHeight();
-
-            final PhotonCameraSim photonCameraSim =
-                    new PhotonCameraSim(titanCamera.getPhotonCamera(), titanCamera.toSimCameraProperties());
-
-            photonCameraSim.enableDrawWireframe(true);
-            photonCameraSim.enableRawStream(true);
-            photonCameraSim.enableProcessedStream(true);
-
-            ToClose.add(photonCameraSim);
-            visionSystemSim.addCamera(photonCameraSim, titanCamera.getRobotToCameraTransform());
-        }
-
-        @Override
-        public void updateInputs(final VisionIOInputs inputs) {
-            inputs.name = cameraName;
-            inputs.isConnected = photonCamera.isConnected();
-            inputs.stdDevFactor = stdDevFactor;
-            inputs.robotToCamera = robotToCamera;
-
-            inputs.resolutionWidthPx  = resolutionWidthPx;
-            inputs.resolutionHeightPx = resolutionHeightPx;
-
-            inputs.cameraMatrix = photonCamera.getCameraMatrix().orElse(EmptyCameraMatrix);
-            inputs.distortionCoeffs = photonCamera.getDistCoeffs().orElse(EmptyDistortionCoeffs);
-
-            // TODO kinda a nasty fix
-            final List<PhotonPipelineResult> pipelineResults = photonCamera.getAllUnreadResults();
-            final List<PhotonPipelineResult> filteredPipelineResults = new ArrayList<>();
-            for (final PhotonPipelineResult result : pipelineResults) {
-                final List<PhotonTrackedTarget> filteredTargets = result.targets.stream()
-                        .filter(target -> target.fiducialId == -1)
-                        .toList();
-
-                filteredPipelineResults.add(new PhotonPipelineResult(
-                        result.metadata,
-                        filteredTargets,
-                        result.multitagResult
-                ));
-            }
-
-            inputs.pipelineResults = filteredPipelineResults.toArray(PhotonPipelineResult[]::new);
-        }
-    }
-
     private final Swerve swerve;
     private final SwerveDriveOdometry visionIndependentOdometry;
     private final VisionSystemSim visionSystemSim;
 
     private final AprilTagFieldLayout aprilTagFieldLayout;
     private final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
-    private final Map<VisionIOCoralTrackingSim, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap;
 
     private final Map<VisionIO, VisionResult[]> visionResultsByVisionIO;
-    private final Map<VisionIO, CoralTrackingResult[]> coralTrackingResultsByVisionIO;
 
     public SimVisionRunner(
             final Swerve swerve,
             final SwerveDriveOdometry visionIndependentOdometry,
             final AprilTagFieldLayout aprilTagFieldLayout,
             final VisionSystemSim visionSystemSim,
-            final Pose3d[] simCoralPoses,
-            final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap,
-            final Map<VisionIOCoralTrackingSim, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap
+            final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap
     ) {
         this.swerve = swerve;
         this.visionIndependentOdometry = visionIndependentOdometry;
         this.visionSystemSim = visionSystemSim;
         this.visionSystemSim.addAprilTags(aprilTagFieldLayout);
 
-        for (final Pose3d simCoralPose : simCoralPoses) {
-            this.visionSystemSim.addVisionTargets("coral", new VisionTargetSim(
-                    simCoralPose,
-                    SimConstants.Vision.CORAL_TARGET_MODEL
-            ));
-        }
-
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
-        this.coralTrackingVisionIOInputsMap = coralTrackingVisionIOInputsMap;
 
         this.visionResultsByVisionIO = new HashMap<>();
-        this.coralTrackingResultsByVisionIO = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -244,38 +162,6 @@ public class SimVisionRunner implements PhotonVisionRunner {
                     visionResults
             );
         }
-
-        for (
-                final Map.Entry<VisionIOCoralTrackingSim, VisionIO.VisionIOInputs>
-                    photonVisionIOInputsEntry : coralTrackingVisionIOInputsMap.entrySet()
-        ) {
-            final VisionIOCoralTrackingSim visionIO = photonVisionIOInputsEntry.getKey();
-            final VisionIO.VisionIOInputs inputs = photonVisionIOInputsEntry.getValue();
-
-            visionIO.periodic();
-            visionIO.updateInputs(inputs);
-
-            Logger.processInputs(
-                    String.format("%s/%s", PhotonVision.PhotonLogKey, inputs.name),
-                    inputs
-            );
-
-            final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            final int nPipelineResults = pipelineResults.length;
-            final CoralTrackingResult[] coralTrackingResults = new CoralTrackingResult[nPipelineResults];
-
-            for (int i = 0; i < nPipelineResults; i++) {
-                final PhotonPipelineResult pipelineResult = pipelineResults[i];
-                final CoralTrackingResult coralTrackingResult = new CoralTrackingResult(
-                        inputs.robotToCamera,
-                        pipelineResult
-                );
-
-                coralTrackingResults[i] = coralTrackingResult;
-            }
-
-            coralTrackingResultsByVisionIO.put(visionIO, coralTrackingResults);
-        }
     }
 
     /**
@@ -298,17 +184,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public Map<? extends VisionIO, VisionIO.VisionIOInputs> getCoralTrackingVisionIOInputsMap() {
-        return coralTrackingVisionIOInputsMap;
-    }
-
-    @Override
     public VisionResult[] getVisionResults(final VisionIO visionIO) {
         return visionResultsByVisionIO.get(visionIO);
-    }
-
-    @Override
-    public CoralTrackingResult[] getCoralTrackingResults(final VisionIO visionIO) {
-        return coralTrackingResultsByVisionIO.get(visionIO);
     }
 }

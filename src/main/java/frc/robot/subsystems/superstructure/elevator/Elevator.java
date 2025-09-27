@@ -81,15 +81,15 @@ public class Elevator extends SubsystemBase {
         HP(0.065),
         ALGAE_GROUND(0),
         PROCESSOR(0),
-        UPPER_ALGAE(0.66330802),
-        LOWER_ALGAE(0.302354),
+        UPPER_ALGAE(0.652),
+        LOWER_ALGAE(0.384),
         AUTO_L4(0.96),
         L4(0.9925853),
         L3(0.45),
         L2(0.12),
         L1(0.1),
         NET(0.995),
-        TRANSFER_CORAL(0.06);
+        TRANSFER_CORAL(0.00);
 
         private final double positionGoalMeters;
         Goal(final double positionGoalMeters) {

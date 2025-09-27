@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.subsystems.vision.cameras.TitanCamera;
 import frc.robot.subsystems.vision.estimator.VisionPoseEstimator;
 import frc.robot.subsystems.vision.estimator.VisionResult;
-import frc.robot.subsystems.vision.result.CoralTrackingResult;
 import frc.robot.utils.closeables.ToClose;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
@@ -30,19 +29,15 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
 
     private final Map<VisionIOReplay, String> visionIONames;
     private final Map<VisionIOReplay, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
-    private final Map<VisionIOReplay, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap;
 
     private final Map<VisionIO, VisionResult[]> visionResultsByVisionIO;
-    private final Map<VisionIO, CoralTrackingResult[]> coralTrackingResultsByVisionIO;
 
     public ReplayVisionRunner(
             final AprilTagFieldLayout aprilTagFieldLayout,
-            final Map<VisionIOReplay, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap,
-            final Map<VisionIOReplay, VisionIO.VisionIOInputs> coralTrackingVisionIOInputsMap
+            final Map<VisionIOReplay, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap
     ) {
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
-        this.coralTrackingVisionIOInputsMap = coralTrackingVisionIOInputsMap;
 
         final Map<VisionIOReplay, String> visionIONames = new HashMap<>();
         for (final VisionIOReplay visionIOApriltagsReplay : apriltagVisionIOInputsMap.keySet()) {
@@ -51,7 +46,6 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
 
         this.visionIONames = visionIONames;
         this.visionResultsByVisionIO = new HashMap<>();
-        this.coralTrackingResultsByVisionIO = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -97,38 +91,6 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
                     visionResults
             );
         }
-
-        for (
-                final Map.Entry<VisionIOReplay, VisionIO.VisionIOInputs>
-                    coralTrackingVisionIOInputsEntry: coralTrackingVisionIOInputsMap.entrySet()
-        ) {
-            final VisionIOReplay visionIO = coralTrackingVisionIOInputsEntry.getKey();
-            final VisionIO.VisionIOInputs inputs = coralTrackingVisionIOInputsEntry.getValue();
-
-            visionIO.periodic();
-            visionIO.updateInputs(inputs);
-
-            Logger.processInputs(
-                    String.format("%s/%s", PhotonVision.PhotonLogKey, visionIONames.get(visionIO)),
-                    inputs
-            );
-
-            final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            final int nPipelineResults = pipelineResults.length;
-            final CoralTrackingResult[] coralTrackingResults = new CoralTrackingResult[nPipelineResults];
-
-            for (int i = 0; i < nPipelineResults; i++) {
-                final PhotonPipelineResult pipelineResult = pipelineResults[i];
-                final CoralTrackingResult coralTrackingResult = new CoralTrackingResult(
-                        inputs.robotToCamera,
-                        pipelineResult
-                );
-
-                coralTrackingResults[i] = coralTrackingResult;
-            }
-
-            coralTrackingResultsByVisionIO.put(visionIO, coralTrackingResults);
-        }
     }
 
     /**
@@ -144,17 +106,7 @@ public class ReplayVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public Map<? extends VisionIO, VisionIO.VisionIOInputs> getCoralTrackingVisionIOInputsMap() {
-        return coralTrackingVisionIOInputsMap;
-    }
-
-    @Override
     public VisionResult[] getVisionResults(final VisionIO visionIO) {
         return visionResultsByVisionIO.get(visionIO);
-    }
-
-    @Override
-    public CoralTrackingResult[] getCoralTrackingResults(final VisionIO visionIO) {
-        return coralTrackingResultsByVisionIO.get(visionIO);
     }
 }

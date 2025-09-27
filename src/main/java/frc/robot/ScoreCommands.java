@@ -585,12 +585,12 @@ public class ScoreCommands {
 
     public Command handoffCoral() {
         return Commands.deadline(
-                Commands.sequence(
-                    Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.HANDOFF)).withTimeout(2),
-                    Commands.parallel(
+                Commands.parallel(
                         intake.handoffCoral(),
-                        groundIntake.handoffCoral()
-                    ).until(intake.isCoralPresent.and(groundIntake.isCoralPresent.negate()))
+                        Commands.sequence(
+                                Commands.waitUntil(superstructure.atSetpoint(Superstructure.Goal.STOW)).withTimeout(2),
+                                groundIntake.handoffCoral().until(intake.isCoralPresent.and(groundIntake.isCoralPresent.negate()))
+                        )
                 ),
                 superstructure.toGoal(Superstructure.Goal.HANDOFF)
         ).withName("HandoffCoral");

@@ -371,20 +371,20 @@ public class Robot extends LoggedRobot {
 
         driverController.b().whileTrue(swerve.wheelRadiusCharacterization());
 
-        driverController.y(testEventLoop).whileTrue(
-                intakeArm.pivotVoltageSysIdCommand()
-                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-        );
+//        driverController.y(testEventLoop).whileTrue(
+//                intakeArm.pivotVoltageSysIdCommand()
+//                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+//        );
 
-        driverController.povRight().whileTrue(
+        driverController.y(testEventLoop).whileTrue(
                 groundIntakeArm.voltageSysIdCommand()
                         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
         );
 
-        driverController.povLeft().whileTrue(
-                groundIntake.coralVoltageSysIdCommand()
-                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
-        );
+//        driverController.povLeft().whileTrue(
+//                groundIntake.coralVoltageSysIdCommand()
+//                        .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming)
+//        );
 
 
 //        driverController.y(testEventLoop).whileTrue(
@@ -443,9 +443,9 @@ public class Robot extends LoggedRobot {
                 driverController.getHID(), GenericHID.RumbleType.kBothRumble, 0.5, 1)
         );
 
-        groundIntake.isCoralPresent.and(() -> scorePositionSupplier.get().level() != ScoreCommands.Level.GROUND_L1).onTrue(
-                scoreCommands.handoffCoral()
-        );
+//        groundIntake.isCoralPresent.and(() -> scorePositionSupplier.get().level() != ScoreCommands.Level.GROUND_L1).onTrue(
+//                scoreCommands.handoffCoral()
+//        );
 
         disabled.onTrue(swerve.stopCommand());
         teleopEnabled.onTrue(superstructure.forceGoal(Superstructure.Goal.STOW));
@@ -523,12 +523,9 @@ public class Robot extends LoggedRobot {
                 ).withName("SwerveSpeedSlow"));
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
-                scoreCommands.groundIntake(
-                        driverController::getLeftY,
-                        driverController::getLeftX,
-                        driverController::getRightX,
-                        IsRedAlliance,
-                        () -> photonVision.getBestCoralPose(swerve::getPose, swerve::getPose)
+                Commands.parallel(
+                        superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE),
+                        groundIntake.intakeCoralGround()
                 )
         );
 
@@ -546,6 +543,8 @@ public class Robot extends LoggedRobot {
                 .onFalse(scoreCommands.climb());
 
         this.driverController.start().whileTrue(scoreCommands.processor());
+
+        this.driverController.povRight().whileTrue(superstructure.toGoal(Superstructure.Goal.HANDOFF));
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))
