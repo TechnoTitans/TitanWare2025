@@ -33,7 +33,7 @@ public class Superstructure extends VirtualSubsystem {
         ALGAE_GROUND(Elevator.Goal.ALGAE_GROUND, ElevatorArm.Goal.ALGAE_GROUND, IntakeArm.Goal.ALGAE_GROUND, GroundIntakeArm.Goal.CLIMB),
         UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.Goal.UPPER_ALGAE, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.LOWER_ALGAE, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
-        HP(Elevator.Goal.HP, ElevatorArm.Goal.HP, IntakeArm.Goal.HP, GroundIntakeArm.Goal.STOW),
+        HP(Elevator.Goal.HP, ElevatorArm.Goal.HP, IntakeArm.Goal.HP, GroundIntakeArm.Goal.HP),
         READY_PROCESSOR(Elevator.Goal.PROCESSOR, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW, GroundIntakeArm.Goal.STOW),
         PROCESSOR(Elevator.Goal.PROCESSOR, ElevatorArm.Goal.PROCESSOR, IntakeArm.Goal.PROCESSOR, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.L1),
@@ -44,7 +44,7 @@ public class Superstructure extends VirtualSubsystem {
         ALIGN_L3(Elevator.Goal.STOW, ElevatorArm.Goal.L3, IntakeArm.Goal.L3, GroundIntakeArm.Goal.STOW),
         L4(Elevator.Goal.L4, ElevatorArm.Goal.L4, IntakeArm.Goal.L4, GroundIntakeArm.Goal.STOW),
         ALIGN_AUTO_L4(Elevator.Goal.STOW, ElevatorArm.Goal.AUTO_L4, IntakeArm.Goal.AUTO_L4, GroundIntakeArm.Goal.STOW),
-        AUTO_L4(Elevator.Goal.AUTO_L4, ElevatorArm.Goal.AUTO_L4, IntakeArm.Goal.AUTO_L4, GroundIntakeArm.Goal.STOW),
+        AUTO_L4(Elevator.Goal.AUTO_L4, ElevatorArm.Goal.AUTO_L4, IntakeArm.Goal.AUTO_L4, GroundIntakeArm.Goal.HP),
         ALIGN_L4(Elevator.Goal.STOW, ElevatorArm.Goal.L4, IntakeArm.Goal.L4, GroundIntakeArm.Goal.STOW),
         NET(Elevator.Goal.NET, ElevatorArm.Goal.STOW, IntakeArm.Goal.NET, GroundIntakeArm.Goal.STOW),
         ALIGN_NET(Elevator.Goal.STOW, ElevatorArm.Goal.STOW, IntakeArm.Goal.NET, GroundIntakeArm.Goal.STOW),
@@ -178,13 +178,16 @@ public class Superstructure extends VirtualSubsystem {
             final Translation2d elevatorEnd =
                     new Translation2d(0, componentPoses[3].getRotation().toRotation2d())
                             .plus(
-                                    new Translation2d(componentPoses[3].getX(), componentPoses[3].getZ()));
+                                    new Translation2d(componentPoses[3].getX(), componentPoses[3].getZ())
+                            );
 
             Logger.recordOutput("ElevatorTranslation", elevatorEnd);
 
             final Translation2d groundIntakeEnd =
-                    new Translation2d(-0.145, SimConstants.GroundIntakeArm.LENGTH_METERS)
-                            .rotateBy(groundIntakeArm.getPivotPosition()).plus(new Translation2d(0.356, 0));
+                    new Translation2d(0, componentPoses[4].getRotation().toRotation2d())
+                            .plus(
+                                    new Translation2d(componentPoses[4].getX(), componentPoses[4].getZ())
+                            );
 
             Logger.recordOutput(LogKey + "/Poses/GroundEnd", new Pose3d(groundIntakeEnd.getX(), 0, groundIntakeEnd.getY(), Rotation3d.kZero));
             Logger.recordOutput(LogKey + "/Poses/ElevatorEnd", new Pose3d(elevatorEnd.getX(), 0, elevatorEnd.getY(), Rotation3d.kZero));
