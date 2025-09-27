@@ -1,17 +1,18 @@
 package frc.robot.subsystems.superstructure;
 
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.struct.Rotation2dStruct;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.constants.SimConstants;
 import frc.robot.subsystems.superstructure.distal.IntakeArm;
 import frc.robot.subsystems.superstructure.elevator.Elevator;
 import frc.robot.subsystems.superstructure.ground.GroundIntakeArm;
 import frc.robot.subsystems.superstructure.proximal.ElevatorArm;
+import frc.robot.utils.geometry.Geometry;
 import frc.robot.utils.solver.SuperstructureSolver;
 import frc.robot.utils.subsystems.VirtualSubsystem;
 import org.littletonrobotics.junction.Logger;
@@ -33,6 +34,7 @@ public class Superstructure extends VirtualSubsystem {
         UPPER_ALGAE(Elevator.Goal.UPPER_ALGAE, ElevatorArm.Goal.UPPER_ALGAE, IntakeArm.Goal.UPPER_ALGAE, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         LOWER_ALGAE(Elevator.Goal.LOWER_ALGAE, ElevatorArm.Goal.LOWER_ALGAE, IntakeArm.Goal.LOWER_ALGAE, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         HP(Elevator.Goal.HP, ElevatorArm.Goal.HP, IntakeArm.Goal.HP, GroundIntakeArm.Goal.STOW),
+        READY_PROCESSOR(Elevator.Goal.PROCESSOR, ElevatorArm.Goal.STOW, IntakeArm.Goal.STOW, GroundIntakeArm.Goal.STOW),
         PROCESSOR(Elevator.Goal.PROCESSOR, ElevatorArm.Goal.PROCESSOR, IntakeArm.Goal.PROCESSOR, GroundIntakeArm.Goal.INTAKE_FROM_GROUND),
         L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.L1),
         ALIGN_L1(Elevator.Goal.L1, ElevatorArm.Goal.L1, IntakeArm.Goal.L1, GroundIntakeArm.Goal.STOW),
@@ -121,6 +123,8 @@ public class Superstructure extends VirtualSubsystem {
     private final Trigger desiredGoalNotStow;
     private final Trigger atSuperstructureSetpoint;
 
+    private final Trigger willGroundCollide;
+
     public final Trigger unsafeToDrive;
 
     public Superstructure(
@@ -161,6 +165,34 @@ public class Superstructure extends VirtualSubsystem {
                     && !(runningGoal == Goal.L1 && desiredGoal == Goal.STOW);
         });
         this.desiresDownwardsMotion = desiresUpwardsMotion.negate();
+
+        this.willGroundCollide = new Trigger(() -> {
+
+            final Pose3d[] componentPoses = SuperstructureSolver.calculatePoses(
+                    Rotation2d.fromRotations(desiredGoal.elevatorArmGoal.getPivotPositionGoalRots()),
+                    desiredGoal.elevatorGoal.getPositionGoalMeters(),
+                    Rotation2d.fromRotations(desiredGoal.intakeArmGoal.getPivotPositionGoalRots()),
+                    Rotation2d.fromRotations(desiredGoal.groundIntakeArmGoal.getPivotPositionGoalRots())
+            );
+
+            final Translation2d elevatorEnd =
+                    new Translation2d(0, componentPoses[3].getRotation().toRotation2d())
+                            .plus(
+                                    new Translation2d(componentPoses[3].getX(), componentPoses[3].getZ()));
+
+            Logger.recordOutput("ElevatorTranslation", elevatorEnd);
+
+            final Translation2d groundIntakeEnd =
+                    new Translation2d(-0.145, SimConstants.GroundIntakeArm.LENGTH_METERS)
+                            .rotateBy(groundIntakeArm.getPivotPosition()).plus(new Translation2d(0.356, 0));
+
+            Logger.recordOutput(LogKey + "/Poses/GroundEnd", new Pose3d(groundIntakeEnd.getX(), 0, groundIntakeEnd.getY(), Rotation3d.kZero));
+            Logger.recordOutput(LogKey + "/Poses/ElevatorEnd", new Pose3d(elevatorEnd.getX(), 0, elevatorEnd.getY(), Rotation3d.kZero));
+
+            return Geometry.checkSegmentInteference(
+                    new Translation2d(-0.267, 0), elevatorEnd, new Translation2d(0.356, 0), groundIntakeEnd
+            );
+        });
 
         final Command upwardsGoalChange = upwardsGoalChange();
         desiredGoalChanged.and(allowedToChangeGoal).and(desiresUpwardsMotion)

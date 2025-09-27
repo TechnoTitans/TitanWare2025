@@ -85,8 +85,8 @@ public interface SimConstants {
     }
 
     interface GroundIntakeArm {
-        double LENGTH_METERS = Units.inchesToMeters(12.5);
-        double WIDTH_METERS = Units.inchesToMeters(18.45);
+        double LENGTH_METERS = Units.inchesToMeters(12.6);
+        double WIDTH_METERS = Units.inchesToMeters(18);
 
         double RETRACTED_MOI_KG_M_SQUARED = 0.0176;
 
