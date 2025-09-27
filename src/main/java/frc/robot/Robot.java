@@ -523,10 +523,7 @@ public class Robot extends LoggedRobot {
                 ).withName("SwerveSpeedSlow"));
 
         this.driverController.leftTrigger(0.5, teleopEventLoop).whileTrue(
-                Commands.parallel(
-                        superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE),
-                        groundIntake.intakeCoralGround()
-                )
+                scoreCommands.groundIntake()
         );
 
         this.driverController.rightTrigger(0.5, teleopEventLoop)
