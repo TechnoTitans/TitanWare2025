@@ -189,7 +189,34 @@ public class ScoreCommands {
         ).withName("IntakeFromClosestCoralStation");
     }
 
-    final Command groundIntake(
+    final Command groundIntake() {
+
+        final BooleanSupplier safeToIntake = new Trigger(() -> {
+            final Pose2d swervePose = swerve.getPose();
+            final Pose2d closestReefFace = swervePose.nearest(
+                    new ArrayList<>(FieldConstants.getReefCenterPoses().values())
+            );
+
+            final boolean atSafeDistance = swervePose.getTranslation()
+                    .getDistance(closestReefFace.getTranslation()) >= AllowableDistanceFromREEFToGroundAlign;
+
+            final double rotationOfReefRelativeToRobot =
+                    closestReefFace.relativeTo(swervePose).getRotation().plus(Rotation2d.fromRadians(Math.PI)).getRadians();
+
+            final boolean facingReef = rotationOfReefRelativeToRobot < Math.PI/2
+                    && rotationOfReefRelativeToRobot > -Math.PI/2;
+
+            return (atSafeDistance) || (!atSafeDistance && !facingReef);
+        });
+
+        return Commands.parallel(
+                superstructure.toGoal(Superstructure.Goal.GROUND_INTAKE)
+                        .onlyIf(superstructure.unsafeToDrive.negate()),
+                groundIntake.intakeCoralGround()
+        ).onlyWhile(safeToIntake);
+    }
+
+    final Command groundIntakeWithAutoAlign(
             final DoubleSupplier leftStickYInput,
             final DoubleSupplier leftStickXInput,
             final DoubleSupplier rightStickXInput,
