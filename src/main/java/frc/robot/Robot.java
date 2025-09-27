@@ -544,7 +544,17 @@ public class Robot extends LoggedRobot {
 
         this.driverController.start().whileTrue(scoreCommands.processor());
 
-        this.driverController.povRight().whileTrue(superstructure.toGoal(Superstructure.Goal.HANDOFF));
+        this.driverController.povLeft().onTrue(
+                Commands.runOnce(() -> this.shouldScoreL1Ground = false)
+        );
+
+        this.driverController.povRight().onTrue(
+                Commands.runOnce(() -> this.shouldScoreL1Ground = true)
+        );
+
+        this.driverController.povDown().onTrue(
+                scoreCommands.handoffCoral()
+        );
 
         this.coController.rightBumper(teleopEventLoop)
                 .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))
@@ -583,13 +593,5 @@ public class Robot extends LoggedRobot {
         this.coController.y(teleopEventLoop).whileTrue(scoreCommands.intakeUpperAlgae());
 
         this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
-
-        this.driverController.povLeft().onTrue(
-                Commands.runOnce(() -> this.shouldScoreL1Ground = false)
-        );
-
-        this.driverController.povRight().onTrue(
-                Commands.runOnce(() -> this.shouldScoreL1Ground = true)
-        );
     }
 }
