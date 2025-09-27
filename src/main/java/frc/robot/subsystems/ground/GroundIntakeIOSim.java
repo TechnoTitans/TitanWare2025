@@ -84,7 +84,7 @@ public class GroundIntakeIOSim implements GroundIntakeIO {
         this.rollerCANRangeDistance = coralCANRange.getDistance(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                RefreshAll.CANBus.CANIVORE,
                 rollerPosition,
                 rollerVelocity,
                 rollerVoltage,

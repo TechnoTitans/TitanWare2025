@@ -21,7 +21,6 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import frc.robot.constants.HardwareConstants;
 import frc.robot.constants.SimConstants;
-import frc.robot.utils.MoreDCMotor;
 import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.RefreshAll;
@@ -102,7 +101,7 @@ public class GroundIntakeArmIOSim implements GroundIntakeArmIO {
         this.pivotCANCoderVelocity = pivotCANCoder.getVelocity(false);
 
         RefreshAll.add(
-                RefreshAll.CANBus.RIO,
+                RefreshAll.CANBus.CANIVORE,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,
