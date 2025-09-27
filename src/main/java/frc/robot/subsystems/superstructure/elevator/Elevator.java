@@ -80,7 +80,7 @@ public class Elevator extends SubsystemBase {
         CLIMB_DOWN(0.08925),
         HP(0.065),
         ALGAE_GROUND(0),
-        PROCESSOR(0),
+        PROCESSOR(0.09),
         UPPER_ALGAE(0.66330802),
         LOWER_ALGAE(0.302354),
         AUTO_L4(0.96),

@@ -541,17 +541,20 @@ public class ScoreCommands {
                 )
         );
 
-        return Commands.deadline(
-                Commands.sequence(
-                        swerve.runToPose(alignPoseSupplier)
-                                .until(atAlignProcessor),
-                        swerve.driveToPose(FieldConstants::getProcessorScoringPose),
-                        Commands.parallel(
-                                swerve.runWheelXCommand(),
-                                intake.scoreAlgae()
-                        )
-                ),
-                superstructure.toGoal(Superstructure.Goal.PROCESSOR)
+        return Commands.sequence(
+                superstructure.toGoal(Superstructure.Goal.READY_PROCESSOR),
+                Commands.deadline(
+                        Commands.sequence(
+                                swerve.runToPose(alignPoseSupplier)
+                                        .until(atAlignProcessor),
+                                swerve.driveToPose(FieldConstants::getProcessorScoringPose),
+                                Commands.parallel(
+                                        swerve.runWheelXCommand(),
+                                        intake.scoreAlgae()
+                                )
+                        ),
+                        superstructure.toGoal(Superstructure.Goal.PROCESSOR)
+                )
         );
     }
 
