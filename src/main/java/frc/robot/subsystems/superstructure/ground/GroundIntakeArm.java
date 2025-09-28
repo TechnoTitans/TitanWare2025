@@ -24,8 +24,8 @@ import static edu.wpi.first.units.Units.*;
 
 public class GroundIntakeArm extends SubsystemBase {
     protected static final String LogKey = "GroundIntakeArm";
-    private static final double PositionToleranceRots = 0.1;
-    private static final double VelocityToleranceRotsPerSec = 0.1;
+    private static final double PositionToleranceRots = 0.2;
+    private static final double VelocityToleranceRotsPerSec = 0.2;
 
     private final GroundIntakeArmIO groundIntakeArmIO;
     private final GroundIntakeArmIOInputsAutoLogged inputs;

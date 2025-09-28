@@ -85,10 +85,10 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
         pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 2.1;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
-        pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 80;
+        pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 50;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        pivotMotorConfig.CurrentLimits.SupplyCurrentLimit = 50;
-        pivotMotorConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        pivotMotorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+        pivotMotorConfig.CurrentLimits.SupplyCurrentLowerLimit = 30;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;

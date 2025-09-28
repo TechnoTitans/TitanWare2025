@@ -20,7 +20,7 @@ public class FieldConstants {
     public static final Transform2d AUTO_SCORING_DISTANCE_OFFSET =
             new Transform2d(Units.inchesToMeters(7.5), 0, Rotation2d.kZero);
     public static final Transform2d ALGAE_DESCORE_DISTANCE_OFFSET =
-            new Transform2d(Units.inchesToMeters(25), 0, Rotation2d.kPi);
+            new Transform2d(Units.inchesToMeters(30), 0, Rotation2d.kPi);
     public static final Transform2d ALGAE_SAFE_REEF_OFFSET =
             new Transform2d(-Units.inchesToMeters(18), 0, Rotation2d.kZero);
     public static final Transform2d PROCESSOR_DISTANCE_OFFSET =

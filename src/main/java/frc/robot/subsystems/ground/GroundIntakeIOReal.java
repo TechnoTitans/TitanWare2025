@@ -67,7 +67,7 @@ public class GroundIntakeIOReal implements GroundIntakeIO {
     @Override
     public void config() {
         final CANrangeConfiguration CANRangeConfiguration = new CANrangeConfiguration();
-        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.LongRangeUserFreq;
+        CANRangeConfiguration.ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz;
         CANRangeConfiguration.ToFParams.UpdateFrequency = 50;
         CANRangeConfiguration.FovParams.FOVRangeX = 7;
         CANRangeConfiguration.FovParams.FOVRangeY = 7;
@@ -76,7 +76,7 @@ public class GroundIntakeIOReal implements GroundIntakeIO {
         final TalonFXConfiguration rollerConfiguration = new TalonFXConfiguration();
         rollerConfiguration.Slot0 = new Slot0Configs()
 //                .withKS(4.0212)
-                .withKV(1.5);
+                .withKV(1);
 //                .withKA(0.22711)
 //                .withKP(100);
         rollerConfiguration.CurrentLimits.StatorCurrentLimit = 40;

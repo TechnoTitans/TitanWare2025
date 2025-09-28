@@ -104,7 +104,7 @@ public class GroundIntake extends SubsystemBase {
     public Command intakeCoralGround() {
         return Commands.sequence(
                 runOnce(() -> this.coralIntaking = true),
-                toRollerVelocity(20) //TODO: Change Number,
+                toRollerVelocity(60) //TODO: Change Number,
         )
                 .finallyDo(() -> this.coralIntaking = false)
                 .withName("IntakeCoralGround");
