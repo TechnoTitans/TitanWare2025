@@ -298,19 +298,17 @@ public class Autos {
         routine.active().onTrue(runStartingTrajectory(startToReef));
 
         final ReefState.Branch fourLeftL4 = new ReefState.Branch(Reef.Face.FOUR, Reef.Side.LEFT, Reef.Level.AUTO_L4);
+        startToReef.active().whileTrue(
+                readyScoreAtLevel(fourLeftL4)
+        );
 
-        startToReef.active().and(farEnoughAwayFromHP).onTrue(
-                Commands.parallel(
-                        readyScoreAtLevel(fourLeftL4)
+        startToReef.done().onTrue(
+                Commands.sequence(
+                        scoreAtLevel(fourLeftL4)
+                                .onlyIf(gamepieceState.hasCoral)
                                 .asProxy(),
-                        Commands.sequence(
-                                scoreAtLevel(fourLeftL4)
-                                        .onlyIf(gamepieceState.hasCoral)
-                                        .asProxy(),
-                                reef4ToRightHP.cmd()
-                                        .asProxy()
-                        )
-
+                        reef4ToRightHP.cmd()
+                                .asProxy()
                 )
         );
 
@@ -398,6 +396,7 @@ public class Autos {
         routine.active().onTrue(runStartingTrajectory(startToReef));
 
         final ReefState.Branch twoRightL4 = new ReefState.Branch(Reef.Face.TWO, Reef.Side.RIGHT, Reef.Level.AUTO_L4);
+
         startToReef.active().whileTrue(
                 readyScoreAtLevel(twoRightL4)
         );
@@ -418,24 +417,21 @@ public class Autos {
         reef2ToLeftHP.done().onTrue(
                 Commands.sequence(
                         driveIntoCoralStation(ScoreCommands.CoralStation.LEFT),
-                        Commands.parallel(
-                                leftHPToReef1Right.cmd(),
-                                Commands.sequence(
-                                        Commands.waitUntil(farEnoughAwayFromHP)
-                                                .withTimeout(0.3),
-                                        readyScoreAtLevel(oneRightL4)
-                                )
-                        )
+                        leftHPToReef1Right.cmd()
                 )
         );
 
-        leftHPToReef1Right.done().onTrue(
-                Commands.sequence(
-                        scoreAtLevel(oneRightL4)
-                                .onlyIf(gamepieceState.hasCoral)
+        leftHPToReef1Right.active().and(farEnoughAwayFromHP).onTrue(
+                Commands.parallel(
+                        readyScoreAtLevel(oneRightL4)
                                 .asProxy(),
-                        reef1ToLeftHP.cmd()
-                                .asProxy()
+                        Commands.sequence(
+                                scoreAtLevel(oneRightL4)
+                                        .onlyIf(gamepieceState.hasCoral)
+                                        .asProxy(),
+                                reef1ToLeftHP.cmd()
+                                        .asProxy()
+                        )
                 )
         );
 
@@ -445,24 +441,22 @@ public class Autos {
         reef1ToLeftHP.done().onTrue(
                 Commands.sequence(
                         driveIntoCoralStation(ScoreCommands.CoralStation.LEFT),
-                        Commands.parallel(
-                                leftHPToReef1Left.cmd(),
-                                Commands.sequence(
-                                        Commands.waitUntil(farEnoughAwayFromHP)
-                                                .withTimeout(0.3),
-                                        readyScoreAtLevel(oneLeftL4)
-                                )
-                        )
+                        leftHPToReef1Left.cmd()
                 )
         );
 
-        leftHPToReef1Left.done().onTrue(
-                Commands.sequence(
-                        scoreAtLevel(oneLeftL4)
-                                .onlyIf(gamepieceState.hasCoral)
+        leftHPToReef1Left.active().and(farEnoughAwayFromHP).onTrue(
+                Commands.parallel(
+                        readyScoreAtLevel(oneLeftL4)
                                 .asProxy(),
-                        moveEndOfAuto.cmd()
-                                .asProxy()
+                        Commands.sequence(
+                                scoreAtLevel(oneLeftL4)
+                                        .onlyIf(gamepieceState.hasCoral)
+                                        .asProxy(),
+                                moveEndOfAuto.cmd()
+                                        .asProxy()
+
+                        )
                 )
         );
 
