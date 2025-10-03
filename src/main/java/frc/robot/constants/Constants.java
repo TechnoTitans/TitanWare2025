@@ -9,7 +9,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 
 public interface Constants {
-    RobotMode CURRENT_MODE = RobotMode.REAL;
+    RobotMode CURRENT_MODE = RobotMode.SIM;
     CompetitionType CURRENT_COMPETITION_TYPE = CompetitionType.COMPETITION;
     double LOOP_PERIOD_SECONDS = 0.02;
 
@@ -44,9 +44,9 @@ public interface Constants {
                 new Translation3d(Units.inchesToMeters(-11.521), Units.inchesToMeters(10.667), Units.inchesToMeters(8.105)),
                 new Rotation3d(0, Units.degreesToRadians(-5), Units.degreesToRadians(-170))
         );
-        Transform3d ROBOT_TO_FL_BOTTOM_APRILTAG = new Transform3d(
-                new Translation3d(Units.inchesToMeters(1.333), Units.inchesToMeters(11.136), Units.inchesToMeters(10.166)),
-                new Rotation3d(0, 0, Units.degreesToRadians(-30))
+        Transform3d ROBOT_TO_FL_APRILTAG = new Transform3d(
+                new Translation3d(Units.inchesToMeters(11.230), Units.inchesToMeters(10.529), Units.inchesToMeters(8.261)),
+                new Rotation3d(0, Units.degreesToRadians(-5), Units.degreesToRadians(-10))
         );
 
         /**
