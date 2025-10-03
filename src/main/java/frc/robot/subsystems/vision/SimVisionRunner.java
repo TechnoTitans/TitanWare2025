@@ -19,10 +19,9 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 public class SimVisionRunner implements PhotonVisionRunner {
@@ -80,6 +79,71 @@ public class SimVisionRunner implements PhotonVisionRunner {
         }
     }
 
+    public static class VisionIOCoralTrackingSim implements VisionIO {
+        public final PhotonCamera photonCamera;
+        public final String cameraName;
+
+        public final double stdDevFactor;
+        public final Transform3d robotToCamera;
+
+        private final int resolutionWidthPx;
+        private final int resolutionHeightPx;
+
+        public VisionIOCoralTrackingSim(final TitanCamera titanCamera, final VisionSystemSim visionSystemSim) {
+            this.photonCamera = titanCamera.getPhotonCamera();
+            this.cameraName = photonCamera.getName();
+
+            this.stdDevFactor = titanCamera.getStdDevFactor();
+            this.robotToCamera = titanCamera.getRobotToCameraTransform();
+            final CameraProperties.Resolution resolution = titanCamera
+                    .getCameraProperties()
+                    .getFirstResolution();
+            this.resolutionWidthPx = resolution.getWidth();
+            this.resolutionHeightPx = resolution.getHeight();
+
+            final PhotonCameraSim photonCameraSim =
+                    new PhotonCameraSim(titanCamera.getPhotonCamera(), titanCamera.toSimCameraProperties());
+
+            photonCameraSim.enableDrawWireframe(true);
+            photonCameraSim.enableRawStream(true);
+            photonCameraSim.enableProcessedStream(true);
+
+            ToClose.add(photonCameraSim);
+            visionSystemSim.addCamera(photonCameraSim, titanCamera.getRobotToCameraTransform());
+        }
+
+        @Override
+        public void updateInputs(final VisionIOInputs inputs) {
+            inputs.name = cameraName;
+            inputs.isConnected = photonCamera.isConnected();
+            inputs.stdDevFactor = stdDevFactor;
+            inputs.robotToCamera = robotToCamera;
+
+            inputs.resolutionWidthPx  = resolutionWidthPx;
+            inputs.resolutionHeightPx = resolutionHeightPx;
+
+            inputs.cameraMatrix = photonCamera.getCameraMatrix().orElse(EmptyCameraMatrix);
+            inputs.distortionCoeffs = photonCamera.getDistCoeffs().orElse(EmptyDistortionCoeffs);
+
+            // TODO kinda a nasty fix
+            final List<PhotonPipelineResult> pipelineResults = photonCamera.getAllUnreadResults();
+            final List<PhotonPipelineResult> filteredPipelineResults = new ArrayList<>();
+            for (final PhotonPipelineResult result : pipelineResults) {
+                final List<PhotonTrackedTarget> filteredTargets = result.targets.stream()
+                        .filter(target -> target.fiducialId == -1)
+                        .toList();
+
+                filteredPipelineResults.add(new PhotonPipelineResult(
+                        result.metadata,
+                        filteredTargets,
+                        result.multitagResult
+                ));
+            }
+
+            inputs.pipelineResults = filteredPipelineResults.toArray(PhotonPipelineResult[]::new);
+        }
+    }
+
     private final Swerve swerve;
     private final SwerveDriveOdometry visionIndependentOdometry;
     private final VisionSystemSim visionSystemSim;
@@ -87,7 +151,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
     private final AprilTagFieldLayout aprilTagFieldLayout;
     private final Map<VisionIOApriltagsSim, VisionIO.VisionIOInputs> apriltagVisionIOInputsMap;
 
-    private final Map<VisionIO, VisionResult> visionResults;
+    private final Map<VisionIO, VisionResult[]> visionResultsByVisionIO;
 
     public SimVisionRunner(
             final Swerve swerve,
@@ -104,7 +168,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
         this.aprilTagFieldLayout = aprilTagFieldLayout;
         this.apriltagVisionIOInputsMap = apriltagVisionIOInputsMap;
 
-        this.visionResults = new HashMap<>();
+        this.visionResultsByVisionIO = new HashMap<>();
     }
 
     @SuppressWarnings("DuplicatedCode")
@@ -144,7 +208,11 @@ public class SimVisionRunner implements PhotonVisionRunner {
             );
 
             final PhotonPipelineResult[] pipelineResults = inputs.pipelineResults;
-            for (final PhotonPipelineResult pipelineResult : pipelineResults) {
+            final int nPipelineResults = pipelineResults.length;
+            final VisionResult[] visionResults = new VisionResult[pipelineResults.length];
+
+            for (int i = 0; i < nPipelineResults; i++) {
+                final PhotonPipelineResult pipelineResult = pipelineResults[i];
                 final VisionResult visionResult = VisionPoseEstimator.update(
                         aprilTagFieldLayout,
                         poseAtTimestamp,
@@ -152,11 +220,13 @@ public class SimVisionRunner implements PhotonVisionRunner {
                         pipelineResult
                 );
 
-                visionResults.put(
-                        visionIO,
-                        visionResult
-                );
+                visionResults[i] = visionResult;
             }
+
+            visionResultsByVisionIO.put(
+                    visionIO,
+                    visionResults
+            );
         }
     }
 
@@ -180,7 +250,7 @@ public class SimVisionRunner implements PhotonVisionRunner {
     }
 
     @Override
-    public VisionResult getVisionResult(final VisionIO visionIO) {
-        return visionResults.get(visionIO);
+    public VisionResult[] getVisionResults(final VisionIO visionIO) {
+        return visionResultsByVisionIO.get(visionIO);
     }
 }

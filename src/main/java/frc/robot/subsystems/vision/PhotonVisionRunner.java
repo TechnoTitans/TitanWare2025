@@ -16,7 +16,7 @@ public interface PhotonVisionRunner {
         return Map.of();
     }
 
-    default VisionResult getVisionResult(final VisionIO visionIO) {
+    default VisionResult[] getVisionResults(final VisionIO visionIO) {
         return null;
     }
 }
