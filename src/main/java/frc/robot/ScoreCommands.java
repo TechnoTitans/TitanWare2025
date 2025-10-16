@@ -431,6 +431,25 @@ public class ScoreCommands {
                 .withName("ScoreNetFlingFacingBarge");
     }
 
+    public Command scoreManualBarge() {
+
+        final Container<Superstructure.Goal> superstructureGoal = Container.empty();
+
+
+        return Commands.sequence(
+                superstructureGoal.set(Superstructure.Goal.STOW),
+                Commands.deadline(
+                        Commands.sequence(
+                                superstructureGoal.set(Superstructure.Goal.ALIGN_NET),
+                                superstructureGoal.set(Superstructure.Goal.NET),
+                                Commands.waitUntil(superstructure.extendedBeyond(0.47)),
+                                intake.netAlgae()
+                        ),
+                        superstructure.toGoal(superstructureGoal)
+                )
+        );
+    }
+
     public Command readyScoreProcessor() {
         return superstructure.runGoal(Superstructure.Goal.PROCESSOR)
                 .withName("ReadyScoreProcessor");

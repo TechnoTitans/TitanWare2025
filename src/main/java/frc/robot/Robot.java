@@ -495,13 +495,25 @@ public class Robot extends LoggedRobot {
         this.driverController.x(teleopEventLoop).whileTrue(scoreCommands.scoreBarge());
 
         this.driverController.b(teleopEventLoop)
-                .whileTrue(scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX))
+                .whileTrue(
+                        Commands.sequence(
+                                intake.scoreCoral(() -> Intake.ScoreMode.RUN_UNTIL_NO_CORAL)
+                                        .onlyIf(gamePieceState.hasCoral),
+                                scoreCommands.readyClimb(driverController::getLeftY, driverController::getLeftX)
+                        )
+                )
                 .onFalse(scoreCommands.climb());
 
         this.driverController.start().whileTrue(scoreCommands.processor());
 
         this.coController.rightBumper(teleopEventLoop)
-                .whileTrue(superstructure.runGoal(Superstructure.Goal.CLIMB))
+                .whileTrue(
+                        Commands.sequence(
+                                intake.scoreCoral(() -> Intake.ScoreMode.RUN_UNTIL_NO_CORAL)
+                                        .onlyIf(gamePieceState.hasCoral),
+                                superstructure.runGoal(Superstructure.Goal.CLIMB)
+                        )
+                )
                 .onFalse(superstructure.toInstantGoal(Superstructure.Goal.CLIMB_DOWN));
 
         this.coController.leftBumper(teleopEventLoop).whileTrue(intake.scoreAlgae());
@@ -533,5 +545,9 @@ public class Robot extends LoggedRobot {
         this.coController.y(teleopEventLoop).whileTrue(scoreCommands.intakeUpperAlgae());
 
         this.coController.a(teleopEventLoop).whileTrue(scoreCommands.intakeLowerAlgae());
+
+//        this.coController.povUp().whileTrue(scoreCommands.scoreManualBarge());
+
+        this.coController.povDown().whileTrue(intake.ejectCoral());
     }
 }
