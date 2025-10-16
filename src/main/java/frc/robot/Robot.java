@@ -70,7 +70,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final Swerve swerve = new Swerve(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             HardwareConstants.GYRO,
             SwerveConstants.FrontLeftModule,
             SwerveConstants.FrontRightModule,
@@ -79,7 +79,7 @@ public class Robot extends LoggedRobot {
     );
 
     public final PhotonVision photonVision = new PhotonVision(
-            Constants.CURRENT_MODE,
+            Constants.RobotMode.DISABLED,
             swerve,
             swerve.getPoseEstimator()
     );
