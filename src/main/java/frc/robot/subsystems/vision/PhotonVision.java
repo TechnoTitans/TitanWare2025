@@ -360,7 +360,7 @@ public class PhotonVision extends VirtualSubsystem {
     public void resetPose(final Pose2d robotPose) {
         poseEstimator.resetPose(robotPose);
         runner.resetRobotPose(GyroUtils.robotPose2dToPose3dWithGyro(
-                new Pose2d(robotPose.getTranslation(), robotPose.getRotation()),
+                robotPose,
                 new Rotation3d(
                         swerve.getRoll().getRadians(),
                         swerve.getPitch().getRadians(),

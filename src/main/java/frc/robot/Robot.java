@@ -429,11 +429,14 @@ public class Robot extends LoggedRobot {
         );
 
         disabled.onTrue(swerve.stopCommand());
-        teleopEnabled.onTrue(superstructure.forceGoal(Superstructure.Goal.STOW));
+        teleopEnabled
+                .onTrue(superstructure.forceGoal(Superstructure.Goal.STOW));
+//                .onTrue(elevator.toVoltage(() -> 4).withTimeout(0.1));
     }
 
     public void configureAutos() {
-        autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
+//        autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autoChooser.getSelected().cmd()));
+        autonomousEnabled.whileTrue(Commands.deferredProxy(() -> autos.threePieceCage1().cmd()));
 
         autoChooser.addAutoOption(new AutoOption(
                 "ThreePieceCage1",
@@ -507,12 +510,15 @@ public class Robot extends LoggedRobot {
 //                scoreCommands.intakeFacingClosestCoralStation(driverController::getLeftY, driverController::getLeftX)
 //        );
 
-//        this.driverController.a(teleopEventLoop)
-//                .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
-
         this.driverController.a(teleopEventLoop)
-                .whileTrue(scoreCommands.groundIntake())
-                .whileFalse(scoreCommands.stowIfNoGroundCoral());
+                .whileTrue(scoreCommands.scoreAtFixedPosition(scorePositionSupplier));
+
+//        this.driverController.a(teleopEventLoop)
+//                .whileTrue(scoreCommands.groundIntake())
+//                .whileFalse(scoreCommands.stowIfNoGroundCoral());
+//        this.driverController.a(teleopEventLoop)
+//                .whileTrue(elevator.runPositionMetersCommand(() -> 0.45))
+//                .onFalse(elevator.runPositionMetersCommand(() -> 0));
 
 //        this.driverController.a(teleopEventLoop).whileTrue(scoreCommands.descoreLowerAlgae());
 

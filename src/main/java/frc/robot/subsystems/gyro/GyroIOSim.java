@@ -67,7 +67,10 @@ public class GyroIOSim implements GyroIO {
         this.faultHardware = pigeon.getFault_Hardware(false);
 
         this.timestampBuffer = odometryThreadRunner.makeTimestampBuffer();
-        this.yawSignalBuffer = odometryThreadRunner.registerSignal(pigeon, this.yaw);
+        this.yawSignalBuffer = odometryThreadRunner.registerSignal(
+                pigeon,
+                new OdometryThreadRunner.Signal<>(yaw, signal -> getYaw())
+        );
 
         pigeonSimState.setSupplyVoltage(12);
         pigeonSimState.setPitch(USE_SIMULATED_PITCH);
@@ -94,6 +97,7 @@ public class GyroIOSim implements GyroIO {
         rawGyroYaw = rawGyroYaw.plus(Rotation2d.fromRadians(
                 kinematics.toChassisSpeeds(moduleStates).omegaRadiansPerSecond * dtSeconds
         ));
+
         pigeonSimState.setRawYaw(rawGyroYaw.getDegrees());
     }
 
@@ -108,14 +112,14 @@ public class GyroIOSim implements GyroIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
-                this.pitch,
-                this.pitchVelocity,
-                this.roll,
-                this.rollVelocity
+                pitch,
+                pitchVelocity,
+                roll,
+                rollVelocity
         );
         BaseStatusSignal.setUpdateFrequencyForAll(
                 4,
-                this.faultHardware
+                faultHardware
         );
         ParentDevice.optimizeBusUtilizationForAll(pigeon);
     }
@@ -131,10 +135,10 @@ public class GyroIOSim implements GyroIO {
         inputs.yawPositionDeg = getYaw();
         inputs.pitchPositionDeg = getPitch();
         inputs.rollPositionDeg = getRoll();
-        inputs.yawVelocityDegPerSec = this.yawVelocity.getValueAsDouble();
-        inputs.pitchVelocityDegPerSec = this.pitchVelocity.getValueAsDouble();
-        inputs.rollVelocityDegPerSec = this.rollVelocity.getValueAsDouble();
-        inputs.hasHardwareFault = this.faultHardware.getValue();
+        inputs.yawVelocityDegPerSec = yawVelocity.getValueAsDouble();
+        inputs.pitchVelocityDegPerSec = pitchVelocity.getValueAsDouble();
+        inputs.rollVelocityDegPerSec = rollVelocity.getValueAsDouble();
+        inputs.hasHardwareFault = faultHardware.getValue();
 
         inputs.odometryTimestampsSec = OdometryThreadRunner.writeBufferToArray(timestampBuffer);
         timestampBuffer.clear();
@@ -149,7 +153,7 @@ public class GyroIOSim implements GyroIO {
 //                yaw,
 //                getYawVelocitySignal()
 //        );
-        return this.yaw.getValueAsDouble();
+        return yaw.getValueAsDouble();
     }
 
     public double getPitch() {
@@ -159,7 +163,7 @@ public class GyroIOSim implements GyroIO {
 //                pigeon.getPitch(),
 //                getPitchVelocitySignal()
 //        );
-        return this.pitch.getValueAsDouble();
+        return pitch.getValueAsDouble();
     }
 
     public double getRoll() {
@@ -169,7 +173,7 @@ public class GyroIOSim implements GyroIO {
 //                pigeon.getRoll(),
 //                getRollVelocitySignal()
 //        );
-        return this.roll.getValueAsDouble();
+        return roll.getValueAsDouble();
     }
 
     @Override

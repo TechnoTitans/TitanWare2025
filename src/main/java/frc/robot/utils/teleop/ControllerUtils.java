@@ -43,15 +43,13 @@ public class ControllerUtils {
 
         final Rotation2d direction;
         if (MathUtil.isNear(0, xInput, 1e-6) && MathUtil.isNear(0, yInput, 1e-6)) {
-            direction = new Rotation2d(0);
+            direction = Rotation2d.kZero;
         } else {
-             direction = new Rotation2d(xInput, yInput);
+            direction = new Rotation2d(xInput, yInput);
         }
 
         final double squaredMagnitude = Math.copySign(magnitude * magnitude, magnitude);
-        return new Pose2d(new Translation2d(), direction)
-                .transformBy(new Transform2d(squaredMagnitude, 0, new Rotation2d()))
-                .getTranslation();
+        return new Translation2d(squaredMagnitude, direction);
     }
 
     public static double getStickSquaredInput(final double input, final double deadband) {

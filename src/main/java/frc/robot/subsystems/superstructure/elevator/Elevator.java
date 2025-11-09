@@ -238,6 +238,14 @@ public class Elevator extends SubsystemBase {
         });
     }
 
+    public Command toVoltage(final DoubleSupplier voltage) {
+        return run(() -> {
+            this.desiredGoal = Goal.DYNAMIC;
+            setpoint.elevatorPositionRots = 0;
+            elevatorIO.toVoltage(voltage.getAsDouble());
+        }).finallyDo(() -> elevatorIO.toVoltage(0));
+    }
+
     private SysIdRoutine makeVoltageSysIdRoutine(
             final Velocity<VoltageUnit> voltageRampRate,
             final Voltage stepVoltage,

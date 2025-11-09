@@ -24,6 +24,7 @@ import frc.robot.utils.closeables.ToClose;
 import frc.robot.utils.control.DeltaTime;
 import frc.robot.utils.ctre.Phoenix6Utils;
 import frc.robot.utils.ctre.RefreshAll;
+import frc.robot.utils.sim.SimUtils;
 import frc.robot.utils.sim.motors.TalonFXSim;
 
 import java.util.List;
@@ -41,7 +42,7 @@ public class ElevatorIOSim implements ElevatorIO {
     private final TalonFX followerMotor;
     private final TalonFXSim motorsSim;
 
-    private final MotionMagicExpoVoltage motionMagicExpoVoltage;
+    private final MotionMagicExpoTorqueCurrentFOC motionMagicExpoTorqueCurrentFOC;
     private final DynamicMotionMagicVoltage dynamicMotionMagicVoltage;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final VoltageOut voltageOut;
@@ -89,12 +90,14 @@ public class ElevatorIOSim implements ElevatorIO {
                 List.of(masterMotor, followerMotor),
                 constants.gearing(),
                 elevatorSim::update,
-                elevatorSim::setInputVoltage,
+                (motorVoltage) -> elevatorSim.setInputVoltage(
+                        SimUtils.addMotorFriction(motorVoltage, 0.25)
+                ),
                 () -> Units.rotationsToRadians(elevatorSim.getPositionMeters() / drumCircumferenceMeters),
                 () -> Units.rotationsToRadians(elevatorSim.getVelocityMetersPerSecond() / drumCircumferenceMeters)
         );
 
-        this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
+        this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
         this.dynamicMotionMagicVoltage = new DynamicMotionMagicVoltage(0, 0, 0, 0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
@@ -142,13 +145,13 @@ public class ElevatorIOSim implements ElevatorIO {
     public void config() {
         final TalonFXConfiguration motorConfiguration = new TalonFXConfiguration();
         motorConfiguration.Slot0 = new Slot0Configs()
-                .withKS(0.037707)
-                .withKG(0.52705)
+                .withKS(1.5)
+                .withKG(21.95)
                 .withGravityType(GravityTypeValue.Elevator_Static)
-                .withKV(0.54587)
-                .withKA(0.012141)
-                .withKP(32.42)
-                .withKD(1);
+                .withKV(0)
+                .withKA(0.28)
+                .withKP(120)
+                .withKD(40);
         motorConfiguration.MotionMagic.MotionMagicCruiseVelocity = 0;
         motorConfiguration.MotionMagic.MotionMagicExpo_kV = 0.54587;
         motorConfiguration.MotionMagic.MotionMagicExpo_kA = 0.1;
@@ -216,7 +219,7 @@ public class ElevatorIOSim implements ElevatorIO {
 
     @Override
     public void toPosition(final double positionRots) {
-        masterMotor.setControl(motionMagicExpoVoltage.withPosition(positionRots));
+        masterMotor.setControl(motionMagicExpoTorqueCurrentFOC.withPosition(positionRots));
         followerMotor.setControl(follower);
     }
 

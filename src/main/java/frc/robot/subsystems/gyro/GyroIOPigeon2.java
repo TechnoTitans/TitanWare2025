@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.DoubleCircularBuffer;
@@ -46,7 +47,10 @@ public class GyroIOPigeon2 implements GyroIO {
         this.faultHardware = pigeon.getFault_Hardware(false);
 
         this.timestampBuffer = odometryThreadRunner.makeTimestampBuffer();
-        this.yawSignalBuffer = odometryThreadRunner.registerSignal(pigeon, this.yaw);
+        this.yawSignalBuffer = odometryThreadRunner.registerSignal(
+                pigeon,
+                new OdometryThreadRunner.Signal<>(yaw, signal -> getYaw())
+        );
 
         RefreshAll.add(
                 CANBus,
@@ -66,10 +70,10 @@ public class GyroIOPigeon2 implements GyroIO {
         inputs.yawPositionDeg = getYaw();
         inputs.pitchPositionDeg = getPitch();
         inputs.rollPositionDeg = getRoll();
-        inputs.yawVelocityDegPerSec = this.yawVelocity.getValueAsDouble();
-        inputs.pitchVelocityDegPerSec = this.pitchVelocity.getValueAsDouble();
-        inputs.rollVelocityDegPerSec = this.rollVelocity.getValueAsDouble();
-        inputs.hasHardwareFault = this.faultHardware.getValue();
+        inputs.yawVelocityDegPerSec = yawVelocity.getValueAsDouble();
+        inputs.pitchVelocityDegPerSec = pitchVelocity.getValueAsDouble();
+        inputs.rollVelocityDegPerSec = rollVelocity.getValueAsDouble();
+        inputs.hasHardwareFault = faultHardware.getValue();
 
         inputs.odometryTimestampsSec = OdometryThreadRunner.writeBufferToArray(timestampBuffer);
         timestampBuffer.clear();
@@ -91,28 +95,28 @@ public class GyroIOPigeon2 implements GyroIO {
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
-                this.pitch,
-                this.pitchVelocity,
-                this.roll,
-                this.rollVelocity
+                pitch,
+                pitchVelocity,
+                roll,
+                rollVelocity
         );
         BaseStatusSignal.setUpdateFrequencyForAll(
                 4,
-                this.faultHardware
+                faultHardware
         );
         ParentDevice.optimizeBusUtilizationForAll(4, pigeon);
     }
 
     public double getYaw() {
-        return Phoenix6Utils.latencyCompensateIfSignalIsGood(this.yaw, this.yawVelocity);
+        return Phoenix6Utils.latencyCompensateIfSignalIsGood(yaw, yawVelocity);
     }
 
     public double getPitch() {
-        return Phoenix6Utils.latencyCompensateIfSignalIsGood(this.pitch, this.pitchVelocity);
+        return Phoenix6Utils.latencyCompensateIfSignalIsGood(pitch, pitchVelocity);
     }
 
     public double getRoll() {
-        return Phoenix6Utils.latencyCompensateIfSignalIsGood(this.roll, this.rollVelocity);
+        return Phoenix6Utils.latencyCompensateIfSignalIsGood(roll, rollVelocity);
     }
 
     @Override

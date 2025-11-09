@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class OdometryThreadRunner {
     // Increase the priority to dedicate more resources towards running the thread at the right frequency, 1 is the
@@ -35,7 +36,8 @@ public class OdometryThreadRunner {
     private String network;
     private CANBus canBus;
 
-    protected final List<StatusSignal<?>> allSignals = new ArrayList<>();
+    protected final List<Signal<?>> allSignals = new ArrayList<>();
+    protected final List<SignalValueSupplier<?>> signalValueSuppliers = new ArrayList<>();
     protected final Map<Long, ControlRequest> outerAppliedControlRequests = new HashMap<>();
     protected final Map<Long, ControlRequest> innerAppliedControlRequests = new HashMap<>();
     protected final Map<Long, Consumer<ControlRequest>> controlReqAppliers = new HashMap<>();
@@ -207,9 +209,20 @@ public class OdometryThreadRunner {
         return buffer;
     }
 
+    @FunctionalInterface
+    public interface SignalValueSupplier<T> {
+        double get(final StatusSignal<T> signal);
+    }
+
+    public record Signal<T>(StatusSignal<T> statusSignal, SignalValueSupplier<T> signalValueSupplier) {
+        public double value() {
+            return signalValueSupplier.get(statusSignal);
+        }
+    }
+
     public <T extends Measure<?>> DoubleCircularBuffer registerSignal(
             final ParentDevice device,
-            final StatusSignal<T> signal
+            final Signal<T> signal
     ) {
         final DoubleCircularBuffer buffer = new DoubleCircularBuffer(20);
         try {
@@ -314,7 +327,12 @@ public class OdometryThreadRunner {
             return;
         }
 
-        final BaseStatusSignal[] allSignalsArray = allSignals.toArray(BaseStatusSignal[]::new);
+        final int nSignals = allSignals.size();
+        final BaseStatusSignal[] allSignalsArray = new BaseStatusSignal[nSignals];
+        for (int i = 0; i < nSignals; i++) {
+            allSignalsArray[i] = allSignals.get(i).statusSignal;
+        }
+
         BaseStatusSignal.setUpdateFrequencyForAll(UPDATE_FREQUENCY_HZ, allSignalsArray);
 //        Threads.setCurrentThreadPriority(true, threadPriorityToSet);
 
@@ -357,15 +375,18 @@ public class OdometryThreadRunner {
                 int maxQueueSize = 0;
                 for (int i = 0; i < signalCount; i++) {
                     final DoubleCircularBuffer buffer = buffers.get(i);
-                    final StatusSignal<?> signal = allSignals.get(i);
-                    buffer.addFirst(signal.getValueAsDouble());
+                    final Signal<?> signal = allSignals.get(i);
+
+                    final StatusSignal<?> statusSignal = signal.statusSignal;
+                    final double signalValue = signal.value();
+                    buffer.addFirst(signalValue);
 
                     final int queueSize = buffer.size();
                     if (queueSize > maxQueueSize) {
                         maxQueueSize = queueSize;
                     }
 
-                    totalLatencySeconds += signal.getTimestamp().getLatency();
+                    totalLatencySeconds += statusSignal.getTimestamp().getLatency();
                 }
 
                 final double realTimestampSeconds = RobotController.getFPGATime() / 1e6;
