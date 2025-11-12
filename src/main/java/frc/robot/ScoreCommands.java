@@ -462,11 +462,11 @@ public class ScoreCommands {
 
 
         return Commands.sequence(
-                superstructureGoal.set(Superstructure.Goal.STOW),
+                superstructureGoal.setCommand(Superstructure.Goal.STOW),
                 Commands.deadline(
                         Commands.sequence(
-                                superstructureGoal.set(Superstructure.Goal.ALIGN_NET),
-                                superstructureGoal.set(Superstructure.Goal.NET),
+                                superstructureGoal.setCommand(Superstructure.Goal.ALIGN_NET),
+                                superstructureGoal.setCommand(Superstructure.Goal.NET),
                                 Commands.waitUntil(superstructure.extendedBeyond(0.47)),
                                 intake.netAlgae()
                         ),
