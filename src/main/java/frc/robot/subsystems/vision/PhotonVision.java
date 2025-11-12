@@ -85,7 +85,7 @@ public class PhotonVision extends VirtualSubsystem {
                     PhotonVision.makeVisionIOInputsMap(
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FR_APRILTAG),
                             new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_BL_APRILTAG),
-                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
+                            new RealVisionRunner.VisionIOApriltagReal(TitanCamera.PHOTON_FL_APRILTAG)
                     )
             );
             case SIM -> {
@@ -108,7 +108,7 @@ public class PhotonVision extends VirtualSubsystem {
                                         TitanCamera.PHOTON_BL_APRILTAG, visionSystemSim
                                 ),
                                 new SimVisionRunner.VisionIOApriltagsSim(
-                                        TitanCamera.PHOTON_FL_BOTTOM_APRILTAG, visionSystemSim
+                                        TitanCamera.PHOTON_FL_APRILTAG, visionSystemSim
                                 )
                         )
                 );
@@ -118,7 +118,7 @@ public class PhotonVision extends VirtualSubsystem {
                     PhotonVision.makeVisionIOInputsMap(
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FR_APRILTAG),
                             new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_BL_APRILTAG),
-                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_BOTTOM_APRILTAG)
+                            new ReplayVisionRunner.VisionIOReplay(TitanCamera.PHOTON_FL_APRILTAG)
                     )
             );
             case DISABLED -> new PhotonVisionRunner() {};
@@ -253,18 +253,19 @@ public class PhotonVision extends VirtualSubsystem {
                     new Pose3d(swerve.getPose()).transformBy(inputs.robotToCamera)
             );
 
-            final VisionResult visionResult = runner.getVisionResult(visionIO);
-            if (visionResult != null) {
+            final VisionResult[] visionResults = runner.getVisionResults(visionIO);
+            for (final VisionResult result : visionResults) {
                 final VisionResult lastVisionResult = lastVisionUpdateMap.get(visionIO);
                 final RejectionReason rejectionReason =
-                        shouldReject(visionResult, lastVisionResult);
+                        shouldReject(result, lastVisionResult);
                 final boolean rejected = rejectionReason.wasRejected();
 
+                // TODO does not differentiate log key per result
                 Logger.recordOutput(logKey + "/Rejected", rejected);
                 Logger.recordOutput(logKey + "/RejectionReason", rejectionReason);
-                Logger.recordOutput(logKey + "/VisionResult", visionResult.result());
+                Logger.recordOutput(logKey + "/VisionResult", result.result());
 
-                final Optional<VisionResult.VisionUpdate> maybeVisionUpdate = visionResult.visionUpdate();
+                final Optional<VisionResult.VisionUpdate> maybeVisionUpdate = result.visionUpdate();
                 if (maybeVisionUpdate.isEmpty()) {
                     continue;
                 }
@@ -283,7 +284,7 @@ public class PhotonVision extends VirtualSubsystem {
                 );
                 Logger.recordOutput(logKey + "/StdDevs", stdDevs.getData());
 
-                lastVisionUpdateMap.put(visionIO, visionResult);
+                lastVisionUpdateMap.put(visionIO, result);
                 poseEstimator.addVisionMeasurement(
                         visionUpdate.estimatedPose().toPose2d(),
                         visionUpdateTimestamp,

@@ -26,6 +26,7 @@ public interface VisionIO {
         public double stdDevFactor = 1.0;
         public Transform3d robotToCamera;
         public PhotonPoseEstimator.ConstrainedSolvepnpParams constrainedPnpParams;
+        public PhotonPipelineResult latestResult;
 
         public int resolutionWidthPx = 0;
         public int resolutionHeightPx = 0;
