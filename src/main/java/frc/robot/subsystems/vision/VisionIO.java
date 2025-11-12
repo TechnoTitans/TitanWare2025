@@ -63,12 +63,12 @@ public interface VisionIO {
             this.resolutionWidthPx = table.get("ResolutionWidthPx", 0);
             this.resolutionHeightPx = table.get("ResolutionHeightPx", 0);
 
-            final double[] cameraMatrix = table.get("CameraMatrix", (double[]) null);
+            final double[] cameraMatrix = table.get("CameraMatrix", new double[0]);
             this.cameraMatrix = cameraMatrix == null
                     ? EmptyCameraMatrix
                     : MatBuilder.fill(Nat.N3(), Nat.N3(), cameraMatrix);
 
-            final double[] distortionCoeffs = table.get("DistortionCoeffs", (double[]) null);
+            final double[] distortionCoeffs = table.get("DistortionCoeffs", new double[0]);
             this.distortionCoeffs = distortionCoeffs == null
                     ? EmptyDistortionCoeffs
                     : MatBuilder.fill(Nat.N8(), Nat.N1(), distortionCoeffs);

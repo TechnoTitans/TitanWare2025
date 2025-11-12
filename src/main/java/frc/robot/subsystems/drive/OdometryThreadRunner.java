@@ -144,7 +144,7 @@ public class OdometryThreadRunner {
 
             @Override
             public int getSize() {
-                return kSizeBool + (kSizeInt32 * 4) + (kSizeDouble * 2);
+                return kSizeBool + (kSizeInt32 * 3) + (kSizeDouble * 2);
             }
 
             @Override
