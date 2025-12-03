@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class OdometryThreadRunner {
     // Increase the priority to dedicate more resources towards running the thread at the right frequency, 1 is the
@@ -37,7 +36,6 @@ public class OdometryThreadRunner {
     private CANBus canBus;
 
     protected final List<Signal<?>> allSignals = new ArrayList<>();
-    protected final List<SignalValueSupplier<?>> signalValueSuppliers = new ArrayList<>();
     protected final Map<Long, ControlRequest> outerAppliedControlRequests = new HashMap<>();
     protected final Map<Long, ControlRequest> innerAppliedControlRequests = new HashMap<>();
     protected final Map<Long, Consumer<ControlRequest>> controlReqAppliers = new HashMap<>();
