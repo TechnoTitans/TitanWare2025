@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drive;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -69,11 +70,12 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
             final SwerveConstants.SwerveModuleConstants constants,
             final OdometryThreadRunner odometryThreadRunner
     ) {
-        final HardwareConstants.CANBus CANBus = constants.moduleCANBus();
-        this.driveMotor = new TalonFX(constants.driveMotorId(), CANBus.name);
-        this.turnMotor = new TalonFX(constants.turnMotorId(), CANBus.name);
+        final HardwareConstants.CANBus bus = constants.moduleCANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.driveMotor = new TalonFX(constants.driveMotorId(), p6Bus);
+        this.turnMotor = new TalonFX(constants.turnMotorId(), p6Bus);
 
-        this.turnEncoder = new CANcoder(constants.turnEncoderId(), CANBus.name);
+        this.turnEncoder = new CANcoder(constants.turnEncoderId(), p6Bus);
         this.magnetOffset = constants.turnEncoderOffsetRots();
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
@@ -105,7 +107,7 @@ public class SwerveModuleIOTalonFX implements SwerveModuleIO {
         );
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 drivePosition,
                 driveVelocity,
                 driveTorqueCurrent,

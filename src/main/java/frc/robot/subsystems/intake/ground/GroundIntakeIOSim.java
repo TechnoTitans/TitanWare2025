@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake.ground;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -54,9 +55,10 @@ public class GroundIntakeIOSim implements GroundIntakeIO  {
         this.deltaTime = new DeltaTime(true);
         this.constants = constants;
 
-        final HardwareConstants.CANBus CANBus = constants.CANBus();
-        this.motor = new TalonFX(constants.wheelMotorID(), constants.CANBus().name);
-        this.coralCANRange = new CANrange(constants.coralCANRangeID(), constants.CANBus().name);
+        final HardwareConstants.CANBus bus = constants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.motor = new TalonFX(constants.wheelMotorID(), p6Bus);
+        this.coralCANRange = new CANrange(constants.coralCANRangeID(), p6Bus);
 
         final DCMotorSim motorSim = new DCMotorSim(
                 LinearSystemId.createDCMotorSystem(
@@ -87,7 +89,7 @@ public class GroundIntakeIOSim implements GroundIntakeIO  {
         this.coralDetected = coralCANRange.getIsDetected(false);
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 wheelPosition,
                 wheelVelocity,
                 wheelVoltage,

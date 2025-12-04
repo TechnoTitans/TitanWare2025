@@ -1,6 +1,7 @@
 package frc.robot.subsystems.gyro;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.ParentDevice;
@@ -49,8 +50,9 @@ public class GyroIOSim implements GyroIO {
             final SwerveDriveKinematics kinematics,
             final SwerveModule[] swerveModules
     ) {
-        final HardwareConstants.CANBus CANBus = gyroConstants.CANBus();
-        this.pigeon = new Pigeon2(gyroConstants.gyroId(), CANBus.name);
+        final HardwareConstants.CANBus bus = gyroConstants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.pigeon = new Pigeon2(gyroConstants.gyroId(), p6Bus);
 
         this.pigeonSimState = pigeon.getSimState();
         this.kinematics = kinematics;
@@ -77,7 +79,7 @@ public class GyroIOSim implements GyroIO {
         pigeonSimState.setRoll(USE_SIMULATED_ROLL);
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 yaw,
                 pitch,
                 roll,

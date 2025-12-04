@@ -1,6 +1,7 @@
 package frc.robot.subsystems.superstructure.proximal;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -78,9 +79,10 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
                 SimConstants.ElevatorArm.STARTING_ANGLE.getRadians()
         );
 
-        final HardwareConstants.CANBus CANBus = constants.CANBus();
-        this.pivotMotor = new TalonFX(constants.motorId(), CANBus.name);
-        this.pivotCANCoder = new CANcoder(constants.CANCoderId(), CANBus.name);
+        final HardwareConstants.CANBus bus = constants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.pivotMotor = new TalonFX(constants.motorId(), p6Bus);
+        this.pivotCANCoder = new CANcoder(constants.CANCoderId(), p6Bus);
 
         this.pivotMotorSim = new TalonFXSim(
                 pivotMotor,
@@ -105,7 +107,7 @@ public class ElevatorArmIOSim implements ElevatorArmIO {
         this.pivotCANCoderVelocity = pivotCANCoder.getVelocity(false);
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

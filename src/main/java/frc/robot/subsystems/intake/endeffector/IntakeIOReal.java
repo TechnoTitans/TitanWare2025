@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake.endeffector;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -39,9 +40,10 @@ public class IntakeIOReal implements IntakeIO {
     public IntakeIOReal(final HardwareConstants.IntakeConstants constants) {
         this.constants = constants;
 
-        final HardwareConstants.CANBus CANBus = constants.CANBus();
-        this.rollerMotor = new TalonFX(constants.rollerMotorID(), CANBus.name);
-        this.coralCANRange = new CANrange(constants.coralTOFID(), CANBus.name);
+        final HardwareConstants.CANBus bus = constants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.rollerMotor = new TalonFX(constants.rollerMotorID(), p6Bus);
+        this.coralCANRange = new CANrange(constants.coralTOFID(), p6Bus);
 
         this.velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
@@ -55,7 +57,7 @@ public class IntakeIOReal implements IntakeIO {
         this.rollerCANRangeDistance = coralCANRange.getDistance(false);
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 rollerPosition,
                 rollerVelocity,
                 rollerVoltage,

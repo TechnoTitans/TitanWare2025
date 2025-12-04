@@ -1,12 +1,12 @@
 package frc.robot.subsystems.gyro;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.util.DoubleCircularBuffer;
@@ -35,8 +35,9 @@ public class GyroIOPigeon2 implements GyroIO {
             final HardwareConstants.GyroConstants gyroConstants,
             final OdometryThreadRunner odometryThreadRunner
     ) {
-        final HardwareConstants.CANBus CANBus = gyroConstants.CANBus();
-        this.pigeon = new Pigeon2(gyroConstants.gyroId(), CANBus.name);
+        final HardwareConstants.CANBus bus = gyroConstants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.pigeon = new Pigeon2(gyroConstants.gyroId(), p6Bus);
 
         this.yaw = pigeon.getYaw(false);
         this.pitch = pigeon.getPitch(false);
@@ -53,7 +54,7 @@ public class GyroIOPigeon2 implements GyroIO {
         );
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 yaw,
                 pitch,
                 roll,

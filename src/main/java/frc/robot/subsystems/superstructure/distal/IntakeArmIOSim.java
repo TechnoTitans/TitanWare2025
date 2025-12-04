@@ -1,6 +1,7 @@
 package frc.robot.subsystems.superstructure.distal;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -68,9 +69,10 @@ public class IntakeArmIOSim implements IntakeArmIO {
                 SimConstants.IntakeArm.STARTING_ANGLE.getRadians()
         );
 
-        final HardwareConstants.CANBus CANBus = constants.CANBus();
-        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), CANBus.name);
-        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), CANBus.name);
+        final HardwareConstants.CANBus bus = constants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), p6Bus);
+        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), p6Bus);
 
         this.pivotTalonFXSSim = new TalonFXSSim(
                 pivotMotor,
@@ -94,7 +96,7 @@ public class IntakeArmIOSim implements IntakeArmIO {
         this.encoderVelocity = pivotEncoder.getVelocity(false);
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

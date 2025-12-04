@@ -1,16 +1,14 @@
 package frc.robot.subsystems.superstructure.elevator;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
-import com.ctre.phoenix6.signals.GravityTypeValue;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -82,9 +80,10 @@ public class ElevatorIOSim implements ElevatorIO {
                 lowerLimitMeters
         );
 
-        final HardwareConstants.CANBus CANBus = constants.CANBus();
-        this.masterMotor = new TalonFX(constants.rightMotorId(), CANBus.name);
-        this.followerMotor = new TalonFX(constants.leftMotorId(), CANBus.name);
+        final HardwareConstants.CANBus bus = constants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.masterMotor = new TalonFX(constants.rightMotorId(), p6Bus);
+        this.followerMotor = new TalonFX(constants.leftMotorId(), p6Bus);
 
         this.motorsSim = new TalonFXSim(
                 List.of(masterMotor, followerMotor),
@@ -98,10 +97,10 @@ public class ElevatorIOSim implements ElevatorIO {
         );
 
         this.motionMagicExpoTorqueCurrentFOC = new MotionMagicExpoTorqueCurrentFOC(0);
-        this.dynamicMotionMagicVoltage = new DynamicMotionMagicVoltage(0, 0, 0, 0);
+        this.dynamicMotionMagicVoltage = new DynamicMotionMagicVoltage(0, 0, 0);
         this.torqueCurrentFOC = new TorqueCurrentFOC(0);
         this.voltageOut = new VoltageOut(0);
-        this.follower = new Follower(masterMotor.getDeviceID(), false);
+        this.follower = new Follower(masterMotor.getDeviceID(), MotorAlignmentValue.Aligned);
 
         this.masterPosition = masterMotor.getPosition(false);
         this.masterVelocity = masterMotor.getVelocity(false);
@@ -115,7 +114,7 @@ public class ElevatorIOSim implements ElevatorIO {
         this.followerDeviceTemp = followerMotor.getDeviceTemp(false);
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 masterPosition,
                 masterVelocity,
                 masterVoltage,

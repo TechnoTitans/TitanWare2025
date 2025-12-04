@@ -1,6 +1,7 @@
 package frc.robot.subsystems.superstructure.ground;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -37,9 +38,10 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
     public GroundIntakeArmIOReal(final HardwareConstants.GroundIntakeArmConstants constants) {
         this.constants = constants;
 
-        final HardwareConstants.CANBus CANBus = constants.CANBus();
-        this.pivotMotor = new TalonFX(constants.pivotMotorID(), CANBus.name);
-        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), CANBus.name);
+        final HardwareConstants.CANBus bus = constants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.pivotMotor = new TalonFX(constants.pivotMotorID(), p6Bus);
+        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), p6Bus);
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.positionVoltage = new PositionVoltage(0);
@@ -54,7 +56,7 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
         this.pivotEncoderVelocity = pivotEncoder.getVelocity(false);
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

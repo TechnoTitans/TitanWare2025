@@ -1,6 +1,7 @@
 package frc.robot.subsystems.superstructure.distal;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -8,9 +9,7 @@ import com.ctre.phoenix6.configs.TalonFXSConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.ParentDevice;
-import com.ctre.phoenix6.hardware.TalonFXS;
+import com.ctre.phoenix6.hardware.*;
 import com.ctre.phoenix6.signals.*;
 import edu.wpi.first.units.measure.*;
 import frc.robot.constants.HardwareConstants;
@@ -37,9 +36,10 @@ public class IntakeArmIOReal implements IntakeArmIO {
     public IntakeArmIOReal(final HardwareConstants.IntakeArmConstants constants) {
         this.constants = constants;
 
-        final HardwareConstants.CANBus CANBus = constants.CANBus();
-        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), CANBus.name);
-        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), CANBus.name);
+        final HardwareConstants.CANBus bus = constants.CANBus();
+        final CANBus p6Bus = bus.toPhoenix6CANBus();
+        this.pivotMotor = new TalonFXS(constants.pivotMotorID(), p6Bus);
+        this.pivotEncoder = new CANcoder(constants.pivotCANCoderId(), p6Bus);
 
         this.motionMagicExpoVoltage = new MotionMagicExpoVoltage(0);
         this.positionVoltage = new PositionVoltage(0);
@@ -54,7 +54,7 @@ public class IntakeArmIOReal implements IntakeArmIO {
         this.encoderVelocity = pivotEncoder.getVelocity(false);
 
         RefreshAll.add(
-                CANBus,
+                bus,
                 pivotPosition,
                 pivotVelocity,
                 pivotVoltage,

@@ -32,7 +32,6 @@ public class OdometryThreadRunner {
     protected final ReentrantReadWriteLock signalReadWriteLock = new ReentrantReadWriteLock();
     protected final ReentrantReadWriteLock controlReqReadWriteLock = new ReentrantReadWriteLock();
 
-    private String network;
     private CANBus canBus;
 
     protected final List<Signal<?>> allSignals = new ArrayList<>();
@@ -225,26 +224,25 @@ public class OdometryThreadRunner {
         final DoubleCircularBuffer buffer = new DoubleCircularBuffer(20);
         try {
             signalReadWriteLock.writeLock().lock();
-            final String deviceNetwork = device.getNetwork();
+            final CANBus deviceBus = device.getNetwork();
 
             // Ensure that we cannot register devices on different networks
-            if (network != null && !network.equals(deviceNetwork)) {
+            if (canBus != null && !canBus.getName().equals(deviceBus.getName())) {
                 throw new RuntimeException(String.format(
                         "Attempted to register signal from a device on a different network than devices already" +
                                 "registered! Current: %s, New: %s! This is a bug!",
-                        network,
-                        deviceNetwork
+                        canBus,
+                        deviceBus.getName()
                 ));
-            } else if (network == null || canBus == null) {
-                network = deviceNetwork;
-                canBus = new CANBus(deviceNetwork);
+            } else if (canBus == null) {
+                canBus = deviceBus;
             }
 
             if (!canBus.isNetworkFD()) {
                 DriverStation.reportWarning(String.format(
                         "Attempted to register signal from a non CAN-FD device ID: %d (%s)! This is a bug!",
                         device.getDeviceID(),
-                        deviceNetwork
+                        deviceBus.getName()
                 ), true);
                 // TODO: fix this, why does it do this?
 //                throw new RuntimeException(String.format(
@@ -269,22 +267,22 @@ public class OdometryThreadRunner {
             final Consumer<ControlRequest> applyControlReq
     ) {
         final long deviceHash = device.getDeviceHash();
-        final String deviceNetwork = device.getNetwork();
-        if (network != null && !network.equals(deviceNetwork)) {
+        final CANBus deviceBus = device.getNetwork();
+        if (canBus != null && !canBus.getName().equals(deviceBus.getName())) {
             throw new RuntimeException(String.format(
                     "Attempted to register signal from a device on a different network than devices already" +
                             "registered! Current: %s, New: %s! This is a bug!",
-                    network,
-                    deviceNetwork
+                    canBus,
+                    deviceBus.getName()
             ));
-        } else if (network == null) {
-            network = deviceNetwork;
+        } else if (canBus == null) {
+            canBus = deviceBus;
         }
 
         if (outerAppliedControlRequests.containsKey(deviceHash)) {
             throw new RuntimeException(String.format(
                     "Attempted to register a ControlRequest for the same device" +
-                            "ID: %d (%s) more than once!", device.getDeviceID(), deviceNetwork
+                            "ID: %d (%s) more than once!", device.getDeviceID(), deviceBus.getName()
             ));
         }
 
