@@ -73,28 +73,26 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
 
         final TalonFXConfiguration pivotMotorConfig = new TalonFXConfiguration();
         pivotMotorConfig.Slot0 = new Slot0Configs()
-                .withKS(0.016887)
-                .withKG(0.25249)
+                .withKS(0.28)
+                .withKG(0.36)
                 .withGravityType(GravityTypeValue.Arm_Cosine)
-                .withKV(10.263)
-                .withKA(2.2613)
-                .withKP(76.008)
-                .withKD(40);
-        pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 9.263;
-        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 2.1;
+                .withKP(50)
+                .withKD(0.4);
+        pivotMotorConfig.MotionMagic.MotionMagicCruiseVelocity = 0.5;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kV = 4;
+        pivotMotorConfig.MotionMagic.MotionMagicExpo_kA = 2.5;
         pivotMotorConfig.TorqueCurrent.PeakForwardTorqueCurrent = 80;
         pivotMotorConfig.TorqueCurrent.PeakReverseTorqueCurrent = -80;
-        pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 50;
+        pivotMotorConfig.CurrentLimits.StatorCurrentLimit = 60;
         pivotMotorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        pivotMotorConfig.CurrentLimits.SupplyCurrentLimit = 40;
+        pivotMotorConfig.CurrentLimits.SupplyCurrentLimit = 50;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLowerLimit = 30;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLowerTime = 1;
         pivotMotorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         pivotMotorConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         pivotMotorConfig.Feedback.FeedbackRemoteSensorID = pivotEncoder.getDeviceID();
         pivotMotorConfig.Feedback.SensorToMechanismRatio = 1;
-        pivotMotorConfig.Feedback.RotorToSensorRatio = 112.84;
+        pivotMotorConfig.Feedback.RotorToSensorRatio = constants.pivotGearing();
         pivotMotorConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         pivotMotorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         pivotMotorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = constants.pivotUpperLimitRots();
@@ -102,6 +100,7 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
         pivotMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = constants.pivotLowerLimitRots();
         pivotMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         pivotMotor.getConfigurator().apply(pivotMotorConfig);
+//        pivotMotor.setPosition(0);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,

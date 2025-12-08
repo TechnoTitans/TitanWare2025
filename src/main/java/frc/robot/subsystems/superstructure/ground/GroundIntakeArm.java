@@ -68,10 +68,10 @@ public class GroundIntakeArm extends SubsystemBase {
 
     public enum Goal {
         DYNAMIC(0),
-        STOW(0.00),
-        INTAKE_FROM_GROUND(-0.345),
+        STOW(0),
+        INTAKE_FROM_GROUND(-0.330),
         HP(-0.03),
-        TRANSFER_CORAL(-0.01),
+        TRANSFER_CORAL(-0.043),
         GROUND_L1(-0.15),
         L1(-0.22),
         CLIMB(-0.340);
@@ -96,8 +96,8 @@ public class GroundIntakeArm extends SubsystemBase {
         this.inputs = new GroundIntakeArmIOInputsAutoLogged();
 
         this.voltageSysIdRoutine = makeVoltageSysIdRoutine(
-                Volts.of(2).per(Second),
-                Volts.of(2),
+                Volts.of(0.35).per(Second),
+                Volts.of(1),
                 Seconds.of(10)
         );
 

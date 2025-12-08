@@ -75,13 +75,13 @@ public class GroundIntakeIOReal implements GroundIntakeIO {
 
         final TalonFXConfiguration rollerConfiguration = new TalonFXConfiguration();
         rollerConfiguration.Slot0 = new Slot0Configs()
-//                .withKS(4.0212)
-                .withKV(1);
-//                .withKA(0.22711)
-//                .withKP(100);
-        rollerConfiguration.CurrentLimits.StatorCurrentLimit = 40;
+                .withKS(0.7)
+                .withKV(2)
+                .withKA(1)
+                .withKP(2);
+        rollerConfiguration.CurrentLimits.StatorCurrentLimit = 60;
         rollerConfiguration.CurrentLimits.StatorCurrentLimitEnable = true;
-        rollerConfiguration.CurrentLimits.SupplyCurrentLimit = 40;
+        rollerConfiguration.CurrentLimits.SupplyCurrentLimit = 60;
         rollerConfiguration.CurrentLimits.SupplyCurrentLowerLimit = 40;
         rollerConfiguration.CurrentLimits.SupplyCurrentLowerTime = 1;
         rollerConfiguration.CurrentLimits.SupplyCurrentLimitEnable = true;

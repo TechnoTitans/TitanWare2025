@@ -68,7 +68,7 @@ public class Intake extends SubsystemBase {
     protected static final String LogKey = "Intake";
     private static final double CoralRadiusFromODMeters = Units.inchesToMeters(4.5 / 2);
     private static final double CoralIntakeCenterDistanceMeters = Units.inchesToMeters(15.5 / 2);
-    private static final double NoCoralTOFReading = 0.36;
+    private static final double NoCoralTOFReading = 0.34;
     private static final double AlgaeDetectedCurrent = 25;
 
     private final IntakeIO intakeIO;

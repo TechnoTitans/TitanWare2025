@@ -115,10 +115,10 @@ public class HardwareConstants {
             RobotMap.CanivoreCANBus,
             26,
             27,
-            0.099,
-            112.84,
-            -0.345,
-            0
+            0.094,
+            56.4223,
+            -0.350,
+            -0.01
 
-    ); //TODO: Limits need to change -0.521
+    );
 }
