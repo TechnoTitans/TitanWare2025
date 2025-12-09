@@ -100,7 +100,6 @@ public class GroundIntakeArmIOReal implements GroundIntakeArmIO {
         pivotMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = constants.pivotLowerLimitRots();
         pivotMotorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
         pivotMotor.getConfigurator().apply(pivotMotorConfig);
-//        pivotMotor.setPosition(0);
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 100,
